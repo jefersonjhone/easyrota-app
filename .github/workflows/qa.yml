@@ -24,13 +24,11 @@ jobs:
           cache: "poetry"
 
       - name: Install Poetry
-        run: pipx install poetry
-
-      - name: cache poetry install
-        uses: actions/cache@v4
+        uses: snok/install-poetry@v1
         with:
-          path: ~/.local
-          key: poetry
+          version: latest
+          virtualenvs-in-project: true
+          installer-parallel: true
 
       - name: Configure Poetry
         run: |
@@ -38,13 +36,6 @@ jobs:
 
       - name: Install dependencies
         run: poetry install --no-interaction --no-ansi
-
-      - name: cache deps
-        id: cache-deps
-        uses: actions/cache@v2
-        with:
-          path: .venv
-          key: pydeps-${{ hashFiles('**/poetry.lock') }}
 
       - name: Lint with Ruff
         run: |
