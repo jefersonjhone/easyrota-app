@@ -19,6 +19,9 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry]
+packages = [{ include = "easy" }]
+
 [dependency-groups]
 dev = [
     "ipython (>=9.12.0,<10.0.0)",
