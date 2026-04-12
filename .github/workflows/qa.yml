@@ -26,8 +26,11 @@ jobs:
       - name: Install Poetry
         run: pipx install poetry
 
-      - name: Add pipx bin to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: cache poetry install
+        uses: actions/cache@v2
+        with:
+          path: ~/.local
+          key: poetry
 
       - name: Configure Poetry
         run: |
@@ -35,6 +38,13 @@ jobs:
 
       - name: Install dependencies
         run: poetry install --no-interaction --no-ansi
+
+      - name: cache deps
+        id: cache-deps
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: pydeps-${{ hashFiles('**/poetry.lock') }}
 
       - name: Lint with Ruff
         run: |
