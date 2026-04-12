@@ -1,2 +1,2 @@
-[tool.ruff.lint]
+[lint]
 select = ["ALL"]
