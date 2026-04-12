@@ -45,7 +45,7 @@ jobs:
           poetry run ruff check . --line-length 127 --exit-zero
 
           # optional: complexity check (like mccabe)
-          poetry run ruff check . --select C90 --max-complexity 10
+          poetry run ruff check . --select C90 -- --max-complexity 10
 
       - name: Test with pytest
         run: poetry run pytest
