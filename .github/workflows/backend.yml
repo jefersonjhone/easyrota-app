@@ -1,0 +1,47 @@
+name: EasyRota Backend
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "poetry"
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.in-project true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi
+
+      - name: Lint with Ruff
+        run: |
+          # strict checks (syntax, undefined names, security subset, etc.)
+          poetry run ruff check . --select E9,F63,F7,F82,S
+
+          # full lint (non-blocking like old exit-zero)
+          poetry run ruff check . --line-length 127 --exit-zero
+
+          # optional: complexity check (like mccabe)
+          poetry run ruff check . --select C90 --max-complexity 10
+
+      - name: Test with pytest
+        run: poetry run pytest
