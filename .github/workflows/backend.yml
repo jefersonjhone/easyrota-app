@@ -25,6 +25,9 @@ jobs:
       - name: Install Poetry
         run: pipx install poetry
 
+      - name: Add pipx bin to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Configure Poetry
         run: |
           poetry config virtualenvs.in-project true
