@@ -1,3 +1,5 @@
+import path from "path"
+
 import { defineConfig } from 'vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
@@ -17,4 +19,9 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./easy"),
+    },
+  },
 })
