@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   backend:
+    name: Backend QA
     runs-on: ubuntu-latest
 
     steps:
@@ -51,7 +52,7 @@ jobs:
 
 
   frontend:
-    name: Install, Test, and Build
+    name: Frontend QA
     runs-on: ubuntu-latest
 
     steps:
