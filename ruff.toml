@@ -11,6 +11,7 @@ select = ["ALL"]
 
 [lint.per-file-ignores]
 "__init__.py" = ["E402"]
+"test/*" = ["S"]
 "**/{tests,docs,tools}/*" = ["E402"]
 
 [format]
