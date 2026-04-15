@@ -12,7 +12,7 @@ export default defineConfig({
     tanstackRouter({
       target: 'react',
       autoCodeSplitting: true,
-      routesDirectory: 'frontend/routes',
+      routesDirectory: 'frontend/pages',
       quoteStyle: 'single',
     }),
     tailwindcss(),
