@@ -12,7 +12,7 @@ export default defineConfig({
     tanstackRouter({
       target: 'react',
       autoCodeSplitting: true,
-      routesDirectory: 'easy/features',
+      routesDirectory: 'frontend/routes',
       quoteStyle: 'single',
     }),
     tailwindcss(),
@@ -21,7 +21,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./easy"),
+      "@": path.resolve(__dirname, "./frontend"),
     },
   },
 })
