@@ -46,15 +46,24 @@ bun dev
 
 Start the backend:
 
-```sh
-poetry run fastapi dev easy:app
+Crie o arquivo de ambiente:
+
+```bash
+cp .env.example .env
+```
+Aplique as migrações:
+
+```bash 
+poetry run python api/manage.py migrate
+```
+Inicie o servidor:
+
+```bash
+poetry run python api/manage.py runserver
 ```
 
-If you prefer Uvicorn directly, this also works:
-
-```sh
-poetry run uvicorn easy:app --reload
-```
+O backend estará disponível em:
+http://127.0.0.1:8000
 
 ## Common checks
 
@@ -62,7 +71,3 @@ poetry run uvicorn easy:app --reload
 bun run build
 bun run lint
 ```
-
-## Notes
-
-The backend app is currently a minimal FastAPI application defined in [easy/__init__.py](easy/__init__.py).
