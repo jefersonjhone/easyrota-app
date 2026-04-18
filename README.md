@@ -46,23 +46,21 @@ bun dev
 
 Start the backend:
 
-Crie o arquivo de ambiente:
-
+Create the environment file:
 ```bash
 cp .env.example .env
 ```
-Aplique as migrações:
+Apply database migrations:
 
 ```bash 
 poetry run python api/manage.py migrate
 ```
-Inicie o servidor:
-
+Start the server:
 ```bash
 poetry run python api/manage.py runserver
 ```
 
-O backend estará disponível em:
+The backend will be available at:
 http://127.0.0.1:8000
 
 ## Common checks
