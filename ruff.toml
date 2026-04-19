@@ -2,17 +2,8 @@ output-format = "github"
 fix = true
 preview = true
 show-fixes = true
-src = ["easy", "test"]
+src = ["api", "test"]
 target-version = "py312"
-
-[lint]
-select = ["ALL"]
-
-
-[lint.per-file-ignores]
-"__init__.py" = ["E402"]
-"test/*" = ["S"]
-"**/{tests,docs,tools}/*" = ["E402"]
 
 [format]
 docstring-code-format = true
