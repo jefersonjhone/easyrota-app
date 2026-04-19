@@ -7,10 +7,14 @@ export const Route = createFileRoute('/signup')({
   component: RouteComponent,
 })
 
+const paths = {
+    login: "/login",
+}
+
 function RouteComponent() {
   return (
     <AuthLayout>
-        <SignupForm></SignupForm>
+        <SignupForm paths={paths} />
     </AuthLayout>
   )
 }

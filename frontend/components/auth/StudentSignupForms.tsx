@@ -7,7 +7,15 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 
-export default function CivilServantSignupForms() {
+type Props = {
+  paths: {
+    login: string
+  }
+}
+
+export default function CivilServantSignupForms(props: Props) {
+  const paths = props.paths
+
   return (
     <form>
       <FieldGroup>
@@ -37,7 +45,7 @@ export default function CivilServantSignupForms() {
           <Field>
             <Button type="submit">Criar Conta</Button>
             <FieldDescription className="px-6 text-center">
-                Já tem uma conta? <a href="/login">Entrar</a>
+                Já tem uma conta? <a href={paths.login}>Entrar</a>
             </FieldDescription>
           </Field>
         </FieldGroup>

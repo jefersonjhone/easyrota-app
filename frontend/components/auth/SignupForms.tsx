@@ -9,7 +9,15 @@ import CivilServantSignupForms from "@/components/auth/CivilServantSignupForms"
 import StudentSignupForms from "@/components/auth/StudentSignupForms"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export function SignupForm() {
+type Props = {
+  paths: {
+    login: string
+  }
+}
+
+export function SignupForm(props: Props) {
+  const paths = props.paths
+
   return (
 
     <Tabs defaultValue="civil-servant" className="w-full max-w-md">
@@ -26,10 +34,10 @@ export function SignupForm() {
         </CardHeader>
         <CardContent>
           <TabsContent value="civil-servant">
-            <CivilServantSignupForms />
+            <CivilServantSignupForms paths={paths} />
           </TabsContent>
           <TabsContent value="student">
-            <StudentSignupForms />
+            <StudentSignupForms paths={paths} />
           </TabsContent>
         </CardContent>
       </Card>
