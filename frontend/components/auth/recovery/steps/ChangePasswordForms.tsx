@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useNavigate } from "@tanstack/react-router"
 
@@ -51,10 +51,12 @@ export function ChangePasswordForms({ paths, onSuccess }: Props) {
             <Field>
               <FieldLabel htmlFor="password">Nova Senha</FieldLabel>
               <Input id="password" name="password" type="password" placeholder="••••••••" required />
+              <FieldDescription>A senha deve ter ao menos 8 caracteres.</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="password-confirm">Confirmar Senha</FieldLabel>
               <Input id="password-confirm" name="password-confirm" type="password" placeholder="••••••••" required />
+              <FieldDescription>Por favor, confirme sua senha.</FieldDescription>
             </Field>
           </FieldGroup>
         </CardContent>
