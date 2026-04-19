@@ -18,7 +18,7 @@ type Props = {
   onSuccess?: () => void
 }
 
-export function ChangePasswordStepForms({ paths, onSuccess }: Props) {
+export function ChangePasswordForms({ paths, onSuccess }: Props) {
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
