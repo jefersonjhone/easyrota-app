@@ -13,6 +13,7 @@ export default defineConfig({
       target: 'react',
       autoCodeSplitting: true,
       routesDirectory: 'frontend/pages',
+      generatedRouteTree: 'frontend/routeTree.gen.ts',
       quoteStyle: 'single',
     }),
     tailwindcss(),

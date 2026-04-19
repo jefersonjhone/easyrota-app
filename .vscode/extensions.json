@@ -1,0 +1,32 @@
+{
+    "recommendations": [
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode-remote.remote-wsl-recommender",
+        "donjayamanne.python-extension-pack",
+        "donjayamanne.python-environment-manager",
+        "ms-python.debugpy",
+        "ms-python.pylint",
+        "ms-python.vscode-pylance",
+        "hverlin.mise-vscode",
+        "oven.bun-vscode",
+        "ms-azuretools.vscode-containers",
+        "batisteo.vscode-django",
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "tamasfe.even-better-toml",
+        "donjayamanne.githistory",
+        "github.vscode-github-actions",
+        "codezombiech.gitignore",
+        "eamodio.gitlens",
+        "ms-python.isort",
+        "ms-vscode.vscode-typescript-next",
+        "ms-vscode.live-server",
+        "ms-vsliveshare.vsliveshare",
+        "ms-ossdata.vscode-pgsql",
+        "ms-python.python",
+        "ms-python.vscode-python-envs",
+        "kevinrose.vsc-python-indent",
+        "njpwerner.autodocstring",
+        "ms-python.black-formatter"
+    ]
+}
