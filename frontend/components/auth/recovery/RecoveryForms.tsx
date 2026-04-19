@@ -1,30 +1,13 @@
 "use client"
 
-import { StepsRoot, StepsList, StepIndex, Step, useSteps } from "@/components/ui/steps"
+import { StepsRoot, StepsList, StepIndex, Step } from "@/components/ui/steps"
 import { RequestStepForms } from "./RequestStepForms"
+import { PinConfirmationStepForms } from "./PinConfirmationStepForms"
 
 type Props = {
   paths: {
     login: string
   }
-}
-
-function ConfirmStep() {
-  const { markComplete, goTo } = useSteps()
-
-  return (
-    <div>
-      {/* Replace with your real form */}
-      <button
-        onClick={() => {
-          markComplete("confirm")
-          goTo("reset")
-        }}
-      >
-        Confirm PIN
-      </button>
-    </div>
-  )
 }
 
 function ResetStep() {
@@ -44,7 +27,7 @@ export function RecoveryForms({ paths }: Props) {
         <RequestStepForms paths={paths} />
       </Step>
       <Step value="confirm">
-        <ConfirmStep />
+        <PinConfirmationStepForms />
       </Step>
       <Step value="reset">
         <ResetStep />
