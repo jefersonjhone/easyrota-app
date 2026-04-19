@@ -1,11 +1,11 @@
 [tools]
 bun = "1.3.12"
-python = "3.12"
+python = "3.12" 
 
-[tasks."docs:api:build"]
+ [tasks."docs:api:build"]
 description = "Generate the final static HTML documentation"
 dir="api"
-run = "poetry run sphinx-build -b html docs docs/_build/html"
+run = ["poetry run sphinx-apidoc -f -o docs/api .", "poetry run sphinx-build -b html docs docs/_build/html"]
 
 [tasks."docs:api:clean"]
 description = "Remove the documentation build directory"
