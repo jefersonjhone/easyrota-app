@@ -29,7 +29,7 @@ export function RecoveryForms({ paths }: Props) {
         />
       </Step>
       <Step value="confirm">
-        <ConfirmPinForms email={email || "email@example.com"} onSuccess={() => {}} />
+        <ConfirmPinForms email={email} onSuccess={() => {}} />
       </Step>
       <Step value="reset">
         <ChangePasswordForms paths={paths} />

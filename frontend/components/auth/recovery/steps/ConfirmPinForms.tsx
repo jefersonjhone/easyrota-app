@@ -1,4 +1,5 @@
 // Import Hooks
+import { useEffect } from "react"
 import { useSteps } from "@/components/ui/steps"
 
 // Import Components
@@ -19,12 +20,15 @@ import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/comp
 import { RefreshCwIcon } from "lucide-react"
 
 type Props = {
-  email: string
+  email: string | null
   onSuccess?: () => void
 }
 
 export function ConfirmPinForms({ email, onSuccess }: Props) {
   const { next, prev } = useSteps()
+
+  useEffect(() => {if (!email?.trim()) {prev()}}, [email, prev])
+
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
 
