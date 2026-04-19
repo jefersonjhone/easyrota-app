@@ -16,10 +16,11 @@ import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
 
 type Props = {
+  email: string
   onSuccess?: () => void
 }
 
-export function ConfirmPinForms({ onSuccess }: Props) {
+export function ConfirmPinForms({ email, onSuccess }: Props) {
   const { next, prev } = useSteps()
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -41,7 +42,8 @@ export function ConfirmPinForms({ onSuccess }: Props) {
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
           <CardDescription>
-            Insira o código de confirmação enviado para seu email.
+            Insira o código de confirmação enviado para seu email:{" "}
+            <span className="font-medium">{email}</span>
           </CardDescription>
 
           <CardAction>

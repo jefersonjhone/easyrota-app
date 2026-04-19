@@ -20,7 +20,7 @@ type Props = {
   paths: {
     login: string
   }
-  onSuccess?: () => void
+  onSuccess?: (form: FormData) => void
 }
 
 export function RequestRecoveryForms({ paths, onSuccess }: Props) {
@@ -30,12 +30,12 @@ export function RequestRecoveryForms({ paths, onSuccess }: Props) {
 
     
     // TODO: call your API here
-    // const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget)
     // const email = formData.get("email")
     // await api.requestRecovery(email)
 
     // move to next step
-    onSuccess?.()
+    onSuccess?.(formData)
     next()
   }
 

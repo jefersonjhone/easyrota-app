@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 import { StepsRoot, StepsList, StepIndex, Step } from "@/components/ui/steps"
 
 import { RequestRecoveryForms } from "./steps/RequestRecoveryForms"
@@ -11,6 +13,7 @@ type Props = {
 }
 
 export function RecoveryForms({ paths }: Props) {
+  const [email, setEmail] = useState<string | null>(null)
   return (
     <StepsRoot stepsOrder={["request", "confirm", "reset"]}>
       <StepsList className="justify-start">
@@ -20,10 +23,13 @@ export function RecoveryForms({ paths }: Props) {
       </StepsList>
 
       <Step value="request">
-        <RequestRecoveryForms paths={paths} />
+        <RequestRecoveryForms 
+          paths={paths} 
+          onSuccess={(form: FormData) => setEmail(form.get("email") as string)} 
+        />
       </Step>
       <Step value="confirm">
-        <ConfirmPinForms />
+        <ConfirmPinForms email={email || "email@example.com"} onSuccess={() => {}} />
       </Step>
       <Step value="reset">
         <ChangePasswordForms paths={paths} />
