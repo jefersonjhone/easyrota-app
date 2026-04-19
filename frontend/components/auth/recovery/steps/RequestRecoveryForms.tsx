@@ -40,30 +40,30 @@ export function RequestRecoveryForms({ paths, onSuccess }: Props) {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Recuperar Acesso</CardTitle>
-        <CardDescription>
-          Insira seu email para recuperar seu acesso.
-        </CardDescription>
+    <form onSubmit={handleSubmit}>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Recuperar Acesso</CardTitle>
+          <CardDescription>
+            Insira seu email para recuperar seu acesso.
+          </CardDescription>
 
-        <CardAction>
-          <Link to={paths.login} className="w-full">
-            <Button variant="link" type="button">Cancelar</Button>
-          </Link>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+          <CardAction>
+            <Link to={paths.login} className="w-full">
+              <Button variant="link" type="button">Cancelar</Button>
+            </Link>
+          </CardAction>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
-        </form>
-      </CardContent>
-      <CardFooter>
+        </CardContent>
+        <CardFooter>
           <Button type="submit" className="w-full cursor-pointer">
             Receber email
           </Button>
         </CardFooter>
-    </Card>
+      </Card>
+    </form>
   )
 }
