@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Field, FieldLabel } from "@/components/ui/field"
 
 type Props = {
   paths: {
@@ -44,10 +45,7 @@ export function RequestRecoveryForms({ paths, onSuccess }: Props) {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
-          <CardDescription>
-            Insira seu email para recuperar seu acesso.
-          </CardDescription>
-
+          <CardDescription>Insira seu email para recuperar seu acesso.</CardDescription>
           <CardAction>
             <Link to={paths.login} className="w-full">
               <Button variant="link" type="button">Cancelar</Button>
@@ -61,6 +59,7 @@ export function RequestRecoveryForms({ paths, onSuccess }: Props) {
             <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
           </Field>
         </CardContent>
+
         <CardFooter>
           <Button type="submit" className="w-full cursor-pointer">
             Receber email
