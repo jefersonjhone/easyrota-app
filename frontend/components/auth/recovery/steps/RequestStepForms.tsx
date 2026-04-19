@@ -1,3 +1,7 @@
+// Import Hooks
+import { useSteps } from "@/components/ui/steps"
+
+// Import Components
 import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,7 +15,6 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useSteps } from "@/components/ui/steps"
 
 type Props = {
   paths: {
