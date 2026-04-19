@@ -16,7 +16,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp"
 
 // Import Icons
-// import { RefreshCwIcon } from "lucide-react"
+import { RefreshCwIcon } from "lucide-react"
 
 type Props = {
   email: string
@@ -65,7 +65,7 @@ export function ConfirmPinForms({ email, onSuccess }: Props) {
                 Código de Confirmação
               </FieldLabel>
               <Button variant="outline" size="xs">
-                {/* <RefreshCwIcon /> */}
+                <RefreshCwIcon />
                 Re-enviar código
               </Button>
             </div>
