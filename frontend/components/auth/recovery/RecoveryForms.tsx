@@ -25,7 +25,7 @@ export function RecoveryForms({ paths }: Props) {
         <PinConfirmationStepForms />
       </Step>
       <Step value="reset">
-        <ChangePasswordStepForms />
+        <ChangePasswordStepForms paths={paths} />
       </Step>
     </StepsRoot>
   )

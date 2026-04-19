@@ -12,10 +12,13 @@ import { Label } from "@/components/ui/label"
 import { useNavigate } from "@tanstack/react-router"
 
 type Props = {
+  paths: {
+    login: string
+  }
   onSuccess?: () => void
 }
 
-export function ChangePasswordStepForms({ onSuccess }: Props) {
+export function ChangePasswordStepForms({ paths, onSuccess }: Props) {
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -30,7 +33,7 @@ export function ChangePasswordStepForms({ onSuccess }: Props) {
     // move to next step
     onSuccess?.()
     navigate({
-      to: "/login",
+      to: paths.login,
       replace: true
     })
   }
