@@ -1,16 +1,5 @@
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Link } from "@tanstack/react-router"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { RequestStepForms } from "./RequestStepForms"
 
 type Props = {
   paths: {
@@ -22,25 +11,15 @@ export function RecoveryForms(props: Props) {
   const paths = props.paths
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Recuperar Acesso</CardTitle>
-        <CardDescription>Insira seu email para recuperar seu acesso.</CardDescription>
-        <CardAction>
-          <Link to={paths.login} className="w-full">
-            <Button variant="link">Cancelar</Button>
-          </Link>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <form className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="joao@uefs.br" required />
-        </form>
-      </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full cursor-pointer">Receber email</Button>
-      </CardFooter>
-    </Card>
+    <Tabs defaultValue="request">
+      <TabsList className="justify-start">
+        <TabsTrigger value="request">1. Solicitar recuperação</TabsTrigger>
+        <TabsTrigger value="confirm" disabled>2. Confirmar PIN</TabsTrigger>
+        <TabsTrigger value="reset" disabled>3. Redefinir senha</TabsTrigger>
+      </TabsList>
+      <TabsContent value="request">
+        <RequestStepForms paths={paths} />
+      </TabsContent>
+    </Tabs>
   )
 }
