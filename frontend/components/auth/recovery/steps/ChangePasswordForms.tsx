@@ -43,9 +43,7 @@ export function ChangePasswordForms({ paths, onSuccess }: Props) {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
-          <CardDescription>
-            Mude sua senha!
-          </CardDescription>
+          <CardDescription>Mude sua senha!</CardDescription>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-2">
