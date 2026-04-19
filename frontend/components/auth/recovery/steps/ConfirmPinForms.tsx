@@ -69,7 +69,9 @@ export function ConfirmPinForms({ email, onSuccess }: Props) {
                 Re-enviar código
               </Button>
             </div>
-            <InputOTP maxLength={6} id="otp-verification" required>
+            <InputOTP maxLength={6} id="otp-verification" 
+              containerClassName="justify-center" required
+            >
               <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-11 *:data-[slot=input-otp-slot]:text-xl">
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />
