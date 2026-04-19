@@ -12,8 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp"
+
+// Import Icons
+// import { RefreshCwIcon } from "lucide-react"
 
 type Props = {
   email: string
@@ -55,8 +58,28 @@ export function ConfirmPinForms({ email, onSuccess }: Props) {
 
         <CardContent className="flex flex-col gap-2">
           <Field>
-            <FieldLabel htmlFor="pin">Código de Confirmação</FieldLabel>
-            <Input id="pin" name="pin" type="text" placeholder="123456" required />
+            <div className="flex items-center justify-between">
+              <FieldLabel htmlFor="otp-verification">
+                Código de Confirmação
+              </FieldLabel>
+              <Button variant="outline" size="xs">
+                {/* <RefreshCwIcon /> */}
+                Re-enviar código
+              </Button>
+            </div>
+            <InputOTP maxLength={6} id="otp-verification" required>
+              <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-11 *:data-[slot=input-otp-slot]:text-xl">
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              <InputOTPSeparator className="mx-2" />
+              <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-11 *:data-[slot=input-otp-slot]:text-xl">
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
           </Field>
         </CardContent>
 
