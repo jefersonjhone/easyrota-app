@@ -1,7 +1,7 @@
 from .base import *
 
-DEBUG = False
 
+DEBUG = False
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 DATABASES = {
@@ -14,3 +14,7 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
+
+
+LOGGING['loggers']['api']['level'] = 'INFO'
+LOGGING['handlers']['console']['formatter'] = 'rich'
