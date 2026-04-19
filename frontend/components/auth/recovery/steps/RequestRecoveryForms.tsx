@@ -23,7 +23,7 @@ type Props = {
   onSuccess?: () => void
 }
 
-export function RequestStepForms({ paths, onSuccess }: Props) {
+export function RequestRecoveryForms({ paths, onSuccess }: Props) {
   const { next } = useSteps()
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
