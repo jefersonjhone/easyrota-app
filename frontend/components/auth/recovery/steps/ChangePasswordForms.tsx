@@ -50,7 +50,7 @@ export function ChangePasswordForms({ paths, onSuccess }: Props) {
           <Label htmlFor="password">Nova Senha</Label>
           <Input id="password" name="password" type="password" placeholder="••••••••" required />
           <Label htmlFor="password-confirm">Confirmar Senha</Label>
-          <Input id="password" name="password" type="password" placeholder="••••••••" required />
+          <Input id="password-confirm" name="password-confirm" type="password" placeholder="••••••••" required />
         </CardContent>
 
         <CardFooter className="flex-col gap-2">
