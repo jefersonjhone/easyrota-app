@@ -20,7 +20,7 @@ type Props = {
 }
 
 export function LoginForms(props: Props) {
-  let paths = props.paths
+  const paths = props.paths
 
   return (
     <Card className="w-full max-w-sm">
