@@ -1,5 +1,3 @@
-"use client"
-
 import { StepsRoot, StepsList, StepIndex, Step } from "@/components/ui/steps"
 import { RequestStepForms } from "./RequestStepForms"
 import { PinConfirmationStepForms } from "./PinConfirmationStepForms"
