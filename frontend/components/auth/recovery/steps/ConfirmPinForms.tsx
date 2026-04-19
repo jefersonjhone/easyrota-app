@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field, FieldLabel } from "@/components/ui/field"
 
 type Props = {
   onSuccess?: () => void
@@ -52,8 +52,10 @@ export function ConfirmPinForms({ onSuccess }: Props) {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-2">
-          <Label htmlFor="pin">Código de Confirmação</Label>
-          <Input id="pin" name="pin" type="text" placeholder="123456" required />
+          <Field>
+            <FieldLabel htmlFor="pin">Código de Confirmação</FieldLabel>
+            <Input id="pin" name="pin" type="text" placeholder="123456" required />
+          </Field>
         </CardContent>
 
         <CardFooter className="flex-col gap-2">
