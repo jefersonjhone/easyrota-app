@@ -11,36 +11,59 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Link } from "@tanstack/react-router"
+import { useSteps } from "../../ui/steps"
 
 type Props = {
   paths: {
     login: string
   }
+  onSuccess?: () => void
 }
 
-export function RequestStepForms(props: Props) {
-  const paths = props.paths
+export function RequestStepForms({ paths, onSuccess }: Props) {
+  const { markComplete, goTo } = useSteps()
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    
+    // TODO: call your API here
+    // const formData = new FormData(e.currentTarget)
+    // const email = formData.get("email")
+    // await api.requestRecovery(email)
+
+    // move to next step
+    onSuccess?.()
+    markComplete("request")
+    goTo("confirm")
+  }
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Recuperar Acesso</CardTitle>
-        <CardDescription>Insira seu email para recuperar seu acesso.</CardDescription>
-        <CardAction>
-          <Link to={paths.login} className="w-full">
-            <Button variant="link">Cancelar</Button>
-          </Link>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <form className="flex flex-col gap-2">
+      <form onSubmit={handleSubmit}>
+        <CardHeader>
+          <CardTitle>Recuperar Acesso</CardTitle>
+          <CardDescription>
+            Insira seu email para recuperar seu acesso.
+          </CardDescription>
+
+          <CardAction>
+            <Link to={paths.login} className="w-full">
+              <Button variant="link" type="button">Cancelar</Button>
+            </Link>
+          </CardAction>
+        </CardHeader>
+
+        <CardContent className="flex flex-col gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="joao@uefs.br" required />
-        </form>
-      </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full cursor-pointer">Receber email</Button>
-      </CardFooter>
+          <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
+        </CardContent>
+
+        <CardFooter className="flex-col gap-2">
+          <Button type="submit" className="w-full cursor-pointer">
+            Receber email
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   )
 }

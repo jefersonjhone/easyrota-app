@@ -1,4 +1,6 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+"use client"
+
+import { StepsRoot, StepsList, StepIndex, Step, useSteps } from "@/components/ui/steps"
 import { RequestStepForms } from "./RequestStepForms"
 
 type Props = {
@@ -7,19 +9,46 @@ type Props = {
   }
 }
 
-export function RecoveryForms(props: Props) {
-  const paths = props.paths
+function ConfirmStep() {
+  const { markComplete, goTo } = useSteps()
 
   return (
-    <Tabs defaultValue="request">
-      <TabsList className="justify-start">
-        <TabsTrigger value="request">1. Solicitar recuperação</TabsTrigger>
-        <TabsTrigger value="confirm" disabled>2. Confirmar PIN</TabsTrigger>
-        <TabsTrigger value="reset" disabled>3. Redefinir senha</TabsTrigger>
-      </TabsList>
-      <TabsContent value="request">
+    <div>
+      {/* Replace with your real form */}
+      <button
+        onClick={() => {
+          markComplete("confirm")
+          goTo("reset")
+        }}
+      >
+        Confirm PIN
+      </button>
+    </div>
+  )
+}
+
+function ResetStep() {
+  return <div>Reset password form</div>
+}
+
+export function RecoveryForms({ paths }: Props) {
+  return (
+    <StepsRoot stepsOrder={["request", "confirm", "reset"]}>
+      <StepsList className="justify-start">
+        <StepIndex value="request">1. Solicitar recuperação</StepIndex>
+        <StepIndex value="confirm">2. Confirmar PIN</StepIndex>
+        <StepIndex value="reset">3. Redefinir senha</StepIndex>
+      </StepsList>
+
+      <Step value="request">
         <RequestStepForms paths={paths} />
-      </TabsContent>
-    </Tabs>
+      </Step>
+      <Step value="confirm">
+        <ConfirmStep />
+      </Step>
+      <Step value="reset">
+        <ResetStep />
+      </Step>
+    </StepsRoot>
   )
 }
