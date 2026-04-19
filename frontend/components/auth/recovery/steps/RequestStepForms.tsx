@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Link } from "@tanstack/react-router"
-import { useSteps } from "../../ui/steps"
+import { useSteps } from "../../../ui/steps"
 
 type Props = {
   paths: {

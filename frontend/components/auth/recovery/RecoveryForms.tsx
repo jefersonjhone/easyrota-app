@@ -1,7 +1,7 @@
 import { StepsRoot, StepsList, StepIndex, Step } from "@/components/ui/steps"
-import { RequestStepForms } from "./RequestStepForms"
-import { PinConfirmationStepForms } from "./PinConfirmationStepForms"
-import { ChangePasswordStepForms } from "./ChangePasswordStepForms"
+import { RequestStepForms } from "./steps/RequestStepForms"
+import { PinConfirmationStepForms } from "./steps/PinConfirmationStepForms"
+import { ChangePasswordStepForms } from "./steps/ChangePasswordStepForms"
 
 type Props = {
   paths: {
