@@ -39,8 +39,8 @@ export function ChangePasswordForms({ paths, onSuccess }: Props) {
   }
 
   return (
-    <Card className="w-full">
-      <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
           <CardDescription>
@@ -60,7 +60,7 @@ export function ChangePasswordForms({ paths, onSuccess }: Props) {
             Confirmar
           </Button>
         </CardFooter>
-      </form>
-    </Card>
+      </Card>
+    </form>
   )
 }
