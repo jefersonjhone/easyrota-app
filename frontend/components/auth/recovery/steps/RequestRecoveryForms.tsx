@@ -54,9 +54,12 @@ export function RequestRecoveryForms({ paths, onSuccess }: Props) {
             </Link>
           </CardAction>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
+
+        <CardContent>
+          <Field>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
+          </Field>
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full cursor-pointer">
