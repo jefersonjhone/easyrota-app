@@ -9,14 +9,15 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useSteps } from "../../ui/steps"
+import { useNavigate } from "@tanstack/react-router"
 
 type Props = {
   onSuccess?: () => void
 }
 
 export function ChangePasswordStepForms({ onSuccess }: Props) {
-  const { next } = useSteps()
+  const navigate = useNavigate()
+
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -28,7 +29,10 @@ export function ChangePasswordStepForms({ onSuccess }: Props) {
 
     // move to next step
     onSuccess?.()
-    next()
+    navigate({
+      to: "/login",
+      replace: true
+    })
   }
 
   return (
