@@ -9,8 +9,9 @@ export const Route = createFileRoute('/login')({
 })
 
 const paths = {
-    createAccount: "/",
-    recoverPassword: "/",
+    createAccount: "/signup",
+    // TODO: Implementar página de recuperação de senha
+    recoverPassword: "/recovery",
 }
 
 function LoginPage() {

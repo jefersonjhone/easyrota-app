@@ -14,8 +14,8 @@ import { Link } from "@tanstack/react-router"
 
 type Props = {
   paths: {
-    createAccount?: string
-    recoverPassword?: string
+    createAccount: string
+    recoverPassword: string
   }
 }
 
