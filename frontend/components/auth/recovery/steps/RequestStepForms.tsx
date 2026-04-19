@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -10,8 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Link } from "@tanstack/react-router"
-import { useSteps } from "../../../ui/steps"
+import { useSteps } from "@/components/ui/steps"
 
 type Props = {
   paths: {
