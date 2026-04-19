@@ -20,6 +20,10 @@ export default function CivilServantSignupForms() {
           <Input id="full-name" type="text" placeholder="João da Silva" required/>
         </Field>
         <Field>
+          <FieldLabel htmlFor="civil-servant-id">Matrícula</FieldLabel>
+          <Input id="civil-servant-id" type="text" placeholder="12345678" required/>
+        </Field>
+        <Field>
           <FieldLabel htmlFor="password">Senha</FieldLabel>
           <Input id="password" type="password" required />
           <FieldDescription>A senha deve ter ao menos 8 caracteres.</FieldDescription>
