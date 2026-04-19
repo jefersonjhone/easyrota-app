@@ -7,8 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useNavigate } from "@tanstack/react-router"
 
 type Props = {
@@ -46,14 +46,20 @@ export function ChangePasswordForms({ paths, onSuccess }: Props) {
           <CardDescription>Mude sua senha!</CardDescription>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-2">
-          <Label htmlFor="password">Nova Senha</Label>
-          <Input id="password" name="password" type="password" placeholder="••••••••" required />
-          <Label htmlFor="password-confirm">Confirmar Senha</Label>
-          <Input id="password-confirm" name="password-confirm" type="password" placeholder="••••••••" required />
+        <CardContent>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="password">Nova Senha</FieldLabel>
+              <Input id="password" name="password" type="password" placeholder="••••••••" required />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="password-confirm">Confirmar Senha</FieldLabel>
+              <Input id="password-confirm" name="password-confirm" type="password" placeholder="••••••••" required />
+            </Field>
+          </FieldGroup>
         </CardContent>
 
-        <CardFooter className="flex-col gap-2">
+        <CardFooter>
           <Button type="submit" className="w-full cursor-pointer">
             Confirmar
           </Button>
