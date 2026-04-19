@@ -21,7 +21,7 @@ type Props = {
 }
 
 export function RequestStepForms({ paths, onSuccess }: Props) {
-  const { markComplete, goTo } = useSteps()
+  const { next } = useSteps()
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -33,8 +33,7 @@ export function RequestStepForms({ paths, onSuccess }: Props) {
 
     // move to next step
     onSuccess?.()
-    markComplete("request")
-    goTo("confirm")
+    next()
   }
 
   return (

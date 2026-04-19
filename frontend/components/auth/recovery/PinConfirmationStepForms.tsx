@@ -17,7 +17,7 @@ type Props = {
 }
 
 export function PinConfirmationStepForms({ onSuccess }: Props) {
-  const { markComplete, goTo } = useSteps()
+  const { next, prev } = useSteps()
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -29,8 +29,7 @@ export function PinConfirmationStepForms({ onSuccess }: Props) {
 
     // move to next step
     onSuccess?.()
-    markComplete("confirm")
-    goTo("reset")
+    next()
   }
 
   return (
@@ -43,7 +42,7 @@ export function PinConfirmationStepForms({ onSuccess }: Props) {
           </CardDescription>
 
           <CardAction>
-            <Button onClick={() => goTo("request")} className="w-full" variant="link" type="button">
+            <Button onClick={() => prev()} className="w-full" variant="link" type="button">
               Re-enviar
             </Button>
           </CardAction>

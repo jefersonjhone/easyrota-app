@@ -16,7 +16,7 @@ type Props = {
 }
 
 export function ChangePasswordStepForms({ onSuccess }: Props) {
-  const { markComplete } = useSteps()
+  const { next } = useSteps()
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -28,7 +28,7 @@ export function ChangePasswordStepForms({ onSuccess }: Props) {
 
     // move to next step
     onSuccess?.()
-    markComplete("reset")
+    next()
   }
 
   return (

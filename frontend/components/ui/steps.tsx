@@ -15,8 +15,8 @@ type StepValue = string
 interface StepsContextType {
   current: StepValue
   completed: StepValue[]
-  goTo: (step: StepValue) => void
-  markComplete: (step: StepValue) => void
+  next: () => void
+  prev: () => void
   isUnlocked: (step: StepValue) => boolean
 }
 
@@ -56,34 +56,42 @@ export function StepsRoot({
     completedRef.current = completed
   }, [completed])
 
-  const isUnlocked = (step: StepValue, completedSteps = completedRef.current) => {
-    const index = stepsOrder.indexOf(step)
-    if (index === -1) return false
-    if (index === 0) return true
-    return completedSteps.includes(stepsOrder[index - 1])
+  const isUnlocked = (step: StepValue) => {
+    return step === current
   }
 
-  const goTo = (step: StepValue) => {
-    if (isUnlocked(step)) setCurrent(step)
-  }
+  const next = () => {
+    const index = stepsOrder.indexOf(current)
+    if (index === -1 || index === stepsOrder.length - 1) return
 
-  const markComplete = (step: StepValue) => {
+    const nextStep = stepsOrder[index + 1]
+
     setCompleted((prev) => {
-      if (prev.includes(step)) return prev
-      const next = [...prev, step]
-      completedRef.current = next
-      return next
+      if (prev.includes(current)) return prev
+      const updated = [...prev, current]
+      completedRef.current = updated
+      return updated
     })
+
+    setCurrent(nextStep)
   }
+
+  const prev = () => {
+    const index = stepsOrder.indexOf(current)
+    if (index <= 0) return
+
+    setCurrent(stepsOrder[index - 1])
+  }
+
 
   return (
     <StepsContext.Provider
-      value={{ current, completed, goTo, markComplete, isUnlocked }}
+      value={{ current, completed, next, prev, isUnlocked }}
     >
       <TabsPrimitive.Root
         {...props}
         value={current}
-        onValueChange={(v) => goTo(v)}
+        onValueChange={() => {}} // no-op
         className={cn("group/tabs flex flex-col gap-2", className)}
       />
     </StepsContext.Provider>
