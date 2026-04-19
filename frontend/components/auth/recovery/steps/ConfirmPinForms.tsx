@@ -50,8 +50,10 @@ export function ConfirmPinForms({ email, onSuccess }: Props) {
           </CardDescription>
 
           <CardAction>
-            <Button onClick={() => prev()} className="w-full" variant="link" type="button">
-              Re-enviar
+            <Button className="w-full cursor-pointer" variant="link" 
+              type="button" onClick={() => prev()}
+            >
+              Email errado?
             </Button>
           </CardAction>
         </CardHeader>
