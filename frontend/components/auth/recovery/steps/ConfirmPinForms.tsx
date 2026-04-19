@@ -19,7 +19,7 @@ type Props = {
   onSuccess?: () => void
 }
 
-export function PinConfirmationStepForms({ onSuccess }: Props) {
+export function ConfirmPinForms({ onSuccess }: Props) {
   const { next, prev } = useSteps()
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()

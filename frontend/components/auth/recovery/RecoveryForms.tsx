@@ -1,6 +1,6 @@
 import { StepsRoot, StepsList, StepIndex, Step } from "@/components/ui/steps"
 import { RequestRecoveryForms } from "./steps/RequestRecoveryForms"
-import { PinConfirmationStepForms } from "./steps/PinConfirmationStepForms"
+import { ConfirmPinForms } from "./steps/ConfirmPinForms"
 import { ChangePasswordStepForms } from "./steps/ChangePasswordStepForms"
 
 type Props = {
@@ -22,7 +22,7 @@ export function RecoveryForms({ paths }: Props) {
         <RequestRecoveryForms paths={paths} />
       </Step>
       <Step value="confirm">
-        <PinConfirmationStepForms />
+        <ConfirmPinForms />
       </Step>
       <Step value="reset">
         <ChangePasswordStepForms paths={paths} />
