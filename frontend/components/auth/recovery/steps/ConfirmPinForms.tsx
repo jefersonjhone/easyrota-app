@@ -17,7 +17,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp"
 
 // Import Icons
-import { RefreshCwIcon } from "lucide-react"
+import { ArrowsClockwiseIcon } from "@phosphor-icons/react"
 
 type Props = {
   email: string | null
@@ -69,7 +69,7 @@ export function ConfirmPinForms({ email, onSuccess }: Props) {
                 Código de Confirmação
               </FieldLabel>
               <Button variant="outline" size="xs">
-                <RefreshCwIcon />
+                <ArrowsClockwiseIcon size={32} />
                 Re-enviar código
               </Button>
             </div>
