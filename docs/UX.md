@@ -68,3 +68,55 @@ TanStack provides tools, such as:
 - [TanStack Form](https://tanstack.com/form/latest) for better forms building
 
 
+## How to Contribute
+
+Our front-end application is found under `frontend`, 
+and it has the following structure:
+- `assets/`: to store images, icons, etc.
+- `components/`: all components used by the application
+- `components/ui/`: base components, such as shadcn's or custom ones.
+- `components/<slice>/`: components used by a specific feature.
+- `pages/`: all pages of our application. The structure is 1:1 with our application route.
+- `lib/`: common functions, types, etc.
+
+### Creating a new page
+
+Open your terminal and type:
+
+```sh
+bun dev
+```
+
+Open `@/pages/` and create a new react file, matching with the route you want.
+
+Automatically, our tanstack router will notice a file was created inside `@/pages/`
+and will fill your file with the needed logic to register this route
+inside `routeTree.gen.ts`.
+
+### Adding components
+
+Make sure, you component already exists inside `@/components/ui`.
+If the component you wish does not exists, run:
+
+```sh
+bunx --bun shadcn@latest add <component>
+```
+
+Refer to Shadcn's documentation to add the correct component.
+Remember to use `bun` for this task.
+
+### Custom styling
+
+If you need to style some piece of your UI, first, try to do this using Tailwind CSS.
+Otherwise, you may create a CSS file.
+
+Some stylings are impossible (or very ugly) to do with Tailwind, so, 
+you may create a CSS file and use it instead.
+
+#### Custom backgrounds
+
+[Magic Pattern](https://www.magicpattern.design/) is an awesome resource to create
+fancy background to our UI, so it won't look lifeless and empty.
+
+In this case, I encourage you to create a separate CSS file in order to use their
+background images.
