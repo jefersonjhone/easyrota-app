@@ -1,5 +1,9 @@
 # EasyRota
 
+## Contributing
+
+Read [Development Guide for UX/UI](./docs/UX.md) for front-end development.
+
 ## Tooling
 
 This repository uses:
