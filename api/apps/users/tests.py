@@ -1,8 +1,10 @@
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
+from django.contrib.auth import get_user_model
 
 from .models import CivilServantProfile, CustomUser, StudentProfile
 
+User = get_user_model()
 
 class RegisterViewTests(APITestCase):
     """Exercise the account creation contract exposed by the API."""
@@ -87,3 +89,60 @@ class RegisterViewTests(APITestCase):
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "civil_servant_id" in response.data
+
+
+class LoginViewTests(APITestCase):
+    """Validate authentication and token generation."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.url = "/api/login/"
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
+            email="teste@email.com",
+            full_name="Teste Usuario",
+            password="12345678"
+        )
+
+    def test_login_success(self):
+        """Ensure valid credentials authenticate user successfully and return JWT tokens."""
+
+        payload = {
+            "email": "teste@email.com",
+            "password": "12345678"
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert "tokens" in response.data
+
+
+    def test_login_wrong_password(self):
+        """Invalid password rejects authentication with 400 response."""
+        
+        payload = {
+            "email": "teste@email.com",
+            "password": "wrong_password"
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "detail" in response.data
+
+
+    def test_user_not_found(self):
+        """Non-existent user returns authentication error."""
+
+        payload = {
+            "email": "userErrado@email.com",
+            "password": "12345678"
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "detail" in response.data

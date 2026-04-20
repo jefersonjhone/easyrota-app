@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 
 from .models import CivilServantProfile, CustomUser, StudentProfile
@@ -125,3 +126,25 @@ class RegistrationSerializer(serializers.Serializer):
             "profile_type": profile_type,
             "profile": profile_data,
         }
+
+
+class LoginSerializer(serializers.Serializer):
+    """Validate sign in"""
+
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, data):
+        """Check if email and password are valid fields"""
+        email = data["email"]
+        password = data["password"]
+
+        user = authenticate(email=email, password=password)
+        if (user is None):
+            raise serializers.ValidationError({
+                "detail": "Credenciais inválidas"
+            })
+        
+        data["user"] = user
+
+        return data

@@ -1,13 +1,11 @@
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegistrationSerializer
-
-
-# Create your views here.
+from .serializers import RegistrationSerializer, LoginSerializer, UserSummarySerializer
 
 
 @api_view(["GET"])
@@ -39,3 +37,26 @@ class RegisterView(generics.GenericAPIView):
         }
 
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+class LoginView(APIView):
+    """Authenticate users and return JWT tokens"""
+
+    permission_classes = [AllowAny]
+
+    def post (self, request):
+        """Validate the payload and authenticates user, generating JWT tokens"""
+
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+
+        tokens = RefreshToken.for_user(user)
+        
+        return Response({
+            "user": UserSummarySerializer(user).data,
+            "tokens": {
+                "refresh": str(tokens),
+                "access": str(tokens.access_token),
+            }
+        }, status=status.HTTP_200_OK)
