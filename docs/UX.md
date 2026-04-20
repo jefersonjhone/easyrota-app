@@ -48,14 +48,11 @@ by injecting css into the html code directly.
 See [Tailwind's documentation](https://tailwindcss.com/docs/styling-with-utility-classes) 
 to understand the classes they provide.
 
-### Lucid Icons
+### Phosphor Icons
 
-Our icon library is [Lucid](https://lucide.dev/icons/), 
+Our icon library is [Phosphor](https://phosphoricons.com/), 
 just browse their icon list and copy the JSX code.
 
-> [!WARNING]
-> I'll replace it by [Phosphor](https://phosphoricons.com/) 
-> to follow our design's rules.
 
 ### TanStack
 
