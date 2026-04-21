@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 
-
 class CustomUserManager(BaseUserManager):
     """Custom manager that authenticates users by email."""
 
@@ -86,3 +85,29 @@ class CivilServantProfile(models.Model):
 
     def __str__(self):
         return f"CivilServantProfile({self.user.email})"
+
+class DriverProfile(models.Model):
+    """Profile data specific to driver accounts."""
+
+    user = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="driver_profile",
+    )
+    cnh = models.CharField(max_length=15, unique=True)
+
+    def __str__(self):
+        return f"DriverProfile({self.user.email})"
+
+class AdministratorProfile(models.Model):
+    """Profile data specific to administrator accounts."""
+
+    user = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="admin_profile",
+    )
+    role = models.CharField(max_length=30) 
+
+    def __str__(self):
+        return f"AdministratorProfile({self.user.email})"
