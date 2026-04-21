@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './pages/__root'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecoveryRouteImport } from './pages/recovery'
 import { Route as LoginRouteImport } from './pages/login'
+import { Route as AdminRouteImport } from './pages/admin'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -28,32 +29,41 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRoutesByTo {
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/login' | '/recovery' | '/signup'
+  fullPaths: '/admin' | '/login' | '/recovery' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/recovery' | '/signup'
-  id: '__root__' | '/login' | '/recovery' | '/signup'
+  to: '/admin' | '/login' | '/recovery' | '/signup'
+  id: '__root__' | '/admin' | '/login' | '/recovery' | '/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
   RecoveryRoute: typeof RecoveryRoute
   SignupRoute: typeof SignupRoute
@@ -82,10 +92,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
   RecoveryRoute: RecoveryRoute,
   SignupRoute: SignupRoute,
