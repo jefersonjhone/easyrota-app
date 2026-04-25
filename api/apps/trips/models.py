@@ -8,7 +8,7 @@ class Bus(models.Model):
     Stores vehicle identification, capacity, and assigned personnel.
     """
 
-    number_plate = models.CharField(max_length=10)
+    number_plate = models.CharField(max_length=10, unique=True)
     seating_capacity = models.IntegerField()
 
     driver = models.ForeignKey('users.DriverProfile', on_delete=models.CASCADE)
