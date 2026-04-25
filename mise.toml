@@ -2,6 +2,11 @@
 bun = "1.3.12"
 python = "3.12" 
 
+# backend tasks
+[tasks."api.docs"]
+description = "Alias for the documentation dev server"
+alias = "api.docs.serve"
+
  [tasks."api.docs.build"]
 description = "Generate the final static HTML documentation"
 dir="api"
@@ -16,11 +21,6 @@ run = "rm -rf docs/_build"
 description = "Start the documentation server with hot-reload"
 dir="api"
 run = "poetry run sphinx-autobuild docs docs/_build/html --watch apps --port 5000 --ignore '**/_build/**'"
-
-[tasks.docs]
-description = "Alias for the documentation dev server"
-alias = "docs:api:serve"
-
 
 [tasks."api.linter"]
 description = "Run Ruff linter on the api/ directory"
@@ -41,3 +41,18 @@ run = "poetry run pytest "
 description = "Run pytest with coverage on the api/ directory"
 dir="api"
 run = "poetry run pytest --cov"
+
+[tasks."api.server"]
+description = "Run Django development server"
+dir = "api"
+run = "poetry run python manage.py runserver"
+
+[tasks."api.migrate"]
+description = "Apply pending database migrations"
+dir = "api"
+run = "poetry run python manage.py migrate"
+
+[tasks."api.makemigrations"]
+description = "Create new migration files based on model changes"
+dir = "api"
+run = "poetry run python manage.py makemigrations"
