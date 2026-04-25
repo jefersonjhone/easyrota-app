@@ -1,17 +1,19 @@
-from rest_framework import generics, status
+from rest_framework import generics
+from rest_framework import status
 from rest_framework.decorators import api_view
-from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegistrationSerializer, LoginSerializer, UserSummarySerializer
+from .serializers import LoginSerializer
+from .serializers import RegistrationSerializer
+from .serializers import UserSummarySerializer
 
 
 @api_view(["GET"])
 def health_check(request):
     """Simple liveness endpoint used by the app and tests."""
-
     return Response({"status": "ok"})
 
 
@@ -23,7 +25,6 @@ class RegisterView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         """Validate the payload, persist the user, and mint refresh/access tokens."""
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         created = serializer.save()
@@ -44,19 +45,21 @@ class LoginView(APIView):
 
     permission_classes = [AllowAny]
 
-    def post (self, request):
+    def post(self, request):
         """Validate the payload and authenticates user, generating JWT tokens"""
-
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
 
         tokens = RefreshToken.for_user(user)
-        
-        return Response({
-            "user": UserSummarySerializer(user).data,
-            "tokens": {
-                "refresh": str(tokens),
-                "access": str(tokens.access_token),
-            }
-        }, status=status.HTTP_200_OK)
+
+        return Response(
+            {
+                "user": UserSummarySerializer(user).data,
+                "tokens": {
+                    "refresh": str(tokens),
+                    "access": str(tokens.access_token),
+                },
+            },
+            status=status.HTTP_200_OK,
+        )

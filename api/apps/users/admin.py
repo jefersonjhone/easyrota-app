@@ -1,7 +1,14 @@
 from django.contrib import admin
-from .models import CustomUser, StudentProfile, CivilServantProfile, DriverProfile, AdministratorProfile
+
+from .models import AdministratorProfile
+from .models import CivilServantProfile
+from .models import CustomUser
+from .models import DriverProfile
+from .models import StudentProfile
+
 
 # Register your models here.
+
 
 class CustomUserList(admin.ModelAdmin):
     list_display = ("email", "full_name", "is_staff", "is_active", "date_joined")
@@ -12,9 +19,21 @@ class CustomUserList(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("full_name",)}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        (
+            "Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
+
 
 class StudentProfileList(admin.ModelAdmin):
     list_display = ("student_id", "get_email", "get_name")
@@ -28,6 +47,7 @@ class StudentProfileList(admin.ModelAdmin):
     def get_name(self, obj):
         return obj.user.full_name
 
+
 class DriverProfileList(admin.ModelAdmin):
     list_display = ("cnh", "get_email")
     search_fields = ("cnh", "user__email")
@@ -35,6 +55,7 @@ class DriverProfileList(admin.ModelAdmin):
     @admin.display(description="Email")
     def get_email(self, obj):
         return obj.user.email
+
 
 admin.site.register(CustomUser, CustomUserList)
 admin.site.register(StudentProfile, StudentProfileList)

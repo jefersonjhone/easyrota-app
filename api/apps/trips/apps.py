@@ -1,4 +1,5 @@
 from django.apps import AppConfig
 
+
 class TripsConfig(AppConfig):
-    name = 'apps.trips'
+    name = "apps.trips"
