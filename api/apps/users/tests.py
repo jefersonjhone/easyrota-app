@@ -1,10 +1,15 @@
-from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
 from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
 
-from .models import CivilServantProfile, CustomUser, StudentProfile
+from .models import CivilServantProfile
+from .models import CustomUser
+from .models import StudentProfile
+
 
 User = get_user_model()
+
 
 class RegisterViewTests(APITestCase):
     """Exercise the account creation contract exposed by the API."""
@@ -15,7 +20,6 @@ class RegisterViewTests(APITestCase):
 
     def test_register_student_creates_user_profile_and_tokens(self):
         """A student registration should create both records and return JWTs."""
-
         payload = {
             "email": "aluno@discente.uefs.br",
             "full_name": "Aluno Exemplo",
@@ -36,7 +40,6 @@ class RegisterViewTests(APITestCase):
 
     def test_register_civil_servant_creates_user_profile_and_tokens(self):
         """A civil servant registration should create both records and return JWTs."""
-
         payload = {
             "email": "servidor@uefs.br",
             "full_name": "Servidor Exemplo",
@@ -59,7 +62,6 @@ class RegisterViewTests(APITestCase):
 
     def test_register_rejects_password_mismatch(self):
         """The API should reject payloads with inconsistent passwords."""
-
         payload = {
             "email": "aluno2@discente.uefs.br",
             "full_name": "Aluno Exemplo",
@@ -76,7 +78,6 @@ class RegisterViewTests(APITestCase):
 
     def test_register_requires_profile_specific_field(self):
         """Each profile type must send its own identifier."""
-
         payload = {
             "email": "servidor2@uefs.br",
             "full_name": "Servidor Exemplo",
@@ -101,46 +102,30 @@ class LoginViewTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(
-            email="teste@email.com",
-            full_name="Teste Usuario",
-            password="12345678"
+            email="teste@email.com", full_name="Teste Usuario", password="12345678"
         )
 
     def test_login_success(self):
         """Ensure valid credentials authenticate user successfully and return JWT tokens."""
-
-        payload = {
-            "email": "teste@email.com",
-            "password": "12345678"
-        }
+        payload = {"email": "teste@email.com", "password": "12345678"}
 
         response = self.client.post(self.url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert "tokens" in response.data
 
-
     def test_login_wrong_password(self):
         """Invalid password rejects authentication with 400 response."""
-        
-        payload = {
-            "email": "teste@email.com",
-            "password": "wrong_password"
-        }
+        payload = {"email": "teste@email.com", "password": "wrong_password"}
 
         response = self.client.post(self.url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "detail" in response.data
 
-
     def test_user_not_found(self):
         """Non-existent user returns authentication error."""
-
-        payload = {
-            "email": "userErrado@email.com",
-            "password": "12345678"
-        }
+        payload = {"email": "userErrado@email.com", "password": "12345678"}
 
         response = self.client.post(self.url, payload, format="json")
 

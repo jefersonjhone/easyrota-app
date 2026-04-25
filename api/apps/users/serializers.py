@@ -1,8 +1,10 @@
-from django.db import transaction
 from django.contrib.auth import authenticate
+from django.db import transaction
 from rest_framework import serializers
 
-from .models import CivilServantProfile, CustomUser, StudentProfile
+from .models import CivilServantProfile
+from .models import CustomUser
+from .models import StudentProfile
 
 
 class UserSummarySerializer(serializers.ModelSerializer):
@@ -51,12 +53,10 @@ class RegistrationSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         """Normalize the incoming email before uniqueness checks."""
-
         return value.strip().lower()
 
     def validate(self, attrs):
         """Enforce password confirmation and profile-specific payload rules."""
-
         if attrs["password"] != attrs["password_confirmation"]:
             raise serializers.ValidationError({
                 "password_confirmation": "Passwords do not match."
@@ -91,7 +91,6 @@ class RegistrationSerializer(serializers.Serializer):
     @transaction.atomic
     def create(self, validated_data):
         """Create the user and exactly one associated profile atomically."""
-
         profile_type = validated_data.pop("profile_type")
         password = validated_data.pop("password")
         validated_data.pop("password_confirmation", None)
@@ -111,7 +110,6 @@ class RegistrationSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         """Shape the response payload returned by the registration endpoint."""
-
         user = instance["user"]
         profile = instance["profile"]
         profile_type = instance["profile_type"]
@@ -140,11 +138,9 @@ class LoginSerializer(serializers.Serializer):
         password = data["password"]
 
         user = authenticate(email=email, password=password)
-        if (user is None):
-            raise serializers.ValidationError({
-                "detail": "Credenciais inválidas"
-            })
-        
+        if user is None:
+            raise serializers.ValidationError({"detail": "Credenciais inválidas"})
+
         data["user"] = user
 
         return data

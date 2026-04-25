@@ -16,5 +16,5 @@ DATABASES = {
 }
 
 
-LOGGING['loggers']['api']['level'] = 'INFO'
-LOGGING['handlers']['console']['formatter'] = 'rich'
+LOGGING["loggers"]["api"]["level"] = "INFO"
+LOGGING["handlers"]["console"]["formatter"] = "rich"

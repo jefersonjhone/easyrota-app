@@ -1,6 +1,8 @@
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+
 
 class CustomUserManager(BaseUserManager):
     """Custom manager that authenticates users by email."""
@@ -9,7 +11,6 @@ class CustomUserManager(BaseUserManager):
 
     def _create_user(self, email, password, **extra_fields):
         """Create and persist a user with normalized email credentials."""
-
         if not email:
             raise ValueError("The email field must be set.")
 
@@ -21,14 +22,12 @@ class CustomUserManager(BaseUserManager):
 
     def create_user(self, email, password=None, **extra_fields):
         """Create a regular user account."""
-
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password=None, **extra_fields):
         """Create a superuser account with administrative access."""
-
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
@@ -39,6 +38,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
 
         return self._create_user(email, password, **extra_fields)
+
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     """Application user model that uses email as the login identifier."""
@@ -57,6 +57,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+
 class StudentProfile(models.Model):
     """Profile data specific to student accounts."""
 
@@ -69,6 +70,7 @@ class StudentProfile(models.Model):
 
     def __str__(self):
         return f"StudentProfile({self.user.email})"
+
 
 class CivilServantProfile(models.Model):
     """Profile data specific to civil servant accounts."""
@@ -83,6 +85,7 @@ class CivilServantProfile(models.Model):
     def __str__(self):
         return f"CivilServantProfile({self.user.email})"
 
+
 class DriverProfile(models.Model):
     """Profile data specific to driver accounts."""
 
@@ -96,6 +99,7 @@ class DriverProfile(models.Model):
     def __str__(self):
         return f"DriverProfile({self.user.email})"
 
+
 class AdministratorProfile(models.Model):
     """Profile data specific to administrator accounts."""
 
@@ -104,7 +108,7 @@ class AdministratorProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="admin_profile",
     )
-    role = models.CharField(max_length=30) 
+    role = models.CharField(max_length=30)
 
     def __str__(self):
         return f"AdministratorProfile({self.user.email})"

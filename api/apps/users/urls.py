@@ -1,5 +1,9 @@
 from django.urls import path
-from .views import RegisterView, LoginView, health_check
+
+from .views import LoginView
+from .views import RegisterView
+from .views import health_check
+
 
 urlpatterns = [
     path("health/", health_check),
