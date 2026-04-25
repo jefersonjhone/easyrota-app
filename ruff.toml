@@ -5,6 +5,13 @@ show-fixes = true
 src = ["api", "test"]
 target-version = "py312"
 
+exclude = [
+  ".git",
+  ".venv",
+  "__pycache__",
+  "**/migrations",
+]
+
 [format]
 docstring-code-format = true
 docstring-code-line-length = 60
