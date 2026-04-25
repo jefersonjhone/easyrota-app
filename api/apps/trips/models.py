@@ -24,8 +24,8 @@ class Route(models.Model):
 
     origin = models.CharField(max_length=50)
     destiny = models.CharField(max_length=50)
-    departure_time = models.DateTimeField()
-    arrival_time = models.DateTimeField()
+    departure_time = models.TimeField()
+    arrival_time = models.TimeField()
 
     administrator = models.ForeignKey('users.AdministratorProfile', on_delete=models.CASCADE)
     
@@ -60,7 +60,7 @@ class Occurrence(models.Model):
     """
     
     #Lembrar de Adicionar os status de ocorrências
-    STATUS_OCCURENCE = [
+    STATUS_OCCURRENCE = [
         ("EM RISCO", "Em risco"),
         ("CONFIRMADA", "Confirmada")
     ]
@@ -68,7 +68,7 @@ class Occurrence(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     event_date = models.DateField()
-    status = models.CharField(max_length=30, choices=STATUS_OCCURENCE, default='')
+    status = models.CharField(max_length=30, choices=STATUS_OCCURRENCE, default='')
 
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     administrator = models.ForeignKey('users.AdministratorProfile', on_delete=models.CASCADE)
