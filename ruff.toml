@@ -4,64 +4,7 @@ preview = true
 show-fixes = true
 src = ["api", "test"]
 target-version = "py312"
-line-length = 88
-
-exclude = [
-    ".git",
-    ".venv",
-    "__pycache__",
-    "migrations",
-    "docs/_build",
-    "dist",
-    "node_modules",
-]
-
-[lint]
-select = [
-    "F",    # Pyflakes
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "I",    # isort
-    "D",    # pydocstyle
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear
-    "SIM",  # flake8-simplify
-    "C4",   # flake8-comprehensions
-    "DJ",   # flake8-django
-    "RET",  # flake8-return
-    "RSE",  # flake8-raise
-    "PT",   # flake8-pytest-style
-    "RUF",  # Ruff-specific rules
-    "S",    # Security issues (bandit)
-    "C90",  # McCabe complexity
-]
-
-ignore = [
-    "E501",   # line-too-long
-    "D107",   # Missing docstring in __init__
-    "D203",   # 1 blank line before class docstring
-    "D213",   # Multi-line docstring summary should start at second line
-    "DJ001",  # Avoid null=True on string-based fields
-    "PT011",  # pytest.raises without match parameter
-    "SIM108", # Use ternary operator instead of if-else-block
-]
-
-
-[lint.isort]
-lines-after-imports = 2   
-known-first-party = ["api"]
-known-third-party = ["django", "rest_framework", "pytest"]
-force-single-line = true
-
-[lint.pydocstyle]
-convention = "google"
-
-[lint.flake8-pytest-style]
-fixture-parentheses = false
-mark-parentheses = false
 
 [format]
-quote-style = "double"
-indent-style = "space"
 docstring-code-format = true
 docstring-code-line-length = 60
