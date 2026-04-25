@@ -1,9 +1,8 @@
 from django.shortcuts import render
-from rest_framework import viewsets
-from rest_framework import permissions
+from rest_framework import viewsets, permissions, generics
 
-from .models import Bus
-from .serializers import BusSerializer
+from .models import Bus, Route
+from .serializers import BusSerializer, RouteSerializer
 from ..users.permissions import IsDriverReadOnly
 
 class BusViewSet(viewsets.ModelViewSet):
@@ -20,3 +19,11 @@ class BusViewSet(viewsets.ModelViewSet):
 
         
         return super().get_permissions()
+
+class RouteListCreateView(generics.ListCreateAPIView):
+    queryset = Route.objects.all()
+    serializer_class = RouteSerializer
+
+class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Route.objects.all()
+    serializer_class = RouteSerializer

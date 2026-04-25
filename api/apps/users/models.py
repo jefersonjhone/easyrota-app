@@ -40,7 +40,6 @@ class CustomUserManager(BaseUserManager):
 
         return self._create_user(email, password, **extra_fields)
 
-
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     """Application user model that uses email as the login identifier."""
 
@@ -58,7 +57,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-
 class StudentProfile(models.Model):
     """Profile data specific to student accounts."""
 
@@ -71,7 +69,6 @@ class StudentProfile(models.Model):
 
     def __str__(self):
         return f"StudentProfile({self.user.email})"
-
 
 class CivilServantProfile(models.Model):
     """Profile data specific to civil servant accounts."""
