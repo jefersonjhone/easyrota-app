@@ -19,3 +19,17 @@ LOGGING["handlers"]["file"] = {
 
 LOGGING["loggers"]["api"]["handlers"].append("file")
 LOGGING["loggers"]["api"]["level"] = "DEBUG"
+
+INSTALLED_APPS += [
+    "drf_spectacular",
+]
+
+REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"] = "drf_spectacular.openapi.AutoSchema"
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API EasyRota - Dev",
+    "DESCRIPTION": "Development Enviroment",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": True,
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+}
