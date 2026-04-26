@@ -4,8 +4,6 @@ import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import type { ReactElement } from "react"
 
-import "./style.css"
-
 import adminImage from "@/assets/admin/admin.jpg"
 import analyticsImage from "@/assets/admin/analytics.jpg"
 import busFleetImage from "@/assets/admin/bus-fleet.jpg"
