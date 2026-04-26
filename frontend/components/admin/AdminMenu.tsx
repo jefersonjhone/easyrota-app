@@ -50,13 +50,13 @@ const Action = ({ title, href, img, children  }: ActionProps) => {
 const AdminMenu = () => {
   return (
     <main className="flex flex-col gap-6 py-10">
-      <h1 className="text-center text-4xl">Painel de Controle</h1>
-      <p className="text-center">
+      <h1 className="text-center text-4xl font-heading font-medium">Painel de Controle</h1>
+      <p className="text-center font-heading font-base">
         Bem-vindo ao centro de gestão {" "} 
         <span>EasyRota</span> {" "} 
         Uninfra
       </p>
-      <Separator />
+      <Separator className="max-w-xl mx-auto" />
       <section className="mx-auto grid w-full max-w-3xl grid-cols-2 items-stretch gap-8 px-4">
         <Action title="Frota Ativa" href="/travel" img={busInRouteImage}>
           <p>Veja a ocupação em tempo real.</p>
