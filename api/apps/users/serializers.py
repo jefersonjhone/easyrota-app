@@ -2,9 +2,7 @@ from django.contrib.auth import authenticate
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import CivilServantProfile
-from .models import CustomUser
-from .models import StudentProfile
+from .models import CivilServantProfile, CustomUser, StudentProfile
 
 
 class UserSummarySerializer(serializers.ModelSerializer):
@@ -12,7 +10,7 @@ class UserSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ["id", "email", "full_name"]
+        fields = ("id", "email", "full_name")
 
 
 class StudentProfileSerializer(serializers.ModelSerializer):
@@ -20,7 +18,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentProfile
-        fields = ["id", "student_id"]
+        fields = ("id", "student_id")
 
 
 class CivilServantProfileSerializer(serializers.ModelSerializer):
@@ -28,7 +26,7 @@ class CivilServantProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CivilServantProfile
-        fields = ["id", "civil_servant_id"]
+        fields = ("id", "civil_servant_id")
 
 
 class RegistrationSerializer(serializers.Serializer):
@@ -73,7 +71,9 @@ class RegistrationSerializer(serializers.Serializer):
                 })
             if civil_servant_id:
                 raise serializers.ValidationError({
-                    "civil_servant_id": "Do not send this field for student registration."
+                    "civil_servant_id": (
+                        "Do not send this field for student registration."
+                    )
                 })
 
         if profile_type == "civil-servant":
@@ -83,7 +83,9 @@ class RegistrationSerializer(serializers.Serializer):
                 })
             if student_id:
                 raise serializers.ValidationError({
-                    "student_id": "Do not send this field for civil servant registration."
+                    "student_id": (
+                        "Do not send this field for civil servant registration."
+                    )
                 })
 
         return attrs

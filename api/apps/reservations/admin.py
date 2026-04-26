@@ -1,9 +1,6 @@
 from django.contrib import admin
 
-from .models import Guest
-from .models import Punishment
-from .models import Reservation
-
+from .models import Guest, Punishment, Reservation
 
 # Register your models here.
 

@@ -1,16 +1,13 @@
-from rest_framework import generics
-from rest_framework import permissions
-from rest_framework import viewsets
+from rest_framework import generics, permissions, viewsets
 
 from ..users.permissions import IsDriverReadOnly
-from .models import Bus
-from .models import Route
-from .serializers import BusSerializer
-from .serializers import RouteSerializer
+from .models import Bus, Route
+from .serializers import BusSerializer, RouteSerializer
 
 
 class BusViewSet(viewsets.ModelViewSet):
-    """This view handles all CRUD operations, depending on the user type: administrator or driver."""
+    """This view handles all CRUD operations, depending on the user type:
+    administrator or driver."""
 
     queryset = Bus.objects.all()
     serializer_class = BusSerializer

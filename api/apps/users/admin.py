@@ -1,11 +1,12 @@
 from django.contrib import admin
 
-from .models import AdministratorProfile
-from .models import CivilServantProfile
-from .models import CustomUser
-from .models import DriverProfile
-from .models import StudentProfile
-
+from .models import (
+    AdministratorProfile,
+    CivilServantProfile,
+    CustomUser,
+    DriverProfile,
+    StudentProfile,
+)
 
 # Register your models here.
 

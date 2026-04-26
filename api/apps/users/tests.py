@@ -1,12 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.test import APIClient
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 
-from .models import CivilServantProfile
-from .models import CustomUser
-from .models import StudentProfile
-
+from .models import CivilServantProfile, CustomUser, StudentProfile
 
 User = get_user_model()
 
@@ -106,7 +102,8 @@ class LoginViewTests(APITestCase):
         )
 
     def test_login_success(self):
-        """Ensure valid credentials authenticate user successfully and return JWT tokens."""
+        """Ensure valid credentials authenticate user successfully
+        and return JWT tokens."""
         payload = {"email": "teste@email.com", "password": "12345678"}
 
         response = self.client.post(self.url, payload, format="json")

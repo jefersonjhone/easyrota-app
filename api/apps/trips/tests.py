@@ -3,11 +3,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..users.models import AdministratorProfile
-from ..users.models import CustomUser
-from ..users.models import DriverProfile
+from ..users.models import AdministratorProfile, CustomUser, DriverProfile
 from .models import Bus
-
 
 User = get_user_model()
 
@@ -161,6 +158,7 @@ class RouteAPITests(APITestCase):
             "administrator": self.admin_id,
         }
 
+        self.client.force_authenticate(user=self.admin)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["origin"], "Feira de Santana")

@@ -1,19 +1,18 @@
 from django.db import models
 
 
-# Create your models here.
-
-
 class Reservation(models.Model):
-    """Represents a seat reservation made by a student or civil servant for a specific trip.
+    """Represents a seat reservation made by a student or civil servant
+    for a specific trip.
+
     Tracks check-in status and queue position.
     """
 
-    STATUS_RESERVATION = [
+    STATUS_RESERVATION = (
         ("PENDENTE", "Pendente"),
         ("CONFIRMADA", "Confirmada"),
         ("LISTA SECUNDÁRIA", "Lista Secundária"),
-    ]
+    )
 
     checkin_date = models.DateTimeField(null=True, blank=True)
     check_in = models.BooleanField(default=False)
@@ -52,8 +51,8 @@ class Guest(models.Model):
 
 
 class Punishment(models.Model):
-    """Records a penalty applied to a student regarding a specific reservation (For missing a trip without cancellation).
-    """
+    """Records a penalty applied to a student regarding a specific reservation
+    (For missing a trip without cancellation)."""
 
     description = models.CharField(max_length=255)
     value = models.IntegerField()

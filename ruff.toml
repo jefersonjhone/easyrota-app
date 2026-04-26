@@ -12,6 +12,16 @@ exclude = [
   "**/migrations",
 ]
 
+[lint]
+select = [
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "I",   # import sorting
+]
+
+[lint.per-file-ignores]
+"api/config/settings/*.py" = ["F403", "F405"]
+
 [format]
 docstring-code-format = true
 docstring-code-line-length = 60

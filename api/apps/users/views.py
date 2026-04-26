@@ -1,14 +1,11 @@
-from rest_framework import generics
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import LoginSerializer
-from .serializers import RegistrationSerializer
-from .serializers import UserSummarySerializer
+from .serializers import LoginSerializer, RegistrationSerializer, UserSummarySerializer
 
 
 @api_view(["GET"])
@@ -21,7 +18,7 @@ class RegisterView(generics.GenericAPIView):
     """Create a new account and return JWT tokens for immediate use."""
 
     serializer_class = RegistrationSerializer
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
         """Validate the payload, persist the user, and mint refresh/access tokens."""
@@ -43,7 +40,7 @@ class RegisterView(generics.GenericAPIView):
 class LoginView(APIView):
     """Authenticate users and return JWT tokens"""
 
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         """Validate the payload and authenticates user, generating JWT tokens"""

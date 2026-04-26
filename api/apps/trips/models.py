@@ -1,9 +1,6 @@
 from django.db import models
 
 
-# Create your models here.
-
-
 class Bus(models.Model):
     """Represents a bus in the fleet available for trips.
     Stores vehicle identification, capacity, and assigned personnel.
@@ -22,8 +19,7 @@ class Bus(models.Model):
 
 
 class Route(models.Model):
-    """Defines a travel route with specific origin, destination, and expected times.
-    """
+    """Defines a travel route with specific origin, destination, and expected times."""
 
     origin = models.CharField(max_length=50)
     destiny = models.CharField(max_length=50)
@@ -43,7 +39,7 @@ class Trip(models.Model):
     to a date and its current operational status.
     """
 
-    STATUS_TRIP = [("EM RISCO", "Em Risco"), ("CONFIRMADA", "Confirmada")]
+    STATUS_TRIP = (("EM RISCO", "Em Risco"), ("CONFIRMADA", "Confirmada"))
 
     trip_date = models.DateField()
     status = models.CharField(max_length=15, choices=STATUS_TRIP, default="CONFIRMADA")
@@ -58,11 +54,10 @@ class Trip(models.Model):
 
 
 class Occurrence(models.Model):
-    """Logs an incident or event that happened during a specific trip.
-    """
+    """Logs an incident or event that happened during a specific trip."""
 
     # Lembrar de Adicionar os status de ocorrências
-    STATUS_OCCURRENCE = [("EM RISCO", "Em risco"), ("CONFIRMADA", "Confirmada")]
+    STATUS_OCCURRENCE = (("EM RISCO", "Em risco"), ("CONFIRMADA", "Confirmada"))
 
     title = models.CharField(max_length=100)
     description = models.TextField()

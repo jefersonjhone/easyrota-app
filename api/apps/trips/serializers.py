@@ -1,12 +1,10 @@
 import unicodedata
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from rest_framework import serializers
 
-from .models import Bus
-from .models import Route
+from .models import Bus, Route
 
 
 class BusSerializer(serializers.ModelSerializer):
@@ -54,9 +52,9 @@ class RouteSerializer(serializers.ModelSerializer):
 
     def _check_times(self, departure, arrival):
         if arrival and departure:
-            hoje = date.today()
-            departure_date = datetime.combine(hoje, departure)
-            arrival_date = datetime.combine(hoje, arrival)
+            today = datetime.now(ZoneInfo("America/Sao_Paulo")).date()
+            departure_date = datetime.combine(today, departure)
+            arrival_date = datetime.combine(today, arrival)
 
             if arrival_date <= departure_date:
                 arrival_date += timedelta(days=1)
@@ -65,7 +63,9 @@ class RouteSerializer(serializers.ModelSerializer):
 
             if seconds < 1800:
                 raise serializers.ValidationError({
-                    "arrival_time": "Uma viagem intermunicipal precisa durar no mínimo 30 minutos."
+                    "arrival_time": (
+                        "Uma viagem intermunicipal precisa durar no mínimo 30 minutos."
+                    )
                 })
             if seconds > 43200:
                 raise serializers.ValidationError({
