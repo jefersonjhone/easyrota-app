@@ -36,7 +36,7 @@ const Action = ({ title, href, img, children  }: ActionProps) => {
       </CardHeader>
       <CardFooter className="mt-auto">
         <Link to={href} className="w-full">
-          <Button className="w-full cursor-pointer" variant="outline">
+          <Button className="w-full cursor-pointer">
             Gerenciar
           </Button>
         </Link>
