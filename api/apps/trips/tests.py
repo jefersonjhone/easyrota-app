@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from ..users.models import AdministratorProfile, CustomUser, DriverProfile
-from .models import Bus
+from .models import Bus, Route
 
 User = get_user_model()
 
@@ -13,7 +13,7 @@ class BusViewTests(APITestCase):
     """Tests all request operations for buses."""
 
     def setUp(self):
-        self.url = "/api/buses/"
+        self.url = reverse("bus-list")
 
         self.admin = CustomUser.objects.create_superuser(
             email="admin@teste.com", password="12345678"
@@ -70,7 +70,8 @@ class BusViewTests(APITestCase):
         )
 
         self.client.force_authenticate(user=self.regular_user)
-        response = self.client.get(f"/api/buses/{bus.id}/", format="json")
+        url = reverse("bus-detail", args=[bus.id])
+        response = self.client.get(url, format="json")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -119,9 +120,8 @@ class BusViewTests(APITestCase):
             "administrator": self.admin.id,
         }
 
-        response = self.client.put(
-            f"/api/buses/{bus.id}/", update_payload, format="json"
-        )
+        url = reverse("bus-detail", args=[bus.id])
+        response = self.client.put(url, update_payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["number_plate"] == "XYZ321"
@@ -136,18 +136,23 @@ class BusViewTests(APITestCase):
             administrator_id=self.payload["administrator"],
         )
         self.client.force_authenticate(user=self.admin)
-
-        response = self.client.delete(f"/api/buses/{bus.id}/", format="json")
+        url = reverse("bus-detail", args=[bus.id])
+        response = self.client.delete(url, format="json")
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 class RouteAPITests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email="admin@teste.com", password="123")
-        self.admin = AdministratorProfile.objects.create(user=self.user)
+        self.user = User.objects.create_user(email="user@teste.com", password="123")
+
+        self.admin = CustomUser.objects.create_superuser(
+            email="admin@teste.com", password="12345678"
+        )
+        self.admin_profile = AdministratorProfile.objects.create(
+            user=self.admin, role="Administrator"
+        )
         self.url = reverse("route-list-create")
-        self.admin_id = self.admin.id
 
     def test_create_route_successfully(self):
         payload = {
@@ -155,10 +160,9 @@ class RouteAPITests(APITestCase):
             "destiny": "Salvador",
             "departure_time": "08:00:00",
             "arrival_time": "10:00:00",
-            "administrator": self.admin_id,
         }
 
-        self.client.force_authenticate(user=self.admin)
+        self.client.force_authenticate(user=self.admin_profile)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["origin"], "Feira de Santana")
@@ -169,9 +173,8 @@ class RouteAPITests(APITestCase):
             "destiny": "Salvador",
             "departure_time": "23:00:00",
             "arrival_time": "00:30:00",
-            "administrator": self.admin_id,
         }
-
+        self.client.force_authenticate(user=self.admin_profile)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -181,9 +184,9 @@ class RouteAPITests(APITestCase):
             "destiny": "féírá dé santanâ",
             "departure_time": "08:00:00",
             "arrival_time": "10:00:00",
-            "administrator": self.admin_id,
         }
 
+        self.client.force_authenticate(user=self.admin_profile)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
@@ -196,9 +199,9 @@ class RouteAPITests(APITestCase):
             "destiny": "Salvador",
             "departure_time": "08:00:00",
             "arrival_time": "08:15:00",
-            "administrator": self.admin_id,
         }
 
+        self.client.force_authenticate(user=self.admin_profile)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
@@ -212,9 +215,34 @@ class RouteAPITests(APITestCase):
             "destiny": "Salvador",
             "departure_time": "10:00:00",
             "arrival_time": "09:00:00",
-            "administrator": self.admin_id,
         }
 
+        self.client.force_authenticate(user=self.admin_profile)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("A viagem excede o tempo limite de 12 horas.", str(response.data))
+
+    def test_regular_user_cannot_update_route(self):
+        """Regular users should not update routes."""
+
+        route = Route.objects.create(
+            origin="Feira de Santana",
+            destiny="Salvador",
+            departure_time="08:00:00",
+            arrival_time="10:00:00",
+            administrator=self.admin_profile,
+        )
+
+        self.client.force_authenticate(user=self.user)
+
+        url = reverse("route-detail", args=[route.id])
+
+        payload = {
+            "origin": "Feira de Santana",
+            "destiny": "Cachoeira",
+            "departure_time": "08:00:00",
+            "arrival_time": "10:30:00",
+        }
+
+        response = self.client.put(url, payload, format="json")
+        assert response.status_code == status.HTTP_403_FORBIDDEN

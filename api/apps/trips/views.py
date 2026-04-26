@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions, viewsets
 
-from ..users.permissions import IsDriverReadOnly
+from ..users.permissions import IsAdminOrReadOnly, IsDriverReadOnly
 from .models import Bus, Route
 from .serializers import BusSerializer, RouteSerializer
 
@@ -25,8 +25,13 @@ class BusViewSet(viewsets.ModelViewSet):
 class RouteListCreateView(generics.ListCreateAPIView):
     queryset = Route.objects.all()
     serializer_class = RouteSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(administrator=self.request.user)
 
 
 class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Route.objects.all()
     serializer_class = RouteSerializer
+    permission_classes = (IsAdminOrReadOnly,)

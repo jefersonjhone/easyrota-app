@@ -27,6 +27,7 @@ class RouteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Route
         fields = "__all__"
+        read_only_fields = ["administrator"]
 
     def _remove_accents(self, text):
         if not text:

@@ -7,7 +7,7 @@ router = DefaultRouter()
 router.register(r"", BusViewSet, basename="bus")
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path("buses/", include(router.urls)),
     path("routes/", RouteListCreateView.as_view(), name="route-list-create"),
     path("routes/<int:pk>/", RouteDetailView.as_view(), name="route-detail"),
 ]
