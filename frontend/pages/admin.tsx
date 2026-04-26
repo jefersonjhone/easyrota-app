@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import AdminMenu from '@/components/admin/AdminMenu'
 import { createFileRoute } from '@tanstack/react-router'
 
