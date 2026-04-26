@@ -4,6 +4,8 @@ import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import type { ReactElement } from "react"
 
+import "./style.css"
+
 import adminImage from "@/assets/admin/admin.jpg"
 import analyticsImage from "@/assets/admin/analytics.jpg"
 import busFleetImage from "@/assets/admin/bus-fleet.jpg"
@@ -49,7 +51,7 @@ const Action = ({ title, href, img, children  }: ActionProps) => {
 
 const AdminMenu = () => {
   return (
-    <main className="container mx-auto max-w-5xl flex flex-col gap-6 py-10">
+    <main className="flex flex-col gap-6 py-10">
       <h1 className="text-center text-4xl">Painel de Controle</h1>
       <p className="text-center">
         Bem-vindo ao centro de gestão {" "} 
