@@ -4,20 +4,28 @@ import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import type { ReactElement } from "react"
 
+import adminImage from "@/assets/admin/admin.jpg"
+import analyticsImage from "@/assets/admin/analytics.jpg"
+import busFleetImage from "@/assets/admin/bus-fleet.jpg"
+import busInRouteImage from "@/assets/admin/bus-in-route.jpg"
+import busDriverImage from "@/assets/admin/bus-driver.jpg"
+import mapImage from "@/assets/admin/map.jpg"
+
 type ActionProps = {
   title: string
   href: string
+  img: string
   children: ReactElement
 }
 
-const Action = ({ title, href, children  }: ActionProps) => {
+const Action = ({ title, href, img, children  }: ActionProps) => {
   return (
     <Card className="relative flex h-full w-full flex-col pt-0">
       <div className="absolute inset-0 z-30 aspect-video bg-black/35" />
       <img
-        src="https://avatar.vercel.sh/shadcn1"
-        alt="Event cover"
-        className="relative z-20 aspect-video w-full object-cover brightness-60 grayscale dark:brightness-40"
+        src={img}
+        alt={title}
+        className="relative z-20 aspect-video w-full object-cover brightness-80 grayscale dark:brightness-40"
       />
       <CardHeader className="flex-1">
         <CardAction>
@@ -50,22 +58,22 @@ const AdminMenu = () => {
       </p>
       <Separator />
       <section className="mx-auto grid w-full max-w-3xl grid-cols-2 items-stretch gap-8 px-4">
-        <Action title="Frota Ativa" href="/travel">
+        <Action title="Frota Ativa" href="/travel" img={busInRouteImage}>
           <p>Veja a ocupação em tempo real.</p>
         </Action>
-        <Action title="Gestão de Veículos" href="/admin/buses">
+        <Action title="Gestão de Veículos" href="/admin/buses" img={busFleetImage}>
           <p>Gerencie seus veículos.</p>
         </Action>
-        <Action title="Equipe de Motoristas" href="/admin/drivers">
+        <Action title="Equipe de Motoristas" href="/admin/drivers" img={busDriverImage}>
           <p>Gerencie sua equipe.</p>
         </Action>
-        <Action title="Malha de Rotas" href="/admin/routes">
+        <Action title="Malha de Rotas" href="/admin/routes" img={mapImage}>
           <p>Crie novos trajetos, defina novas paradas.</p>
         </Action>
-        <Action title="Administradores" href="/admin/admins">
+        <Action title="Administradores" href="/admin/admins" img={adminImage}>
           <p>Conceda privilégios de gestão a novos usuários.</p>
         </Action>
-        <Action title="Relatórios Gerais" href="/admin/reports">
+        <Action title="Relatórios Gerais" href="/admin/reports" img={analyticsImage}>
           <p>Estatísticas de uso e eficiência da frota.</p>
         </Action>
       </section>
