@@ -6,3 +6,4 @@ In-depth documentation of internal patterns, coding standards, and systematic wo
    :maxdepth: 2
 
    onboarding
+   guidelines

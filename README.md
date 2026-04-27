@@ -2,74 +2,120 @@
 
 ## Contributing
 
-Read [Development Guide for UX/UI](./docs/UX.md) for front-end development.
+Please read the project guides before contributing:
+
+- UX/UI Guide: Specific guidelines for front-end development are available in [Development Guide for UX/UI](./docs/UX.md).
+
+- Technical and Onboarding Guide (Sphinx): Detailed architectural overview, backend logic, and coding standards.
+Execute mise `run api.docs.serve` and access http://127.0.0.1:5000.
+
+- API Interactive Reference (Swagger): Real-time endpoint testing and schema validation.
+Available at  _http://127.0.0.1:8000/api/docs/_ during backend execution.
+
+
+---
 
 ## Tooling
 
 This repository uses:
 
-- `mise` to install the pinned toolchain from [mise.toml](mise.toml)
-- `bun` for the Vite frontend
-- `python` and `poetry` for the FastAPI backend package
+- **mise** for pinned runtimes and task automation  
+- **bun** for the frontend  
+- **python + poetry** for the backend  
+
+Pinned versions are managed in [mise.toml](mise.toml).
+
+---
 
 ## Prerequisites
 
-Install `mise` and `poetry` on your machine if they are not already available.
+Install:
 
-The repository pins these tool versions in [mise.toml](mise.toml):
+- [Mise](https://mise.jdx.dev/) 
+- [Poetry](https://python-poetry.org/)  
 
-- Bun `1.3.12`
-- Python `3.12`
 
-## Bootstrap
+## Quick Start
 
-From the repository root:
+Clone the repository and create your environment file:
 
-```sh
-mise install
+```bash
+cp .env.example .env
 ```
 
-That installs the tool versions declared in [mise.toml](mise.toml).
+Install tools and dependencies:
 
-Then install the project dependencies:
-
-```sh
+```bash
+mise install
 bun install
 poetry install
 ```
 
-`bun install` restores the frontend dependencies defined in [package.json](package.json), and `poetry install` creates the backend virtual environment from [pyproject.toml](pyproject.toml) and [poetry.lock](poetry.lock).
+This installs:
 
-## Run locally
+- frontend dependencies from [package.json](package.json)
+- backend dependencies from [pyproject.toml](pyproject.toml) and [poetry.lock](poetry.lock)
 
-Start the frontend:
+Run database migrations:
 
-```sh
+```bash
+mise run api.migrate
+```
+
+Start backend:
+
+```bash
+mise run api.server
+```
+
+Start frontend:
+
+```bash
 bun dev
 ```
 
-Start the backend:
+Applications available at:
 
-Create the environment file:
+- Frontend: http://localhost:5173  
+- Backend API: http://127.0.0.1:8000
+
+---
+
+## OpenAPI Documentation
+
+Interactive API documentation: http://127.0.0.1:8000/api/docs/
+
+Raw OpenAPI schema: http://127.0.0.1:8000/api/schema/
+
+---
+
+## Common Development Commands
+
+### Backend
+
 ```bash
-cp .env.example .env
+mise run api.migrate
+mise run api.makemigrations
+mise run api.server
+mise run api.test
+mise run api.test.cov
+mise run api.lint
+mise run api.formatter
 ```
-Apply database migrations:
 
-```bash 
-poetry run python api/manage.py migrate
-```
-Start the server:
+### Frontend
+
 ```bash
-poetry run python api/manage.py runserver
-```
-
-The backend will be available at:
-http://127.0.0.1:8000
-
-## Common checks
-
-```sh
+bun run dev
 bun run build
 bun run lint
 ```
+
+### Documentation
+
+```bash
+mise run api.docs.serve
+mise run api.docs.build
+```
+
+
