@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -13,37 +14,149 @@ type Props = {
   }
 }
 
-export default function CivilServantSignupForms(props: Props) {
+export default function StudentSignupForms(props: Props) {
   const paths = props.paths
+  const [formData, setFormData] = useState({
+    email: "",
+    fullName: "",
+    studentId: "",
+    password: "",
+    confirmPassword: "",
+  })
+  const [errors, setErrors] = useState<Record<string, string[]>>({})
+  const [isLoading, setIsLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target
+    const key = id === "full-name" ? "fullName" : id === "student-id" ? "studentId" : id === "confirm-password" ? "confirmPassword" : id
+    setFormData((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setErrors({})
+
+    try {
+      const response = await fetch("/api/register/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          full_name: formData.fullName,
+          student_id: formData.studentId,
+          password: formData.password,
+          password_confirmation: formData.confirmPassword,
+          profile_type: "student",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess(true)
+        setTimeout(() => {
+          window.location.href = paths.login
+        }, 2000)
+      } else {
+        setErrors(data)
+      }
+    } catch (error) {
+      console.error("Registration error:", error)
+      setErrors({ non_field_errors: ["Ocorreu um erro inesperado. Tente novamente."] })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="p-4 text-center text-green-600 bg-green-50 rounded-md">
+        Conta criada com sucesso! Redirecionando...
+      </div>
+    )
+  }
 
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Email Institucional</FieldLabel>
-          <Input id="email" type="text" placeholder="12345678@discente.uefs.br" required />
+          <Input 
+            id="email" 
+            type="email" 
+            placeholder="12345678@discente.uefs.br" 
+            value={formData.email}
+            onChange={handleChange}
+            required 
+          />
+          {errors.email && <FieldDescription className="text-red-500">{errors.email[0]}</FieldDescription>}
         </Field>
         <Field>
           <FieldLabel htmlFor="full-name">Nome Completo</FieldLabel>
-          <Input id="full-name" type="text" placeholder="Carla Santos" required/>
+          <Input 
+            id="full-name" 
+            type="text" 
+            placeholder="Carla Santos" 
+            value={formData.fullName}
+            onChange={handleChange}
+            required
+          />
+          {errors.full_name && <FieldDescription className="text-red-500">{errors.full_name[0]}</FieldDescription>}
         </Field>
         <Field>
           <FieldLabel htmlFor="student-id">Matrícula</FieldLabel>
-          <Input id="student-id" type="text" placeholder="12345678" required/>
+          <Input 
+            id="student-id" 
+            type="text" 
+            placeholder="12345678" 
+            value={formData.studentId}
+            onChange={handleChange}
+            required
+          />
+          {errors.student_id && <FieldDescription className="text-red-500">{errors.student_id[0]}</FieldDescription>}
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Senha</FieldLabel>
-          <Input id="password" type="password" required />
-          <FieldDescription>A senha deve ter ao menos 8 caracteres.</FieldDescription>
+          <Input 
+            id="password" 
+            type="password" 
+            value={formData.password}
+            onChange={handleChange}
+            required 
+          />
+          {errors.password ? (
+            <FieldDescription className="text-red-500">{errors.password[0]}</FieldDescription>
+          ) : (
+            <FieldDescription>A senha deve ter ao menos 8 caracteres.</FieldDescription>
+          )}
         </Field>
         <Field>
           <FieldLabel htmlFor="confirm-password">Confirmar Senha</FieldLabel>
-          <Input id="confirm-password" type="password" required />
-          <FieldDescription>Por favor, confirme sua senha.</FieldDescription>
+          <Input 
+            id="confirm-password" 
+            type="password" 
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required 
+          />
+          {errors.password_confirmation ? (
+            <FieldDescription className="text-red-500">{errors.password_confirmation[0]}</FieldDescription>
+          ) : (
+            <FieldDescription>Por favor, confirme sua senha.</FieldDescription>
+          )}
         </Field>
+        {errors.non_field_errors && (
+          <div className="text-red-500 text-sm mt-2">{errors.non_field_errors[0]}</div>
+        )}
         <FieldGroup>
           <Field>
-            <Button type="submit">Criar Conta</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Criando Conta..." : "Criar Conta"}
+            </Button>
             <FieldDescription className="px-6 text-center">
                 Já tem uma conta? <a href={paths.login}>Entrar</a>
             </FieldDescription>
