@@ -2,6 +2,7 @@ import Brand from "./footer/Brand"
 import Section from "./footer/Section"
 import Bottom from "./footer/Bottom"
 
+import { InstagramLogoIcon, FacebookLogoIcon, GithubLogoIcon } from "@phosphor-icons/react"
 
 type SectionData = {
   title: string
@@ -38,6 +39,12 @@ const sections: SectionData[] = [
   }
 ]
 
+const socialLinks = [
+  { href: "#instagram", label: "Instagram", icon: <InstagramLogoIcon /> },
+  { href: "#facebook", label: "Facebook", icon: <FacebookLogoIcon /> },
+  { href: "#github", label: "GitHub", icon: <GithubLogoIcon /> }
+]
+
 const Footer = () => {
   return (
     <footer className="border-t border-border/70 bg-muted/30">
@@ -62,8 +69,7 @@ const Footer = () => {
             ))}
           </Section>
         ))}
-
-        <Bottom />
+        <Bottom social={socialLinks} />
       </div>
     </footer>
   )
