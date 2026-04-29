@@ -1,6 +1,6 @@
 import Brand from "./footer/Brand"
 import Section from "./footer/Section"
-import Bottom from "./footer/Bottom"
+import InnerFooter from "./footer/InnerFooter"
 
 import { InstagramLogoIcon, FacebookLogoIcon, GithubLogoIcon } from "@phosphor-icons/react"
 
@@ -69,7 +69,7 @@ const Footer = () => {
             ))}
           </Section>
         ))}
-        <Bottom social={socialLinks} />
+        <InnerFooter social={socialLinks} />
       </div>
     </footer>
   )
