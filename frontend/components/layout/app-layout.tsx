@@ -2,12 +2,21 @@ import logo from "@/assets/logo-light-mode.svg"
 
 const Header = () => {
   return (
-    <header className="flex items-center justify-center-safe gap-4 p-2 border-b border-border">
-      <img src={logo} alt="Logo" className="w-12 h-12" />
-      <h1 className="font-heading font-black">
-        <span className="text-primary">Easy</span>
-        <span className="text-chart-5">Rota</span>
-      </h1>
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/75">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <a href="/" className="flex items-center gap-3 rounded-2xl text-foreground transition-colors hover:text-primary">
+          <img src={logo} alt="EasyRota" className="h-10 w-10" />
+          <div className="leading-none">
+            <h1 className="font-heading text-lg font-semibold tracking-tight">
+              <span className="text-primary">Easy</span>
+              <span>Rota</span>
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Gestão de presença e viagem
+            </p>
+          </div>
+        </a>
+      </div>
     </header>
   )
 }
