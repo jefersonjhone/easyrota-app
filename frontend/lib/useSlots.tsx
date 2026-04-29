@@ -7,7 +7,7 @@ export function createSlots<T extends string>(...names: T[]) {
 
   for (const name of names) {
     const Comp: React.FC<{ children?: ReactNode }> = ({ children }) => <>{children}</>
-    ;(Comp as React.FC<{ children?: ReactNode }>).displayName = `Slot.${name}`
+    Comp.displayName = `Slot.${name}`
     slots[name as T] = Comp
   }
 
