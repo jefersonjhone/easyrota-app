@@ -7,7 +7,7 @@ export function createSlots<T extends string>(...names: T[]) {
 
   for (const name of names) {
     const Comp: React.FC<{ children?: ReactNode }> = ({ children }) => <>{children}</>
-    ;(Comp as any).displayName = `Slot.${name}`
+    ;(Comp as React.FC<{ children?: ReactNode }>).displayName = `Slot.${name}`
     slots[name as T] = Comp
   }
 
@@ -19,7 +19,7 @@ export function createSlots<T extends string>(...names: T[]) {
     for (const ch of arr) {
       if (isValidElement(ch)) {
         const slotName = (Object.keys(slots) as string[]).find(
-          (k) => (slots as any)[k] === ch.type,
+          (k) => (slots as SlotMap)[k as T] === ch.type,
         ) as T | undefined
 
         if (slotName) {
