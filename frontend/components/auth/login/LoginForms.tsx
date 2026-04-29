@@ -67,7 +67,7 @@ export function LoginForms(props: Props) {
     } catch (error) {
       console.error("Login Error:", error);
       setErrors({
-        non_filed_errors: ["Ops algo deu errado! Tente novamente."],
+        non_field_errors: ["Ops algo deu errado! Tente novamente."],
       });
     } finally {
       setIsLoading(false);
@@ -106,11 +106,6 @@ export function LoginForms(props: Props) {
                 onChange={handleChange}
                 required
               />
-              {errors.email && (
-                <FieldDescription className="text-red-500">
-                  {errors.email[0]}
-                </FieldDescription>
-              )}
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
@@ -129,11 +124,6 @@ export function LoginForms(props: Props) {
                 onChange={handleChange}
                 required
               />
-              {errors.password && (
-                <FieldDescription className="text-red-500">
-                  {errors.password[0]}
-                </FieldDescription>
-              )}
             </div>
           </div>
           <CardFooter className="flex-col gap-2">
@@ -141,6 +131,7 @@ export function LoginForms(props: Props) {
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </CardFooter>
+          {errors.detail ? ( <FieldDescription className="text-red-500">{errors.detail[0]}</FieldDescription>) : (<></>)}
         </form>
       </CardContent>
     </Card>
