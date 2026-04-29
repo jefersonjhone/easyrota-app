@@ -8,7 +8,7 @@ type Props = {
 
 const Brand: React.FC<Props> = ({ description, warning }) => {
   return (
-    <div className="lg:pr-8">
+    <div className="col-span-1 sm:col-span-2 lg:col-span-1 lg:pr-8">
       <a href="/" className="mb-4 inline-flex items-center gap-3 text-foreground transition-colors hover:text-primary">
         <img src={logo} alt="EasyRota" className="h-10 w-10" />
         <span className="font-heading text-2xl font-semibold tracking-tight">
