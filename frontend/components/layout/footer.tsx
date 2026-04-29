@@ -2,6 +2,42 @@ import Brand from "./footer/Brand"
 import Section from "./footer/Section"
 import Bottom from "./footer/Bottom"
 
+
+type SectionData = {
+  title: string
+  links: { href: string, label: string}[]
+}
+
+const sections: SectionData[] = [
+  {
+    title: "Plataforma",
+    links: [
+      { href: "/sobre", label: "Sobre o projeto" },
+      { href: "/contatos", label: "Como funciona" },
+      { href: "/rotas", label: "A rota" },
+      { href: "/equipe", label: "Equipe" },
+    ]
+  },
+  {
+    title: "Viagem",
+    links: [
+      { href: "/#app", label: "Confirmar presença" },
+      { href: "/#historico", label: "Histórico" },
+      { href: "/#notificacoes", label: "Notificações" },
+      { href: "/#checkin", label: "Check-in" },
+    ]
+  },
+  {
+    title: "Acadêmico",
+    links: [
+      { href: "#exa613", label: "EXA613 / PBL" },
+      { href: "#github", label: "Repositório GitHub" },
+      { href: "#documentacao", label: "Documentação" },
+      { href: "#aviso-legal", label: "Aviso legal" },
+    ]
+  }
+]
+
 const Footer = () => {
   return (
     <footer className="border-t border-border/70 bg-muted/30">
@@ -17,26 +53,15 @@ const Footer = () => {
           </Brand.Callout>
         </Brand>
 
-        <Section title="Plataforma">
-          <Section.Link href="/sobre">Sobre o projeto</Section.Link>
-          <Section.Link href="/contatos">Como funciona</Section.Link>
-          <Section.Link href="/rotas">A rota</Section.Link>
-          <Section.Link href="/equipe">Equipe</Section.Link>
-        </Section>
-
-        <Section title="Viagem">
-          <Section.Link href="/#app">Confirmar presença</Section.Link>
-          <Section.Link href="/#historico">Histórico</Section.Link>
-          <Section.Link href="/#notificacoes">Notificações</Section.Link>
-          <Section.Link href="/#checkin">Check-in</Section.Link>
-        </Section>
-
-        <Section title="Acadêmico">
-          <Section.Link href="#exa613">EXA613 / PBL</Section.Link>
-          <Section.Link href="#github">Repositório GitHub</Section.Link>
-          <Section.Link href="#documentacao">Documentação</Section.Link>
-          <Section.Link href="#aviso-legal">Aviso legal</Section.Link>
-        </Section>
+        {sections.map((section) => (
+          <Section key={section.title} title={section.title}>
+            {section.links.map((link) => (
+              <Section.Link key={link.href} href={link.href}>
+                {link.label}
+              </Section.Link>
+            ))}
+          </Section>
+        ))}
 
         <Bottom />
       </div>
