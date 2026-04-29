@@ -1,6 +1,11 @@
 import logo from "@/assets/logo-light-mode.svg"
+import type React from 'react'
 
-const Brand = () => {
+type Props = {
+  description: string
+}
+
+const Brand: React.FC<Props> = ({ description }) => {
   return (
     <div className="lg:pr-8">
       <a href="/" className="mb-4 inline-flex items-center gap-3 text-foreground transition-colors hover:text-primary">
@@ -12,8 +17,7 @@ const Brand = () => {
       </a>
 
       <p className="max-w-md text-sm leading-6 text-muted-foreground">
-        Plataforma acadêmica fictícia para gestão de quórum e presença no transporte
-        intermunicipal universitário.
+        {description}
       </p>
 
       <strong className="mt-5 block text-xs font-semibold uppercase tracking-[0.35em] text-primary">
