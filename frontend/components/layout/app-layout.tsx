@@ -24,11 +24,11 @@ const Footer = () => {
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <body>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
-      { children }
+      <main className="flex-1">{children}</main>
       <Footer />
-    </body>
+    </div>
   )
 }
 
