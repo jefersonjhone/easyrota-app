@@ -1,6 +1,6 @@
 import Brand from "./footer/Brand"
-import FooterColumn from "./footer/Column"
-import FooterBottom from "./footer/Bottom"
+import Section from "./footer/Section"
+import Bottom from "./footer/Bottom"
 
 const description = 'Plataforma acadêmica fictícia para gestão de quórum e presença no transporte'
 const warning = 'Projeto acadêmico fictício — EXA613 / PBL. A EasyRota não existe como pessoa jurídica; a parceria com a Uninfra é simulada.'
@@ -14,7 +14,7 @@ const Footer = () => {
           warning={warning}
         />
 
-        <FooterColumn title="Plataforma">
+        <Section title="Plataforma">
           <a className="w-fit transition-colors hover:text-primary" href="#sobre">
             Sobre o projeto
           </a>
@@ -27,9 +27,9 @@ const Footer = () => {
           <a className="w-fit transition-colors hover:text-primary" href="#equipe">
             Equipe
           </a>
-        </FooterColumn>
+        </Section>
 
-        <FooterColumn title="Viagem">
+        <Section title="Viagem">
           <a className="w-fit transition-colors hover:text-primary" href="#app">
             Confirmar presença
           </a>
@@ -42,9 +42,9 @@ const Footer = () => {
           <a className="w-fit transition-colors hover:text-primary" href="#checkin">
             Check-in
           </a>
-        </FooterColumn>
+        </Section>
 
-        <FooterColumn title="Acadêmico">
+        <Section title="Acadêmico">
           <a className="w-fit transition-colors hover:text-primary" href="#exa613">
             EXA613 / PBL
           </a>
@@ -57,9 +57,9 @@ const Footer = () => {
           <a className="w-fit transition-colors hover:text-primary" href="#aviso-legal">
             Aviso legal
           </a>
-        </FooterColumn>
+        </Section>
 
-        <FooterBottom />
+        <Bottom />
       </div>
     </footer>
   )

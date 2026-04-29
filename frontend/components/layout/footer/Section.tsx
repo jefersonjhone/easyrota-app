@@ -3,7 +3,7 @@ type ColumnProps = {
   children?: React.ReactNode
 }
 
-const FooterColumn: React.FC<ColumnProps> = ({ title, children }) => {
+const Section: React.FC<ColumnProps> = ({ title, children }) => {
   return (
     <div>
       <h3 className="mb-5 text-xs font-semibold uppercase tracking-[0.35em] text-foreground">
@@ -16,4 +16,4 @@ const FooterColumn: React.FC<ColumnProps> = ({ title, children }) => {
   )
 }
 
-export default FooterColumn
+export default Section

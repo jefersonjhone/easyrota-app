@@ -1,6 +1,6 @@
 import SocialIcon from "./SocialIcon"
 
-const FooterBottom = () => {
+const Bottom = () => {
   return (
     <div className="col-span-1 flex flex-col gap-6 border-t border-border pt-6 sm:col-span-2 lg:col-span-4 lg:flex-row lg:items-center lg:justify-between lg:pt-7">
       <p className="max-w-2xl text-sm text-muted-foreground">
@@ -22,4 +22,4 @@ const FooterBottom = () => {
   )
 }
 
-export default FooterBottom
+export default Bottom
