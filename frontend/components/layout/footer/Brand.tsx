@@ -6,7 +6,8 @@ const Brand = () => {
       <a href="/" className="mb-4 inline-flex items-center gap-3 text-foreground transition-colors hover:text-primary">
         <img src={logo} alt="EasyRota" className="h-10 w-10" />
         <span className="font-heading text-2xl font-semibold tracking-tight">
-          Easy<span className="text-primary">Rota</span>
+          <span className="text-primary">Easy</span>
+          <span>Rota</span>
         </span>
       </a>
 
