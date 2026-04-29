@@ -18,48 +18,24 @@ const Footer = () => {
         </Brand>
 
         <Section title="Plataforma">
-          <a className="w-fit transition-colors hover:text-primary" href="#sobre">
-            Sobre o projeto
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#contatos">
-            Como funciona
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#rotas">
-            A rota
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#equipe">
-            Equipe
-          </a>
+          <Section.Link href="/sobre">Sobre o projeto</Section.Link>
+          <Section.Link href="/contatos">Como funciona</Section.Link>
+          <Section.Link href="/rotas">A rota</Section.Link>
+          <Section.Link href="/equipe">Equipe</Section.Link>
         </Section>
 
         <Section title="Viagem">
-          <a className="w-fit transition-colors hover:text-primary" href="#app">
-            Confirmar presença
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#historico">
-            Histórico
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#notificacoes">
-            Notificações
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#checkin">
-            Check-in
-          </a>
+          <Section.Link href="/#app">Confirmar presença</Section.Link>
+          <Section.Link href="/#historico">Histórico</Section.Link>
+          <Section.Link href="/#notificacoes">Notificações</Section.Link>
+          <Section.Link href="/#checkin">Check-in</Section.Link>
         </Section>
 
         <Section title="Acadêmico">
-          <a className="w-fit transition-colors hover:text-primary" href="#exa613">
-            EXA613 / PBL
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#github">
-            Repositório GitHub
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#documentacao">
-            Documentação
-          </a>
-          <a className="w-fit transition-colors hover:text-primary" href="#aviso-legal">
-            Aviso legal
-          </a>
+          <Section.Link href="#exa613">EXA613 / PBL</Section.Link>
+          <Section.Link href="#github">Repositório GitHub</Section.Link>
+          <Section.Link href="#documentacao">Documentação</Section.Link>
+          <Section.Link href="#aviso-legal">Aviso legal</Section.Link>
         </Section>
 
         <Bottom />
