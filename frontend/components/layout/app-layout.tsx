@@ -16,6 +16,15 @@ const Header = () => {
             </p>
           </div>
         </a>
+
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
+            <a href="/login">Entrar</a>
+          </Button>
+          <Button asChild size="sm">
+            <a href="/admin">Painel</a>
+          </Button>
+        </div>
       </div>
     </header>
   )
