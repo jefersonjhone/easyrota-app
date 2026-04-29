@@ -1,3 +1,6 @@
+import { Link } from '@tanstack/react-router'
+
+
 type SocialIconProps = {
   href?: string
   label: string
@@ -6,13 +9,16 @@ type SocialIconProps = {
 
 const SocialIcon: React.FC<SocialIconProps> = ({ href = "#", label, children }) => {
   return (
-    <a
-      href={href}
-      aria-label={label}
-      className="grid h-9 w-9 place-items-center rounded-full border border-border bg-background text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-    >
+    <Link to={href} aria-label={label} className="
+      grid h-9 w-9 place-items-center 
+      bg-background transition-colors 
+      rounded-full border border-border 
+        hover:border-primary
+      text-xs font-semibold uppercase tracking-wide text-muted-foreground 
+        hover:text-primary
+    ">
       {children}
-    </a>
+    </Link>
   )
 }
 
