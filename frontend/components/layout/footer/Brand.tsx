@@ -3,9 +3,10 @@ import type React from 'react'
 
 type Props = {
   description: string
+  warning: string
 }
 
-const Brand: React.FC<Props> = ({ description }) => {
+const Brand: React.FC<Props> = ({ description, warning }) => {
   return (
     <div className="lg:pr-8">
       <a href="/" className="mb-4 inline-flex items-center gap-3 text-foreground transition-colors hover:text-primary">
@@ -25,8 +26,7 @@ const Brand: React.FC<Props> = ({ description }) => {
       </strong>
 
       <div className="mt-5 max-w-md rounded-lg border border-border bg-background/70 px-4 py-3 text-xs leading-6 text-muted-foreground">
-        Projeto acadêmico fictício — EXA613 / PBL. A EasyRota não existe como pessoa
-        jurídica; a parceria com a Uninfra é simulada.
+        {warning}
       </div>
     </div>
   )

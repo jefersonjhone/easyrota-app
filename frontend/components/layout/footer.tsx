@@ -3,6 +3,7 @@ import FooterColumn from "./footer/Column"
 import FooterBottom from "./footer/Bottom"
 
 const description = 'Plataforma acadêmica fictícia para gestão de quórum e presença no transporte'
+const warning = 'Projeto acadêmico fictício — EXA613 / PBL. A EasyRota não existe como pessoa jurídica; a parceria com a Uninfra é simulada.'
 
 const Footer = () => {
   return (
@@ -10,6 +11,7 @@ const Footer = () => {
       <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:gap-12 lg:px-8 lg:py-10">
         <Brand 
           description={description}
+          warning={warning}
         />
 
         <FooterColumn title="Plataforma">
