@@ -4,11 +4,11 @@ import type { FC, ReactNode } from "react"
 
 const { slots, useSlots } = createSlots("Description", "Callout")
 
-type BrandProps = {
+type InnerHeaderProps = {
   children?: ReactNode
 }
 
-const Description: FC<BrandProps> = ({ children }) => {
+const Description: FC<InnerHeaderProps> = ({ children }) => {
   return (
     <p className="max-w-md text-sm leading-6 text-muted-foreground">
       {children}
@@ -16,7 +16,7 @@ const Description: FC<BrandProps> = ({ children }) => {
   )
 }
 
-const Callout: FC<BrandProps> = ({ children }) => {
+const Callout: FC<InnerHeaderProps> = ({ children }) => {
   return (
     <div className="mt-5 max-w-md rounded-lg border border-border bg-background/70 px-4 py-3 text-xs leading-6 text-muted-foreground">
       {children}
@@ -25,13 +25,13 @@ const Callout: FC<BrandProps> = ({ children }) => {
 }
 
 
-const BrandBase: FC<BrandProps> = ({ children }) => {
+const HeaderBase: FC<InnerHeaderProps> = ({ children }) => {
   const { slots } = useSlots(children)
   const description = slots.Description
   const callout = slots.Callout
 
   return (
-    <div className="col-span-1 sm:col-span-2 lg:col-span-1 lg:pr-8">
+    <header className="col-span-1 sm:col-span-2 lg:col-span-1 lg:pr-8">
       <a
         href="/"
         className="mb-4 inline-flex items-center gap-3 text-foreground transition-colors hover:text-primary"
@@ -54,13 +54,13 @@ const BrandBase: FC<BrandProps> = ({ children }) => {
       <Callout>
         {callout}
       </Callout>
-    </div>
+    </header>
   )
 }
 
-const Brand = Object.assign(BrandBase, slots) as FC<BrandProps> & {
+const InnerHeader = Object.assign(HeaderBase, slots) as FC<InnerHeaderProps> & {
   Description: typeof slots["Description"]
   Callout: typeof slots["Callout"]
 }
 
-export default Brand
+export default InnerHeader
