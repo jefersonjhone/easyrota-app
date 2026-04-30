@@ -3,20 +3,19 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { LoginForms } from '@/components/auth/login/LoginForms'
 import AuthLayout from '@/components/auth/layout/AuthLayout'
+import { routes } from '@/routes'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
 })
 
-const paths = {
-    createAccount: "/signup",
-    recoverPassword: "/recovery",
-}
-
 function LoginPage() {
   return (
     <AuthLayout>
-      <LoginForms paths={paths} />
+      <LoginForms paths={{
+        createAccount: routes.auth.signup(),
+        recoverPassword: routes.auth.recovery()
+      }} />
     </AuthLayout>
   )
 }
