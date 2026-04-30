@@ -7,6 +7,8 @@ export const routes = {
     contacts: () => '/contatos',
     routes: () => '/rotas',
     team: () => '/equipe',
+    legal: () => '/aviso-legal',
+    tos: () => '/termos',
 
     // Feature routes that are accessible without authentication
     // These routes correspond to specific sections on home page.
