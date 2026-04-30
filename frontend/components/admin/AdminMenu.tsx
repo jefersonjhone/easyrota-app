@@ -2,7 +2,7 @@ import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } 
 import { Separator } from "@/components/ui/separator"
 import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
-import type { ReactElement } from "react"
+import type { FC, ReactElement } from "react"
 
 import adminImage from "@/assets/admin/admin.jpg"
 import analyticsImage from "@/assets/admin/analytics.jpg"
@@ -16,6 +16,13 @@ type ActionProps = {
   href: string
   img: string
   children: ReactElement
+}
+
+type ActionData = {
+  title: string
+  description: string
+  background: string
+  goesTo: string
 }
 
 const Action = ({ title, href, img, children  }: ActionProps) => {
@@ -45,9 +52,58 @@ const Action = ({ title, href, img, children  }: ActionProps) => {
   )
 }
 
+type MenuProps = {
+  paths: {
+    travel: string
+    buses: string
+    drivers: string
+    routes: string
+    admins: string
+    analytics: string
+  }
+}
 
+const AdminMenu: FC<MenuProps> = ({ paths }) => {
 
-const AdminMenu = () => {
+  const actions: ActionData[] = [
+    { 
+      title: "Frota Ativa",
+      description: "Veja a ocupação em tempo real.",
+      background: busInRouteImage,
+      goesTo: paths.travel,
+    },
+    {
+      title: "Gestão de Veículos",
+      description: "Gerencie seus veículos.",
+      background: busFleetImage,
+      goesTo: paths.buses,
+    },
+    {
+      title: "Equipe de Motoristas",
+      description: "Gerencie sua equipe.",
+      background: busDriverImage,
+      goesTo: paths.drivers,
+    },
+    {
+      title: "Malha de Rotas",
+      description: "Crie novos trajetos, defina novas paradas.",
+      background: mapImage,
+      goesTo: paths.routes,
+    },
+    {
+      title: "Administradores",
+      description: "Conceda privilégios de gestão a novos usuários.",
+      background: adminImage,
+      goesTo: paths.admins,
+    },
+    {
+      title: "Relatórios Gerais",
+      description: "Estatísticas de uso e eficiência da frota.",
+      background: analyticsImage,
+      goesTo: paths.analytics,
+    },
+  ]
+
   return (
     <main className="flex flex-col gap-6 py-10">
       <h1 className="text-center text-4xl font-heading font-medium">Painel de Controle</h1>
@@ -58,24 +114,12 @@ const AdminMenu = () => {
       </p>
       <Separator className="max-w-xl mx-auto" />
       <section className="mx-auto grid w-full max-w-3xl grid-cols-2 items-stretch gap-8 px-4">
-        <Action title="Frota Ativa" href="/travel" img={busInRouteImage}>
-          <p>Veja a ocupação em tempo real.</p>
+
+      {actions.map(({ title, description, background, goesTo }) => (
+        <Action key={title} title={title} href={goesTo} img={background}>
+          <p>{description}</p>
         </Action>
-        <Action title="Gestão de Veículos" href="/admin/buses" img={busFleetImage}>
-          <p>Gerencie seus veículos.</p>
-        </Action>
-        <Action title="Equipe de Motoristas" href="/admin/drivers" img={busDriverImage}>
-          <p>Gerencie sua equipe.</p>
-        </Action>
-        <Action title="Malha de Rotas" href="/admin/routes" img={mapImage}>
-          <p>Crie novos trajetos, defina novas paradas.</p>
-        </Action>
-        <Action title="Administradores" href="/admin/admins" img={adminImage}>
-          <p>Conceda privilégios de gestão a novos usuários.</p>
-        </Action>
-        <Action title="Relatórios Gerais" href="/admin/reports" img={analyticsImage}>
-          <p>Estatísticas de uso e eficiência da frota.</p>
-        </Action>
+      ))}
       </section>
     </main>
   )
