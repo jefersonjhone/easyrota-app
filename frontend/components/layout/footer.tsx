@@ -3,7 +3,7 @@ import Section from "./footer/Section"
 import InnerFooter from "./footer/InnerFooter"
 
 import { InstagramLogoIcon, FacebookLogoIcon, GithubLogoIcon } from "@phosphor-icons/react"
-import { routes, externalRoutes } from '@/routes'
+import { routes } from '@/routes'
 
 type SectionData = {
   title: string
@@ -32,18 +32,18 @@ const sections: SectionData[] = [
   {
     title: "Acadêmico",
     links: [
-      { href: externalRoutes.academic.exa613(), label: "EXA613 / PBL" },
-      { href: externalRoutes.github.repo(), label: "Repositório GitHub" },
-      { href: externalRoutes.github.docs(), label: "Documentação" },
+      { href: routes.external.academic.exa613(), label: "EXA613 / PBL" },
+      { href: routes.external.github.repo(), label: "Repositório GitHub" },
+      { href: routes.external.github.docs(), label: "Documentação" },
       { href: routes.public.legal(), label: "Aviso legal" },
     ]
   }
 ]
 
 const socialLinks = [
-  { href: externalRoutes.instagram(), label: "Instagram", icon: <InstagramLogoIcon /> },
-  { href: externalRoutes.facebook(), label: "Facebook", icon: <FacebookLogoIcon /> },
-  { href: externalRoutes.github.repo(), label: "GitHub", icon: <GithubLogoIcon /> }
+  { href: routes.external.instagram(), label: "Instagram", icon: <InstagramLogoIcon /> },
+  { href: routes.external.facebook(), label: "Facebook", icon: <FacebookLogoIcon /> },
+  { href: routes.external.github.repo(), label: "GitHub", icon: <GithubLogoIcon /> }
 ]
 
 const Footer = () => {

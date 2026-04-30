@@ -36,18 +36,20 @@ export const routes = {
     routes: () => '/admin/routes',
     admins: () => '/admin/admins',
     reports: () => '/admin/reports',
-  }
-}
+  },
 
-export const externalRoutes = {
-  github: {
-    org: () => 'https://github.com/EasyRota',
-    repo: () => 'https://github.com/EasyRota/app',
-    docs: () => '#docs'
-  },
-  academic: {
-    exa613: () => '#exa613',
-  },
-  instagram: () => '#instagram',
-  facebook: () => '#facebook',
+  // External routes for linking to resources outside the application, 
+  // such as social media and academic pages.
+  external: {
+    github: {
+      org: () => 'https://github.com/EasyRota',
+      repo: () => 'https://github.com/EasyRota/app',
+      docs: () => '#docs'
+    },
+    academic: {
+      exa613: () => '#exa613',
+    },
+    instagram: () => '#instagram',
+    facebook: () => '#facebook',
+  }
 }
