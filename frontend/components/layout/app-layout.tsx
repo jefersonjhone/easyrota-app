@@ -7,7 +7,11 @@ const paths = {
   admin: "/admin"
 }
 
-const AppLayout = ({ children }: { children: React.ReactNode }) => {
+type LayoutProps = {
+  children: React.ReactNode
+}
+
+const AppLayout = ({ children }: LayoutProps) => {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header 
