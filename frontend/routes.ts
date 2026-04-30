@@ -14,3 +14,16 @@ export const routes = {
     reports: () => '/admin/reports',
   }
 }
+
+export const externalRoutes = {
+  github: {
+    org: () => 'https://github.com/EasyRota',
+    repo: () => 'https://github.com/EasyRota/app',
+    docs: () => '#docs'
+  },
+  academic: {
+    exa613: () => '#exa613',
+  },
+  instagram: () => '#instagram',
+  facebook: () => '#facebook',
+}
