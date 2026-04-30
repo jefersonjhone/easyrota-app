@@ -1,10 +1,15 @@
 export const routes = {
+  // Public routes accessible to all users
+  // These routes correspond to informational pages and features available without authentication.
   public: {
     home: () => '/',
     about: () => '/sobre',
     contacts: () => '/contatos',
     routes: () => '/rotas',
     team: () => '/equipe',
+
+    // Feature routes that are accessible without authentication
+    // These routes correspond to specific sections on home page.
     features: {
       confirm: () => '/#app',
       history: () => '/#historico',
@@ -12,11 +17,15 @@ export const routes = {
       checkin: () => '/#checkin',
     },
   },
+
+  // Authentication routes for user login, signup, and password recovery.
   auth: {
     login: () => '/login',
     signup: () => '/signup',
     recovery: () => '/recovery',
   },
+
+  // Admin routes for managing the platform, accessible only to authenticated admin users.
   admin: {
     index: () => '/admin',
     travel: () => '/admin/travel',
