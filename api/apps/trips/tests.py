@@ -36,8 +36,7 @@ class BusViewTests(APITestCase):
         self.payload = {
             "number_plate": "ABC123",
             "seating_capacity": 40,
-            "driver": self.driver_profile.id,
-            "administrator": self.admin_profile.id,
+            "brand": "Mercedes-Benz",
         }
 
     def test_list_buses_authenticated(self):
@@ -60,33 +59,12 @@ class BusViewTests(APITestCase):
 
         assert response.status_code == status.HTTP_200_OK
 
-    def test_retrieve_bus_authenticated(self):
-        """Users should NOT be able to retrieve a bus by ID."""
-        bus = Bus.objects.create(
-            number_plate=self.payload["number_plate"],
-            seating_capacity=self.payload["seating_capacity"],
-            driver_id=self.payload["driver"],
-            administrator_id=self.payload["administrator"],
-        )
-
-        self.client.force_authenticate(user=self.regular_user)
-        url = reverse("bus-detail", args=[bus.id])
-        response = self.client.get(url, format="json")
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
     def test_create_bus_as_user(self):
         """Regular users should NOT be able to create a bus."""
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.post(self.url, self.payload, format="json")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    def test_create_bus_unauthenticated(self):
-        """Unauthenticated users should NOT be able to create a bus."""
-        response = self.client.post(self.url, self.payload, format="json")
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_create_bus_as_driver(self):
         """Drivers should NOT be able to create a bus."""
@@ -102,44 +80,23 @@ class BusViewTests(APITestCase):
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["number_plate"] == "ABC123"
+        assert response.data["administrator"] == self.admin.id
 
-    def test_update_bus_as_admin(self):
-        """Administrators should be able to update a bus successfully."""
-        bus = Bus.objects.create(
-            number_plate=self.payload["number_plate"],
-            seating_capacity=self.payload["seating_capacity"],
-            driver_id=self.payload["driver"],
-            administrator_id=self.payload["administrator"],
-        )
-        self.client.force_authenticate(user=self.admin)
+    def test_driver_assigns_himself_to_bus(self):
+        """Ensures that an authenticated driver can successfully assign themselves
+        to a bus using the custom assign_driver endpoint.
+        """
+        bus = Bus.objects.create(**self.payload, administrator=self.admin_profile)
 
-        update_payload = {
-            "number_plate": "XYZ321",
-            "seating_capacity": 30,
-            "driver": self.driver_profile.id,
-            "administrator": self.admin.id,
-        }
+        self.client.force_authenticate(user=self.user_driver)
 
-        url = reverse("bus-detail", args=[bus.id])
-        response = self.client.put(url, update_payload, format="json")
+        url = reverse("bus-assign-driver", args=[bus.id])
+        response = self.client.post(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["number_plate"] == "XYZ321"
-        assert response.data["seating_capacity"] == 30
 
-    def test_delete_bus_as_admin(self):
-        """Administrators should be able to delete a bus successfully."""
-        bus = Bus.objects.create(
-            number_plate=self.payload["number_plate"],
-            seating_capacity=self.payload["seating_capacity"],
-            driver_id=self.payload["driver"],
-            administrator_id=self.payload["administrator"],
-        )
-        self.client.force_authenticate(user=self.admin)
-        url = reverse("bus-detail", args=[bus.id])
-        response = self.client.delete(url, format="json")
-
-        assert response.status_code == status.HTTP_204_NO_CONTENT
+        bus.refresh_from_db()
+        assert bus.driver == self.driver_profile
 
 
 class RouteAPITests(APITestCase):

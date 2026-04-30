@@ -13,6 +13,7 @@ class BusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bus
         fields = "__all__"
+        read_only_fields = ["administrator", "driver"]
 
     def validate_seating_capacity(self, value):
         """Ensures seating_capacity is greater than 0 and less than or equal to 120."""

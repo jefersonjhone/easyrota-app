@@ -8,10 +8,13 @@ class Bus(models.Model):
 
     number_plate = models.CharField(max_length=10, unique=True)
     seating_capacity = models.IntegerField()
+    brand = models.CharField(max_length=100)
 
-    driver = models.ForeignKey("users.DriverProfile", on_delete=models.CASCADE)
+    driver = models.ForeignKey(
+        "users.DriverProfile", on_delete=models.SET_NULL, blank=True, null=True
+    )
     administrator = models.ForeignKey(
-        "users.AdministratorProfile", on_delete=models.CASCADE
+        "users.AdministratorProfile", on_delete=models.SET_NULL, null=True
     )
 
     def __str__(self):
