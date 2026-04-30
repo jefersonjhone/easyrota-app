@@ -1,4 +1,17 @@
 export const routes = {
+  public: {
+    home: () => '/',
+    about: () => '/sobre',
+    contacts: () => '/contatos',
+    routes: () => '/rotas',
+    team: () => '/equipe',
+    features: {
+      confirm: () => '/#app',
+      history: () => '/#historico',
+      notifications: () => '/#notificacoes',
+      checkin: () => '/#checkin',
+    },
+  },
   auth: {
     login: () => '/login',
     signup: () => '/signup',
