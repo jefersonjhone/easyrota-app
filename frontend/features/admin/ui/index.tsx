@@ -1,9 +1,11 @@
+import { Link } from '@tanstack/react-router';
+
 import AppLayout from '@/components/layout/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { config } from '@/features/admin/ui/config';
-import { Link } from '@tanstack/react-router';
+
+import { links } from '@/features/admin/config/links';
 
 const AdminPage = () => (
   <AppLayout>
@@ -15,7 +17,7 @@ const AdminPage = () => (
     </p>
     <Separator className="max-w-xl mx-auto" />
      <section className="mx-auto grid w-full max-w-3xl grid-cols-2 gap-8 px-4">
-        {config.map((link) => (
+        {links.map((link) => (
           <Card key={link.title} className="flex flex-col">
             <img src={link.background} alt={link.title} 
               className="aspect-video object-cover brightness-80 grayscale dark:brightness-40"/>

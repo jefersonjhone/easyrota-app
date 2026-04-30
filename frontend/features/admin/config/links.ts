@@ -16,14 +16,14 @@ const images: Record<string, ImageLink> = {
   analytics: analyticsImage,
 }
 
-export type Data = {
+export type Link = {
   title: string
   description: string
   background: ImageLink
   goesTo: string
 }
 
-export const config: Data[] = [
+export const links: Link[] = [
   { 
     title: "Frota Ativa",
     description: "Veja a ocupação em tempo real.",
