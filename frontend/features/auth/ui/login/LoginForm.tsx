@@ -17,6 +17,7 @@ import { z } from "zod"
 import { useLoginMutation } from "@/features/auth/hooks/useLogin"
 import { Route as RecoveryRoute } from "@/pages/recovery"
 import { Route as SignupRoute } from "@/pages/signup"
+import ErrorHint from "@/features/auth/ui/ErrorHint"
 
 export function LoginForm() {
 	const loginMutation = useLoginMutation()
@@ -44,13 +45,7 @@ export function LoginForm() {
 		},
 	})
 
-	const errorMessage =
-		typeof loginMutation.error === "object" && loginMutation.error !== null
-			? (loginMutation.error as { detail?: string[]; non_field_errors?: string[] })
-				.detail?.[0] ??
-			  (loginMutation.error as { detail?: string[]; non_field_errors?: string[] })
-				.non_field_errors?.[0]
-			: undefined
+
 
 	if (loginMutation.isSuccess) {
 		return (
@@ -94,11 +89,9 @@ export function LoginForm() {
 										placeholder="joao@uefs.br"
 										required
 									/>
-									{!field.state.meta.isValid ? (
-										<p className="text-sm text-red-500">
-											{field.state.meta.errors.join(", ")}
-										</p>
-									) : null}
+								<div className="text-sm text-red-500">
+									<ErrorHint field={field} showAlways />
+								</div>
 								</div>
 							)}
 						/>
@@ -124,11 +117,9 @@ export function LoginForm() {
 										onBlur={field.handleBlur}
 										required
 									/>
-									{!field.state.meta.isValid ? (
-										<p className="text-sm text-red-500">
-											{field.state.meta.errors.join(", ")}
-										</p>
-									) : null}
+									<div className="text-sm text-red-500">
+										<ErrorHint field={field} showAlways />
+									</div>
 								</div>
 							)}
 						/>
@@ -138,11 +129,7 @@ export function LoginForm() {
 							{loginMutation.isPending ? "Entrando..." : "Entrar"}
 						</Button>
 					</CardFooter>
-					{errorMessage ? (
-						<p className="text-sm text-red-500">
-							{errorMessage}
-						</p>
-					) : null}
+
 				</form>
 			</CardContent>
 		</Card>
