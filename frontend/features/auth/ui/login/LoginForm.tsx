@@ -66,8 +66,8 @@ export function LoginForm() {
 					}}
 				>
 					<div className="flex flex-col gap-6">
-						<form.Field
-							name="email"
+						<form.Field 
+              name="email"
 							validators={{
 								onChange: ({ value }) => {
 									if (!value.trim()) {
