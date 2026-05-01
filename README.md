@@ -4,7 +4,9 @@
 
 Please read the project guides before contributing:
 
-- [Best Practices](./docs/BestPractices.md)
+- [Django Best Practices](./docs/django-best-practices.md)
+
+- [React Best Practices](./docs/react-best-practices.md)
 
 - UX/UI Guide: Specific guidelines for front-end development are available in [Development Guide for UX/UI](./docs/UX.md).
 
