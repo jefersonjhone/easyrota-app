@@ -4,6 +4,8 @@
 
 Please read the project guides before contributing:
 
+- [Best Practices](./docs/BestPractices.md)
+
 - UX/UI Guide: Specific guidelines for front-end development are available in [Development Guide for UX/UI](./docs/UX.md).
 
 - Technical and Onboarding Guide (Sphinx): Detailed architectural overview, backend logic, and coding standards.
