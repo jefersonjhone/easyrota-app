@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import AuthLayout from '@/components/auth/layout/AuthLayout'
+import AuthLayout from '@/features/auth/ui/AuthLayout'
 import { SignupForm } from '@/components/auth/signup/SignupForms'
 import { createFileRoute } from '@tanstack/react-router'
 
