@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Link } from "@tanstack/react-router"
 import { useForm } from "@tanstack/react-form"
+import { z } from "zod"
 
 import type { LoginValues } from "@/features/auth/hooks/useLogin"
 import { useLoginMutation } from "@/features/auth/hooks/useLogin"
@@ -21,12 +22,35 @@ import { Route as SignupRoute } from "@/pages/signup"
 export function LoginForm() {
 	const loginMutation = useLoginMutation()
 
+	const schema = z.object({
+		email: z.string()
+      .nonempty("Informe seu email institucional.")
+      .email("Informe um email valido."),
+		password: z.string()
+      .nonempty("Informe sua senha."),
+	})
+
 	const form = useForm({
 		defaultValues: {
 			email: "",
 			password: "",
 		},
+		validators: {
+			onChange: ({ value }) => {
+				const result = schema.safeParse(value)
+				if (!result.success) {
+					const errors: Record<string, string> = {}
+					result.error.errors.forEach(err => {
+						const path = err.path.join('.')
+						errors[path] = err.message
+					})
+					return errors
+				}
+				return undefined
+			},
+		},
 		onSubmit: async ({ value }) => {
+			await schema.parseAsync(value as unknown)
 			await loginMutation.mutateAsync(value as LoginValues)
 		},
 	})
@@ -67,20 +91,7 @@ export function LoginForm() {
 				>
 					<div className="flex flex-col gap-6">
 						<form.Field 
-              name="email"
-							validators={{
-								onChange: ({ value }) => {
-									if (!value.trim()) {
-										return "Informe seu email institucional."
-									}
-
-									if (!value.includes("@")) {
-										return "Informe um email valido."
-									}
-
-									return undefined
-								},
-							}}
+							name="email"
 							children={(field) => (
 								<div className="grid gap-2">
 									<Label htmlFor={field.name}>Email Institucional</Label>
@@ -104,15 +115,6 @@ export function LoginForm() {
 						/>
 						<form.Field
 							name="password"
-							validators={{
-								onChange: ({ value }) => {
-									if (!value.trim()) {
-										return "Informe sua senha."
-									}
-
-									return undefined
-								},
-							}}
 							children={(field) => (
 								<div className="grid gap-2">
 									<div className="flex items-center">
