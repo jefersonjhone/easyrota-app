@@ -26,10 +26,7 @@ async function loginRequest(values: LoginValues): Promise<LoginResponse> {
 
 	const data: LoginResponse = (await response.json())
 
-	if (!response.ok) {
-		throw data
-	}
-
+	if (!response.ok) { throw data }
 	return data
 }
 
