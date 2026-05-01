@@ -14,7 +14,6 @@ import { Link } from "@tanstack/react-router"
 import { useForm } from "@tanstack/react-form"
 import { z } from "zod"
 
-import type { LoginValues } from "@/features/auth/hooks/useLogin"
 import { useLoginMutation } from "@/features/auth/hooks/useLogin"
 import { Route as RecoveryRoute } from "@/pages/recovery"
 import { Route as SignupRoute } from "@/pages/signup"
@@ -35,23 +34,13 @@ export function LoginForm() {
 			email: "",
 			password: "",
 		},
-		validators: {
-			onChange: ({ value }) => {
-				const result = schema.safeParse(value)
-				if (!result.success) {
-					const errors: Record<string, string> = {}
-					result.error.errors.forEach(err => {
-						const path = err.path.join('.')
-						errors[path] = err.message
-					})
-					return errors
-				}
-				return undefined
-			},
-		},
+		 validators: {
+      onSubmit: schema,
+      onChange: schema,
+    },
 		onSubmit: async ({ value }) => {
-			await schema.parseAsync(value as unknown)
-			await loginMutation.mutateAsync(value as LoginValues)
+			const v = await schema.parseAsync(value)
+			await loginMutation.mutateAsync(v)
 		},
 	})
 
@@ -99,10 +88,10 @@ export function LoginForm() {
 										id={field.name}
 										name={field.name}
 										type="email"
-										placeholder="joao@uefs.br"
 										value={field.state.value}
+										onChange={(e) => field.handleChange((e.target as HTMLInputElement).value)}
 										onBlur={field.handleBlur}
-										onChange={(event) => field.handleChange(event.target.value)}
+										placeholder="joao@uefs.br"
 										required
 									/>
 									{!field.state.meta.isValid ? (
@@ -131,8 +120,8 @@ export function LoginForm() {
 										name={field.name}
 										type="password"
 										value={field.state.value}
+										onChange={(e) => field.handleChange((e.target as HTMLInputElement).value)}
 										onBlur={field.handleBlur}
-										onChange={(event) => field.handleChange(event.target.value)}
 										required
 									/>
 									{!field.state.meta.isValid ? (
