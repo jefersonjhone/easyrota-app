@@ -1,21 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from '@tanstack/react-router'
 
-import { LoginForms } from '@/components/auth/login/LoginForms'
-import AuthLayout from '@/components/auth/layout/AuthLayout'
-import { routes } from '@/routes'
+import { LoginPage } from '@/features/auth/ui/login/LoginPage'
 
 export const Route = createFileRoute('/login')({
-  component: LoginPage,
+  component: LoginRouteComponent,
 })
 
-function LoginPage() {
-  return (
-    <AuthLayout>
-      <LoginForms paths={{
-        createAccount: routes.auth.signup(),
-        recoverPassword: routes.auth.recovery()
-      }} />
-    </AuthLayout>
-  )
+function LoginRouteComponent() {
+  return <LoginPage />
 }
