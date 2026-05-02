@@ -36,6 +36,7 @@ type Schema = z.infer<typeof schema>
 export function LoginForm() {
 	const loginMutation = useLoginMutation()
 	const form = useForm<Schema>({
+    mode: 'onChange',
 		resolver: zodResolver(schema),
 		defaultValues: {
 			email: "",
