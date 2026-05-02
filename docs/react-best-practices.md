@@ -1232,59 +1232,93 @@ routes/
 
 ---
 
-### TanStack Form
+### React Hook Form
 
-**What it solves:** Type-safe, performant forms without re-rendering the entire form on every keystroke.
+**What it solves:** Performant, minimal-boilerplate forms using uncontrolled inputs and refs. Avoids re-rendering the entire form on each keystroke while keeping validation simple and type-safe.
 
-> [!NOTE]
-> 📖 Reference: [TanStack Form Docs](https://tanstack.com/form/latest)
+> 📖 Reference: [https://react-hook-form.com](https://react-hook-form.com)
+
+---
 
 #### Why not just use controlled inputs?
 
-With regular controlled inputs (`useState` per field), the whole component re-renders on every keystroke. For large forms, this causes performance issues. TanStack Form uses a field-level subscription model.
+With `useState` per field, every change triggers a component re-render. In larger forms, this becomes inefficient. React Hook Form stores input state internally using refs and only updates what’s necessary.
+
+---
+
+#### Example with Zod
 
 ```tsx
-import { useForm } from '@tanstack/react-form'
+import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { zodValidator } from '@tanstack/zod-form-adapter'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-// Define your schema with Zod (see section 10)
+// Define schema
 const loginSchema = z.object({
-  email:    z.string().email('Invalid email'),
+  email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
+// Infer TypeScript type from schema
+type LoginFormData = z.infer<typeof loginSchema>
+
 function LoginForm() {
-  const form = useForm({
-    defaultValues: { email: '', password: '' },
-    validatorAdapter: zodValidator(),
-    validators: { onChange: loginSchema },
-    onSubmit: async ({ value }) => {
-      console.log('Submitting:', value) // fully typed!
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
     },
   })
 
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit() }}>
-      <form.Field name="email">
-        {(field) => (
-          <div>
-            <input
-              value={field.state.value}
-              onChange={(e) => field.handleChange(e.target.value)}
-              onBlur={field.handleBlur}
-            />
-            {field.state.meta.errors && (
-              <span>{field.state.meta.errors[0]}</span>
-            )}
-          </div>
-        )}
-      </form.Field>
+  const { register, handleSubmit, formState: { errors } } = form
 
+  const onSubmit = (data: LoginFormData) => {
+    console.log('Submitting:', data)
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div>
+        <input {...register('email')} placeholder="doe@example.com"/>
+        {errors.email && (
+          <span>{errors.email.message}</span>
+        )}
+      </div>
+      <div>
+        <input type="password" {...register('password')} placeholder="Password"/>
+        {errors.password && (
+          <span>{errors.password.message}</span>
+        )}
+      </div>
       <button type="submit">Login</button>
     </form>
   )
 }
+```
+
+---
+
+#### Key Advantages
+
+* **No unnecessary re-renders** (uncontrolled inputs)
+* **Minimal boilerplate** compared to controlled forms
+* **Built-in validation support** via resolvers (Zod, Yup, etc.)
+* **Strong TypeScript support** with schema inference
+* **Simple API** (`register`, `handleSubmit`, `errors`)
+
+---
+
+#### Optional: Cleaner Field Pattern
+
+If you want slightly more structure without heavy abstraction:
+
+```tsx
+<Field>
+  <FieldLabel>Email</FieldLabel>
+  <Input {...register('email')}>
+  <HintInvalid for={errors.email}>
+</Field>
 ```
 
 ---
