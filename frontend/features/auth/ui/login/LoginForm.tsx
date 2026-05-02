@@ -73,33 +73,23 @@ export function LoginForm() {
 					<div className="flex flex-col gap-6">
 						<div className="grid gap-2">
 							<Label htmlFor="email">Email Institucional</Label>
-							<Input id="email" type="email" placeholder="joao@uefs.br" required 
-                {...register("email")}
-							/>
+							<Input id="email" type="email" placeholder="joao@uefs.br" required {...register("email")}/>
               <HintInvalid for={state.errors.email} />
 						</div>
 						<div className="grid gap-2">
 							<div className="flex items-center">
 								<Label htmlFor="password">Senha</Label>
-								<Link
-									to={RecoveryRoute.to}
-									className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-								>
+								<Link to={RecoveryRoute.to} className="ml-auto text-sm underline-offset-4 hover:underline">
 									Esqueceu sua senha?
 								</Link>
 							</div>
-							<Input
-								id="password"
-								type="password"
-								required
-								{...register("password")}
-							/>
+							<Input id="password" type="password" required {...register("password")}/>
               <HintInvalid for={state.errors.password} />
 						</div>
 					</div>
 					<CardFooter className="flex-col gap-2 px-0 pb-0 pt-6">
 						<Button type="submit" className="w-full" disabled={state.isSubmitting}>
-							{state.isSubmitting || loginMutation.isPending ? "Entrando..." : "Entrar"}
+							{state.isSubmitting ? "Entrando..." : "Entrar"}
 						</Button>
 					</CardFooter>
 				</form>
