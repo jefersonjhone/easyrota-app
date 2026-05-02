@@ -95,7 +95,7 @@ export function LoginForm() {
 				</form>
 			</CardContent>
       <CardFooter className="flex-col">
-        <Button form="login" type="submit" className="w-full" disabled={isSubmitting}>
+        <Button form="login" type="submit" className="w-full cursor-pointer" disabled={isSubmitting}>
           {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </CardFooter>
