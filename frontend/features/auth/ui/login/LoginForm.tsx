@@ -9,7 +9,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Link } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -19,6 +18,7 @@ import { useLoginMutation } from "@/features/auth/hooks/useLogin"
 import { Route as RecoveryRoute } from "@/pages/recovery"
 import { Route as SignupRoute } from "@/pages/signup"
 import HintInvalid from '@/features/auth/ui/HintInvalid'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 
 const schema = z.object({
 	email: z.string()
@@ -70,23 +70,23 @@ export function LoginForm() {
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={handleSubmit(onSubmit)}>
-					<div className="flex flex-col gap-6">
-						<div className="grid gap-2">
-							<Label htmlFor="email">Email Institucional</Label>
+					<FieldGroup>
+						<Field className="grid gap-2">
+							<FieldLabel htmlFor="email">Email Institucional</FieldLabel>
 							<Input id="email" type="email" placeholder="joao@uefs.br" required {...register("email")}/>
               <HintInvalid for={state.errors.email} />
-						</div>
-						<div className="grid gap-2">
+						</Field>
+						<Field className="grid gap-2">
 							<div className="flex items-center">
-								<Label htmlFor="password">Senha</Label>
+								<FieldLabel htmlFor="password">Senha</FieldLabel>
 								<Link to={RecoveryRoute.to} className="ml-auto text-sm underline-offset-4 hover:underline">
 									Esqueceu sua senha?
 								</Link>
 							</div>
 							<Input id="password" type="password" required {...register("password")}/>
               <HintInvalid for={state.errors.password} />
-						</div>
-					</div>
+						</Field>
+					</FieldGroup>
 					<CardFooter className="flex-col gap-2 px-0 pb-0 pt-6">
 						<Button type="submit" className="w-full" disabled={state.isSubmitting}>
 							{state.isSubmitting ? "Entrando..." : "Entrar"}

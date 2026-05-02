@@ -1,14 +1,15 @@
-import type { FieldError } from 'react-hook-form'
+import { FieldError } from '@/components/ui/field'
+import type { FieldError as HookError } from 'react-hook-form'
 
 type Props = {
-  for: FieldError | undefined
+  for: HookError | undefined
 }
 
 const HintInvalid = ({ for: errors }: Props) => {
   return errors && (
-    <div className="text-sm text-red-500">
+    <FieldError className="text-sm text-red-500">
       {errors.message || 'Campo inválido'}
-    </div>
+    </FieldError>
   )
 }
 
