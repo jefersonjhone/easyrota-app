@@ -69,13 +69,15 @@ export function LoginForm() {
 				</CardAction>
 			</CardHeader>
 			<CardContent>
-				<form onSubmit={handleSubmit(onSubmit)}>
+
+				<form id="login" onSubmit={handleSubmit(onSubmit)}>
 					<FieldGroup>
 						<Field className="grid gap-2">
 							<FieldLabel htmlFor="email">Email Institucional</FieldLabel>
 							<Input id="email" type="email" placeholder="joao@uefs.br" required {...register("email")}/>
               <HintInvalid for={state.errors.email} />
 						</Field>
+
 						<Field className="grid gap-2">
 							<div className="flex items-center">
 								<FieldLabel htmlFor="password">Senha</FieldLabel>
@@ -87,13 +89,13 @@ export function LoginForm() {
               <HintInvalid for={state.errors.password} />
 						</Field>
 					</FieldGroup>
-					<CardFooter className="flex-col gap-2 px-0 pb-0 pt-6">
-						<Button type="submit" className="w-full" disabled={state.isSubmitting}>
-							{state.isSubmitting ? "Entrando..." : "Entrar"}
-						</Button>
-					</CardFooter>
 				</form>
 			</CardContent>
+      <CardFooter className="flex-col">
+        <Button form="login" type="submit" className="w-full" disabled={state.isSubmitting}>
+          {state.isSubmitting ? "Entrando..." : "Entrar"}
+        </Button>
+      </CardFooter>
 		</Card>
 	)
 }
