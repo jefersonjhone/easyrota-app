@@ -19,7 +19,7 @@ import { useLoginMutation } from "@/features/auth/hooks/useLogin"
 import { Route as RecoveryRoute } from "@/pages/recovery"
 import { Route as SignupRoute } from "@/pages/signup"
 
-const loginSchema = z.object({
+const schema = z.object({
 	email: z.string()
 		.nonempty("Informe seu email institucional.")
 		.email("Informe um email valido."),
@@ -28,23 +28,23 @@ const loginSchema = z.object({
 		.min(8, "A senha deve ter pelo menos 8 caracteres."),
 })
 
-type LoginFormData = z.infer<typeof loginSchema>
+type Schema = z.infer<typeof schema>
 
 export function LoginForm() {
 	const loginMutation = useLoginMutation()
 	const {
 		register,
 		handleSubmit,
-		formState: { errors, isSubmitting },
-	} = useForm<LoginFormData>({
-		resolver: zodResolver(loginSchema),
+		formState: state,
+	} = useForm<Schema>({
+		resolver: zodResolver(schema),
 		defaultValues: {
 			email: "",
 			password: "",
 		},
 	})
 
-	const onSubmit = async (data: LoginFormData) => {
+	const onSubmit = async (data: Schema) => {
 		await loginMutation.mutateAsync(data)
 	}
 
@@ -72,16 +72,12 @@ export function LoginForm() {
 					<div className="flex flex-col gap-6">
 						<div className="grid gap-2">
 							<Label htmlFor="email">Email Institucional</Label>
-							<Input
-								id="email"
-								type="email"
-								placeholder="joao@uefs.br"
-								required
+							<Input id="email" type="email" placeholder="joao@uefs.br" required
 								{...register("email")}
 							/>
-							{errors.email && (
+							{state.errors.email && (
 								<div className="text-sm text-red-500">
-									{errors.email.message}
+									{state.errors.email.message}
 								</div>
 							)}
 						</div>
@@ -101,16 +97,16 @@ export function LoginForm() {
 								required
 								{...register("password")}
 							/>
-							{errors.password && (
+							{state.errors.password && (
 								<div className="text-sm text-red-500">
-									{errors.password.message}
+									{state.errors.password.message}
 								</div>
 							)}
 						</div>
 					</div>
 					<CardFooter className="flex-col gap-2 px-0 pb-0 pt-6">
-						<Button type="submit" className="w-full" disabled={isSubmitting || loginMutation.isPending}>
-							{isSubmitting || loginMutation.isPending ? "Entrando..." : "Entrar"}
+						<Button type="submit" className="w-full" disabled={state.isSubmitting}>
+							{state.isSubmitting || loginMutation.isPending ? "Entrando..." : "Entrar"}
 						</Button>
 					</CardFooter>
 				</form>
