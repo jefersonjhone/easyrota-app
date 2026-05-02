@@ -18,6 +18,7 @@ import { z } from "zod"
 import { useLoginMutation } from "@/features/auth/hooks/useLogin"
 import { Route as RecoveryRoute } from "@/pages/recovery"
 import { Route as SignupRoute } from "@/pages/signup"
+import HintInvalid from '@/features/auth/ui/HintInvalid'
 
 const schema = z.object({
 	email: z.string()
@@ -72,14 +73,10 @@ export function LoginForm() {
 					<div className="flex flex-col gap-6">
 						<div className="grid gap-2">
 							<Label htmlFor="email">Email Institucional</Label>
-							<Input id="email" type="email" placeholder="joao@uefs.br" required
-								{...register("email")}
+							<Input id="email" type="email" placeholder="joao@uefs.br" required 
+                {...register("email")}
 							/>
-							{state.errors.email && (
-								<div className="text-sm text-red-500">
-									{state.errors.email.message}
-								</div>
-							)}
+              <HintInvalid for={state.errors.email} />
 						</div>
 						<div className="grid gap-2">
 							<div className="flex items-center">
@@ -97,11 +94,7 @@ export function LoginForm() {
 								required
 								{...register("password")}
 							/>
-							{state.errors.password && (
-								<div className="text-sm text-red-500">
-									{state.errors.password.message}
-								</div>
-							)}
+              <HintInvalid for={state.errors.password} />
 						</div>
 					</div>
 					<CardFooter className="flex-col gap-2 px-0 pb-0 pt-6">
