@@ -21,10 +21,12 @@ import HintInvalid from '@/features/auth/ui/HintInvalid'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 
 const schema = z.object({
-	email: z.string()
+	email: z
+    .string()
 		.nonempty("Informe seu email institucional.")
 		.email("Informe um email valido."),
-	password: z.string()
+	password: z
+    .string()
 		.nonempty("Informe sua senha.")
 		.min(8, "A senha deve ter pelo menos 8 caracteres."),
 })
@@ -33,17 +35,16 @@ type Schema = z.infer<typeof schema>
 
 export function LoginForm() {
 	const loginMutation = useLoginMutation()
-	const {
-		register,
-		handleSubmit,
-		formState: state,
-	} = useForm<Schema>({
+	const form = useForm<Schema>({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			email: "",
 			password: "",
 		},
 	})
+
+  const { register, handleSubmit, formState: state } = form
+  const isSubmitting = state.isSubmitting || loginMutation.isPending
 
 	const onSubmit = async (data: Schema) => {
 		await loginMutation.mutateAsync(data)
@@ -92,8 +93,8 @@ export function LoginForm() {
 				</form>
 			</CardContent>
       <CardFooter className="flex-col">
-        <Button form="login" type="submit" className="w-full" disabled={state.isSubmitting}>
-          {state.isSubmitting ? "Entrando..." : "Entrar"}
+        <Button form="login" type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </CardFooter>
 		</Card>
