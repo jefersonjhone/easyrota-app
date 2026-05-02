@@ -65,7 +65,7 @@ export function LoginForm() {
 				<CardDescription>Entre com seu email institucional.</CardDescription>
 				<CardAction>
 					<Link to={SignupRoute.to} className="w-full">
-						<Button variant="link">Criar Conta</Button>
+						<Button variant="link" className="cursor-pointer">Criar Conta</Button>
 					</Link>
 				</CardAction>
 			</CardHeader>
@@ -82,8 +82,10 @@ export function LoginForm() {
 						<Field className="grid gap-2">
 							<div className="flex items-center">
 								<FieldLabel htmlFor="password">Senha</FieldLabel>
-								<Link to={RecoveryRoute.to} className="ml-auto text-sm underline-offset-4 hover:underline">
-									Esqueceu sua senha?
+								<Link to={RecoveryRoute.to} className="ml-auto">
+									<Button variant="link" className="text-black/50 cursor-pointer">
+                    Esqueceu sua senha?
+                  </Button>
 								</Link>
 							</div>
 							<Input id="password" type="password" required {...register("password")}/>
