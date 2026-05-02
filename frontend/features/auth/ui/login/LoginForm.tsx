@@ -11,41 +11,42 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Link } from "@tanstack/react-router"
-import { useForm } from "@tanstack/react-form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
 import { useLoginMutation } from "@/features/auth/hooks/useLogin"
 import { Route as RecoveryRoute } from "@/pages/recovery"
 import { Route as SignupRoute } from "@/pages/signup"
-import ErrorHint from "@/features/auth/ui/ErrorHint"
+
+const loginSchema = z.object({
+	email: z.string()
+		.nonempty("Informe seu email institucional.")
+		.email("Informe um email valido."),
+	password: z.string()
+		.nonempty("Informe sua senha.")
+		.min(8, "A senha deve ter pelo menos 8 caracteres."),
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
 	const loginMutation = useLoginMutation()
-
-	const schema = z.object({
-		email: z.string()
-      .nonempty("Informe seu email institucional.")
-      .email("Informe um email valido."),
-		password: z.string()
-      .nonempty("Informe sua senha."),
-	})
-
-	const form = useForm({
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting },
+	} = useForm<LoginFormData>({
+		resolver: zodResolver(loginSchema),
 		defaultValues: {
 			email: "",
 			password: "",
 		},
-		 validators: {
-      onSubmit: schema,
-      onChange: schema,
-    },
-		onSubmit: async ({ value }) => {
-			const v = await schema.parseAsync(value)
-			await loginMutation.mutateAsync(v)
-		},
 	})
 
-
+	const onSubmit = async (data: LoginFormData) => {
+		await loginMutation.mutateAsync(data)
+	}
 
 	if (loginMutation.isSuccess) {
 		return (
@@ -67,69 +68,51 @@ export function LoginForm() {
 				</CardAction>
 			</CardHeader>
 			<CardContent>
-				<form
-					onSubmit={(event) => {
-						event.preventDefault()
-						void form.handleSubmit()
-					}}
-				>
+				<form onSubmit={handleSubmit(onSubmit)}>
 					<div className="flex flex-col gap-6">
-						<form.Field 
-							name="email"
-							children={(field) => (
-								<div className="grid gap-2">
-									<Label htmlFor={field.name}>Email Institucional</Label>
-									<Input
-										id={field.name}
-										name={field.name}
-										type="email"
-										value={field.state.value}
-										onChange={(e) => field.handleChange((e.target as HTMLInputElement).value)}
-										onBlur={field.handleBlur}
-										placeholder="joao@uefs.br"
-										required
-									/>
+						<div className="grid gap-2">
+							<Label htmlFor="email">Email Institucional</Label>
+							<Input
+								id="email"
+								type="email"
+								placeholder="joao@uefs.br"
+								required
+								{...register("email")}
+							/>
+							{errors.email && (
 								<div className="text-sm text-red-500">
-									<ErrorHint field={field} showAlways />
-								</div>
-								</div>
-							)}
-						/>
-						<form.Field
-							name="password"
-							children={(field) => (
-								<div className="grid gap-2">
-									<div className="flex items-center">
-										<Label htmlFor={field.name}>Senha</Label>
-										<Link
-											to={RecoveryRoute.to}
-											className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-										>
-											Esqueceu sua senha?
-										</Link>
-									</div>
-									<Input
-										id={field.name}
-										name={field.name}
-										type="password"
-										value={field.state.value}
-										onChange={(e) => field.handleChange((e.target as HTMLInputElement).value)}
-										onBlur={field.handleBlur}
-										required
-									/>
-									<div className="text-sm text-red-500">
-										<ErrorHint field={field} showAlways />
-									</div>
+									{errors.email.message}
 								</div>
 							)}
-						/>
+						</div>
+						<div className="grid gap-2">
+							<div className="flex items-center">
+								<Label htmlFor="password">Senha</Label>
+								<Link
+									to={RecoveryRoute.to}
+									className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+								>
+									Esqueceu sua senha?
+								</Link>
+							</div>
+							<Input
+								id="password"
+								type="password"
+								required
+								{...register("password")}
+							/>
+							{errors.password && (
+								<div className="text-sm text-red-500">
+									{errors.password.message}
+								</div>
+							)}
+						</div>
 					</div>
 					<CardFooter className="flex-col gap-2 px-0 pb-0 pt-6">
-						<Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-							{loginMutation.isPending ? "Entrando..." : "Entrar"}
+						<Button type="submit" className="w-full" disabled={isSubmitting || loginMutation.isPending}>
+							{isSubmitting || loginMutation.isPending ? "Entrando..." : "Entrar"}
 						</Button>
 					</CardFooter>
-
 				</form>
 			</CardContent>
 		</Card>
