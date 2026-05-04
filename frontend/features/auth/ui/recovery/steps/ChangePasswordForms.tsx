@@ -12,34 +12,14 @@ import { Input } from "@/components/ui/input"
 import { useNavigate } from "@tanstack/react-router"
 
 type Props = {
-  paths: {
-    login: string
-  }
-  onSuccess?: () => void
+  paths: { login: string }
 }
 
-export function ChangePasswordForms({ paths, onSuccess }: Props) {
+export function ChangePasswordForms({ paths }: Props) {
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    
-    // TODO: call your API here
-    // const formData = new FormData(e.currentTarget)
-    // const email = formData.get("email")
-    // await api.requestRecovery(email)
-
-    // move to next step
-    onSuccess?.()
-    navigate({
-      to: paths.login,
-      replace: true
-    })
-  }
-
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={() => navigate({ to: paths.login, replace: true })}>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
