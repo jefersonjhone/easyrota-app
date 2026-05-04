@@ -117,7 +117,9 @@ jobs:
 
       - name: Start backend server
         run: |
-          cd api && poetry run python manage.py runserver 127.0.0.1:8000 &
+          poetry run python manage.py migrate
+          cd api
+          poetry run python manage.py runserver 127.0.0.1:8000 &
 
       - name: Wait for backend server
         run: |
