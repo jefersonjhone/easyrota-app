@@ -25,13 +25,7 @@ export function RequestRecoveryForms({ onSuccess }: Props) {
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    
-    // TODO: call your API here
     const formData = new FormData(e.currentTarget)
-    // const email = formData.get("email")
-    // await api.requestRecovery(email)
-
-    // move to next step
     onSuccess?.(formData)
     next()
   }
