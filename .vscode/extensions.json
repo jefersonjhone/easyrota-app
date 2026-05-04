@@ -27,6 +27,7 @@
         "ms-python.vscode-python-envs",
         "kevinrose.vsc-python-indent",
         "njpwerner.autodocstring",
-        "ms-python.black-formatter"
+        "ms-python.black-formatter",
+        "ms-playwright.playwright"
     ]
 }
