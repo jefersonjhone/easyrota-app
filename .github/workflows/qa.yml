@@ -72,7 +72,7 @@ jobs:
         run: bun run lint
 
       - name: Run tests
-        run: bun test
+        run: bun test test/
 
       - name: Build
         run: bun run build
