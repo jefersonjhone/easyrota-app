@@ -21,30 +21,17 @@ import { ArrowsClockwiseIcon } from "@phosphor-icons/react"
 
 type Props = {
   email: string | null
-  onSuccess?: () => void
 }
 
-export function ConfirmPinForms({ email, onSuccess }: Props) {
+export function ConfirmPinForms({ email }: Props) {
   const { next, prev } = useSteps()
 
-  useEffect(() => {if (!email?.trim()) {prev()}}, [email, prev])
-
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    
-    // TODO: call your API here
-    // const formData = new FormData(e.currentTarget)
-    // const email = formData.get("email")
-    // await api.requestRecovery(email)
-
-    // move to next step
-    onSuccess?.()
-    next()
-  }
+  useEffect(() => {
+    if (!email?.trim()) { prev() }
+  }, [email, prev])
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={next}>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
