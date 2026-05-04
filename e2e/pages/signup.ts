@@ -12,11 +12,7 @@ export class SignupPage {
   }
 
   async goto() {
-    try {
-      await this.page.goto('/signup')
-    } catch {
-      // Navigation interrupted by redirect, continue
-    }
+    await this.page.goto('/signup')
     await this.page.waitForURL('/signup')
   }
 
