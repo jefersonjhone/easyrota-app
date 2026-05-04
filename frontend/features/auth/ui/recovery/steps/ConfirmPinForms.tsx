@@ -51,15 +51,7 @@ export const ConfirmPinForms = ({ email }: Props) => {
 
         <CardContent className="flex flex-col gap-2">
           <Field>
-            <div className="flex items-center justify-between">
-              <FieldLabel htmlFor="otp-verification">
-                Código de Confirmação
-              </FieldLabel>
-              <Button variant="outline" size="xs">
-                <ArrowsClockwiseIcon size={32} />
-                Re-enviar código
-              </Button>
-            </div>
+            <PinLabel/>
             <PinField/>
           </Field>
         </CardContent>
@@ -73,6 +65,18 @@ export const ConfirmPinForms = ({ email }: Props) => {
     </form>
   )
 }
+
+ const PinLabel = () => (
+  <div className="flex items-center justify-between">
+    <FieldLabel htmlFor="otp-verification">
+      Código de Confirmação
+    </FieldLabel>
+    <Button variant="outline" size="xs">
+      <ArrowsClockwiseIcon size={32} />
+      Re-enviar código
+    </Button>
+  </div>
+)
 
 const PinField = () => {
   const groupClass = `
