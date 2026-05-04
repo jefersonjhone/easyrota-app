@@ -52,7 +52,7 @@ export const ConfirmPinForms = ({ email }: Props) => {
         <CardContent className="flex flex-col gap-2">
           <Field>
             <PinLabel/>
-            <PinField/>
+            <PinInput/>
           </Field>
         </CardContent>
 
@@ -78,7 +78,7 @@ export const ConfirmPinForms = ({ email }: Props) => {
   </div>
 )
 
-const PinField = () => {
+const PinInput = () => {
   const groupClass = `
     *:data-[slot=input-otp-slot]:h-12 
     *:data-[slot=input-otp-slot]:w-11 
