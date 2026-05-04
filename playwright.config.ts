@@ -63,7 +63,7 @@ export default defineConfig({
 
   webServer: {
     command: process.env.CI
-      ? 'bun run build && bun run preview -- --port 5173'
+      ? 'bun run dev -- --port 5173'
       : 'bun dev -- --port 5173',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
