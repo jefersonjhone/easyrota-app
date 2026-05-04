@@ -1,16 +1,7 @@
-/* eslint-disable react-refresh/only-export-components */
-import AuthLayout from '@/features/auth/ui/AuthLayout'
-import { RecoveryForms } from '@/features/auth/ui/recovery/RecoveryForms'
+import { RecoveryPage } from '@/features/auth/ui/recovery/RecoveryPage'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/recovery')({
-  component: RouteComponent,
+  component: () => <RecoveryPage />,
 })
 
-function RouteComponent() {
-  return (
-    <AuthLayout>
-      <RecoveryForms/>
-    </AuthLayout>
-  )
-}
