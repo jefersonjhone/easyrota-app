@@ -48,14 +48,7 @@ export const ConfirmPinForms = ({ email }: Props) => {
             </Button>
           </CardAction>
         </CardHeader>
-
-        <CardContent className="flex flex-col gap-2">
-          <Field>
-            <PinLabel/>
-            <PinInput/>
-          </Field>
-        </CardContent>
-
+        <PinField />
         <CardFooter className="flex-col gap-2">
           <Button type="submit" className="w-full cursor-pointer">
             Confirmar
@@ -65,6 +58,15 @@ export const ConfirmPinForms = ({ email }: Props) => {
     </form>
   )
 }
+
+const PinField = () => (
+  <CardContent className="flex flex-col gap-2">
+    <Field>
+      <PinLabel />
+      <PinInput />
+    </Field>
+  </CardContent>
+)
 
  const PinLabel = () => (
   <div className="flex items-center justify-between">
