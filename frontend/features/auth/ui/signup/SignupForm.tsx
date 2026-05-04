@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -7,30 +6,57 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { useSignupMutation, type SignupVariant } from "@/features/auth/hooks/useSignup"
+import HintInvalid from "@/features/auth/ui/HintInvalid"
 
-type Variant = "civil-servant" | "student"
+const signupSchema = z.object({
+  email: z
+    .string()
+    .nonempty("Informe seu email institucional.")
+    .email("Informe um email válido."),
+  fullName: z
+    .string()
+    .nonempty("Informe seu nome completo.")
+    .min(3, "O nome deve ter pelo menos 3 caracteres."),
+  id: z
+    .string()
+    .nonempty("Informe sua matrícula.")
+    .min(6, "A matrícula deve ter pelo menos 6 caracteres."),
+  password: z
+    .string()
+    .nonempty("Informe sua senha.")
+    .min(8, "A senha deve ter pelo menos 8 caracteres."),
+  confirmPassword: z
+    .string()
+    .nonempty("Confirme sua senha."),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "As senhas não correspondem.",
+  path: ["confirmPassword"],
+})
+
+type SignupSchema = z.infer<typeof signupSchema>
 
 type Props = {
-  variant: Variant
+  variant: SignupVariant
   paths: {
     login: string
   }
 }
 
-const variantConfig: Record<Variant, {
+const variantConfig: Record<SignupVariant, {
   emailPlaceholder: string
-  idLabel: string
-  profileType: string
+  namePlaceholder: string
 }> = {
   "civil-servant": {
     emailPlaceholder: "joão@uefs.br",
-    idLabel: "Matrícula",
-    profileType: "civil-servant",
+    namePlaceholder: "João da Silva",
   },
   "student": {
     emailPlaceholder: "12345678@discente.uefs.br",
-    idLabel: "Matrícula",
-    profileType: "student",
+    namePlaceholder: "Carla Santos",
   },
 }
 
@@ -38,136 +64,115 @@ export default function SignupForm(props: Props) {
   const { variant, paths } = props
   const config = variantConfig[variant]
   
-  const [formData, setFormData] = useState({
-    email: "",
-    fullName: "",
-    id: "",
-    password: "",
-    confirmPassword: "",
+  const signupMutation = useSignupMutation(variant)
+  const form = useForm<SignupSchema>({
+    mode: "onChange",
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: "",
+      fullName: "",
+      id: "",
+      password: "",
+      confirmPassword: "",
+    },
   })
-  const [errors, setErrors] = useState<Record<string, string[]>>({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target
-    const key = id === "full-name" ? "fullName" : id === "id" ? "id" : id === "confirm-password" ? "confirmPassword" : id
-    setFormData((prev) => ({ ...prev, [key]: value }))
-  }
+  const { register, handleSubmit, formState: state, setError } = form
+  const isSubmitting = state.isSubmitting || signupMutation.isPending
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setErrors({})
-
+  const onSubmit = async (data: SignupSchema) => {
     try {
-      const payload: Record<string, string> = {
-        email: formData.email,
-        full_name: formData.fullName,
-        password: formData.password,
-        password_confirmation: formData.confirmPassword,
-        profile_type: config.profileType,
-      }
-
-      if (variant === "civil-servant") {
-        payload.civil_servant_id = formData.id
-      } else {
-        payload.student_id = formData.id
-      }
-
-      const response = await fetch("/api/register/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+      await signupMutation.mutateAsync(data)
+    } catch (error: unknown) {
+      const errors = error as Record<string, string[]>
+      Object.entries(errors).forEach(([field, messages]) => {
+        if (field === "non_field_errors") {
+          setError("root", { message: messages[0] })
+        } else {
+          setError(field as keyof SignupSchema, { message: messages[0] })
+        }
       })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setSuccess(true)
-        setTimeout(() => {
-          window.location.href = paths.login
-        }, 2000)
-      } else {
-        setErrors(data)
-      }
-    } catch (error) {
-      console.error("Registration error:", error)
-      setErrors({ non_field_errors: ["Ocorreu um erro inesperado. Tente novamente."] })
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  if (success) {
+  if (signupMutation.isSuccess) {
     return (
-      <div className="p-4 text-center text-green-600 bg-green-50 rounded-md">
+      <div className="rounded-md bg-green-50 p-4 text-center text-green-600">
         Conta criada com sucesso! Redirecionando...
       </div>
     )
   }
 
-  const idFieldKey = variant === "civil-servant" ? "civil_servant_id" : "student_id"
-
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Email Institucional</FieldLabel>
-          <Input id="email" type="email" placeholder={config.emailPlaceholder} required
-            value={formData.email} onChange={handleChange} 
+          <Input
+            id="email"
+            type="email"
+            placeholder={config.emailPlaceholder}
+            required
+            {...register("email")}
           />
-          {errors.email && <FieldDescription className="text-red-500">{errors.email[0]}</FieldDescription>}
+          <HintInvalid for={state.errors.email} />
         </Field>
         <Field>
-          <FieldLabel htmlFor="full-name">Nome Completo</FieldLabel>
-          <Input id="full-name" type="text" required
-            placeholder={variant === "civil-servant" ? "João da Silva" : "Carla Santos"}
-            value={formData.fullName} onChange={handleChange}
+          <FieldLabel htmlFor="fullName">Nome Completo</FieldLabel>
+          <Input
+            id="fullName"
+            type="text"
+            placeholder={config.namePlaceholder}
+            required
+            {...register("fullName")}
           />
-          {errors.full_name && <FieldDescription className="text-red-500">{errors.full_name[0]}</FieldDescription>}
+          <HintInvalid for={state.errors.fullName} />
         </Field>
         <Field>
-          <FieldLabel htmlFor="id">{config.idLabel}</FieldLabel>
-          <Input id="id" type="text" placeholder="12345678" required
-            value={formData.id} onChange={handleChange}
+          <FieldLabel htmlFor="id">Matrícula</FieldLabel>
+          <Input
+            id="id"
+            type="text"
+            placeholder="12345678"
+            required
+            {...register("id")}
           />
-          {errors[idFieldKey] && <FieldDescription className="text-red-500">{errors[idFieldKey][0]}</FieldDescription>}
+          <HintInvalid for={state.errors.id} />
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Senha</FieldLabel>
-          <Input id="password" type="password" required 
-            value={formData.password} onChange={handleChange}
+          <Input
+            id="password"
+            type="password"
+            required
+            {...register("password")}
           />
-          {errors.password ? (
-            <FieldDescription className="text-red-500">{errors.password[0]}</FieldDescription>
+          {state.errors.password ? (
+            <HintInvalid for={state.errors.password} />
           ) : (
             <FieldDescription>A senha deve ter ao menos 8 caracteres.</FieldDescription>
           )}
         </Field>
         <Field>
-          <FieldLabel htmlFor="confirm-password">Confirmar Senha</FieldLabel>
-          <Input id="confirm-password" type="password" required 
-            value={formData.confirmPassword} onChange={handleChange}
+          <FieldLabel htmlFor="confirmPassword">Confirmar Senha</FieldLabel>
+          <Input
+            id="confirmPassword"
+            type="password"
+            required
+            {...register("confirmPassword")}
           />
-          {errors.password_confirmation ? (
-            <FieldDescription className="text-red-500">{errors.password_confirmation[0]}</FieldDescription>
-          ) : (
-            <FieldDescription>Por favor, confirme sua senha.</FieldDescription>
-          )}
+          <HintInvalid for={state.errors.confirmPassword} />
         </Field>
-        {errors.non_field_errors && (
-          <div className="text-red-500 text-sm mt-2">{errors.non_field_errors[0]}</div>
+        {state.errors.root && (
+          <div className="text-red-500 text-sm mt-2">{state.errors.root.message}</div>
         )}
         <FieldGroup>
           <Field>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Criando Conta..." : "Criar Conta"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Criando Conta..." : "Criar Conta"}
             </Button>
             <FieldDescription className="px-6 text-center">
-                Já tem uma conta? <a href={paths.login}>Entrar</a>
+              Já tem uma conta? <a href={paths.login}>Entrar</a>
             </FieldDescription>
           </Field>
         </FieldGroup>
