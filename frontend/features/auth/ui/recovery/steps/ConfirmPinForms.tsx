@@ -39,14 +39,7 @@ export const ConfirmPinForms = ({ email }: Props) => {
             Insira o código de confirmação enviado para seu email:{" "}
             <span className="font-medium">{email}</span>
           </CardDescription>
-
-          <CardAction>
-            <Button className="w-full cursor-pointer" variant="link" 
-              type="button" onClick={() => prev()}
-            >
-              Email errado?
-            </Button>
-          </CardAction>
+          <GoBackButton onClick={prev} />
         </CardHeader>
         <PinField />
         <SubmitPin />
@@ -54,6 +47,16 @@ export const ConfirmPinForms = ({ email }: Props) => {
     </form>
   )
 }
+
+const GoBackButton = ({ onClick }: { onClick: () => void }) => (
+  <CardAction>
+    <Button className="w-full cursor-pointer" variant="link" 
+      type="button" onClick={onClick}
+    >
+      Email errado?
+    </Button>
+  </CardAction>
+)
 
 const PinField = () => (
   <CardContent className="flex flex-col gap-2">
