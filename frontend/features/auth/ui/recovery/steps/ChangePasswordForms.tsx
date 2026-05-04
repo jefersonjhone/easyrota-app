@@ -22,20 +22,8 @@ export function ChangePasswordForms() {
           <CardTitle>Recuperar Acesso</CardTitle>
           <CardDescription>Mude sua senha!</CardDescription>
         </CardHeader>
-
         <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="password">Nova Senha</FieldLabel>
-              <Input id="password" name="password" type="password" placeholder="••••••••" required />
-              <FieldDescription>A senha deve ter ao menos 8 caracteres.</FieldDescription>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="password-confirm">Confirmar Senha</FieldLabel>
-              <Input id="password-confirm" name="password-confirm" type="password" placeholder="••••••••" required />
-              <FieldDescription>Por favor, confirme sua senha.</FieldDescription>
-            </Field>
-          </FieldGroup>
+          <PasswordField />
         </CardContent>
         <SubmitPassword />
       </Card>
@@ -43,6 +31,20 @@ export function ChangePasswordForms() {
   )
 }
 
+const PasswordField = () => (
+  <FieldGroup>
+    <Field>
+      <FieldLabel htmlFor="password">Nova Senha</FieldLabel>
+      <Input id="password" name="password" type="password" placeholder="••••••••" required />
+      <FieldDescription>A senha deve ter ao menos 8 caracteres.</FieldDescription>
+    </Field>
+    <Field>
+      <FieldLabel htmlFor="password-confirm">Confirmar Senha</FieldLabel>
+      <Input id="password-confirm" name="password-confirm" type="password" placeholder="••••••••" required />
+      <FieldDescription>Por favor, confirme sua senha.</FieldDescription>
+    </Field>
+  </FieldGroup>
+)
 
 const SubmitPassword = () => (
   <CardFooter>
