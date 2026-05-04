@@ -1,8 +1,8 @@
-import { Page } from '@playwright/test'
+import { expect, Page } from '@playwright/test'
 import { SignupPage } from '../pages/signup'
 
 export const unique = () => `${Date.now()}.${Math.random().toString(36).slice(2)}`
-export const uniqueRegistration = () => Math.random().toString().slice(8)
+export const uniqueRegistration = () => `${Date.now()}${Math.floor(Math.random() * 1_000_000)}`.slice(-8)
 export const uniqueEmail = () => `john.doe+${unique()}@example.com`
 
 export const signupAsCivilServant = async (page: Page, password: string) => {
@@ -18,6 +18,7 @@ export const signupAsCivilServant = async (page: Page, password: string) => {
   await signupPage.password.fill(password)
   await signupPage.confirmPassword.fill(password)
   await signupPage.submitButton.click()
+  await expect(page.getByText('Conta criada com sucesso!')).toBeVisible()
 
   return { email, password }
 }
@@ -38,6 +39,7 @@ export const signupAsStudent = async (
   await signupPage.password.fill(password)
   await signupPage.confirmPassword.fill(password)
   await signupPage.submitButton.click()
+  await expect(page.getByText('Conta criada com sucesso!')).toBeVisible()
 
   return { email, password }
 }
