@@ -24,7 +24,6 @@ export function RecoveryForms({ paths }: Props) {
 
       <Step value="request">
         <RequestRecoveryForms 
-          paths={paths} 
           onSuccess={(form: FormData) => setEmail(form.get("email") as string)} 
         />
       </Step>

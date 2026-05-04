@@ -15,15 +15,13 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
+import { Route as LoginRoute } from "@/pages/login"
 
 type Props = {
-  paths: {
-    login: string
-  }
   onSuccess?: (form: FormData) => void
 }
 
-export function RequestRecoveryForms({ paths, onSuccess }: Props) {
+export function RequestRecoveryForms({ onSuccess }: Props) {
   const { next } = useSteps()
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -46,9 +44,9 @@ export function RequestRecoveryForms({ paths, onSuccess }: Props) {
           <CardTitle>Recuperar Acesso</CardTitle>
           <CardDescription>Insira seu email para recuperar seu acesso.</CardDescription>
           <CardAction>
-            <Link to={paths.login} className="w-full">
+            <LoginRoute.Link className="w-full">
               <Button variant="link" type="button">Cancelar</Button>
-            </Link>
+            </LoginRoute.Link>
           </CardAction>
         </CardHeader>
 
