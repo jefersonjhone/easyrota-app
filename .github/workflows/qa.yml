@@ -105,9 +105,17 @@ jobs:
       - name: Install backend dependencies
         run: poetry install --no-interaction --no-ansi
 
+      - name: Create Django environment file
+        run: |
+          cat > api/.env << EOF
+          SECRET_KEY="some-secrete-key"
+          DEBUG=True
+          DJANGO_SETTINGS_MODULE="config.settings.development"
+          EOF
+
       - name: Start backend server
         run: |
-          poetry run python api/manage.py runserver 127.0.0.1:8000 &
+          cd api && poetry run python manage.py runserver 127.0.0.1:8000 &
 
       - name: Wait for backend server
         run: |
