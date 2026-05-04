@@ -11,8 +11,13 @@ export class SignupPage {
     await this.page.getByRole('tab', { name: 'Servidor Público' }).click();
   }
 
-  goto() {
-    this.page.goto('/signup')
+  async goto() {
+    try {
+      await this.page.goto('/signup')
+    } catch {
+      // Navigation interrupted by redirect, continue
+    }
+    await this.page.waitForURL('/signup')
   }
 
   get email(): Locator {
