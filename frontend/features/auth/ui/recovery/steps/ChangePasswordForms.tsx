@@ -16,7 +16,10 @@ export function ChangePasswordForms() {
   const navigate = useNavigate()
 
   return (
-    <form onSubmit={() => navigate({ to: LoginRoute.to, replace: true })}>
+    <form onSubmit={(event) => {
+      event.preventDefault()
+      navigate({ to: LoginRoute.to, replace: true })
+    }}>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
