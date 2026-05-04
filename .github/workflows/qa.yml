@@ -116,9 +116,11 @@ jobs:
           EOF
 
       - name: Start backend server
+        working-directory: api
         run: |
-          cd api && poetry run python manage.py migrate
-          cd api && poetry run python manage.py runserver 127.0.0.1:8000 &
+          poetry run python manage.py migrate
+          poetry run python manage.py runserver 127.0.0.1:8000 > ../django-server.log 2>&1 &
+          echo $! > ../django-server.pid
 
       - name: Wait for backend server
         run: |
@@ -127,9 +129,15 @@ jobs:
               echo "Backend is ready"
               exit 0
             fi
+            if [[ -f django-server.pid ]] && ! kill -0 "$(cat django-server.pid)" 2>/dev/null; then
+              echo "Backend process exited early"
+              cat django-server.log || true
+              exit 1
+            fi
             sleep 2
           done
           echo "Backend did not become ready in time"
+          cat django-server.log || true
           exit 1
 
       - name: Setup Bun
