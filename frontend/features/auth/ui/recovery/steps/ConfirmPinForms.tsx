@@ -49,11 +49,7 @@ export const ConfirmPinForms = ({ email }: Props) => {
           </CardAction>
         </CardHeader>
         <PinField />
-        <CardFooter className="flex-col gap-2">
-          <Button type="submit" className="w-full cursor-pointer">
-            Confirmar
-          </Button>
-        </CardFooter>
+        <SubmitPin />
       </Card>
     </form>
   )
@@ -103,3 +99,11 @@ const PinInput = () => {
     </InputOTP>
   )
 }
+const SubmitPin = () => (
+  <CardFooter className="flex-col gap-2">
+    <Button type="submit" className="w-full cursor-pointer">
+      Confirmar
+    </Button>
+  </CardFooter>
+)
+
