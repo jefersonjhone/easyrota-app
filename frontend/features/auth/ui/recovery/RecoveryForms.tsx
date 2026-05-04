@@ -6,13 +6,7 @@ import { RequestRecoveryForms } from "./steps/RequestRecoveryForms"
 import { ConfirmPinForms } from "./steps/ConfirmPinForms"
 import { ChangePasswordForms } from "./steps/ChangePasswordForms"
 
-type Props = {
-  paths: {
-    login: string
-  }
-}
-
-export function RecoveryForms({ paths }: Props) {
+export function RecoveryForms() {
   const [email, setEmail] = useState<string | null>(null)
   return (
     <StepsRoot stepsOrder={["request", "confirm", "reset"]}>
