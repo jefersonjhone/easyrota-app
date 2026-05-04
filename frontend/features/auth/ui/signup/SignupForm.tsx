@@ -116,48 +116,30 @@ export default function SignupForm(props: Props) {
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Email Institucional</FieldLabel>
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder={config.emailPlaceholder}
-            value={formData.email}
-            onChange={handleChange}
-            required 
+          <Input id="email" type="email" placeholder={config.emailPlaceholder} required
+            value={formData.email} onChange={handleChange} 
           />
           {errors.email && <FieldDescription className="text-red-500">{errors.email[0]}</FieldDescription>}
         </Field>
         <Field>
           <FieldLabel htmlFor="full-name">Nome Completo</FieldLabel>
-          <Input 
-            id="full-name" 
-            type="text" 
+          <Input id="full-name" type="text" required
             placeholder={variant === "civil-servant" ? "João da Silva" : "Carla Santos"}
-            value={formData.fullName}
-            onChange={handleChange}
-            required
+            value={formData.fullName} onChange={handleChange}
           />
           {errors.full_name && <FieldDescription className="text-red-500">{errors.full_name[0]}</FieldDescription>}
         </Field>
         <Field>
           <FieldLabel htmlFor="id">{config.idLabel}</FieldLabel>
-          <Input 
-            id="id" 
-            type="text" 
-            placeholder="12345678" 
-            value={formData.id}
-            onChange={handleChange}
-            required
+          <Input id="id" type="text" placeholder="12345678" required
+            value={formData.id} onChange={handleChange}
           />
           {errors[idFieldKey] && <FieldDescription className="text-red-500">{errors[idFieldKey][0]}</FieldDescription>}
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Senha</FieldLabel>
-          <Input 
-            id="password" 
-            type="password" 
-            value={formData.password}
-            onChange={handleChange}
-            required 
+          <Input id="password" type="password" required 
+            value={formData.password} onChange={handleChange}
           />
           {errors.password ? (
             <FieldDescription className="text-red-500">{errors.password[0]}</FieldDescription>
@@ -167,12 +149,8 @@ export default function SignupForm(props: Props) {
         </Field>
         <Field>
           <FieldLabel htmlFor="confirm-password">Confirmar Senha</FieldLabel>
-          <Input 
-            id="confirm-password" 
-            type="password" 
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required 
+          <Input id="confirm-password" type="password" required 
+            value={formData.confirmPassword} onChange={handleChange}
           />
           {errors.password_confirmation ? (
             <FieldDescription className="text-red-500">{errors.password_confirmation[0]}</FieldDescription>
