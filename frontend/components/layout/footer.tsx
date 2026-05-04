@@ -3,7 +3,6 @@ import Section from "./footer/Section"
 import InnerFooter from "./footer/InnerFooter"
 
 import { InstagramLogoIcon, FacebookLogoIcon, GithubLogoIcon } from "@phosphor-icons/react"
-import { routes } from '@/routes'
 
 type SectionData = {
   title: string
@@ -14,36 +13,36 @@ const sections: SectionData[] = [
   {
     title: "Plataforma",
     links: [
-      { href: routes.public.about(), label: "Sobre o projeto" },
-      { href: routes.public.contacts(), label: "Como funciona" },
-      { href: routes.public.routes(), label: "A rota" },
-      { href: routes.public.team(), label: "Equipe" },
+      { href: "#", label: "Sobre o projeto" },
+      { href: "#", label: "Como funciona" },
+      { href: "#", label: "A rota" },
+      { href: "#", label: "Equipe" },
     ]
   },
   {
     title: "Viagem",
     links: [
-      { href: routes.public.features.confirm(), label: "Confirmar presença" },
-      { href: routes.public.features.history(), label: "Histórico" },
-      { href: routes.public.features.notifications(), label: "Notificações" },
-      { href: routes.public.features.checkin(), label: "Check-in" },
+      { href: "#", label: "Confirmar presença" },
+      { href: "#", label: "Histórico" },
+      { href: "#", label: "Notificações" },
+      { href: "#", label: "Check-in" },
     ]
   },
   {
     title: "Acadêmico",
     links: [
-      { href: routes.external.academic.exa613(), label: "EXA613 / PBL" },
-      { href: routes.external.github.repo(), label: "Repositório GitHub" },
-      { href: routes.external.github.docs(), label: "Documentação" },
-      { href: routes.public.legal(), label: "Aviso legal" },
+      { href: "#", label: "EXA613 / PBL" },
+      { href: "#", label: "Repositório GitHub" },
+      { href: "#", label: "Documentação" },
+      { href: "#", label: "Aviso legal" },
     ]
   }
 ]
 
 const socialLinks = [
-  { href: routes.external.instagram(), label: "Instagram", icon: <InstagramLogoIcon /> },
-  { href: routes.external.facebook(), label: "Facebook", icon: <FacebookLogoIcon /> },
-  { href: routes.external.github.repo(), label: "GitHub", icon: <GithubLogoIcon /> }
+  { href: "#", label: "Instagram", icon: <InstagramLogoIcon /> },
+  { href: "#", label: "Facebook", icon: <FacebookLogoIcon /> },
+  { href: "https://github.com/EasyRota", label: "GitHub", icon: <GithubLogoIcon /> }
 ]
 
 const Footer = () => {
