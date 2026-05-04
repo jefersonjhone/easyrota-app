@@ -5,8 +5,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import CivilServantSignupForms from "@/components/auth/signup/CivilServantSignupForms"
-import StudentSignupForms from "@/components/auth/signup/StudentSignupForms"
+import CivilServantSignupForms from "@/features/auth/ui/signup/CivilServantSignupForms"
+import StudentSignupForms from "@/features/auth/ui/signup/StudentSignupForms"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type Props = {
