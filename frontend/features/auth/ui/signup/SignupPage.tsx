@@ -5,19 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import CivilServantSignupForms from "@/features/auth/ui/signup/CivilServantSignupForms"
-import StudentSignupForms from "@/features/auth/ui/signup/StudentSignupForms"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import SignupForm from '@/features/auth/ui/signup/SignupForm'
 
-type Props = {
-  paths: {
-    login: string
-  }
-}
-
-export function SignupForm(props: Props) {
-  const paths = props.paths
-
+export function SignupPage() {
   return (
 
     <Tabs defaultValue="civil-servant" className="w-full max-w-md">
@@ -34,10 +25,10 @@ export function SignupForm(props: Props) {
         </CardHeader>
         <CardContent>
           <TabsContent value="civil-servant">
-            <CivilServantSignupForms paths={paths} />
+            <SignupForm variant="civil-servant" paths={{ login: "/login" }} />
           </TabsContent>
           <TabsContent value="student">
-            <StudentSignupForms paths={paths} />
+            <SignupForm variant="student" paths={{ login: "/login" }} />
           </TabsContent>
         </CardContent>
       </Card>
