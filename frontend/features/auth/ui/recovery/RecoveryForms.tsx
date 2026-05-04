@@ -32,7 +32,7 @@ export function RecoveryForms({ paths }: Props) {
         <ConfirmPinForms email={email} onSuccess={() => {}} />
       </Step>
       <Step value="reset">
-        <ChangePasswordForms paths={paths} />
+        <ChangePasswordForms/>
       </Step>
     </StepsRoot>
   )

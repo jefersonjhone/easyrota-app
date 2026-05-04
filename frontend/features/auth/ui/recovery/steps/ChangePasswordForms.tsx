@@ -10,16 +10,13 @@ import {
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useNavigate } from "@tanstack/react-router"
+import { Route as LoginRoute } from "@/pages/login"
 
-type Props = {
-  paths: { login: string }
-}
-
-export function ChangePasswordForms({ paths }: Props) {
+export function ChangePasswordForms() {
   const navigate = useNavigate()
 
   return (
-    <form onSubmit={() => navigate({ to: paths.login, replace: true })}>
+    <form onSubmit={() => navigate({ to: LoginRoute.to, replace: true })}>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
