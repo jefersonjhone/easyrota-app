@@ -33,23 +33,23 @@ export function RequestRecoveryForms({ onSuccess }: Props) {
   return (
     <form onSubmit={handleSubmit}>
       <Card className="w-full">
-        <Header/>
-        <EmailField/>        
-        <SubmitRequest/>
+        <CardHeader>
+          <CardTitle>Recuperar Acesso</CardTitle>
+          <CardDescription>Insira seu email para recuperar seu acesso.</CardDescription>
+          <CardAction>
+            <CancelButton/>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <EmailField/>
+        </CardContent>
+        <CardFooter>
+          <SubmitRequest/>
+        </CardFooter>
       </Card>
     </form>
   )
 }
-
-const Header = () => (
-  <CardHeader>
-    <CardTitle>Recuperar Acesso</CardTitle>
-    <CardDescription>Insira seu email para recuperar seu acesso.</CardDescription>
-    <CardAction>
-      <CancelButton/>
-    </CardAction>
-  </CardHeader>
-)
 
 const CancelButton = () => (
   <LoginRoute.Link className="w-full">
@@ -58,17 +58,13 @@ const CancelButton = () => (
 )
 
 const EmailField = () => (
-  <CardContent>
-    <Field>
-      <FieldLabel htmlFor="email">Email</FieldLabel>
-      <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
-    </Field>
-  </CardContent>
+  <Field>
+    <FieldLabel htmlFor="email">Email</FieldLabel>
+    <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
+  </Field>
 )
 const SubmitRequest = () => (
-  <CardFooter>
-    <Button type="submit" className="w-full cursor-pointer">
-      Receber email
-    </Button>
-  </CardFooter>
+  <Button type="submit" className="w-full cursor-pointer">
+    Receber email
+  </Button>
 )

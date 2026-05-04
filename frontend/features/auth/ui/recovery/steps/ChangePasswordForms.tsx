@@ -25,7 +25,9 @@ export function ChangePasswordForms() {
         <CardContent>
           <PasswordField />
         </CardContent>
-        <SubmitPassword />
+        <CardFooter>
+          <SubmitPassword />
+        </CardFooter>
       </Card>
     </form>
   )
@@ -47,9 +49,7 @@ const PasswordField = () => (
 )
 
 const SubmitPassword = () => (
-  <CardFooter>
-    <Button type="submit" className="w-full cursor-pointer">
-      Confirmar
-    </Button>
-  </CardFooter>
+  <Button type="submit" className="w-full cursor-pointer">
+    Confirmar
+  </Button>
 )

@@ -39,32 +39,33 @@ export const ConfirmPinForms = ({ email }: Props) => {
             Insira o código de confirmação enviado para seu email:{" "}
             <span className="font-medium">{email}</span>
           </CardDescription>
-          <GoBackButton onClick={prev} />
+          <CardAction>
+            <GoBackButton onClick={prev} />
+          </CardAction>
         </CardHeader>
-        <PinField />
-        <SubmitPin />
+        <CardContent className="flex flex-col gap-2">
+          <PinField />
+        </CardContent>
+        <CardFooter className="flex-col gap-2">
+          <SubmitPin />
+        </CardFooter>
       </Card>
     </form>
   )
 }
 
 const GoBackButton = ({ onClick }: { onClick: () => void }) => (
-  <CardAction>
-    <Button className="w-full cursor-pointer" variant="link" 
-      type="button" onClick={onClick}
-    >
-      Email errado?
-    </Button>
-  </CardAction>
+  <Button className="w-full cursor-pointer" variant="link" 
+    type="button" onClick={onClick}>
+    Email errado?
+  </Button>
 )
 
 const PinField = () => (
-  <CardContent className="flex flex-col gap-2">
-    <Field>
-      <PinLabel />
-      <PinInput />
-    </Field>
-  </CardContent>
+  <Field>
+    <PinLabel />
+    <PinInput />
+  </Field>
 )
 
  const PinLabel = () => (
@@ -103,10 +104,8 @@ const PinInput = () => {
   )
 }
 const SubmitPin = () => (
-  <CardFooter className="flex-col gap-2">
-    <Button type="submit" className="w-full cursor-pointer">
-      Confirmar
-    </Button>
-  </CardFooter>
+  <Button type="submit" className="w-full cursor-pointer">
+    Confirmar
+  </Button>
 )
 
