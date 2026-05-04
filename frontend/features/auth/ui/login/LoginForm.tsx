@@ -1,24 +1,22 @@
-import { Button } from "@/components/ui/button"
-import {
-	Card,
-	CardAction,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+// Library
 import { Link } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
-import { useLoginMutation } from "@/features/auth/hooks/useLogin"
-import { Route as RecoveryRoute } from "@/pages/recovery"
-import { Route as SignupRoute } from "@/pages/signup"
-import HintInvalid from '@/features/auth/ui/HintInvalid'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+// Hooks
+import { useLoginMutation } from "@features/auth/hooks/useLogin"
+
+// Routes
+import { Route as RecoveryRoute } from "@pages/recovery"
+import { Route as SignupRoute } from "@pages/signup"
+
+// Components
+import HintInvalid from '@features/auth/ui/HintInvalid'
+import { Button } from "@ui/button"
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@ui/card"
+import { Field, FieldGroup, FieldLabel } from '@ui/field'
+import { Input } from "@ui/input"
 
 const schema = z.object({
 	email: z

@@ -1,5 +1,5 @@
-import logo from "@/assets/logo-light-mode.svg"
-import { Button } from "@/components/ui/button"
+import logo from "@assets/logo-light-mode.svg"
+import { Button } from "@ui/button"
 
 type User = {
   name: string

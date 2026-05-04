@@ -1,8 +1,5 @@
-// Import Hooks
-import { useSteps } from "@/components/ui/steps"
-
-// Import Components
-import { Button } from "@/components/ui/button"
+// Components
+import { Button } from "@ui/button"
 import {
   Card,
   CardAction,
@@ -11,10 +8,16 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Route as LoginRoute } from "@/pages/login"
+} from "@ui/card"
+import { Input } from "@ui/input"
+import { Field, FieldLabel } from "@ui/field"
+
+// Hooks
+import { useSteps } from "@ui/steps"
+
+// Routes
+import { Route as LoginRoute } from "@pages/login"
+
 
 type Props = {
   onSuccess?: (form: FormData) => void

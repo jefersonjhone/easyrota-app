@@ -1,16 +1,14 @@
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+// Components
+import { Button } from "@ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@ui/card"
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
+import { Input } from "@ui/input"
+
+// Hooks
 import { useNavigate } from "@tanstack/react-router"
-import { Route as LoginRoute } from "@/pages/login"
+
+// Routes
+import { Route as LoginRoute } from "@pages/login"
 
 export function ChangePasswordForms() {
   const navigate = useNavigate()

@@ -23,6 +23,13 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./frontend"),
+      "@features": path.resolve(__dirname, "./frontend/features"),
+      "@lib": path.resolve(__dirname, "./frontend/lib"),
+      "@utils": path.resolve(__dirname, "./frontend/lib/utils"),
+      "@assets": path.resolve(__dirname, "./frontend/assets"),
+      "@pages": path.resolve(__dirname, "./frontend/pages"),
+      "@ui": path.resolve(__dirname, "./frontend/lib/ui"),
+      "@layout": path.resolve(__dirname, "./frontend/lib/layout"),
     },
   },
   server: {

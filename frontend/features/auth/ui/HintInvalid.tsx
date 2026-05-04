@@ -1,5 +1,5 @@
-import { FieldError } from '@/components/ui/field'
 import type { FieldError as HookError } from 'react-hook-form'
+import { FieldError } from '@ui/field'
 
 type Props = {
   for: HookError | undefined

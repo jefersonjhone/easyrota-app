@@ -1,11 +1,14 @@
+// Hooks
 import { useState } from "react"
 
-import { StepsRoot, StepsList, StepIndex, Step } from "@/components/ui/steps"
+// Components
+import AuthLayout from '@features/auth/ui/AuthLayout'
+import { StepsRoot, StepsList, StepIndex, Step } from "@ui/steps"
 
-import { RequestRecoveryForms } from "./steps/RequestRecoveryForms"
-import { ConfirmPinForms } from "./steps/ConfirmPinForms"
 import { ChangePasswordForms } from "./steps/ChangePasswordForms"
-import AuthLayout from '@/features/auth/ui/AuthLayout'
+import { ConfirmPinForms } from "./steps/ConfirmPinForms"
+import { RequestRecoveryForms } from "./steps/RequestRecoveryForms"
+
 
 export const RecoveryPage = () => {
   const [email, setEmail] = useState<string | null>(null)

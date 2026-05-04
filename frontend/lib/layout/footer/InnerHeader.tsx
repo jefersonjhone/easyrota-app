@@ -1,6 +1,10 @@
-import logo from "@/assets/logo-light-mode.svg"
-import createSlots from "@/lib/useSlots"
 import type { FC, ReactNode } from "react"
+
+import createSlots from "@lib/useSlots"
+
+// Assets
+import logo from "@assets/logo-light-mode.svg"
+
 
 const { slots, useSlots } = createSlots("Description", "Callout")
 

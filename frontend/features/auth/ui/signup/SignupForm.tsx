@@ -1,16 +1,20 @@
-import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+// Library
 import { z } from "zod"
-import { useSignupMutation, type SignupVariant } from "@/features/auth/hooks/useSignup"
-import HintInvalid from "@/features/auth/ui/HintInvalid"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+// Hooks
+import { useForm } from "react-hook-form"
+import { useSignupMutation } from "@features/auth/hooks/useSignup"
+
+// Types
+import { type SignupVariant } from "@features/auth/hooks/useSignup"
+
+// Components
+import HintInvalid from "@features/auth/ui/HintInvalid"
+import { Button } from "@ui/button"
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
+import { Input } from "@ui/input"
+
 
 const signupSchema = z.object({
   email: z

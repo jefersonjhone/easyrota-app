@@ -1,9 +1,6 @@
-// Import Hooks
-import { useEffect } from "react"
-import { useSteps } from "@/components/ui/steps"
-
 // Import Components
-import { Button } from "@/components/ui/button"
+import { ArrowsClockwiseIcon } from "@phosphor-icons/react"
+import { Button } from "@ui/button"
 import {
   Card,
   CardAction,
@@ -12,12 +9,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp"
+} from "@ui/card"
+import { Field, FieldLabel } from "@ui/field"
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@ui/input-otp"
 
-// Import Icons
-import { ArrowsClockwiseIcon } from "@phosphor-icons/react"
+// Hooks
+import { useEffect } from "react"
+import { useSteps } from "@ui/steps"
+
 
 type Props = {
   email: string | null

@@ -1,6 +1,6 @@
-import InnerHeader from "./footer/InnerHeader"
-import Section from "./footer/Section"
-import InnerFooter from "./footer/InnerFooter"
+import InnerHeader from "@layout/footer/InnerHeader"
+import Section from "@layout/footer/Section"
+import InnerFooter from "@layout/footer/InnerFooter"
 
 import { InstagramLogoIcon, FacebookLogoIcon, GithubLogoIcon } from "@phosphor-icons/react"
 

@@ -16,7 +16,16 @@
     "jsx": "react-jsx",
 
     "paths": {
-      "@/*": ["./frontend/*"]
+      "@/*": ["./frontend/*"],
+      "@features/*": ["./frontend/features/*"],
+      "@lib/*": ["./frontend/lib/*"],
+      "@utils/*": ["./frontend/lib/utils/*"],
+      "@utils": ["./frontend/lib/utils"],
+      "@ui/*": ["./frontend/lib/ui/*"],
+      "@layout/*": ["./frontend/lib/layout/*"],
+      "@pages/*": ["./frontend/pages/*"],
+      "@pages": ["./frontend/pages"],
+      "@assets/*": ["./frontend/assets/*"]
     },
 
     /* Linting */

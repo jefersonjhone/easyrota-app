@@ -1,7 +1,10 @@
 import type React from 'react'
-import SocialIcon from "./SocialIcon"
 
-import type { SocialLink } from './types'
+// Components
+import SocialIcon from "@layout/footer/SocialIcon"
+
+// Types
+import type { SocialLink } from '@layout/footer/types'
 
 const currentYear = () => new Date().getFullYear()
 

@@ -1,13 +1,9 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import AuthLayout from '@/features/auth/ui/AuthLayout'
-import SignupForm from '@/features/auth/ui/signup/SignupForm'
+// Components
+import AuthLayout from '@features/auth/ui/AuthLayout'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@ui/card"
+import SignupForm from '@features/auth/ui/signup/SignupForm'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@ui/tabs"
+
 
 export const SignupPage = () => (
   <AuthLayout>

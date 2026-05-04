@@ -1,11 +1,13 @@
-import { Link } from '@tanstack/react-router';
+// Configs
+import { links } from '@features/admin/config/links'
 
-import AppLayout from '@/components/layout/app-layout';
-import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+// Components
+import { Link } from '@tanstack/react-router'
+import AppLayout from '@layout/app-layout'
+import { Button } from '@ui/button'
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@ui/card'
+import { Separator } from '@ui/separator'
 
-import { links } from '@/features/admin/config/links';
 
 const AdminPage = () => (
   <AppLayout>
