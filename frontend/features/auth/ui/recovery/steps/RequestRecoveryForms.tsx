@@ -33,29 +33,42 @@ export function RequestRecoveryForms({ onSuccess }: Props) {
   return (
     <form onSubmit={handleSubmit}>
       <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Recuperar Acesso</CardTitle>
-          <CardDescription>Insira seu email para recuperar seu acesso.</CardDescription>
-          <CardAction>
-            <LoginRoute.Link className="w-full">
-              <Button variant="link" type="button">Cancelar</Button>
-            </LoginRoute.Link>
-          </CardAction>
-        </CardHeader>
-
-        <CardContent>
-          <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
-            <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
-          </Field>
-        </CardContent>
-
-        <CardFooter>
-          <Button type="submit" className="w-full cursor-pointer">
-            Receber email
-          </Button>
-        </CardFooter>
+        <Header/>
+        <EmailField/>        
+        <SubmitRequest/>
       </Card>
     </form>
   )
 }
+
+const Header = () => (
+  <CardHeader>
+    <CardTitle>Recuperar Acesso</CardTitle>
+    <CardDescription>Insira seu email para recuperar seu acesso.</CardDescription>
+    <CardAction>
+      <CancelButton/>
+    </CardAction>
+  </CardHeader>
+)
+
+const CancelButton = () => (
+  <LoginRoute.Link className="w-full">
+    <Button variant="link" type="button">Cancelar</Button>
+  </LoginRoute.Link>
+)
+
+const EmailField = () => (
+  <CardContent>
+    <Field>
+      <FieldLabel htmlFor="email">Email</FieldLabel>
+      <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
+    </Field>
+  </CardContent>
+)
+const SubmitRequest = () => (
+  <CardFooter>
+    <Button type="submit" className="w-full cursor-pointer">
+      Receber email
+    </Button>
+  </CardFooter>
+)
