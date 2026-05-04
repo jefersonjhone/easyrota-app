@@ -23,7 +23,7 @@ type Props = {
   email: string | null
 }
 
-export function ConfirmPinForms({ email }: Props) {
+export const ConfirmPinForms = ({ email }: Props) => {
   const { next, prev } = useSteps()
 
   useEffect(() => {
