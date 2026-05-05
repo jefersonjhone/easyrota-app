@@ -46,11 +46,13 @@ test.describe('Login Page', () => {
     await expect(loginPage.submitButton).toBeVisible()
   })
 
-  test('Has Forgot Password link', async ({ page }) => {
+  test('Can go to Recovery Page', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
     await expect(loginPage.forgotPasswordButton).toBeVisible()
+    await loginPage.forgotPasswordButton.click()
+    await expect(page).toHaveURL('/recovery')
   })
 
 })
