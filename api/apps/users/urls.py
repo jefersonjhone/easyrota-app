@@ -1,9 +1,10 @@
 from django.urls import path
 
-from .views import LoginView, RegisterView, health_check
+from .views import AdminDelegationView, LoginView, RegisterView, health_check
 
 urlpatterns = [
     path("health/", health_check),
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
+    path("admins/", AdminDelegationView.as_view(), name="create-subadmin"),
 ]

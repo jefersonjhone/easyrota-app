@@ -30,4 +30,21 @@ class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-        return isinstance(request.user, AdministratorProfile)
+        return (
+            request.user
+            and request.user.is_authenticated
+            and getattr(request.user, "admin_profile", None) is not None
+        )
+
+
+class IsSuperAdmin(BasePermission):
+    """Allows access only to authenticated superadmins."""
+
+    def has_permission(self, request, view):
+        admin_profile = getattr(request.user, "admin_profile", None)
+        return (
+            request.user
+            and request.user.is_authenticated
+            and admin_profile is not None
+            and admin_profile.level == AdministratorProfile.Level.SUPERADMIN
+        )

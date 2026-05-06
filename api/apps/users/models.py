@@ -102,12 +102,28 @@ class DriverProfile(models.Model):
 class AdministratorProfile(models.Model):
     """Profile data specific to administrator accounts."""
 
+    class Level(models.TextChoices):
+        SUPERADMIN = "superadmin", "Superadmin"
+        SUBADMIN = "subadmin", "Subadmin"
+
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
         related_name="admin_profile",
     )
     role = models.CharField(max_length=30)
+    level = models.CharField(
+        max_length=20,
+        choices=Level.choices,
+        default=Level.SUBADMIN,
+    )
+    created_by = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="delegated_admins",
+    )
 
     def __str__(self):
-        return f"AdministratorProfile({self.user.email})"
+        return f"AdministratorProfile({self.user.email}, {self.level})"

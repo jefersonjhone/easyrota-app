@@ -1,11 +1,17 @@
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import LoginSerializer, RegistrationSerializer, UserSummarySerializer
+from .permissions import IsSuperAdmin
+from .serializers import (
+    CreateSubAdminSerializer,
+    LoginSerializer,
+    LoginUserSummarySerializer,
+    RegistrationSerializer,
+)
 
 
 @api_view(["GET"])
@@ -52,11 +58,27 @@ class LoginView(APIView):
 
         return Response(
             {
-                "user": UserSummarySerializer(user).data,
+                "user": LoginUserSummarySerializer(user).data,
                 "tokens": {
                     "refresh": str(tokens),
                     "access": str(tokens.access_token),
                 },
             },
             status=status.HTTP_200_OK,
+        )
+
+
+class AdminDelegationView(generics.GenericAPIView):
+    """Allow superadmins to delegate new subadmin accounts."""
+
+    serializer_class = CreateSubAdminSerializer
+    permission_classes = (IsAuthenticated, IsSuperAdmin)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        created = serializer.save()
+        return Response(
+            serializer.to_representation(created),
+            status=status.HTTP_201_CREATED,
         )

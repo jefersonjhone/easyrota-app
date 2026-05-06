@@ -2,7 +2,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from .models import CivilServantProfile, CustomUser, StudentProfile
+from .models import (
+    AdministratorProfile,
+    CivilServantProfile,
+    CustomUser,
+    StudentProfile,
+)
 
 User = get_user_model()
 
@@ -100,6 +105,17 @@ class LoginViewTests(APITestCase):
         cls.user = User.objects.create_user(
             email="teste@email.com", full_name="Teste Usuario", password="12345678"
         )
+        cls.admin_user = User.objects.create_user(
+            email="superadmin@email.com",
+            full_name="Super Admin",
+            password="12345678",
+            is_staff=True,
+        )
+        cls.admin_profile = AdministratorProfile.objects.create(
+            user=cls.admin_user,
+            role="Superadmin",
+            level=AdministratorProfile.Level.SUPERADMIN,
+        )
 
     def test_login_success(self):
         """Ensure valid credentials authenticate user successfully
@@ -128,3 +144,87 @@ class LoginViewTests(APITestCase):
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "detail" in response.data
+
+    def test_login_returns_admin_hierarchy_for_admins(self):
+        payload = {"email": "superadmin@email.com", "password": "12345678"}
+
+        response = self.client.post(self.url, payload, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["user"]["admin_profile"]["level"] == "superadmin"
+        assert response.data["user"]["admin_profile"]["role"] == "Superadmin"
+
+
+class AdminDelegationViewTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = "/api/admins/"
+        self.superadmin_user = User.objects.create_user(
+            email="boss@email.com",
+            full_name="Boss",
+            password="12345678",
+            is_staff=True,
+        )
+        self.superadmin_profile = AdministratorProfile.objects.create(
+            user=self.superadmin_user,
+            role="Diretor",
+            level=AdministratorProfile.Level.SUPERADMIN,
+        )
+        self.subadmin_user = User.objects.create_user(
+            email="sub@email.com",
+            full_name="Sub",
+            password="12345678",
+            is_staff=True,
+        )
+        self.subadmin_profile = AdministratorProfile.objects.create(
+            user=self.subadmin_user,
+            role="Coordenador",
+            level=AdministratorProfile.Level.SUBADMIN,
+            created_by=self.superadmin_profile,
+        )
+        self.regular_user = User.objects.create_user(
+            email="common@email.com",
+            full_name="Common User",
+            password="12345678",
+        )
+        self.payload = {
+            "email": "newadmin@email.com",
+            "full_name": "Novo Admin",
+            "password": "12345678",
+            "role": "Supervisor",
+        }
+
+    def test_superadmin_can_create_subadmin(self):
+        self.client.force_authenticate(user=self.superadmin_user)
+
+        response = self.client.post(self.url, self.payload, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        created_user = User.objects.get(email=self.payload["email"])
+        assert created_user.is_staff is True
+        assert created_user.admin_profile.level == AdministratorProfile.Level.SUBADMIN
+        assert created_user.admin_profile.created_by == self.superadmin_profile
+
+    def test_subadmin_cannot_create_admin(self):
+        self.client.force_authenticate(user=self.subadmin_user)
+
+        response = self.client.post(self.url, self.payload, format="json")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_regular_user_cannot_create_admin(self):
+        self.client.force_authenticate(user=self.regular_user)
+
+        response = self.client.post(self.url, self.payload, format="json")
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_cannot_create_superadmin_via_endpoint(self):
+        self.client.force_authenticate(user=self.superadmin_user)
+        payload = dict(self.payload)
+        payload["level"] = "superadmin"
+
+        response = self.client.post(self.url, payload, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "level" in response.data
