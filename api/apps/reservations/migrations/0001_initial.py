@@ -5,46 +5,119 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('trips', '0001_initial'),
-        ('users', '0002_administratorprofile_driverprofile'),
+        ("trips", "0001_initial"),
+        ("users", "0002_administratorprofile_driverprofile"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Reservation',
+            name="Reservation",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('checkin_date', models.DateTimeField(blank=True, null=True)),
-                ('check_in', models.BooleanField(default=False)),
-                ('queue_position', models.IntegerField()),
-                ('status', models.CharField(choices=[('PENDENTE', 'Pendente'), ('CONFIRMADA', 'Confirmada'), ('LISTA SECUNDÁRIA', 'Lista Secundária')], default='PENDENTE', max_length=25)),
-                ('civil_servant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='users.civilservantprofile')),
-                ('student', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='users.studentprofile')),
-                ('trip', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='trips.trip')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("checkin_date", models.DateTimeField(blank=True, null=True)),
+                ("check_in", models.BooleanField(default=False)),
+                ("queue_position", models.IntegerField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("PENDENTE", "Pendente"),
+                            ("CONFIRMADA", "Confirmada"),
+                            ("LISTA SECUNDÁRIA", "Lista Secundária"),
+                        ],
+                        default="PENDENTE",
+                        max_length=25,
+                    ),
+                ),
+                (
+                    "civil_servant",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="users.civilservantprofile",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="users.studentprofile",
+                    ),
+                ),
+                (
+                    "trip",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="trips.trip"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Punishment',
+            name="Punishment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('description', models.CharField(max_length=255)),
-                ('value', models.IntegerField()),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.studentprofile')),
-                ('reservation', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='reservations.reservation')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("description", models.CharField(max_length=255)),
+                ("value", models.IntegerField()),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="users.studentprofile",
+                    ),
+                ),
+                (
+                    "reservation",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="reservations.reservation",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Guest',
+            name="Guest",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('cpf', models.CharField(max_length=15, unique=True)),
-                ('civil_servant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.civilservantprofile')),
-                ('reservations', models.ManyToManyField(to='reservations.reservation')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("cpf", models.CharField(max_length=15, unique=True)),
+                (
+                    "civil_servant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="users.civilservantprofile",
+                    ),
+                ),
+                ("reservations", models.ManyToManyField(to="reservations.reservation")),
             ],
         ),
     ]

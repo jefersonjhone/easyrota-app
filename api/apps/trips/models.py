@@ -42,10 +42,16 @@ class Trip(models.Model):
     to a date and its current operational status.
     """
 
-    STATUS_TRIP = (("EM RISCO", "Em Risco"), ("CONFIRMADA", "Confirmada"))
+    STATUS_TRIP = (
+        ("RISCO DE CANCELAMENTO", "Risco de Cancelamento"),
+        ("CONFIRMADA", "Confirmada"),
+        ("CANCELADA", "Cancelada"),
+        ("EM ANDAMENTO", "Em Andamento"),
+        ("CONCLUÍDA", "Concluída"),
+    )
 
     trip_date = models.DateField()
-    status = models.CharField(max_length=15, choices=STATUS_TRIP, default="CONFIRMADA")
+    status = models.CharField(max_length=25, choices=STATUS_TRIP, default="CONFIRMADA")
     departure_timestamp = models.DateTimeField(null=True, blank=True)
     arrival_timestamp = models.DateTimeField(null=True, blank=True)
 
@@ -59,8 +65,10 @@ class Trip(models.Model):
 class Occurrence(models.Model):
     """Logs an incident or event that happened during a specific trip."""
 
-    # Lembrar de Adicionar os status de ocorrências
-    STATUS_OCCURRENCE = (("EM RISCO", "Em risco"), ("CONFIRMADA", "Confirmada"))
+    STATUS_OCCURRENCE = (
+        ("CANCELAMENTO PARCIAL DO ÔNIBUS", "Cancelamento Parcial do Ônibus"),
+        ("CANCELADO", "Cancelado"),
+    )
 
     title = models.CharField(max_length=100)
     description = models.TextField()

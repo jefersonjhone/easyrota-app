@@ -61,9 +61,9 @@ class RegistrationSerializer(serializers.Serializer):
     def validate(self, attrs):
         """Enforce password confirmation and profile-specific payload rules."""
         if attrs["password"] != attrs["password_confirmation"]:
-            raise serializers.ValidationError({
-                "password_confirmation": "Passwords do not match."
-            })
+            raise serializers.ValidationError(
+                {"password_confirmation": "Passwords do not match."}
+            )
 
         profile_type = attrs["profile_type"]
         student_id = attrs.get("student_id")
@@ -71,27 +71,31 @@ class RegistrationSerializer(serializers.Serializer):
 
         if profile_type == "student":
             if not student_id:
-                raise serializers.ValidationError({
-                    "student_id": "This field is required."
-                })
+                raise serializers.ValidationError(
+                    {"student_id": "This field is required."}
+                )
             if civil_servant_id:
-                raise serializers.ValidationError({
-                    "civil_servant_id": (
-                        "Do not send this field for student registration."
-                    )
-                })
+                raise serializers.ValidationError(
+                    {
+                        "civil_servant_id": (
+                            "Do not send this field for student registration."
+                        )
+                    }
+                )
 
         if profile_type == "civil-servant":
             if not civil_servant_id:
-                raise serializers.ValidationError({
-                    "civil_servant_id": "This field is required."
-                })
+                raise serializers.ValidationError(
+                    {"civil_servant_id": "This field is required."}
+                )
             if student_id:
-                raise serializers.ValidationError({
-                    "student_id": (
-                        "Do not send this field for civil servant registration."
-                    )
-                })
+                raise serializers.ValidationError(
+                    {
+                        "student_id": (
+                            "Do not send this field for civil servant registration."
+                        )
+                    }
+                )
 
         return attrs
 

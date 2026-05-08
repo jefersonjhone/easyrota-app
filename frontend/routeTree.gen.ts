@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './pages/__root'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecoveryRouteImport } from './pages/recovery'
 import { Route as LoginRouteImport } from './pages/login'
+import { Route as CurrentTripRouteImport } from './pages/current-trip'
 import { Route as AdminRouteImport } from './pages/admin'
 
 const SignupRoute = SignupRouteImport.update({
@@ -29,6 +30,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CurrentTripRoute = CurrentTripRouteImport.update({
+  id: '/current-trip',
+  path: '/current-trip',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -37,12 +43,14 @@ const AdminRoute = AdminRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
+  '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
+  '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
@@ -50,20 +58,28 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/admin': typeof AdminRoute
+  '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/admin' | '/login' | '/recovery' | '/signup'
+  fullPaths: '/admin' | '/current-trip' | '/login' | '/recovery' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/admin' | '/login' | '/recovery' | '/signup'
-  id: '__root__' | '/admin' | '/login' | '/recovery' | '/signup'
+  to: '/admin' | '/current-trip' | '/login' | '/recovery' | '/signup'
+  id:
+    | '__root__'
+    | '/admin'
+    | '/current-trip'
+    | '/login'
+    | '/recovery'
+    | '/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
+  CurrentTripRoute: typeof CurrentTripRoute
   LoginRoute: typeof LoginRoute
   RecoveryRoute: typeof RecoveryRoute
   SignupRoute: typeof SignupRoute
@@ -92,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/current-trip': {
+      id: '/current-trip'
+      path: '/current-trip'
+      fullPath: '/current-trip'
+      preLoaderRoute: typeof CurrentTripRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -104,6 +127,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
+  CurrentTripRoute: CurrentTripRoute,
   LoginRoute: LoginRoute,
   RecoveryRoute: RecoveryRoute,
   SignupRoute: SignupRoute,
