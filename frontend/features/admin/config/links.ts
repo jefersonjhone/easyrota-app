@@ -29,7 +29,7 @@ export const links: Link[] = [
     title: "Frota Ativa",
     description: "Veja a ocupação em tempo real.",
     background: images.inRoute,
-    goesTo: 'viagens',
+    goesTo: '/viagens',
   },
   {
     title: "Gestão de Veículos",
