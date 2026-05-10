@@ -14,6 +14,7 @@ import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecoveryRouteImport } from './pages/recovery'
 import { Route as LoginRouteImport } from './pages/login'
 import { Route as CurrentTripRouteImport } from './pages/current-trip'
+import { Route as AdminbusRouteImport } from './pages/adminbus'
 import { Route as AdminRouteImport } from './pages/admin'
 
 const ViagensRoute = ViagensRouteImport.update({
@@ -41,6 +42,11 @@ const CurrentTripRoute = CurrentTripRouteImport.update({
   path: '/current-trip',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminbusRoute = AdminbusRouteImport.update({
+  id: '/adminbus',
+  path: '/adminbus',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -49,6 +55,7 @@ const AdminRoute = AdminRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
+  '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
+  '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/admin': typeof AdminRoute
+  '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/admin'
+    | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/admin'
+    | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/admin'
+    | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
+  AdminbusRoute: typeof AdminbusRoute
   CurrentTripRoute: typeof CurrentTripRoute
   LoginRoute: typeof LoginRoute
   RecoveryRoute: typeof RecoveryRoute
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CurrentTripRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/adminbus': {
+      id: '/adminbus'
+      path: '/adminbus'
+      fullPath: '/adminbus'
+      preLoaderRoute: typeof AdminbusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -157,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
+  AdminbusRoute: AdminbusRoute,
   CurrentTripRoute: CurrentTripRoute,
   LoginRoute: LoginRoute,
   RecoveryRoute: RecoveryRoute,
