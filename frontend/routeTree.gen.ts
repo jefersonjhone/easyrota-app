@@ -15,8 +15,8 @@ import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecoveryRouteImport } from './pages/recovery'
 import { Route as LoginRouteImport } from './pages/login'
 import { Route as CurrentTripRouteImport } from './pages/current-trip'
-import { Route as AdminbusRouteImport } from './pages/adminbus'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
+import { Route as AdminBusesRouteImport } from './pages/admin/buses'
 
 const Admin_rootRoute = Admin_rootRouteImport.update({
   id: '/admin/__root',
@@ -47,87 +47,87 @@ const CurrentTripRoute = CurrentTripRouteImport.update({
   path: '/current-trip',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminbusRoute = AdminbusRouteImport.update({
-  id: '/adminbus',
-  path: '/adminbus',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminBusesRoute = AdminBusesRouteImport.update({
+  id: '/admin/buses',
+  path: '/admin/buses',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
   '/viagens': typeof ViagensRoute
   '/admin': typeof Admin_rootRoute
+  '/admin/buses': typeof AdminBusesRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
-  '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
   '/viagens': typeof ViagensRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/buses': typeof AdminBusesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
   '/viagens': typeof ViagensRoute
   '/admin/__root': typeof Admin_rootRoute
+  '/admin/buses': typeof AdminBusesRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
     | '/signup'
     | '/viagens'
     | '/admin'
+    | '/admin/buses'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
     | '/signup'
     | '/viagens'
     | '/admin'
+    | '/admin/buses'
   id:
     | '__root__'
-    | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
     | '/signup'
     | '/viagens'
     | '/admin/__root'
+    | '/admin/buses'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AdminbusRoute: typeof AdminbusRoute
   CurrentTripRoute: typeof CurrentTripRoute
   LoginRoute: typeof LoginRoute
   RecoveryRoute: typeof RecoveryRoute
   SignupRoute: typeof SignupRoute
   ViagensRoute: typeof ViagensRoute
   Admin_rootRoute: typeof Admin_rootRoute
+  AdminBusesRoute: typeof AdminBusesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -175,13 +175,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CurrentTripRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/adminbus': {
-      id: '/adminbus'
-      path: '/adminbus'
-      fullPath: '/adminbus'
-      preLoaderRoute: typeof AdminbusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
@@ -189,17 +182,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/buses': {
+      id: '/admin/buses'
+      path: '/admin/buses'
+      fullPath: '/admin/buses'
+      preLoaderRoute: typeof AdminBusesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  AdminbusRoute: AdminbusRoute,
   CurrentTripRoute: CurrentTripRoute,
   LoginRoute: LoginRoute,
   RecoveryRoute: RecoveryRoute,
   SignupRoute: SignupRoute,
   ViagensRoute: ViagensRoute,
   Admin_rootRoute: Admin_rootRoute,
+  AdminBusesRoute: AdminBusesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
