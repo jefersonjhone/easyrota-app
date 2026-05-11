@@ -2,7 +2,6 @@
 import { links } from '@features/admin/config/links'
 
 // Components
-import { Link } from '@tanstack/react-router'
 import AppLayout from '@layout/app-layout'
 import { Button } from '@ui/button'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@ui/card'
@@ -28,9 +27,9 @@ const AdminPage = () => (
               <CardDescription>{link.description}</CardDescription>
             </CardHeader>
             <CardFooter className="mt-auto">
-              <Link to={link.goesTo} className="w-full">
+              <link.goesTo.Link className="w-full">
                 <Button className="w-full">Gerenciar</Button>
-              </Link>
+              </link.goesTo.Link>
             </CardFooter>
           </Card>
         ))}
