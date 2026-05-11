@@ -9,14 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './pages/__root'
+import { Route as Admin_rootRouteImport } from './pages/admin/__root'
 import { Route as ViagensRouteImport } from './pages/viagens'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecoveryRouteImport } from './pages/recovery'
 import { Route as LoginRouteImport } from './pages/login'
 import { Route as CurrentTripRouteImport } from './pages/current-trip'
 import { Route as AdminbusRouteImport } from './pages/adminbus'
-import { Route as AdminRouteImport } from './pages/admin'
+import { Route as AdminIndexRouteImport } from './pages/admin/index'
 
+const Admin_rootRoute = Admin_rootRouteImport.update({
+  id: '/admin/__root',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ViagensRoute = ViagensRouteImport.update({
   id: '/viagens',
   path: '/viagens',
@@ -47,82 +52,94 @@ const AdminbusRoute = AdminbusRouteImport.update({
   path: '/adminbus',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/admin': typeof AdminRoute
   '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
   '/viagens': typeof ViagensRoute
+  '/admin': typeof Admin_rootRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
-  '/admin': typeof AdminRoute
   '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
   '/viagens': typeof ViagensRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/admin': typeof AdminRoute
   '/adminbus': typeof AdminbusRoute
   '/current-trip': typeof CurrentTripRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
   '/viagens': typeof ViagensRoute
+  '/admin/__root': typeof Admin_rootRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/admin'
     | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
     | '/signup'
     | '/viagens'
+    | '/admin'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/admin'
     | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
     | '/signup'
     | '/viagens'
+    | '/admin'
   id:
     | '__root__'
-    | '/admin'
     | '/adminbus'
     | '/current-trip'
     | '/login'
     | '/recovery'
     | '/signup'
     | '/viagens'
+    | '/admin/__root'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AdminRoute: typeof AdminRoute
   AdminbusRoute: typeof AdminbusRoute
   CurrentTripRoute: typeof CurrentTripRoute
   LoginRoute: typeof LoginRoute
   RecoveryRoute: typeof RecoveryRoute
   SignupRoute: typeof SignupRoute
   ViagensRoute: typeof ViagensRoute
+  Admin_rootRoute: typeof Admin_rootRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/admin/__root': {
+      id: '/admin/__root'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof Admin_rootRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/viagens': {
       id: '/viagens'
       path: '/viagens'
@@ -165,24 +182,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminbusRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
+    '/admin/': {
+      id: '/admin/'
       path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  AdminRoute: AdminRoute,
   AdminbusRoute: AdminbusRoute,
   CurrentTripRoute: CurrentTripRoute,
   LoginRoute: LoginRoute,
   RecoveryRoute: RecoveryRoute,
   SignupRoute: SignupRoute,
   ViagensRoute: ViagensRoute,
+  Admin_rootRoute: Admin_rootRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
