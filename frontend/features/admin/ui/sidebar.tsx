@@ -4,15 +4,19 @@ import { Button } from '@/lib/ui/button'
 
 export const Sidebar = () => {
   return (
-    <aside className="flex h-full self-stretch">
-      <nav className="flex h-full flex-col justify-center p-4 gap-4 border-r-2 border-secondary">
-        {actions.map((action) => (
-          <Link to={action.route.to}>
-            <Button variant="outline" className="w-full justify-start">
-              {action.title}
-            </Button>
-          </Link>
-        ))}
+    <aside className="fixed left-0 top-1/2 transform -translate-y-1/2 flex h-auto">
+      <nav className="flex flex-col justify-center p-4 gap-4">
+        {actions.map((action) => {
+          const Icon = action.icon
+          return (
+            <Link key={action.title} to={action.route.to}>
+              <Button variant="outline" className="w-full justify-start items-center gap-2">
+                <Icon className="size-5" />
+                {action.title}
+              </Button>
+            </Link>
+          )
+        })}
       </nav>
     </aside>
   )

@@ -5,12 +5,10 @@ import { CreateBusForm } from '@features/admin/ui/buses/CreateForm'
 export function BusesPage() {
   return (
     <AppLayout>
-      <div className="flex h-full">
-        <Sidebar></Sidebar>
-        <main className="flex w-full flex-col items-center justify-start gap-4">
-          <CreateBusForm />
-        </main>
-      </div>
+      <Sidebar></Sidebar>
+      <main className="flex w-full flex-col items-center justify-start gap-4">
+        <CreateBusForm />
+      </main>
     </AppLayout>
   )
 }
