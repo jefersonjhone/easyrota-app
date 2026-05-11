@@ -24,18 +24,18 @@ export function BusesPage() {
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="plate">Placa</FieldLabel>
-                <Input name="plate" type="text" placeholder="Ex: ABC-1234" />
+                <Input name="plate" type="text" placeholder="ABC-1234" />
               </Field>
 
               <Field>
                 <FieldLabel htmlFor="brand">Modelo</FieldLabel>
-                <Input name="brand" type="text" placeholder="Ex: Marcopolo Torino" />
+                <Input name="brand" type="text" placeholder="Marcopolo Torino" />
               </Field>
 
               <Field>
                 <FieldLabel htmlFor="capacity">Capacidade</FieldLabel>
                 <Input name="capacity" type="number" min={1} max={120}
-                  placeholder="Assentos"
+                  placeholder="40"
                 />
                 <FieldDescription>
                   A capacidade deve ficar entre 1 e 120 assentos.
