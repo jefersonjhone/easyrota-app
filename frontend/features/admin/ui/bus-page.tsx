@@ -23,7 +23,7 @@ export function BusPage() {
           </div>
           <div className="space-y-2 text-left">
             <label className="text-xs font-bold uppercase text-muted-foreground">Capacidade</label>
-            <Input type="number" placeholder="Assentos" />
+            <Input type="number" min={"1"} max={"100"} placeholder="Assentos" />
           </div>
           <div className="md:col-span-3 flex justify-end">
             <Button className="bg-[#bd4b00] hover:bg-[#a34100] w-full md:w-fit px-12 text-white font-bold h-12 uppercase">

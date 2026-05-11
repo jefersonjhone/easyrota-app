@@ -35,7 +35,7 @@ export const links: Link[] = [
     title: "Gestão de Veículos",
     description: "Gerencie seus veículos.",
     background: images.fleet,
-    goesTo: 'veiculos',
+    goesTo: '/adminbus',
   },
   {
     title: "Equipe de Motoristas",
