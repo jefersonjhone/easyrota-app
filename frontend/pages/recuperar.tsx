@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { RecoveryPage } from '@features/auth/ui/recovery/RecoveryPage'
 
-export const Route = createFileRoute('/recovery')({
+export const Route = createFileRoute('/recuperar')({
   component: RecoveryPage
 })
 

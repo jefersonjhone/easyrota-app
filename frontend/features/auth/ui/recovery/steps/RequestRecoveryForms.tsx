@@ -16,7 +16,7 @@ import { Field, FieldLabel } from "@ui/field"
 import { useSteps } from "@ui/steps"
 
 // Routes
-import { Route as LoginRoute } from "@pages/login"
+import { Route as LoginRoute } from "@/pages/login"
 
 
 type Props = {
