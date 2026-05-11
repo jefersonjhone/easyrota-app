@@ -1,0 +1,346 @@
+@import url("https://fonts.googleapis.com/css2?family=Datatype:wght@100..900&display=swap");
+
+.landing-subpage {
+  --text-color: #283618;
+  --link-color: #dda15e;
+  --background: #fefae0;
+  --border: #b0c46c;
+  --dark: #1f3014;
+  --orange: #bc6c25;
+  --green-soft: #5f7036;
+
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text-color);
+  font-family: "Datatype", "Inter Variable", sans-serif;
+}
+
+.landing-subpage,
+.landing-subpage * {
+  box-sizing: border-box;
+}
+
+.landing-subpage a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.landing-subnav {
+  display: flex;
+  height: 80px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 5px solid var(--border);
+  background-color: var(--background);
+  padding: 0 50px;
+}
+
+.landing-subnav .left,
+.landing-subnav .right {
+  display: flex;
+  align-items: center;
+}
+
+.landing-subnav .left {
+  min-width: 0;
+  gap: 10px;
+}
+
+.landing-subnav .logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.landing-subnav .left a {
+  color: var(--text-color);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.landing-subpage .destaque,
+.landing-subpage .footer-logo span {
+  color: var(--link-color);
+}
+
+.landing-subnav .right a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: var(--text-color);
+  color: var(--background);
+  padding: 5px 15px;
+  white-space: nowrap;
+}
+
+.project-container,
+.project-hero-content,
+.landing-subpage .footer-container {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.project-hero {
+  background: var(--dark);
+  color: var(--background);
+  padding: 96px 50px 88px;
+}
+
+.landing-subpage .eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.project-hero h1,
+.goal-grid h2,
+.institution-text h2,
+.goal-points h3 {
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+
+.project-hero h1 {
+  max-width: 780px;
+  margin: 0 0 24px;
+  color: var(--background);
+  font-size: clamp(42px, 7vw, 58px);
+}
+
+.project-hero p {
+  max-width: 650px;
+  margin: 0;
+  color: rgba(254, 250, 224, 0.78);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.goal-section {
+  background: var(--background);
+  padding: 86px 50px 92px;
+}
+
+.goal-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 72px;
+  align-items: start;
+  margin-bottom: 48px;
+}
+
+.goal-grid h2 {
+  margin: 0;
+  color: var(--dark);
+  font-size: clamp(36px, 5vw, 48px);
+}
+
+.goal-text {
+  display: grid;
+  gap: 18px;
+  color: #52613d;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.goal-text p {
+  margin: 0;
+}
+
+.goal-points {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid rgba(40, 54, 24, 0.18);
+}
+
+.goal-points article {
+  min-height: 240px;
+  border-right: 1px solid rgba(40, 54, 24, 0.18);
+  padding: 34px 32px;
+}
+
+.goal-points article:last-child {
+  border-right: 0;
+}
+
+.goal-points strong {
+  display: block;
+  margin-bottom: 18px;
+  color: rgba(40, 54, 24, 0.14);
+  font-family: Georgia, serif;
+  font-size: 48px;
+  line-height: 1;
+}
+
+.goal-points h3 {
+  margin: 0 0 12px;
+  color: var(--dark);
+  font-size: 22px;
+}
+
+.goal-points p,
+.institution-text p {
+  margin: 0;
+  color: #52613d;
+  line-height: 1.75;
+}
+
+.institution-section {
+  background: #fff4cf;
+  padding: 88px 50px;
+}
+
+.partner-section {
+  background: var(--dark);
+  color: var(--background);
+}
+
+.institution-grid {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 58px;
+  align-items: center;
+}
+
+.partner-grid {
+  grid-template-columns: 1.05fr 0.95fr;
+}
+
+.partner-grid .institution-image {
+  order: 2;
+}
+
+.institution-image {
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid rgba(40, 54, 24, 0.18);
+}
+
+.institution-image img {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  object-fit: cover;
+}
+
+.institution-text {
+  display: grid;
+  gap: 18px;
+}
+
+.institution-text h2 {
+  margin: 0;
+  color: var(--dark);
+  font-size: clamp(42px, 6vw, 64px);
+}
+
+.partner-section .institution-text h2,
+.partner-section .institution-text p {
+  color: var(--background);
+}
+
+.warning-box {
+  margin-top: 10px;
+  border-left: 4px solid var(--orange);
+  background: rgba(254, 250, 224, 0.08);
+  color: rgba(254, 250, 224, 0.82);
+  padding: 16px;
+  line-height: 1.55;
+}
+
+.subpage-footer {
+  background: #101d0a;
+  color: var(--background);
+  padding: 44px 50px;
+}
+
+.landing-subpage .footer-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 36px;
+}
+
+.landing-subpage .footer-logo {
+  color: var(--background);
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.landing-subpage .footer-brand p {
+  max-width: 470px;
+  margin: 14px 0 0;
+  color: rgba(254, 250, 224, 0.72);
+  line-height: 1.7;
+}
+
+.footer-social-area h3 {
+  margin: 0 0 12px;
+  color: var(--background);
+  font-size: 15px;
+  text-transform: uppercase;
+}
+
+.footer-social {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-social a {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(254, 250, 224, 0.16);
+  border-radius: 50%;
+  color: var(--link-color);
+  font-weight: 900;
+}
+
+@media (max-width: 820px) {
+  .landing-subnav,
+  .project-hero,
+  .goal-section,
+  .institution-section,
+  .subpage-footer {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  .goal-grid,
+  .institution-grid,
+  .partner-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .partner-grid .institution-image {
+    order: 0;
+  }
+
+  .goal-points {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-points article {
+    border-right: 0;
+    border-bottom: 1px solid rgba(40, 54, 24, 0.18);
+  }
+
+  .goal-points article:last-child {
+    border-bottom: 0;
+  }
+
+  .landing-subpage .footer-container {
+    flex-direction: column;
+  }
+}

@@ -10,15 +10,23 @@
 
 import { Route as rootRouteImport } from './pages/__root'
 import { Route as ViagensRouteImport } from './pages/viagens'
+import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecoveryRouteImport } from './pages/recovery'
 import { Route as LoginRouteImport } from './pages/login'
+import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as CurrentTripRouteImport } from './pages/current-trip'
 import { Route as AdminRouteImport } from './pages/admin'
+import { Route as IndexRouteImport } from './pages/index'
 
 const ViagensRoute = ViagensRouteImport.update({
   id: '/viagens',
   path: '/viagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SobreProjetoRoute = SobreProjetoRouteImport.update({
+  id: '/sobre-projeto',
+  path: '/sobre-projeto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -36,6 +44,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EquipeRoute = EquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CurrentTripRoute = CurrentTripRouteImport.update({
   id: '/current-trip',
   path: '/current-trip',
@@ -46,65 +59,91 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/current-trip': typeof CurrentTripRoute
+  '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
+  '/sobre-projeto': typeof SobreProjetoRoute
   '/viagens': typeof ViagensRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/current-trip': typeof CurrentTripRoute
+  '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
+  '/sobre-projeto': typeof SobreProjetoRoute
   '/viagens': typeof ViagensRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/current-trip': typeof CurrentTripRoute
+  '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recovery': typeof RecoveryRoute
   '/signup': typeof SignupRoute
+  '/sobre-projeto': typeof SobreProjetoRoute
   '/viagens': typeof ViagensRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/admin'
     | '/current-trip'
+    | '/equipe'
     | '/login'
     | '/recovery'
     | '/signup'
+    | '/sobre-projeto'
     | '/viagens'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/admin'
     | '/current-trip'
+    | '/equipe'
     | '/login'
     | '/recovery'
     | '/signup'
+    | '/sobre-projeto'
     | '/viagens'
   id:
     | '__root__'
+    | '/'
     | '/admin'
     | '/current-trip'
+    | '/equipe'
     | '/login'
     | '/recovery'
     | '/signup'
+    | '/sobre-projeto'
     | '/viagens'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CurrentTripRoute: typeof CurrentTripRoute
+  EquipeRoute: typeof EquipeRoute
   LoginRoute: typeof LoginRoute
   RecoveryRoute: typeof RecoveryRoute
   SignupRoute: typeof SignupRoute
+  SobreProjetoRoute: typeof SobreProjetoRoute
   ViagensRoute: typeof ViagensRoute
 }
 
@@ -115,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/viagens'
       fullPath: '/viagens'
       preLoaderRoute: typeof ViagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre-projeto': {
+      id: '/sobre-projeto'
+      path: '/sobre-projeto'
+      fullPath: '/sobre-projeto'
+      preLoaderRoute: typeof SobreProjetoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -138,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/equipe': {
+      id: '/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof EquipeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/current-trip': {
       id: '/current-trip'
       path: '/current-trip'
@@ -152,15 +205,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CurrentTripRoute: CurrentTripRoute,
+  EquipeRoute: EquipeRoute,
   LoginRoute: LoginRoute,
   RecoveryRoute: RecoveryRoute,
   SignupRoute: SignupRoute,
+  SobreProjetoRoute: SobreProjetoRoute,
   ViagensRoute: ViagensRoute,
 }
 export const routeTree = rootRouteImport
