@@ -23,18 +23,18 @@ export function BusesPage() {
           <form>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="numberPlate">Placa</FieldLabel>
-                <Input id="numberPlate" type="text" placeholder="Ex: ABC-1234" />
+                <FieldLabel htmlFor="plate">Placa</FieldLabel>
+                <Input name="plate" type="text" placeholder="Ex: ABC-1234" />
               </Field>
 
               <Field>
                 <FieldLabel htmlFor="brand">Modelo</FieldLabel>
-                <Input id="brand" type="text" placeholder="Ex: Marcopolo Torino" />
+                <Input name="brand" type="text" placeholder="Ex: Marcopolo Torino" />
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="seatingCapacity">Capacidade</FieldLabel>
-                <Input id="seatingCapacity" type="number" min={1} max={120}
+                <FieldLabel htmlFor="capacity">Capacidade</FieldLabel>
+                <Input name="capacity" type="number" min={1} max={120}
                   placeholder="Assentos"
                 />
                 <FieldDescription>
@@ -43,7 +43,7 @@ export function BusesPage() {
               </Field>
 
               <Field>
-                <Button type="button">
+                <Button type="submit" className="cursor-pointer">
                   Salvar veículo
                 </Button>
               </Field>
