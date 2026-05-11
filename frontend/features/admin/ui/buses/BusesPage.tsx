@@ -1,36 +1,55 @@
 import { AdminLayout } from '@features/admin/ui/admin-layout'
 
-import { Button } from '@lib/ui/button'
-import { Input } from '@lib/ui/input'
-import { Card } from '@lib/ui/card'
+import { Button } from '@ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@ui/field'
+import { Input } from '@ui/input'
 
 export function BusesPage() {
   return (
-    <AdminLayout 
-      title="Gestão de Frota" 
+    <AdminLayout
+      title="Gestão de Frota"
       description="Gerenciamento de veículos e capacidade operacional."
     >
-      <Card className="p-4 md:p-6 border-none shadow-sm bg-white">
-        <h3 className="font-heading font-bold mb-6 text-lg text-black">Cadastrar Novo Veículo</h3>
-        <form className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-          <div className="space-y-2 text-left">
-            <label className="text-xs font-bold uppercase text-muted-foreground">Placa</label>
-            <Input placeholder="Ex: ABC-1234" />
-          </div>
-          <div className="space-y-2 text-left">
-            <label className="text-xs font-bold uppercase text-muted-foreground">Modelo</label>
-            <Input placeholder="Ex: Marcopolo Torino" />
-          </div>
-          <div className="space-y-2 text-left">
-            <label className="text-xs font-bold uppercase text-muted-foreground">Capacidade</label>
-            <Input type="number" min={"1"} max={"100"} placeholder="Assentos" />
-          </div>
-          <div className="md:col-span-3 flex justify-end">
-            <Button className="bg-[#bd4b00] hover:bg-[#a34100] w-full md:w-fit px-12 text-white font-bold h-12 uppercase">
-              Salvar Veículo
-            </Button>
-          </div>
-        </form>
+      <Card className="w-full max-w-3xl">
+        <CardHeader>
+          <CardTitle>Cadastrar novo veículo</CardTitle>
+          <CardDescription>
+            Informe placa, modelo e capacidade para registrar um ônibus na frota.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <form>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="numberPlate">Placa</FieldLabel>
+                <Input id="numberPlate" type="text" placeholder="Ex: ABC-1234" />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="brand">Modelo</FieldLabel>
+                <Input id="brand" type="text" placeholder="Ex: Marcopolo Torino" />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="seatingCapacity">Capacidade</FieldLabel>
+                <Input id="seatingCapacity" type="number" min={1} max={120}
+                  placeholder="Assentos"
+                />
+                <FieldDescription>
+                  A capacidade deve ficar entre 1 e 120 assentos.
+                </FieldDescription>
+              </Field>
+
+              <Field>
+                <Button type="button">
+                  Salvar veículo
+                </Button>
+              </Field>
+            </FieldGroup>
+          </form>
+        </CardContent>
       </Card>
     </AdminLayout>
   )
