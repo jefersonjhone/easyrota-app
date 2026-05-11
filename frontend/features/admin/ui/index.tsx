@@ -1,5 +1,5 @@
 // Configs
-import { actions } from '@features/admin/config/links'
+import { actions } from '@/features/admin/config/actions'
 
 // Components
 import AppLayout from '@layout/app-layout'

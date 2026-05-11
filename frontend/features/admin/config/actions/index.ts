@@ -6,7 +6,7 @@ import {
   BusFleetImage, 
   BusInRouteImage, 
   MapImage, type ImageLink 
-} from '@/features/admin/config/ImageLink'
+} from '@/features/admin/config/actions/images'
 
 import { 
   AdminsRoute,
@@ -14,7 +14,7 @@ import {
   ReportRoute,
   RoutesRoute,
   TravelRoute
-} from '@/features/admin/config/RoutesLink'
+} from '@/features/admin/config/actions/routes'
 import type { AnyRoute } from '@tanstack/react-router'
 
 export type Action = {

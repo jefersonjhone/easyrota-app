@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { actions } from '../config/links'
+import { actions } from '../config/actions'
 import { useState } from 'react'
 
 export const Sidebar = () => {
