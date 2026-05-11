@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { links } from '../config/links'
+import { actions } from '../config/links'
 import { useState } from 'react'
 
 export const Sidebar = () => {
@@ -24,15 +24,15 @@ export const Sidebar = () => {
         </div>
 
         <nav className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto">
-          {links.map((link) => (
+          {actions.map((action) => (
             <Link
-              key={link.goesTo}
-              to={link.goesTo}
+              key={action.route.to}
+              to={action.route.to}
               onClick={() => setIsOpen(false)}
               activeProps={{ className: "bg-[#bd4b00] text-white" }}
               className="flex items-center px-4 py-3 rounded-xl text-muted-foreground hover:bg-[#f2f2ee] transition-all font-medium uppercase text-xs"
             >
-              {link.title}
+              {action.title}
             </Link>
           ))}
         </nav>

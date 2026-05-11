@@ -17,48 +17,48 @@ import {
 } from '@/features/admin/config/RoutesLink'
 import type { AnyRoute } from '@tanstack/react-router'
 
-export type Link = {
+export type Action = {
   title: string
   description: string
   background: ImageLink
-  goesTo: AnyRoute
+  route: AnyRoute
 }
 
-export const links: Link[] = [
+export const actions: Action[] = [
   { 
     title: "Frota Ativa",
     description: "Veja a ocupação em tempo real.",
     background: BusInRouteImage,
-    goesTo: TravelRoute,
+    route: TravelRoute,
   },
   {
     title: "Gestão de Veículos",
     description: "Gerencie seus veículos.",
     background: BusFleetImage,
-    goesTo: RoutesRoute,
+    route: RoutesRoute,
   },
   {
     title: "Equipe de Motoristas",
     description: "Gerencie sua equipe.",
     background: BusDriverImage,
-    goesTo: DriversRoute,
+    route: DriversRoute,
   },
   {
     title: "Malha de Rotas",
     description: "Crie novos trajetos, defina novas paradas.",
     background: MapImage,
-    goesTo: RoutesRoute,
+    route: RoutesRoute,
   },
   {
     title: "Administradores",
     description: "Conceda privilégios de gestão a novos usuários.",
     background: AdminImage,
-    goesTo: AdminsRoute,
+    route: AdminsRoute,
   },
   {
     title: "Relatórios Gerais",
     description: "Estatísticas de uso e eficiência da frota.",
     background: AnalyticsImage,
-    goesTo: ReportRoute,
+    route: ReportRoute,
   },
 ]
