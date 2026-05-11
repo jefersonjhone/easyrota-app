@@ -3,7 +3,7 @@ import { CreateBusForm } from '@features/admin/ui/buses/CreateForm'
 
 export function BusesPage() {
   return (
-    <AdminLayout title="Gestão de Frota"
+    <AdminLayout title="Gestão de Veículos"
       description="Gerenciamento de veículos e capacidade operacional."
     >
       <CreateBusForm />
