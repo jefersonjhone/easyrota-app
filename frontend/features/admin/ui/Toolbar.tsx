@@ -4,7 +4,7 @@ import { Button } from '@/lib/ui/button'
 import { useRef } from 'react'
 import useFooterOverlap from '@/lib/hooks/useFooterOverlap'
 
-export const Sidebar = () => {
+export const Toolbar = () => {
   const component = useRef(null)
   const isOverlapping = useFooterOverlap(component)
 
