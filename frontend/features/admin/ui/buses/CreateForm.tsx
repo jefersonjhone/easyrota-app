@@ -5,7 +5,7 @@ import { Input } from '@ui/input'
 
 export const CreateBusForm = () => {
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="w-full max-w-2xl m-4">
       <CardHeader>
         <CardTitle>Cadastrar novo veículo</CardTitle>
         <CardDescription>
