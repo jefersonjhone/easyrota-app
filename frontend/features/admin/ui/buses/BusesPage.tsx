@@ -1,10 +1,10 @@
-// Caminhos baseados na sua estrutura de pastas da imagem dd417d.png
-import { Button } from '../../../lib/ui/button'
-import { Input } from '../../../lib/ui/input'
-import { Card } from '../../../lib/ui/card'
-import { AdminLayout } from './admin-layout'
+import { AdminLayout } from '@features/admin/ui/admin-layout'
 
-export function BusPage() {
+import { Button } from '@lib/ui/button'
+import { Input } from '@lib/ui/input'
+import { Card } from '@lib/ui/card'
+
+export function BusesPage() {
   return (
     <AdminLayout 
       title="Gestão de Frota" 
