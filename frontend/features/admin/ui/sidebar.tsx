@@ -1,46 +1,19 @@
 import { Link } from '@tanstack/react-router'
 import { actions } from '../config/actions'
-import { useState } from 'react'
+import { Button } from '@/lib/ui/button'
 
 export const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false)
-
   return (
-    <>
-      {/* Mobile menu button */}
-      <button 
-        className="md:hidden fixed top-4 right-4 z- bg-[#bd4b00] text-white p-2 rounded-lg font-bold"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? 'FECHAR' : 'MENU'}
-      </button>
-
-      <aside className={`
-        fixed left-0 top-0 h-screen bg-white border-r border-border flex flex-col z-50 transition-transform duration-300
-        w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
-      `}>
-        <div className="p-8 border-b border-border text-xl font-heading font-bold text-[#bd4b00]">
-          EasyRota ADM
-        </div>
-
-        <nav className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto">
-          {actions.map((action) => (
-            <Link
-              key={action.route.to}
-              to={action.route.to}
-              onClick={() => setIsOpen(false)}
-              activeProps={{ className: "bg-[#bd4b00] text-white" }}
-              className="flex items-center px-4 py-3 rounded-xl text-muted-foreground hover:bg-[#f2f2ee] transition-all font-medium uppercase text-xs"
-            >
+    <aside className="flex h-full self-stretch">
+      <nav className="flex h-full flex-col justify-center p-4 gap-4 border-r-2 border-secondary">
+        {actions.map((action) => (
+          <Link to={action.route.to}>
+            <Button variant="outline" className="w-full justify-start">
               {action.title}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setIsOpen(false)} />
-      )}
-    </>
+            </Button>
+          </Link>
+        ))}
+      </nav>
+    </aside>
   )
 }
