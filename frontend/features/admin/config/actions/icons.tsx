@@ -5,7 +5,7 @@ import {
   MapPinIcon,
   ShieldCheckIcon,
   ChartBarIcon,
-} from '@phosphor-icons/react'
+} from "@phosphor-icons/react"
 
 export {
   BusIcon as BusInRouteIcon,

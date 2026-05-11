@@ -10,6 +10,7 @@ import {
 
 import { 
   AdminsRoute,
+  BusesRoute,
   DriversRoute,
   ReportRoute,
   RoutesRoute,
@@ -49,7 +50,7 @@ export const actions: Action[] = [
     description: "Gerencie seus veículos.",
     icon: BusFleetIcon,
     background: BusFleetImage,
-    route: RoutesRoute,
+    route: BusesRoute,
   },
   {
     title: "Equipe de Motoristas",
