@@ -1,12 +1,12 @@
-import { AdminLayout } from '@features/admin/ui/admin-layout'
+import AppLayout from '@/lib/layout/app-layout'
 import { CreateBusForm } from '@features/admin/ui/buses/CreateForm'
 
 export function BusesPage() {
   return (
-    <AdminLayout title="Gestão de Veículos"
-      description="Gerenciamento de veículos e capacidade operacional."
-    >
-      <CreateBusForm />
-    </AdminLayout>
+    <AppLayout>
+      <main className="flex w-full flex-col items-center justify-start gap-4">
+        <CreateBusForm />
+      </main>
+    </AppLayout>
   )
 }
