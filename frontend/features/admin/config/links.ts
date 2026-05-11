@@ -1,12 +1,12 @@
 // Assets
-import adminImage from "@assets/admin/admin.jpg"
-import analyticsImage from "@assets/admin/analytics.jpg"
-import busFleetImage from "@assets/admin/bus-fleet.jpg"
-import busInRouteImage from "@assets/admin/bus-in-route.jpg"
-import busDriverImage from "@assets/admin/bus-driver.jpg"
-import mapImage from "@assets/admin/map.jpg"
-
-type ImageLink = string
+import { 
+  AdminImage, 
+  AnalyticsImage, 
+  BusDriverImage, 
+  BusFleetImage, 
+  BusInRouteImage, 
+  MapImage, type ImageLink 
+} from '@/features/admin/config/ImageLink'
 
 export type Link = {
   title: string
@@ -19,37 +19,37 @@ export const links: Link[] = [
   { 
     title: "Frota Ativa",
     description: "Veja a ocupação em tempo real.",
-    background: busInRouteImage,
+    background: BusInRouteImage,
     goesTo: '/viagens',
   },
   {
     title: "Gestão de Veículos",
     description: "Gerencie seus veículos.",
-    background: busFleetImage,
+    background: BusFleetImage,
     goesTo: '/adminbus',
   },
   {
     title: "Equipe de Motoristas",
     description: "Gerencie sua equipe.",
-    background: busDriverImage,
+    background: BusDriverImage,
     goesTo: 'motoristas',
   },
   {
     title: "Malha de Rotas",
     description: "Crie novos trajetos, defina novas paradas.",
-    background: mapImage,
+    background: MapImage,
     goesTo: 'rotas',
   },
   {
     title: "Administradores",
     description: "Conceda privilégios de gestão a novos usuários.",
-    background: adminImage,
+    background: AdminImage,
     goesTo: 'administradores',
   },
   {
     title: "Relatórios Gerais",
     description: "Estatísticas de uso e eficiência da frota.",
-    background: analyticsImage,
+    background: AnalyticsImage,
     goesTo: 'relatorios',
   },
 ]
