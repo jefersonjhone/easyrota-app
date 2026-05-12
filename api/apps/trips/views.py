@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -57,7 +57,10 @@ class RouteListCreateView(generics.ListCreateAPIView):
     permission_classes = (IsAdminOrReadOnly,)
 
     def perform_create(self, serializer):
-        serializer.save(administrator=self.request.user.admin_profile)
+        profile = getattr(self.request.user, "admin_profile", None)
+        if not profile:
+            raise PermissionDenied("Usuário não é administrador")
+        serializer.save(administrator=profile)
 
 
 class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -84,13 +87,13 @@ class CurrentTripDetailView(generics.RetrieveAPIView):
     Returns the processed data for a specific trip to the Current Trip screen.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Trip.objects.all()
     serializer_class = TripCurrentScreenSerializer
 
 
 class MyNextTripView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         now = timezone.now()

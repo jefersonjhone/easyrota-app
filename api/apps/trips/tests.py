@@ -6,8 +6,9 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..users.models import AdministratorProfile, CustomUser, DriverProfile
-from .models import Bus, Route, Trip
+from ..users.models.profiles import AdministratorProfile, DriverProfile
+from ..users.models import CustomUser
+from .models import Bus, Route
 
 User = get_user_model()
 
@@ -104,12 +105,14 @@ class BusViewTests(APITestCase):
 
 class RouteAPITests(APITestCase):
     def setUp(self):
-        self.user = CustomUser.objects.create_user(
-            email="user@teste.com", password="123"
+        self.user = User.objects.create_user(
+            email="user@teste.com",
+            password="123",
+            is_active=True,
         )
 
         self.admin = CustomUser.objects.create_superuser(
-            email="admin@teste.com", password="123"
+            email="admin@teste.com", password="12345678", is_active=True
         )
         self.admin_profile = AdministratorProfile.objects.create(
             user=self.admin, role="Administrator"
