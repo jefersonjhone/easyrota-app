@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from ..users.permissions import IsAdminOrReadOnly, IsDriver, IsDriverReadOnly
@@ -47,7 +48,10 @@ class RouteListCreateView(generics.ListCreateAPIView):
     permission_classes = (IsAdminOrReadOnly,)
 
     def perform_create(self, serializer):
-        serializer.save(administrator=self.request.user)
+        profile = getattr(self.request.user, "admin_profile", None)
+        if not profile:
+            raise PermissionDenied("Usuário não é administrador")
+        serializer.save(administrator=profile)
 
 
 class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):

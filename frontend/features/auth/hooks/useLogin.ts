@@ -1,4 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
+import {
+	useAuthStore,
+} from "@features/auth/store/auth-store"
 
 export type LoginValues = {
 	email: string
@@ -31,7 +34,16 @@ async function loginRequest(values: LoginValues): Promise<LoginResponse> {
 }
 
 export function useLoginMutation() {
+  
+  const setAuth =
+		useAuthStore((state) => state.setAuth)
 	return useMutation({
 		mutationFn: loginRequest,
+		onSuccess: (data) => {
+					setAuth(
+						data.tokens.access,
+						data.user
+					)
+				},
 	})
 }

@@ -2,12 +2,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from .models import (
+from .models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
-    CustomUser,
     StudentProfile,
 )
+from .models.user import CustomUser
 
 User = get_user_model()
 
@@ -33,9 +33,10 @@ class RegisterViewTests(APITestCase):
         response = self.client.post(self.url, payload, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["user"]["email"] == payload["email"]
-        assert response.data["profile_type"] == "student"
+        assert response.data["user"]["user"]["email"] == payload["email"]
+        assert response.data["user"]["profile_type"] == "student"
         assert "tokens" in response.data
+        assert response.data["tokens"]["access"]
         assert CustomUser.objects.filter(email=payload["email"]).exists()
         assert StudentProfile.objects.filter(student_id=payload["student_id"]).exists()
 
@@ -53,9 +54,10 @@ class RegisterViewTests(APITestCase):
         response = self.client.post(self.url, payload, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["user"]["email"] == payload["email"]
-        assert response.data["profile_type"] == "civil-servant"
+        assert response.data["user"]["user"]["email"] == payload["email"]
+        assert response.data["user"]["profile_type"] == "civil-servant"
         assert "tokens" in response.data
+        assert response.data["tokens"]["access"]
         assert CustomUser.objects.filter(email=payload["email"]).exists()
         assert CivilServantProfile.objects.filter(
             civil_servant_id=payload["civil_servant_id"]
@@ -103,13 +105,17 @@ class LoginViewTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(
-            email="teste@email.com", full_name="Teste Usuario", password="12345678"
+            email="teste@email.com",
+            full_name="Teste Usuario",
+            password="12345678",
+            is_active=True,
         )
         cls.admin_user = User.objects.create_user(
             email="superadmin@email.com",
             full_name="Super Admin",
             password="12345678",
             is_staff=True,
+            is_active=True,
         )
         cls.admin_profile = AdministratorProfile.objects.create(
             user=cls.admin_user,

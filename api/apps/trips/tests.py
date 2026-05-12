@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..users.models import AdministratorProfile, CustomUser, DriverProfile
+from ..users.models.profiles import AdministratorProfile, CustomUser, DriverProfile
 from .models import Bus, Route
 
 User = get_user_model()
@@ -101,10 +101,14 @@ class BusViewTests(APITestCase):
 
 class RouteAPITests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email="user@teste.com", password="123")
+        self.user = User.objects.create_user(
+            email="user@teste.com",
+            password="123",
+            is_active=True,
+        )
 
         self.admin = CustomUser.objects.create_superuser(
-            email="admin@teste.com", password="12345678"
+            email="admin@teste.com", password="12345678", is_active=True
         )
         self.admin_profile = AdministratorProfile.objects.create(
             user=self.admin, role="Administrator"
@@ -119,7 +123,7 @@ class RouteAPITests(APITestCase):
             "arrival_time": "10:00:00",
         }
 
-        self.client.force_authenticate(user=self.admin_profile)
+        self.client.force_authenticate(user=self.admin)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["origin"], "Feira de Santana")
@@ -131,7 +135,7 @@ class RouteAPITests(APITestCase):
             "departure_time": "23:00:00",
             "arrival_time": "00:30:00",
         }
-        self.client.force_authenticate(user=self.admin_profile)
+        self.client.force_authenticate(user=self.admin)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -143,7 +147,7 @@ class RouteAPITests(APITestCase):
             "arrival_time": "10:00:00",
         }
 
-        self.client.force_authenticate(user=self.admin_profile)
+        self.client.force_authenticate(user=self.admin)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
@@ -158,7 +162,7 @@ class RouteAPITests(APITestCase):
             "arrival_time": "08:15:00",
         }
 
-        self.client.force_authenticate(user=self.admin_profile)
+        self.client.force_authenticate(user=self.admin)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
@@ -174,7 +178,7 @@ class RouteAPITests(APITestCase):
             "arrival_time": "09:00:00",
         }
 
-        self.client.force_authenticate(user=self.admin_profile)
+        self.client.force_authenticate(user=self.admin)
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("A viagem excede o tempo limite de 12 horas.", str(response.data))
