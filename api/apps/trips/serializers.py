@@ -36,7 +36,8 @@ class RouteSerializer(serializers.ModelSerializer):
             return None
 
         normalized_text = (
-            unicodedata.normalize("NFKD", text)
+            unicodedata
+            .normalize("NFKD", text)
             .encode("ASCII", "ignore")
             .decode("ASCII")
         )
@@ -48,9 +49,9 @@ class RouteSerializer(serializers.ModelSerializer):
             destiny_clear = self._remove_accents(destiny)
 
             if origin_clear == destiny_clear:
-                raise serializers.ValidationError(
-                    {"destiny": "A origem e o destino não podem ser a mesma cidade."}
-                )
+                raise serializers.ValidationError({
+                    "destiny": "A origem e o destino não podem ser a mesma cidade."
+                })
 
     def _check_times(self, departure, arrival):
         if arrival and departure:
@@ -64,18 +65,15 @@ class RouteSerializer(serializers.ModelSerializer):
             seconds = (arrival_date - departure_date).total_seconds()
 
             if seconds < 1800:
-                raise serializers.ValidationError(
-                    {
-                        "arrival_time": (
-                            "Uma viagem intermunicipal precisa durar no mínimo "
-                            "30 minutos."
-                        )
-                    }
-                )
+                raise serializers.ValidationError({
+                    "arrival_time": (
+                        "Uma viagem intermunicipal precisa durar no mínimo 30 minutos."
+                    )
+                })
             if seconds > 43200:
-                raise serializers.ValidationError(
-                    {"arrival_time": "A viagem excede o tempo limite de 12 horas."}
-                )
+                raise serializers.ValidationError({
+                    "arrival_time": "A viagem excede o tempo limite de 12 horas."
+                })
 
     def validate(self, data):
         departure = data.get("departure_time") or (
@@ -119,12 +117,10 @@ class TripSerializer(serializers.ModelSerializer):
 
         if status == "EM ANDAMENTO":
             if trip_date > timezone.now().date():
-                raise serializers.ValidationError(
-                    {
-                        "status": "Não é possível iniciar uma viagem "
-                        "agendada para o futuro."
-                    }
-                )
+                raise serializers.ValidationError({
+                    "status": "Não é possível iniciar uma viagem "
+                    "agendada para o futuro."
+                })
 
             departure = data.get(
                 "departure_timestamp",
@@ -172,16 +168,14 @@ class TripSerializer(serializers.ModelSerializer):
                     ex_end += timedelta(days=1)
 
                 if new_start < ex_end and new_end > ex_start:
-                    raise serializers.ValidationError(
-                        {
-                            "bus": (
-                                f"Este ônibus já está alocado para a viagem "
-                                f"'{existing_trip.route}' "
-                                f"(Data: {existing_trip.trip_date}) "
-                                "que conflita com este horário."
-                            )
-                        }
-                    )
+                    raise serializers.ValidationError({
+                        "bus": (
+                            f"Este ônibus já está alocado para a viagem "
+                            f"'{existing_trip.route}' "
+                            f"(Data: {existing_trip.trip_date}) "
+                            "que conflita com este horário."
+                        )
+                    })
 
         return data
 

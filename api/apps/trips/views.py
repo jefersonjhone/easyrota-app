@@ -101,7 +101,8 @@ class MyNextTripView(APIView):
         yesterday = today - timedelta(days=1)
 
         trip_running = (
-            Trip.objects.filter(status="EM ANDAMENTO", trip_date__gte=yesterday)
+            Trip.objects
+            .filter(status="EM ANDAMENTO", trip_date__gte=yesterday)
             .order_by("trip_date", "route__departure_time")
             .first()
         )
@@ -111,7 +112,8 @@ class MyNextTripView(APIView):
             return Response(serializer.data)
 
         next_trip = (
-            Trip.objects.filter(trip_date__gte=today)
+            Trip.objects
+            .filter(trip_date__gte=today)
             .exclude(status__in=["CONCLUÍDA", "CANCELADA"])
             .order_by("trip_date", "route__departure_time")
             .first()
