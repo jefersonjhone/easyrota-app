@@ -48,6 +48,7 @@ export function useLoginMutation() {
       
       if (tokens && user) {
         setAuth(tokens, user)
+		return user
       } else {
         throw new Error('Invalid login response: missing tokens or user data')
       }
