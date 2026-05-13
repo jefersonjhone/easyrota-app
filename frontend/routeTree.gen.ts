@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './pages/__root'
 import { Route as App_rootRouteImport } from './pages/app/__root'
 import { Route as Admin_rootRouteImport } from './pages/admin/__root'
+import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecuperarRouteImport } from './pages/recuperar'
 import { Route as LoginRouteImport } from './pages/login'
+import { Route as EquipeRouteImport } from './pages/equipe'
+import { Route as IndexRouteImport } from './pages/index'
 import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
 import { Route as AppViagensRouteImport } from './pages/app/viagens'
@@ -31,6 +34,11 @@ const Admin_rootRoute = Admin_rootRouteImport.update({
   id: '/admin/__root',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SobreProjetoRoute = SobreProjetoRouteImport.update({
+  id: '/sobre-projeto',
+  path: '/sobre-projeto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -44,6 +52,16 @@ const RecuperarRoute = RecuperarRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EquipeRoute = EquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -88,9 +106,12 @@ const AdminAdminsRoute = AdminAdminsRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
+  '/sobre-projeto': typeof SobreProjetoRoute
   '/admin': typeof Admin_rootRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -103,9 +124,12 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
+  '/sobre-projeto': typeof SobreProjetoRoute
   '/admin': typeof AdminIndexRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -117,9 +141,12 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
+  '/sobre-projeto': typeof SobreProjetoRoute
   '/admin/__root': typeof Admin_rootRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -134,9 +161,12 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
+    | '/equipe'
     | '/login'
     | '/recuperar'
     | '/signup'
+    | '/sobre-projeto'
     | '/admin'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -149,9 +179,12 @@ export interface FileRouteTypes {
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/equipe'
     | '/login'
     | '/recuperar'
     | '/signup'
+    | '/sobre-projeto'
     | '/admin'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -162,9 +195,12 @@ export interface FileRouteTypes {
     | '/app/viagens'
   id:
     | '__root__'
+    | '/'
+    | '/equipe'
     | '/login'
     | '/recuperar'
     | '/signup'
+    | '/sobre-projeto'
     | '/admin/__root'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -178,9 +214,12 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  EquipeRoute: typeof EquipeRoute
   LoginRoute: typeof LoginRoute
   RecuperarRoute: typeof RecuperarRoute
   SignupRoute: typeof SignupRoute
+  SobreProjetoRoute: typeof SobreProjetoRoute
   Admin_rootRoute: typeof Admin_rootRoute
   AdminAdminsRoute: typeof AdminAdminsRoute
   AdminMotoristasRoute: typeof AdminMotoristasRoute
@@ -209,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Admin_rootRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sobre-projeto': {
+      id: '/sobre-projeto'
+      path: '/sobre-projeto'
+      fullPath: '/sobre-projeto'
+      preLoaderRoute: typeof SobreProjetoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -228,6 +274,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/equipe': {
+      id: '/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof EquipeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -290,9 +350,12 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  EquipeRoute: EquipeRoute,
   LoginRoute: LoginRoute,
   RecuperarRoute: RecuperarRoute,
   SignupRoute: SignupRoute,
+  SobreProjetoRoute: SobreProjetoRoute,
   Admin_rootRoute: Admin_rootRoute,
   AdminAdminsRoute: AdminAdminsRoute,
   AdminMotoristasRoute: AdminMotoristasRoute,

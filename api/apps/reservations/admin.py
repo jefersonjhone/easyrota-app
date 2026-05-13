@@ -10,7 +10,6 @@ class ReservationList(admin.ModelAdmin):
         "id",
         "checkin_date",
         "check_in",
-        "queue_position",
         "status",
         "student",
         "civil_servant",
@@ -18,7 +17,10 @@ class ReservationList(admin.ModelAdmin):
     )
     list_display_links = ("id",)
     list_editable = ("status",)
-    list_filter = ("queue_position",)
+    list_filter = (
+        "status",
+        "trip",
+    )
     list_per_page = 3
 
 
