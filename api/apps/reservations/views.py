@@ -4,7 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Reservation
 from .serializers import ReservationSerializer, ReservationHistorySerializer
 
-class ReservationCreateView (generics.CreateAPIView):
+
+class ReservationCreateView(generics.CreateAPIView):
     serializer_class = ReservationSerializer
     permission_classes = [IsAuthenticated]
 
@@ -17,6 +18,7 @@ class ReservationCreateView (generics.CreateAPIView):
         elif hasattr(user, "civil_servant_profile"):
             serializer.save(civil_servant=user.civil_servant_profile)
 
+
 class ReservationHistoryView(generics.ListAPIView):
     """Trips history page."""
 
@@ -28,13 +30,19 @@ class ReservationHistoryView(generics.ListAPIView):
         user = self.request.user
 
         if hasattr(user, "student_profile"):
-            return Reservation.objects.filter(
-                student=user.student_profile
-            ).select_related("trip", "trip__route").order_by("-created_at")
+            return (
+                Reservation.objects
+                .filter(student=user.student_profile)
+                .select_related("trip", "trip__route")
+                .order_by("-created_at")
+            )
 
         if hasattr(user, "civil_servant_profile"):
-            return Reservation.objects.filter(
-                civil_servant=user.civil_servant_profile
-            ).select_related("trip", "trip__route").order_by("-created_at")
+            return (
+                Reservation.objects
+                .filter(civil_servant=user.civil_servant_profile)
+                .select_related("trip", "trip__route")
+                .order_by("-created_at")
+            )
 
         return Reservation.objects.none()

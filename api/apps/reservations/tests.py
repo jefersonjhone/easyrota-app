@@ -8,7 +8,14 @@ from django.core.exceptions import ValidationError
 from .serializers import ReservationSerializer
 from .models import Reservation
 from ..trips.models import Trip, Bus, Route
-from ..users.models import CustomUser, AdministratorProfile, DriverProfile, StudentProfile, CivilServantProfile
+from ..users.models import (
+    CustomUser,
+    AdministratorProfile,
+    DriverProfile,
+    StudentProfile,
+    CivilServantProfile,
+)
+
 
 class BaseReservationTestCase(APITestCase):
     """Base test case for reservations."""
@@ -36,7 +43,7 @@ class BaseReservationTestCase(APITestCase):
             user=self.driver_user, cnh="12345678901"
         )
 
-    def _create_bus_and_route (self):
+    def _create_bus_and_route(self):
         """Creates bus and route"""
 
         self.bus = Bus.objects.create(
@@ -54,22 +61,21 @@ class BaseReservationTestCase(APITestCase):
             administrator=self.admin_profile,
         )
 
-
     def create_civil_servant(self):
         """Creates civil servant user and profile"""
-        user= CustomUser.objects.create_user(
+        user = CustomUser.objects.create_user(
             email="civil-servant@teste.com", password="12345678"
         )
         civil_servant = CivilServantProfile.objects.create(user=user)
 
         return user, civil_servant
-    
+
     def create_student(self):
         """Creates student user and profile."""
-        user= CustomUser.objects.create_user(
+        user = CustomUser.objects.create_user(
             email="student@teste.com", password="12345678"
         )
-        student_profile= StudentProfile.objects.create(user=user)
+        student_profile = StudentProfile.objects.create(user=user)
 
         return user, student_profile
 
@@ -81,70 +87,75 @@ class BaseReservationTestCase(APITestCase):
             bus=self.bus,
             route=self.route,
         )
-    
+
     def create_reservation(self, trip=None, civil_servant=None, student=None):
         """Creates reservation."""
         if not trip:
             trip = self.create_trip()
 
         return Reservation.objects.create(
-            trip=trip,
-            civil_servant=civil_servant,
-            student=student,
-            checkin_date=None
+            trip=trip, civil_servant=civil_servant, student=student, checkin_date=None
         )
 
 
 class ReservationTest(BaseReservationTestCase):
-
     def setUp(self):
         super().setUp()
-        self.url = reverse('reservation-create')
+        self.url = reverse("reservation-create")
         self.student, self.student_profile = self.create_student()
 
-    def test_create_reservation_after_limit (self):
+    def test_create_reservation_after_limit(self):
         """Creating a reservation after the limit (3 hours before bus departure) should display an error message."""
 
         self.client.force_authenticate(user=self.student)
-        
+
         trip = self.create_trip(days_ahead=0)
 
-        response = self.client.post(self.url, data={"trip": trip.id}, format='json')
+        response = self.client.post(self.url, data={"trip": trip.id}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Prazo de reserva encerrado.", str(response.data))
-    
-    def test_create_reservation_successfully (self):
+
+    def test_create_reservation_successfully(self):
         """Creating a reservation before the limit (3 hours before bus departure) should create a successful reservation."""
 
         self.client.force_authenticate(user=self.student)
 
         trip = self.create_trip()
 
-        response = self.client.post(self.url, data={"trip": trip.id}, format='json')
+        response = self.client.post(self.url, data={"trip": trip.id}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+
 class ReservationHistoryTest(BaseReservationTestCase):
-    
     def setUp(self):
         super().setUp()
         self.url = reverse("reservation-history")
         self.user, self.civil_servant = self.create_civil_servant()
 
         self.trip = self.create_trip(days_ahead=0, status="CONCLUÍDA")
-        self.reservation = self.create_reservation(civil_servant=self.civil_servant, trip=self.trip)
+        self.reservation = self.create_reservation(
+            civil_servant=self.civil_servant, trip=self.trip
+        )
 
     def test_verify_fields_visible(self):
         """Verify if the fields are showing correctly."""
 
         self.client.force_authenticate(user=self.user)
 
-        response = self.client.get(self.url, format='json')
+        response = self.client.get(self.url, format="json")
 
-        fields = ["origin", "destiny", "trip_date", "trip_history_status", "total_trips", "created_at"]
+        fields = [
+            "origin",
+            "destiny",
+            "trip_date",
+            "trip_history_status",
+            "total_trips",
+            "created_at",
+        ]
         for field in fields:
             self.assertIn(field, response.data[0])
 
-        self.assertEqual(response.data[0]["trip_history_status"],"FALTA")
+        self.assertEqual(response.data[0]["trip_history_status"], "FALTA")
         self.assertEqual(response.data[0]["total_trips"], 1)

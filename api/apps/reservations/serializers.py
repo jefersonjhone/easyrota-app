@@ -4,7 +4,8 @@ from django.utils import timezone
 
 from .models import Reservation
 
-class ReservationSerializer (serializers.ModelSerializer):
+
+class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = ["trip"]
@@ -14,24 +15,20 @@ class ReservationSerializer (serializers.ModelSerializer):
         A seat must be reserved ONLY up to 3 hours before departure time."""
 
         departure = timezone.make_aware(
-            datetime.combine(
-                trip.trip_date,
-                trip.route.departure_time
-            )
+            datetime.combine(trip.trip_date, trip.route.departure_time)
         )
 
         limit = departure - timedelta(hours=3)
 
         if timezone.now() >= limit:
-            raise serializers.ValidationError(
-                "Prazo de reserva encerrado."
-            )
+            raise serializers.ValidationError("Prazo de reserva encerrado.")
 
         return trip
-    
+
     # TODO: Implement priority business rules (students, civil servants, guests and punishments)
 
-class ReservationHistorySerializer (serializers.ModelSerializer):
+
+class ReservationHistorySerializer(serializers.ModelSerializer):
     """Serializer for trips history page."""
 
     origin = serializers.CharField(source="trip.route.origin")
@@ -50,7 +47,7 @@ class ReservationHistorySerializer (serializers.ModelSerializer):
             "trip_date",
             "trip_history_status",
             "total_trips",
-            "created_at"
+            "created_at",
         ]
 
     def get_trip_history_status(self, obj):
@@ -65,21 +62,18 @@ class ReservationHistorySerializer (serializers.ModelSerializer):
             return "PENDENTE"
 
         if trip.status == "CONCLUÍDA":
-
             if obj.check_in:
                 return "CONCLUÍDA"
 
             return "FALTA"
-        
+
     def get_total_trips(self, obj):
         """Returns the total number of trips the user has booked."""
-        
+
         user = self.context["request"].user
 
         if hasattr(user, "student_profile"):
-            return Reservation.objects.filter(
-                student=user.student_profile
-            ).count()
+            return Reservation.objects.filter(student=user.student_profile).count()
 
         if hasattr(user, "civil_servant_profile"):
             return Reservation.objects.filter(
@@ -87,4 +81,3 @@ class ReservationHistorySerializer (serializers.ModelSerializer):
             ).count()
 
         return 0
-    

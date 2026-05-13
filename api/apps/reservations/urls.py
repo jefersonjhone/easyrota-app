@@ -8,5 +8,9 @@ from .views import (
 
 urlpatterns = [
     path("reservations/", ReservationCreateView.as_view(), name="reservation-create"),
-    path("reservations/history/", ReservationHistoryView.as_view(), name="reservation-history"),
+    path(
+        "reservations/history/",
+        ReservationHistoryView.as_view(),
+        name="reservation-history",
+    ),
 ]

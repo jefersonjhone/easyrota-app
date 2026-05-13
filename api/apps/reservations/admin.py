@@ -17,7 +17,10 @@ class ReservationList(admin.ModelAdmin):
     )
     list_display_links = ("id",)
     list_editable = ("status",)
-    list_filter = ("status", "trip",)
+    list_filter = (
+        "status",
+        "trip",
+    )
     list_per_page = 3
 
 
