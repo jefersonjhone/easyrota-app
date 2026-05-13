@@ -650,19 +650,31 @@
 
 @media (max-width: 640px) {
   .landing-page .landing-nav {
-    height: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    padding-top: 18px;
-    padding-bottom: 18px;
+    height: 70px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .landing-page .landing-nav .left {
+    flex: 1;
+  }
+
+  .landing-page .landing-nav .left a {
+    font-size: 24px;
   }
 
   .landing-page .landing-nav .right {
-    width: 100%;
+    width: auto;
+    flex: 0 0 auto;
   }
 
   .landing-page .landing-nav .right a {
-    width: 100%;
+    min-height: 34px;
+    padding: 4px 10px;
+    font-size: 13px;
   }
 
   .landing-page .hero-section h1 {

@@ -9,16 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './pages/__root'
-import { Route as ViagensRouteImport } from './pages/viagens'
-import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
 import { Route as App_rootRouteImport } from './pages/app/__root'
 import { Route as Admin_rootRouteImport } from './pages/admin/__root'
+import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecuperarRouteImport } from './pages/recuperar'
 import { Route as LoginRouteImport } from './pages/login'
 import { Route as EquipeRouteImport } from './pages/equipe'
-import { Route as CurrentTripRouteImport } from './pages/current-trip'
-import { Route as AdminRouteImport } from './pages/admin'
 import { Route as IndexRouteImport } from './pages/index'
 import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
@@ -62,9 +59,11 @@ const EquipeRoute = EquipeRouteImport.update({
   path: '/equipe',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CurrentTripRoute = CurrentTripRouteImport.update({
-  id: '/current-trip',
-  path: '/current-trip',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/app/',
   path: '/app/',
@@ -105,28 +104,14 @@ const AdminAdminsRoute = AdminAdminsRouteImport.update({
   path: '/admin/admins',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/current-trip': typeof CurrentTripRoute
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
-  '/viagens': typeof ViagensRoute
-}
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/current-trip': typeof CurrentTripRoute
-  '/equipe': typeof EquipeRoute
   '/admin': typeof Admin_rootRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -139,18 +124,12 @@ export interface FileRoutesByTo {
   '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
-  '/viagens': typeof ViagensRoute
-}
-export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/current-trip': typeof CurrentTripRoute
-  '/equipe': typeof EquipeRoute
   '/admin': typeof AdminIndexRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -162,11 +141,12 @@ export interface FileRoutesById {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
-  '/viagens': typeof ViagensRoute
   '/admin/__root': typeof Admin_rootRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -182,20 +162,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
-    | '/current-trip'
     | '/equipe'
     | '/login'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
-    | '/viagens'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/admin'
-    | '/current-trip'
-    | '/equipe'
     | '/admin'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -208,17 +179,12 @@ export interface FileRouteTypes {
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/equipe'
     | '/login'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
-    | '/viagens'
-  id:
-    | '__root__'
-    | '/'
-    | '/admin'
-    | '/current-trip'
-    | '/equipe'
     | '/admin'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -229,18 +195,12 @@ export interface FileRouteTypes {
     | '/app/viagens'
   id:
     | '__root__'
+    | '/'
+    | '/equipe'
     | '/login'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
-    | '/viagens'
-  fileRoutesById: FileRoutesById
-}
-export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
-  CurrentTripRoute: typeof CurrentTripRoute
-  EquipeRoute: typeof EquipeRoute
     | '/admin/__root'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -254,11 +214,12 @@ export interface RootRouteChildren {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  EquipeRoute: typeof EquipeRoute
   LoginRoute: typeof LoginRoute
   RecuperarRoute: typeof RecuperarRoute
   SignupRoute: typeof SignupRoute
   SobreProjetoRoute: typeof SobreProjetoRoute
-  ViagensRoute: typeof ViagensRoute
   Admin_rootRoute: typeof Admin_rootRoute
   AdminAdminsRoute: typeof AdminAdminsRoute
   AdminMotoristasRoute: typeof AdminMotoristasRoute
@@ -322,11 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EquipeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/current-trip': {
-      id: '/current-trip'
-      path: '/current-trip'
-      fullPath: '/current-trip'
-      preLoaderRoute: typeof CurrentTripRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/': {
       id: '/app/'
       path: '/app'
@@ -383,26 +346,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
-  CurrentTripRoute: CurrentTripRoute,
   EquipeRoute: EquipeRoute,
   LoginRoute: LoginRoute,
   RecuperarRoute: RecuperarRoute,
   SignupRoute: SignupRoute,
   SobreProjetoRoute: SobreProjetoRoute,
-  ViagensRoute: ViagensRoute,
   Admin_rootRoute: Admin_rootRoute,
   AdminAdminsRoute: AdminAdminsRoute,
   AdminMotoristasRoute: AdminMotoristasRoute,
