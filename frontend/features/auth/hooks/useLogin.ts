@@ -36,16 +36,19 @@ async function loginRequest(values: LoginValues): Promise<LoginResponse> {
 }
 
 export function useLoginMutation() {
+  const setAuth = useAuthStore((state) => state.setAuth)
   
-  const setAuth =
-		useAuthStore((state) => state.setAuth)
-	return useMutation({
-		mutationFn: loginRequest,
-		onSuccess: (data) => {
-					setAuth(
-						data.tokens.access,
-						data.user
-					)
-				},
-	})
+  return useMutation({
+    mutationFn: loginRequest,
+    onSuccess: (data) => {
+      const tokens = data.tokens?.access
+      const user = data.user
+      
+      if (tokens && user) {
+        setAuth(tokens, user)
+      } else {
+        throw new Error('Invalid login response: missing tokens or user data')
+      }
+    },
+  })
 }
