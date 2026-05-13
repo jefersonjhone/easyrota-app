@@ -1,6 +1,7 @@
-from rest_framework import serializers
 from datetime import datetime, timedelta
+
 from django.utils import timezone
+from rest_framework import serializers
 
 from .models import Reservation
 

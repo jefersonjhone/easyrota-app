@@ -1,20 +1,19 @@
+from datetime import time, timedelta
+
+from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.utils import timezone
-from django.urls import reverse
-from datetime import time, timedelta
-from django.core.exceptions import ValidationError
 
-from .serializers import ReservationSerializer
-from .models import Reservation
-from ..trips.models import Trip, Bus, Route
+from ..trips.models import Bus, Route, Trip
 from ..users.models import (
-    CustomUser,
     AdministratorProfile,
+    CivilServantProfile,
+    CustomUser,
     DriverProfile,
     StudentProfile,
-    CivilServantProfile,
 )
+from .models import Reservation
 
 
 class BaseReservationTestCase(APITestCase):
