@@ -11,7 +11,7 @@ import { useState } from 'react'
 const busSchema = z.object({
   number_plate: z.string().min(1, "Placa obrigatória"),
   brand: z.string().min(1, "Marca obrigatória"),
-  seating_capacity: z.coerce.number().min(1).max(120)
+  seating_capacity: z.number().min(1).max(120)
 })
 
 type BusData = z.infer<typeof busSchema>
@@ -102,7 +102,7 @@ export const CreateBusForm = () => {
 
             <Field>
               <FieldLabel htmlFor="brand">Modelo</FieldLabel>
-              <Input {...register("brand")} type="text" placeholder="Marcopolo Torino"/>
+              <Input {...register("brand", {valueAsNumber: true})} type="text" placeholder="Marcopolo Torino"/>
 
               {errors.brand && (
               <FieldDescription className="text-red-500">
