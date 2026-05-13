@@ -104,7 +104,8 @@ class ReservationTest(BaseReservationTestCase):
         self.student, self.student_profile = self.create_student()
 
     def test_create_reservation_after_limit(self):
-        """Creating a reservation after the limit (3 hours before bus departure) should display an error message."""
+        """Creating a reservation after the limit (3 hours before bus departure) 
+        should display an error message."""
 
         self.client.force_authenticate(user=self.student)
 
@@ -116,7 +117,8 @@ class ReservationTest(BaseReservationTestCase):
         self.assertIn("Prazo de reserva encerrado.", str(response.data))
 
     def test_create_reservation_successfully(self):
-        """Creating a reservation before the limit (3 hours before bus departure) should create a successful reservation."""
+        """Creating a reservation before the limit (3 hours before bus departure) 
+        should create a successful reservation."""
 
         self.client.force_authenticate(user=self.student)
 

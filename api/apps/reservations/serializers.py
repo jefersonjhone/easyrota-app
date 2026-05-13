@@ -26,7 +26,8 @@ class ReservationSerializer(serializers.ModelSerializer):
 
         return trip
 
-    # TODO: Implement priority business rules (students, civil servants, guests and punishments)
+    # TODO: Implement priority business rules 
+    # (students, civil servants, guests and punishments)
 
 
 class ReservationHistorySerializer(serializers.ModelSerializer):
