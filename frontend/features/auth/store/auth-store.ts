@@ -1,12 +1,7 @@
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
+import type { AuthUser } from "../types/auth"
 
-type AuthUser = {
-  id: number
-  email: string
-  full_name: string
-  profile_type: string
-}
 
 type AuthState = {
   accessToken: string | null

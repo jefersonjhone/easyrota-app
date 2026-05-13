@@ -1,7 +1,9 @@
 import { useMutation } from "@tanstack/react-query"
 import {
-	useAuthStore,
+  useAuthStore 
 } from "@features/auth/store/auth-store"
+import type { AuthUser } from "../types/auth"
+
 
 export type LoginValues = {
 	email: string
@@ -16,7 +18,7 @@ export type LoginResponse = {
 	tokens?: {
 		access: string
 	}
-	user?: Record<string, unknown>
+  user?: AuthUser;
 	[key: string]: unknown
 }
 
