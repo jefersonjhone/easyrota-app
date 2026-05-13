@@ -8,7 +8,7 @@ import { Input } from "@ui/input"
 import { useNavigate } from "@tanstack/react-router"
 
 // Routes
-import { Route as LoginRoute } from "@pages/login"
+import { Route as LoginRoute } from "@/pages/login"
 
 export function ChangePasswordForms() {
   const navigate = useNavigate()

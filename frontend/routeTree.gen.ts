@@ -11,17 +11,30 @@
 import { Route as rootRouteImport } from './pages/__root'
 import { Route as ViagensRouteImport } from './pages/viagens'
 import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
+import { Route as App_rootRouteImport } from './pages/app/__root'
+import { Route as Admin_rootRouteImport } from './pages/admin/__root'
 import { Route as SignupRouteImport } from './pages/signup'
-import { Route as RecoveryRouteImport } from './pages/recovery'
+import { Route as RecuperarRouteImport } from './pages/recuperar'
 import { Route as LoginRouteImport } from './pages/login'
 import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as CurrentTripRouteImport } from './pages/current-trip'
 import { Route as AdminRouteImport } from './pages/admin'
 import { Route as IndexRouteImport } from './pages/index'
+import { Route as AppIndexRouteImport } from './pages/app/index'
+import { Route as AdminIndexRouteImport } from './pages/admin/index'
+import { Route as AppViagensRouteImport } from './pages/app/viagens'
+import { Route as AdminRotasRouteImport } from './pages/admin/rotas'
+import { Route as AdminRelatoriosRouteImport } from './pages/admin/relatorios'
+import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
+import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
+import { Route as AdminAdminsRouteImport } from './pages/admin/admins'
 
-const ViagensRoute = ViagensRouteImport.update({
-  id: '/viagens',
-  path: '/viagens',
+const App_rootRoute = App_rootRouteImport.update({
+  id: '/app/__root',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Admin_rootRoute = Admin_rootRouteImport.update({
+  id: '/admin/__root',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SobreProjetoRoute = SobreProjetoRouteImport.update({
@@ -34,9 +47,9 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RecoveryRoute = RecoveryRouteImport.update({
-  id: '/recovery',
-  path: '/recovery',
+const RecuperarRoute = RecuperarRouteImport.update({
+  id: '/recuperar',
+  path: '/recuperar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -52,11 +65,44 @@ const EquipeRoute = EquipeRouteImport.update({
 const CurrentTripRoute = CurrentTripRouteImport.update({
   id: '/current-trip',
   path: '/current-trip',
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppViagensRoute = AppViagensRouteImport.update({
+  id: '/app/viagens',
+  path: '/app/viagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRotasRoute = AdminRotasRouteImport.update({
+  id: '/admin/rotas',
+  path: '/admin/rotas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRelatoriosRoute = AdminRelatoriosRouteImport.update({
+  id: '/admin/relatorios',
+  path: '/admin/relatorios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOnibusRoute = AdminOnibusRouteImport.update({
+  id: '/admin/onibus',
+  path: '/admin/onibus',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMotoristasRoute = AdminMotoristasRouteImport.update({
+  id: '/admin/motoristas',
+  path: '/admin/motoristas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAdminsRoute = AdminAdminsRouteImport.update({
+  id: '/admin/admins',
+  path: '/admin/admins',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -71,7 +117,7 @@ export interface FileRoutesByFullPath {
   '/current-trip': typeof CurrentTripRoute
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
-  '/recovery': typeof RecoveryRoute
+  '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
   '/viagens': typeof ViagensRoute
@@ -81,8 +127,20 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/current-trip': typeof CurrentTripRoute
   '/equipe': typeof EquipeRoute
+  '/admin': typeof Admin_rootRoute
+  '/admin/admins': typeof AdminAdminsRoute
+  '/admin/motoristas': typeof AdminMotoristasRoute
+  '/admin/onibus': typeof AdminOnibusRoute
+  '/admin/relatorios': typeof AdminRelatoriosRoute
+  '/admin/rotas': typeof AdminRotasRoute
+  '/app': typeof App_rootRoute
+  '/app/viagens': typeof AppViagensRoute
+  '/admin/': typeof AdminIndexRoute
+  '/app/': typeof AppIndexRoute
+}
+export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/recovery': typeof RecoveryRoute
+  '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
   '/viagens': typeof ViagensRoute
@@ -93,11 +151,32 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/current-trip': typeof CurrentTripRoute
   '/equipe': typeof EquipeRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/admins': typeof AdminAdminsRoute
+  '/admin/motoristas': typeof AdminMotoristasRoute
+  '/admin/onibus': typeof AdminOnibusRoute
+  '/admin/relatorios': typeof AdminRelatoriosRoute
+  '/admin/rotas': typeof AdminRotasRoute
+  '/app': typeof AppIndexRoute
+  '/app/viagens': typeof AppViagensRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
   '/login': typeof LoginRoute
-  '/recovery': typeof RecoveryRoute
+  '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
   '/viagens': typeof ViagensRoute
+  '/admin/__root': typeof Admin_rootRoute
+  '/admin/admins': typeof AdminAdminsRoute
+  '/admin/motoristas': typeof AdminMotoristasRoute
+  '/admin/onibus': typeof AdminOnibusRoute
+  '/admin/relatorios': typeof AdminRelatoriosRoute
+  '/admin/rotas': typeof AdminRotasRoute
+  '/app/__root': typeof App_rootRoute
+  '/app/viagens': typeof AppViagensRoute
+  '/admin/': typeof AdminIndexRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,7 +186,7 @@ export interface FileRouteTypes {
     | '/current-trip'
     | '/equipe'
     | '/login'
-    | '/recovery'
+    | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
     | '/viagens'
@@ -117,8 +196,20 @@ export interface FileRouteTypes {
     | '/admin'
     | '/current-trip'
     | '/equipe'
+    | '/admin'
+    | '/admin/admins'
+    | '/admin/motoristas'
+    | '/admin/onibus'
+    | '/admin/relatorios'
+    | '/admin/rotas'
+    | '/app'
+    | '/app/viagens'
+    | '/admin/'
+    | '/app/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
     | '/login'
-    | '/recovery'
+    | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
     | '/viagens'
@@ -128,8 +219,18 @@ export interface FileRouteTypes {
     | '/admin'
     | '/current-trip'
     | '/equipe'
+    | '/admin'
+    | '/admin/admins'
+    | '/admin/motoristas'
+    | '/admin/onibus'
+    | '/admin/relatorios'
+    | '/admin/rotas'
+    | '/app'
+    | '/app/viagens'
+  id:
+    | '__root__'
     | '/login'
-    | '/recovery'
+    | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
     | '/viagens'
@@ -140,20 +241,50 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CurrentTripRoute: typeof CurrentTripRoute
   EquipeRoute: typeof EquipeRoute
+    | '/admin/__root'
+    | '/admin/admins'
+    | '/admin/motoristas'
+    | '/admin/onibus'
+    | '/admin/relatorios'
+    | '/admin/rotas'
+    | '/app/__root'
+    | '/app/viagens'
+    | '/admin/'
+    | '/app/'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
-  RecoveryRoute: typeof RecoveryRoute
+  RecuperarRoute: typeof RecuperarRoute
   SignupRoute: typeof SignupRoute
   SobreProjetoRoute: typeof SobreProjetoRoute
   ViagensRoute: typeof ViagensRoute
+  Admin_rootRoute: typeof Admin_rootRoute
+  AdminAdminsRoute: typeof AdminAdminsRoute
+  AdminMotoristasRoute: typeof AdminMotoristasRoute
+  AdminOnibusRoute: typeof AdminOnibusRoute
+  AdminRelatoriosRoute: typeof AdminRelatoriosRoute
+  AdminRotasRoute: typeof AdminRotasRoute
+  App_rootRoute: typeof App_rootRoute
+  AppViagensRoute: typeof AppViagensRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/viagens': {
-      id: '/viagens'
-      path: '/viagens'
-      fullPath: '/viagens'
-      preLoaderRoute: typeof ViagensRouteImport
+    '/app/__root': {
+      id: '/app/__root'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof App_rootRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/__root': {
+      id: '/admin/__root'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof Admin_rootRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sobre-projeto': {
@@ -170,11 +301,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/recovery': {
-      id: '/recovery'
-      path: '/recovery'
-      fullPath: '/recovery'
-      preLoaderRoute: typeof RecoveryRouteImport
+    '/recuperar': {
+      id: '/recuperar'
+      path: '/recuperar'
+      fullPath: '/recuperar'
+      preLoaderRoute: typeof RecuperarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -196,13 +327,60 @@ declare module '@tanstack/react-router' {
       path: '/current-trip'
       fullPath: '/current-trip'
       preLoaderRoute: typeof CurrentTripRouteImport
+    '/app/': {
+      id: '/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
+    '/admin/': {
+      id: '/admin/'
       path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/viagens': {
+      id: '/app/viagens'
+      path: '/app/viagens'
+      fullPath: '/app/viagens'
+      preLoaderRoute: typeof AppViagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/rotas': {
+      id: '/admin/rotas'
+      path: '/admin/rotas'
+      fullPath: '/admin/rotas'
+      preLoaderRoute: typeof AdminRotasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/relatorios': {
+      id: '/admin/relatorios'
+      path: '/admin/relatorios'
+      fullPath: '/admin/relatorios'
+      preLoaderRoute: typeof AdminRelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/onibus': {
+      id: '/admin/onibus'
+      path: '/admin/onibus'
+      fullPath: '/admin/onibus'
+      preLoaderRoute: typeof AdminOnibusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/motoristas': {
+      id: '/admin/motoristas'
+      path: '/admin/motoristas'
+      fullPath: '/admin/motoristas'
+      preLoaderRoute: typeof AdminMotoristasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/admins': {
+      id: '/admin/admins'
+      path: '/admin/admins'
+      fullPath: '/admin/admins'
+      preLoaderRoute: typeof AdminAdminsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -221,10 +399,20 @@ const rootRouteChildren: RootRouteChildren = {
   CurrentTripRoute: CurrentTripRoute,
   EquipeRoute: EquipeRoute,
   LoginRoute: LoginRoute,
-  RecoveryRoute: RecoveryRoute,
+  RecuperarRoute: RecuperarRoute,
   SignupRoute: SignupRoute,
   SobreProjetoRoute: SobreProjetoRoute,
   ViagensRoute: ViagensRoute,
+  Admin_rootRoute: Admin_rootRoute,
+  AdminAdminsRoute: AdminAdminsRoute,
+  AdminMotoristasRoute: AdminMotoristasRoute,
+  AdminOnibusRoute: AdminOnibusRoute,
+  AdminRelatoriosRoute: AdminRelatoriosRoute,
+  AdminRotasRoute: AdminRotasRoute,
+  App_rootRoute: App_rootRoute,
+  AppViagensRoute: AppViagensRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

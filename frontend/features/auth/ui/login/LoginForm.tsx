@@ -8,8 +8,8 @@ import { z } from "zod"
 import { useLoginMutation } from "@features/auth/hooks/useLogin"
 
 // Routes
-import { Route as RecoveryRoute } from "@pages/recovery"
-import { Route as SignupRoute } from "@pages/signup"
+import { Route as RecoveryRoute } from "@/pages/recuperar"
+import { Route as SignupRoute } from "@/pages/signup"
 
 // Components
 import HintInvalid from '@features/auth/ui/HintInvalid'

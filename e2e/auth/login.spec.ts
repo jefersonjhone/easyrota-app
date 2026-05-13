@@ -52,7 +52,7 @@ test.describe('Login Page', () => {
 
     await expect(loginPage.forgotPasswordButton).toBeVisible()
     await loginPage.forgotPasswordButton.click()
-    await expect(page).toHaveURL('/recovery')
+    await expect(page).toHaveURL('/recuperar')
   })
 
 })
