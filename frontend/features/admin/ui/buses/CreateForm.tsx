@@ -41,12 +41,16 @@ export const CreateBusForm = () => {
       setSuccess("Ônibus cadastrado com sucesso!")
 
       reset()
-    } catch (err: any){
+    } catch (err){
       console.error (err);
-      const detail = err?.data?.detail;
-      const plateError = err?.data?.number_plate?.[0];
+
+      const errorData = err as { data?: { detail?: string, number_plate?: string[] } } | undefined
+
+      const detail = errorData?.data?.detail;
+      const plateError = errorData?.data?.number_plate?.[0];
 
       const message =
+        detail &&
         (plateError
           ? 'A placa inserida já está cadastrada.'
           : detail.includes('Given token not valid')
