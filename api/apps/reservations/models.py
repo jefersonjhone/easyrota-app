@@ -16,10 +16,10 @@ class Reservation(models.Model):
 
     checkin_date = models.DateTimeField(null=True, blank=True)
     check_in = models.BooleanField(default=False)
-    queue_position = models.IntegerField()
     status = models.CharField(
         max_length=25, choices=STATUS_RESERVATION, default="PENDENTE"
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
     student = models.ForeignKey(
         "users.StudentProfile", on_delete=models.CASCADE, null=True, blank=True
