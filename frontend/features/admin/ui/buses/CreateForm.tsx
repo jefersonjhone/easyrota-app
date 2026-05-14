@@ -20,17 +20,21 @@ export const CreateBusForm = () => {
   const {
     register,
     handleSubmit,
-    reset,
+    setError,
     formState: { errors },
   } = useForm<BusData>({
     resolver: zodResolver(busSchema),
+    defaultValues: {
+      number_plate: "",
+      brand: "",
+      seating_capacity: undefined
+    },
+    mode: "onChange",
   });
-  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
   const onSubmit = async (data: BusData) => {
     setSuccess(null)
-    setError(null)
 
     try {
       await apiFetch('/buses/', {
@@ -39,29 +43,32 @@ export const CreateBusForm = () => {
       })
 
       setSuccess("Ônibus cadastrado com sucesso!")
-
-      reset()
     } catch (err){
       console.error (err);
 
       const errorData = err as { data?: { detail?: string, number_plate?: string[] } } | undefined
-
       const detail = errorData?.data?.detail;
       const plateError = errorData?.data?.number_plate?.[0];
+      console.log(errorData)
 
-      const message =
+      if (plateError){
+        setError("number_plate", {message: "A placa inserida já está cadastrada."})
+      }
+
+      if (detail) {
+        const message =
         detail &&
-        (plateError
-          ? 'A placa inserida já está cadastrada.'
-          : detail.includes('Given token not valid')
+        (detail.includes('Given token not valid')
           ? 'Token inválido. Faça login novamente.'
           : detail.includes('Token is invalid')
           ? 'Token inválido ou expirado. Faça login novamente.'
-          : detail.includes('Authentication credentials')
+          : detail.includes('credenciais de autenticação')
           ? 'Faça login para acessar esse recurso.'
           : detail)
         || 'Erro ao criar ônibus.'
-        setError(message)
+
+        setError("root.serverError", {message: message})
+      }
     }
   }
 
@@ -74,9 +81,9 @@ export const CreateBusForm = () => {
         </CardDescription>
       </CardHeader>
 
-      {error && (
+      {errors.root?.serverError && (
         <FieldDescription className="mb-4 rounded-md bg-red-50 p-3 text-red-700">
-          {error}
+          {errors.root.serverError.message}
         </FieldDescription>
       )}
       
@@ -102,7 +109,7 @@ export const CreateBusForm = () => {
 
             <Field>
               <FieldLabel htmlFor="brand">Modelo</FieldLabel>
-              <Input {...register("brand", {valueAsNumber: true})} type="text" placeholder="Marcopolo Torino"/>
+              <Input {...register("brand")} type="text" placeholder="Marcopolo Torino"/>
 
               {errors.brand && (
               <FieldDescription className="text-red-500">
@@ -113,7 +120,7 @@ export const CreateBusForm = () => {
 
             <Field>
               <FieldLabel htmlFor="capacity">Capacidade</FieldLabel>
-              <Input {...register("seating_capacity")} type="number" min={1} max={120}
+              <Input {...register("seating_capacity", {valueAsNumber: true})} type="number" min={1} max={120}
                 placeholder="40"
               />
               <FieldDescription>
