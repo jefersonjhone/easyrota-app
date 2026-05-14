@@ -1,48 +1,19 @@
 import { useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { refreshSession } from "../services/refresh-session"
 import { useAuthStore } from "../store/auth-store"
-
+import { isTokenExpired } from "../services/decode-token"
+import { refreshTokenIfNeeded } from "@/lib/api"
 
 export function useAuthBootstrap() {
-  const setAuth =
-    useAuthStore((state) => state.setAuth)
-
-  const clearAuth =
-    useAuthStore((state) => state.clearAuth)
-
+  
+  const clearAuth = useAuthStore((state) => state.clearAuth)
   const accessToken = useAuthStore((state) => state.accessToken)
- 
-  const query = useQuery({
-    queryKey: ["auth-bootstrap"],
-    queryFn: async () => {
-      const data = await refreshSession();
-      setAuth(
-              data.access_token,
-              data.user,
-            )
-      
-            return data.user
-    },
-    enabled: !accessToken,
-    retry: false,
-    staleTime: 0,
-    gcTime: 1000,
-    refetchOnWindowFocus: false,
-  })
-
+  const user = useAuthStore((state) => state.user)
+  
   useEffect(() => {
-    if (query.isError) {
-      clearAuth()
+    if (!user) return;
+    if ( !accessToken || isTokenExpired(accessToken)) {
+      refreshTokenIfNeeded().catch(() => {clearAuth();});
+      return;
     }
-  }, [
-    query.isError,
-    clearAuth,
-  ])
-
-  return {
-    isLoading: query.isPending,
-    isAuthenticated : !!accessToken,
-    error: query.error,
-  }
+  }, )
 }

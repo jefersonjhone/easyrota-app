@@ -1,8 +1,10 @@
+import { isTokenExpired } from "@/features/auth/services/decode-token"
 import { refreshSession } from "@/features/auth/services/refresh-session"
 import { useAuthStore } from "@/features/auth/store/auth-store"
 
 type ApiFetchOptions = RequestInit & {
-  auth?: boolean
+  auth?: boolean,
+  _retry?: boolean
 }
 
 let refreshPromise: Promise<void> | null = null
@@ -12,105 +14,96 @@ async function handleRefresh(): Promise<void> {
     const data = await refreshSession()
 
     useAuthStore.getState().setAuth(
-      data.access_token,
+      data.tokens?.access,
       data.user,
     )
   } catch (error) {
     useAuthStore.getState().clearAuth()
-
-    window.location.href = "/login"
-
     throw error
   }
 }
 
-export async function apiFetch<T>(input: RequestInfo | URL, options: ApiFetchOptions = {},): Promise<T> {
-  const { auth = true, headers, ...rest } = options
-  const accessToken = useAuthStore.getState().accessToken
-  const response = await fetch(input, {
+export async function refreshTokenIfNeeded(): Promise<void> {
+  if (refreshPromise) {
+    await refreshPromise;
+    return;
+  }
+
+  refreshPromise = handleRefresh();
+  try {
+    await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
+
+export async function apiFetch<T>(
+  input: RequestInfo | URL,
+  options: ApiFetchOptions = {}
+): Promise<T> {
+  const { auth = true, headers, ...rest } = options;
+
+  if (auth) {
+    const token = useAuthStore.getState().accessToken;
+    if (token && isTokenExpired(token) && !refreshPromise) {
+      try {
+        await refreshTokenIfNeeded();
+      } catch {
+        throw { status: 401, data: null };
+      }
+    }
+  }
+
+  const makeRequest = async () => {
+    const accessToken = useAuthStore.getState().accessToken;
+    return fetch(`/api${input}`, {
     ...rest,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...headers,
       ...(auth && accessToken
-        ? {
-            Authorization: `Bearer ${accessToken}`,
-          }
+        ? { Authorization: `Bearer ${accessToken}` }
         : {}),
     },
-  })
+  });
+  }
 
-  if (response.status !== 401) {
-    if (!response.ok) {
-      const errorData = await safeJson(response)
-
+  const response = await makeRequest();
+  if (
+    response.status === 401 &&
+    auth &&
+    !options._retry
+  ) {
+    try {
+      await refreshTokenIfNeeded();
+  
+      return apiFetch<T>(input, {
+        ...options,
+        _retry: true,
+      });
+    } catch {
+      useAuthStore.getState().clearAuth();
+  
       throw {
-        status: response.status,
-        data: errorData,
-      }
-    }
-
-    return response.json()
-  }
-
-  if (!auth) {
-    throw {
-      status: 401,
+        status: 401,
+        data: null,
+      };
     }
   }
-
-  try {
-    if (!refreshPromise) {
-      refreshPromise = handleRefresh()
-    }
-
-    await refreshPromise
-  } finally {
-    refreshPromise = null
+  if (!response.ok) {
+    const errorData = await safeJson(response);
+    throw { status: response.status, data: errorData };
   }
 
-  const newAccessToken =
-    useAuthStore.getState().accessToken
-
-  const retryResponse = await fetch(input, {
-    ...rest,
-
-    credentials: "include",
-
-    headers: {
-      "Content-Type": "application/json",
-
-      ...headers,
-
-      ...(newAccessToken
-        ? {
-            Authorization: `Bearer ${newAccessToken}`,
-          }
-        : {}),
-    },
-  })
-
-  if (!retryResponse.ok) {
-    const errorData = await safeJson(
-      retryResponse,
-    )
-
-    throw {
-      status: retryResponse.status,
-      data: errorData,
-    }
-  }
-
-  return retryResponse.json()
+  return response.json();
 }
 
-async function safeJson(
-  response: Response,
-) {
+async function safeJson(response: Response){
   try {
-    return await response.json()
+    return await response.json();
   } catch {
-    return null
+    return null;
   }
 }
