@@ -17,7 +17,7 @@ type CurrentTripData = {
   bus_number_plate: string
   driver: string
   percentage_complete: number
-  minutes_remaining: number
+  minutes_remaining: number | null
   status_route: string
 }
 
@@ -121,20 +121,26 @@ export function CurrentTripPage() {
 
               <Separator className="my-6" />
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className={`grid gap-4 ${trip.minutes_remaining !== null ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+                
                 <div className="rounded-lg bg-white p-4 shadow-sm">
                   <p className="text-sm text-slate-500">Percentual concluído</p>
                   <p className="mt-2 text-2xl font-semibold">{trip.percentage_complete}%</p>
                 </div>
-                <div className="rounded-lg bg-white p-4 shadow-sm">
-                  <p className="text-sm text-slate-500">Minutos restantes</p>
-                  <p className="mt-2 text-2xl font-semibold">{trip.minutes_remaining}</p>
-                </div>
+
+                {trip.minutes_remaining !== null && (
+                  <div className="rounded-lg bg-white p-4 shadow-sm">
+                    <p className="text-sm text-slate-500">Minutos restantes</p>
+                    <p className="mt-2 text-2xl font-semibold">{trip.minutes_remaining}</p>
+                  </div>
+                )}
+
                 <div className="rounded-lg bg-white p-4 shadow-sm">
                   <p className="text-sm text-slate-500">Status da rota</p>
                   <p className="mt-2 text-2xl font-semibold">{trip.status_route}</p>
                 </div>
               </div>
+
             </CardContent>
           </Card>
         ) : (

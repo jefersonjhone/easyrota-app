@@ -223,40 +223,24 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         ]
 
     def get_status_trip(self, obj):
-        if obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO"]:
-            return obj.get_status_display()
-
-        now = timezone.now()
-        expected_dep, expected_arr = self._get_expected_datetimes(obj)
-
-        if now < expected_dep:
-            real_status = "CONFIRMADA"
-        elif expected_dep <= now < expected_arr:
-            real_status = "EM ANDAMENTO"
-        else:
-            real_status = "CONCLUÍDA"
-
-        if obj.status != real_status:
-            obj.status = real_status
-            obj.save(update_fields=["status"])
-
         return obj.get_status_display()
-
-    def _get_expected_datetimes(self, obj):
+    
+    def _get_trip_metrics(self, obj):
+        """
+        It calculates the actual start time and duration based on the route.
+        This serves as the basis for percentage and remaining time considering delays.
+        """
+        
         time_zone = timezone.get_current_timezone()
-
-        if (
-            not obj.trip_date
-            or not getattr(obj, "route", None)
-            or not obj.route.departure_time
-            or not obj.route.arrival_time
-        ):
+        
+        if not obj.trip_date or not getattr(obj, "route", None):
             now = timezone.now()
-            return now, now
+            return now, 0
 
         expected_dep = timezone.make_aware(
             datetime.combine(obj.trip_date, obj.route.departure_time), time_zone
         )
+        
         expected_arr = timezone.make_aware(
             datetime.combine(obj.trip_date, obj.route.arrival_time), time_zone
         )
@@ -264,21 +248,37 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         if expected_arr <= expected_dep:
             expected_arr += timedelta(days=1)
 
-        return expected_dep, expected_arr
+        total_duration = (expected_arr - expected_dep).total_seconds()
+
+        start_time = (
+            obj.departure_timestamp if obj.departure_timestamp else expected_dep
+            )
+
+        return start_time, total_duration
 
     def get_percentage_complete(self, obj):
-        now = timezone.now()
-        expected_dep, expected_arr = self._get_expected_datetimes(obj)
-
-        if now < expected_dep:
+        if obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO"]:
             return 0
-        if now > expected_arr:
+        if obj.status == "CONCLUÍDA" or obj.arrival_timestamp:
             return 100
+        if obj.status == "CONFIRMADA" and not obj.departure_timestamp:
+            return 0
 
-        total_duration = (expected_arr - expected_dep).total_seconds()
-        elapsed = (now - expected_dep).total_seconds()
+        now = timezone.now()
+        start_time, total_duration = self._get_trip_metrics(obj)
+
+        if total_duration <= 0:
+            return 0
+
+        elapsed = (now - start_time).total_seconds()
+
+        if elapsed < 0:
+            return 0
 
         pct = (elapsed / total_duration) * 100
+
+        if pct >= 100:
+            return 99 
 
         if 0 < pct < 1:
             return 1
@@ -286,13 +286,25 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         return int(pct)
 
     def get_minutes_remaining(self, obj):
-        now = timezone.now()
-        _, expected_arr = self._get_expected_datetimes(obj)
-
-        if now >= expected_arr:
+        if obj.status == "CONFIRMADA" and not obj.departure_timestamp:
+            return None
+        
+        if obj.status in [
+            "CONCLUÍDA", 
+            "CANCELADA", 
+            "RISCO DE CANCELAMENTO"
+            ] or obj.arrival_timestamp:
             return 0
 
-        remaining_seconds = (expected_arr - now).total_seconds()
+        now = timezone.now()
+        start_time, total_duration = self._get_trip_metrics(obj)
+        
+        real_expected_arr = start_time + timedelta(seconds=total_duration)
+
+        if now >= real_expected_arr:
+            return 0
+
+        remaining_seconds = (real_expected_arr - now).total_seconds()
         return int(remaining_seconds // 60)
 
     def get_status_route(self, obj):
@@ -311,7 +323,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             return "Trajeto em Andamento"
         elif 45 <= pct <= 55:
             return "Metade do trajeto concluída"
-        elif pct < 100:
+        elif pct < 99:
             return "Aproximando do Destino"
         else:
-            return "Trajeto Concluído"
+            return "Finalizando Trajeto"

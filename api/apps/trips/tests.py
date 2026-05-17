@@ -6,8 +6,13 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from ..reservations.models import Reservation
 from ..users.models import CustomUser
-from ..users.models.profiles import AdministratorProfile, DriverProfile
+from ..users.models.profiles import (
+    AdministratorProfile,
+    DriverProfile,
+    StudentProfile,
+)
 from .models import Bus, Route, Trip
 
 User = get_user_model()
@@ -391,27 +396,155 @@ class TripAPITestCase(APITestCase):
         self.assertIn("status_route", keys)
         self.assertEqual(response.data["bus_number_plate"], "ABC-1234")
 
-    def test_next_trip_automatic_endpoint(self):
-        """Ensures the automatic endpoint returns the next valid trip for the user."""
-        self.client.force_authenticate(user=self.driver_user)
 
-        Trip.objects.create(
-            trip_date=self.today,
-            bus=self.bus,
-            route=self.route_morning,
-            status="CANCELADA",
+class CurrentTripPassengerAPITests(APITestCase):
+    def setUp(self):
+        """Setup focado no Passageiro e suas Reservas."""
+        self.url = reverse("trip-current")
+
+        self.admin_user = CustomUser.objects.create_superuser(
+            email="admin@easyrota.com", password="123", is_active=True
+        )
+        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
+
+        self.passenger_user = CustomUser.objects.create_user(
+            email="estudante@teste.com", password="123", is_active=True
+        )
+        self.student_profile = StudentProfile.objects.create(
+            user=self.passenger_user, 
         )
 
-        valid_trip = Trip.objects.create(
-            trip_date=self.tomorrow,
-            bus=self.bus,
-            route=self.route_midnight,
-            status="CONFIRMADA",
+        self.other_user = CustomUser.objects.create_user(
+            email="sem_reserva@teste.com", password="123", is_active=True
         )
 
-        url = reverse("trip-current")
-        response = self.client.get(url)
+        self.bus = Bus.objects.create(
+            number_plate="XYZ-9876", 
+            seating_capacity=40, 
+            administrator=self.admin_profile
+        )
+        
+        now = timezone.now()
+        time_zone = timezone.get_current_timezone()
+        
+        self.past_time = (now - timedelta(hours=1)).astimezone(time_zone).time()
+        self.future_time = (now + timedelta(hours=1)).astimezone(time_zone).time()
+
+        self.route_active = Route.objects.create(
+            origin="Feira de Santana",
+            destiny="Salvador",
+            departure_time=self.past_time,
+            arrival_time=self.future_time,
+            administrator=self.admin_profile,
+        )
+
+    def test_no_upcoming_trips_returns_404(self):
+        """Deve retornar 404 se o passageiro não tiver nenhuma viagem próxima."""
+        self.client.force_authenticate(user=self.passenger_user)
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data["detail"], "Nenhuma viagem próxima.")
+
+    def test_ignores_trips_without_user_reservation(self):
+        """Garante que um passageiro não veja a viagem atual de outra pessoa."""
+        
+        trip = Trip.objects.create(
+            trip_date=timezone.now().date(),
+            bus=self.bus,
+            route=self.route_active,
+            status="CONFIRMADA"
+        )
+        
+        Reservation.objects.create(
+            trip=trip, 
+            student=self.student_profile, 
+            status="CONFIRMADA"
+            )
+
+        self.client.force_authenticate(user=self.other_user)
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_returns_trip_in_progress(self):
+        """Deve retornar a viagem se o usuário 
+        tiver reserva e ela estiver em andamento."""
+        
+        trip = Trip.objects.create(
+            trip_date=timezone.now().date(),
+            bus=self.bus,
+            route=self.route_active,
+            status="EM ANDAMENTO"
+        )
+        Reservation.objects.create(
+            trip=trip, 
+            student=self.student_profile, 
+            status="CONFIRMADA"
+            )
+
+        self.client.force_authenticate(user=self.passenger_user)
+        response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], valid_trip.id)
-        self.assertEqual(response.data["destiny"], "Recife")
+        self.assertEqual(response.data["id"], trip.id)
+
+    def test_updates_status_automatically(self):
+        """
+        Testa o método _update_trip_status da View.
+        Se a viagem está 'CONFIRMADA', mas o horário atual já passou do horário 
+        de partida, a view deve atualizar automaticamente para 'EM ANDAMENTO'.
+        """
+        trip = Trip.objects.create(
+            trip_date=timezone.now().date(),
+            bus=self.bus,
+            route=self.route_active,
+            status="CONFIRMADA"
+        )
+        Reservation.objects.create(
+            trip=trip, 
+            student=self.student_profile, 
+            status="CONFIRMADA"
+            )
+
+        self.client.force_authenticate(user=self.passenger_user)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status_trip"], "Em Andamento")
+        
+        trip.refresh_from_db()
+        self.assertEqual(trip.status, "EM ANDAMENTO")
+
+    def test_percentage_logic_with_departure_timestamp(self):
+        """
+        Testa se o Serializer calcula a porcentagem corretamente com base
+        no momento em que o motorista de fato apertou 'Iniciar Viagem'.
+        """
+        now = timezone.now()
+        
+        trip = Trip.objects.create(
+            trip_date=now.date(),
+            bus=self.bus,
+            route=self.route_active,
+            status="EM ANDAMENTO",
+            departure_timestamp=now - timedelta(hours=1)
+        )
+        Reservation.objects.create(
+            trip=trip, 
+            student=self.student_profile, 
+            status="CONFIRMADA"
+            )
+
+        self.client.force_authenticate(user=self.passenger_user)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        percentage = response.data["percentage_complete"]
+        minutes_left = response.data["minutes_remaining"]
+        
+        self.assertTrue(49 <= percentage <= 51, 
+                        f"Porcentagem esperada ~50%, recebido {percentage}")
+        self.assertTrue(59 <= minutes_left <= 61, 
+        f"Minutos restantes esperados ~60, recebido {minutes_left}")
