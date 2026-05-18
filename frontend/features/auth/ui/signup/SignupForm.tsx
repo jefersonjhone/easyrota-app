@@ -14,6 +14,7 @@ import HintInvalid from "@features/auth/ui/HintInvalid"
 import { Button } from "@ui/button"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
 import { Input } from "@ui/input"
+import { Route as LoginRoute } from "@pages/login"
 
 
 const signupSchema = z.object({
@@ -68,6 +69,8 @@ export default function SignupForm(props: Props) {
   const { variant, paths } = props
   const config = variantConfig[variant]
   
+  const navigate = LoginRoute.useNavigate()
+
   const signupMutation = useSignupMutation(variant)
   const form = useForm<SignupSchema>({
     mode: "onChange",
@@ -87,6 +90,7 @@ export default function SignupForm(props: Props) {
   const onSubmit = async (data: SignupSchema) => {
     try {
       await signupMutation.mutateAsync(data)
+      navigate({ to: LoginRoute.to, replace: true })
     } catch (error: unknown) {
       const errors = error as Record<string, string[]>
       Object.entries(errors).forEach(([field, messages]) => {
@@ -97,14 +101,6 @@ export default function SignupForm(props: Props) {
         }
       })
     }
-  }
-
-  if (signupMutation.isSuccess) {
-    return (
-      <div className="rounded-md bg-green-50 p-4 text-center text-green-600">
-        Conta criada com sucesso! Redirecionando...
-      </div>
-    )
   }
 
   return (
