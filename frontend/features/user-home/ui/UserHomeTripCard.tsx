@@ -103,9 +103,11 @@ export function UserHomeTripCard({
                 aparecerá aqui com status, horário e motorista.
               </p>
             </div>
-            <Button asChild size="sm">
-                <a href="/app/current-trip">Explorar viagem atual</a>
-            </Button>
+            <a href="/app/viagens">
+              <Button asChild size="sm">
+                Explorar viagens futuras
+              </Button>
+            </a>
           </div>
         )}
 
