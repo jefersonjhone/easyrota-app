@@ -1,0 +1,74 @@
+import { Button } from '@ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
+
+interface Bus {
+  id: string
+  plate: string
+  brand: string
+  capacity: number
+  status: 'active' | 'maintenance'
+}
+
+const mockBuses: Bus[] = [
+  { id: '1', plate: 'ABC-1234', brand: 'Marcopolo Torino', capacity: 40, status: 'active' },
+  { id: '2', plate: 'XYZ-5678', brand: 'Mercedes-Benz Of', capacity: 45, status: 'active' },
+  { id: '3', plate: 'KGB-9900', brand: 'Volare Fly 10', capacity: 30, status: 'maintenance' },
+]
+
+export const BusesTable = () => {
+  return (
+    <Card className="w-full max-w-4xl m-4 flex-1">
+      <CardHeader>
+        <CardTitle>Frota Cadastrada</CardTitle>
+        <CardDescription>
+          Visualização e status dos veículos registrados no sistema.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent>
+        <div className="w-full overflow-x-auto rounded-xl border border-border bg-background">
+          <table className="w-full text-sm text-left border-collapse">
+            <thead>
+              <tr className="border-b border-border bg-muted/50 text-muted-foreground font-medium uppercase text-xs">
+                <th className="p-4">Placa</th>
+                <th className="p-4">Modelo / Marca</th>
+                <th className="p-4 text-center">Capacidade</th>
+                <th className="p-4 text-center">Status</th>
+                <th className="p-4 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {mockBuses.map((bus) => (
+                <tr key={bus.id} className="hover:bg-muted/40 transition-colors">
+                  <td className="p-4 font-mono font-bold text-foreground">
+                    {bus.plate}
+                  </td>
+                  <td className="p-4 text-foreground">
+                    {bus.brand}
+                  </td>
+                  <td className="p-4 text-center text-muted-foreground">
+                    {bus.capacity} assentos
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                      bus.status === 'active' 
+                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                        : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                    }`}>
+                      {bus.status === 'active' ? 'Ativo' : 'Manutenção'}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right">
+                    <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10">
+                      Excluir
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
