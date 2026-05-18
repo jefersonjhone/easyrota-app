@@ -13,7 +13,7 @@ test.describe('Login Page', () => {
     await loginPage.password.fill(credentials.password)
     await loginPage.submitButton.click()
   
-    await expect(page.getByText('Logado com sucesso! Um dia')).toBeVisible()
+    await expect(page).toHaveURL('/app')
   })
 
   test('Can login as student with valid credentials', async ({ page }) => {
@@ -25,7 +25,7 @@ test.describe('Login Page', () => {
     await loginPage.password.fill(credentials.password)
     await loginPage.submitButton.click()
   
-    await expect(page.getByText('Logado com sucesso! Um dia')).toBeVisible()
+    await expect(page).toHaveURL('/app')
   })
 
   test('Can go to Signup page', async ({ page }) => {
