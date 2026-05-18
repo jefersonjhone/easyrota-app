@@ -45,7 +45,6 @@ type DriverTrip = {
   status: TripModelStatus
   statusLabel: string
   availableSeats: number | null
-  isFull: boolean
 }
 
 type MockDriverTripSeed = {
@@ -77,8 +76,8 @@ const todayFormatter = new Intl.DateTimeFormat('pt-BR', {
 const mockTripsSeed: MockDriverTripSeed[] = [
   {
     id: 1,
-    origin: 'SSA',
-    destiny: 'FSA',
+    origin: 'SALVADOR',
+    destiny: 'FEIRA',
     departure_time: '07:20',
     status: 'CANCELADA',
     seating_capacity: 40,
@@ -86,8 +85,8 @@ const mockTripsSeed: MockDriverTripSeed[] = [
   },
   {
     id: 2,
-    origin: 'FSA',
-    destiny: 'SSA',
+    origin: 'FEIRA',
+    destiny: 'SALVADOR',
     departure_time: '10:30',
     status: 'CONFIRMADA',
     seating_capacity: 44,
@@ -95,8 +94,8 @@ const mockTripsSeed: MockDriverTripSeed[] = [
   },
   {
     id: 3,
-    origin: 'FSA',
-    destiny: 'SSA',
+    origin: 'FEIRA',
+    destiny: 'SALVADOR',
     departure_time: '14:10',
     status: 'CONFIRMADA',
     seating_capacity: 46,
@@ -104,8 +103,8 @@ const mockTripsSeed: MockDriverTripSeed[] = [
   },
   {
     id: 4,
-    origin: 'SSA',
-    destiny: 'FSA',
+    origin: 'SALVADOR',
+    destiny: 'FEIRA',
     departure_time: '18:40',
     status: 'EM ANDAMENTO',
     seating_capacity: 44,
@@ -166,7 +165,7 @@ function toStatusLabel(status: TripModelStatus) {
 }
 
 function toMockDriverTrip(seed: MockDriverTripSeed): DriverTrip {
-  const availableSeats = Math.max(seed.seating_capacity - seed.active_reservations, 0)
+  const availableSeats =  seed.active_reservations
   const tripDate = getTodayIsoDate()
 
   return {
@@ -179,7 +178,6 @@ function toMockDriverTrip(seed: MockDriverTripSeed): DriverTrip {
     status: seed.status,
     statusLabel: toStatusLabel(seed.status),
     availableSeats,
-    isFull: availableSeats === 0,
   }
 }
 
@@ -211,7 +209,6 @@ function normalizeTripFromModel(
     status: trip.status,
     statusLabel: toStatusLabel(trip.status),
     availableSeats,
-    isFull,
   }
 }
 
@@ -269,13 +266,6 @@ function getStatusCard(trip: DriverTrip) {
     }
   }
 
-  if (trip.isFull) {
-    return {
-      modifier: 'full',
-      label: 'Lotada',
-      description: 'Sem vagas livres',
-    }
-  }
 
   if (trip.availableSeats !== null) {
     const seatLabel = trip.availableSeats === 1 ? '1 vaga' : `${trip.availableSeats} vagas`
@@ -283,7 +273,7 @@ function getStatusCard(trip: DriverTrip) {
     return {
       modifier: 'available',
       label: seatLabel,
-      description: 'disponíveis',
+      description: 'reservadas',
     }
   }
 
