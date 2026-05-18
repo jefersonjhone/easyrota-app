@@ -52,7 +52,8 @@ export function BusesPage() {
   
   return (
     <AdminLayout>
-      <div className="flex flex-col lg:flex-row gap-6 p-2 items-start w-full justify-center">
+      {/* Alinhamento vertical travado para não quebrar com a barra lateral */}
+      <div className="flex flex-col gap-6 p-4 items-start w-full max-w-4xl mx-auto box-border">
         <CreateBusForm onBusCreated={addBus}/>
         <BusesTable
          buses={buses}

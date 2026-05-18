@@ -9,7 +9,7 @@ interface BusesTableProps {
 
 export const BusesTable = ({ buses, onDeleteBus }: BusesTableProps) => {
   return (
-    <Card className="w-full max-w-4xl m-4 flex-1">
+    <Card className="w-full lg:flex-1 min-w-0">
       <CardHeader>
         <CardTitle>Frota Cadastrada</CardTitle>
         <CardDescription>
@@ -53,7 +53,7 @@ export const BusesTable = ({ buses, onDeleteBus }: BusesTableProps) => {
                   <td className="p-4 text-right">
                     <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10"
                       onClick={() => onDeleteBus(bus.id)}>
-                        {/* TODO: Implementar pop-up de confirmação de deletar ônibus. */}
+                      {/* TODO: Implementar pop-up de confirmação de deletar ônibus. */}
                       Excluir
                     </Button>
                   </td>
