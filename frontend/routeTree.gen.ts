@@ -25,6 +25,7 @@ import { Route as AdminRelatoriosRouteImport } from './pages/admin/relatorios'
 import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
 import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
 import { Route as AdminAdminsRouteImport } from './pages/admin/admins'
+import { Route as AppDriverViagensRouteImport } from './pages/app/driver/viagens'
 
 const App_rootRoute = App_rootRouteImport.update({
   id: '/app/__root',
@@ -104,6 +105,11 @@ const AdminAdminsRoute = AdminAdminsRouteImport.update({
   path: '/admin/admins',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppDriverViagensRoute = AppDriverViagensRouteImport.update({
+  id: '/app/driver/viagens',
+  path: '/app/driver/viagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/app/viagens': typeof AppViagensRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/app/driver/viagens': typeof AppDriverViagensRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/admin/rotas': typeof AdminRotasRoute
   '/app': typeof AppIndexRoute
   '/app/viagens': typeof AppViagensRoute
+  '/app/driver/viagens': typeof AppDriverViagensRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/app/viagens': typeof AppViagensRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/app/driver/viagens': typeof AppDriverViagensRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/app/viagens'
     | '/admin/'
     | '/app/'
+    | '/app/driver/viagens'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/admin/rotas'
     | '/app'
     | '/app/viagens'
+    | '/app/driver/viagens'
   id:
     | '__root__'
     | '/'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/app/viagens'
     | '/admin/'
     | '/app/'
+    | '/app/driver/viagens'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -230,6 +242,7 @@ export interface RootRouteChildren {
   AppViagensRoute: typeof AppViagensRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppDriverViagensRoute: typeof AppDriverViagensRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -346,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/driver/viagens': {
+      id: '/app/driver/viagens'
+      path: '/app/driver/viagens'
+      fullPath: '/app/driver/viagens'
+      preLoaderRoute: typeof AppDriverViagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -366,6 +386,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppViagensRoute: AppViagensRoute,
   AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
+  AppDriverViagensRoute: AppDriverViagensRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
