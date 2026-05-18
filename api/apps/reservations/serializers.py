@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework import serializers
 
+from ..trips.models import Trip
 from .models import Reservation
 
 
@@ -83,3 +84,40 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
             ).count()
 
         return 0
+
+
+class AvailableTripSerializer(serializers.ModelSerializer):
+    trip_date = serializers.DateField(format="%d/%m/%Y", read_only=True)
+    departure_time = serializers.TimeField(
+        source="route.departure_time", format="%H:%M", read_only=True
+    )
+    origin = serializers.CharField(source="route.origin", read_only=True)
+    destiny = serializers.CharField(source="route.destiny", read_only=True)
+    bus_brand = serializers.CharField(source="bus.brand", read_only=True)
+    status_trip = serializers.SerializerMethodField()
+    available_seats = serializers.SerializerMethodField()
+    is_full = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Trip
+        fields = [
+            "id",
+            "trip_date",
+            "origin",
+            "destiny",
+            "departure_time",
+            "bus_brand",
+            "status_trip",
+            "available_seats",
+            "is_full",
+        ]
+
+    def get_status_trip(self, obj):
+        return obj.get_status_display()
+
+    def get_available_seats(self, obj):
+        reserved_seats = getattr(obj, "reserved_seats", 0)
+        return max(obj.bus.seating_capacity - reserved_seats, 0)
+
+    def get_is_full(self, obj):
+        return self.get_available_seats(obj) == 0

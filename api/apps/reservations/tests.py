@@ -48,6 +48,7 @@ class BaseReservationTestCase(APITestCase):
         self.bus = Bus.objects.create(
             number_plate="ABC-1234",
             seating_capacity=40,
+            brand="Mercedes-Benz",
             driver=self.driver_profile,
             administrator=self.admin_profile,
         )
@@ -160,3 +161,36 @@ class ReservationHistoryTest(BaseReservationTestCase):
 
         self.assertEqual(response.data[0]["trip_history_status"], "FALTA")
         self.assertEqual(response.data[0]["total_trips"], 1)
+
+
+class AvailableTripsTest(BaseReservationTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse("reservation-available-trips")
+        self.user, self.student_profile = self.create_student()
+
+    def test_returns_available_trips_with_reserved_seats(self):
+        trip = self.create_trip(days_ahead=2)
+        Reservation.objects.create(
+            trip=trip,
+            student=self.student_profile,
+            status="CONFIRMADA",
+        )
+        Reservation.objects.create(
+            trip=trip,
+            civil_servant=self.create_civil_servant()[1],
+            status="PENDENTE",
+        )
+        Reservation.objects.create(
+            trip=trip,
+            civil_servant=self.create_civil_servant()[1],
+            status="LISTA SECUNDÁRIA",
+        )
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["available_seats"], 38)
+        self.assertEqual(response.data[0]["bus_brand"], "Mercedes-Benz")

@@ -249,6 +249,7 @@ class TripAPITestCase(APITestCase):
         self.bus = Bus.objects.create(
             number_plate="ABC-1234",
             seating_capacity=40,
+            brand="Mercedes-Benz",
             driver=self.driver_profile,
             administrator=self.admin_profile,
         )
@@ -421,6 +422,7 @@ class CurrentTripPassengerAPITests(APITestCase):
         self.bus = Bus.objects.create(
             number_plate="XYZ-9876", 
             seating_capacity=40, 
+            brand="Mercedes-Benz",
             administrator=self.admin_profile
         )
         

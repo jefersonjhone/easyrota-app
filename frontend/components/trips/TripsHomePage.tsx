@@ -3,123 +3,21 @@ import { useEffect, useState } from 'react'
 import AppLayout from '@layout/app-layout'
 import { FieldDescription } from '@ui/field'
 import { Button } from '@ui/button'
+import { apiFetch } from '@/lib/api'
 
-type TripStatus = 'CONFIRMADA' | 'CANCELADA'
-
-type TripOption = {
+type AvailableTrip = {
   id: number
   trip_date: string
   origin: string
   destiny: string
   departure_time: string
-  bus_type: string
-  status: TripStatus
+  bus_brand: string
   status_trip: string
   available_seats: number
-  is_full: boolean
-}
-
-type MockTripSeed = {
-  id: number
-  origin: string
-  destiny: string
-  departure_offset_minutes: number
-  bus_type: string
-  seating_capacity: number
-  active_reservations: number
-  checkins_last_two_minutes: number
-}
-
-const mockTripsSeed: MockTripSeed[] = [
-  {
-    id: 1,
-    origin: 'FSA',
-    destiny: 'SSA',
-    departure_offset_minutes: 90,
-    bus_type: 'Executivo',
-    seating_capacity: 44,
-    active_reservations: 32,
-    checkins_last_two_minutes: 0,
-  },
-  {
-    id: 2,
-    origin: 'SSA',
-    destiny: 'FSA',
-    departure_offset_minutes: 1,
-    bus_type: 'Convencional',
-    seating_capacity: 40,
-    active_reservations: 36,
-    checkins_last_two_minutes: 0,
-  },
-  {
-    id: 3,
-    origin: 'FSA',
-    destiny: 'SSA',
-    departure_offset_minutes: 240,
-    bus_type: 'Executivo',
-    seating_capacity: 46,
-    active_reservations: 46,
-    checkins_last_two_minutes: 3,
-  },
-  {
-    id: 4,
-    origin: 'SSA',
-    destiny: 'FSA',
-    departure_offset_minutes: 420,
-    bus_type: 'Noturno',
-    seating_capacity: 44,
-    active_reservations: 18,
-    checkins_last_two_minutes: 0,
-  },
-]
-
-const formatterDate = new Intl.DateTimeFormat('pt-BR')
-const formatterTime = new Intl.DateTimeFormat('pt-BR', {
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-})
-
-function toTripStatusLabel(status: TripStatus) {
-  if (status === 'CANCELADA') return 'Cancelada por ausência de check-in'
-  return 'Confirmada'
-}
-
-function toTripOption(seed: MockTripSeed, now: Date): TripOption {
-  const departureDate = new Date(now.getTime() + seed.departure_offset_minutes * 60_000)
-  const inLastTwoMinutesWindow = seed.departure_offset_minutes <= 2
-  const shouldCancel = inLastTwoMinutesWindow && seed.checkins_last_two_minutes === 0
-  const status: TripStatus = shouldCancel ? 'CANCELADA' : 'CONFIRMADA'
-  const availableSeats = Math.max(seed.seating_capacity - seed.active_reservations, 0)
-
-  return {
-    id: seed.id,
-    trip_date: formatterDate.format(departureDate),
-    origin: seed.origin,
-    destiny: seed.destiny,
-    departure_time: formatterTime.format(departureDate),
-    bus_type: seed.bus_type,
-    status,
-    status_trip: toTripStatusLabel(status),
-    available_seats: availableSeats,
-    is_full: availableSeats === 0,
-  }
-}
-
-async function getMockTrips(): Promise<TripOption[]> {
-  await new Promise((resolve) => {
-    setTimeout(resolve, 450)
-  })
-
-  const now = new Date()
-  return mockTripsSeed
-    .slice()
-    .sort((first, second) => first.departure_offset_minutes - second.departure_offset_minutes)
-    .map((seed) => toTripOption(seed, now))
 }
 
 export function TripsHomePage() {
-  const [trips, setTrips] = useState<TripOption[]>([])
+  const [trips, setTrips] = useState<AvailableTrip[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -129,11 +27,15 @@ export function TripsHomePage() {
       setIsLoading(true)
 
       try {
-        const data = await getMockTrips()
+        const data = await apiFetch<AvailableTrip[]>('/reservations/available-trips/')
         setTrips(data)
       } catch (err) {
         console.error('Erro ao carregar viagens disponíveis:', err)
-        setError('Não foi possível carregar as viagens no momento.')
+
+        const errorData = err as { data?: { detail?: string } } | undefined
+        const detail = errorData?.data?.detail
+        const message = detail || 'Não foi possível carregar as viagens no momento.'
+        setError(message)
       } finally {
         setIsLoading(false)
       }
@@ -147,13 +49,13 @@ export function TripsHomePage() {
       <section className="mx-auto w-full max-w-5xl px-4">
         <header className="mb-8 space-y-2">
           <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
-            Disponíveis hoje
+            Viagens disponíveis
           </p>
           <h1 className="font-heading text-4xl font-semibold tracking-tight">
-            Selecione sua Viagem
+            Selecione sua viagem
           </h1>
           <p className="text-muted-foreground">
-            Mock dinâmico temporário para validar a experiência da tela de viagens.
+            Viagens liberadas pelo backend para reserva do usuário autenticado.
           </p>
         </header>
 
@@ -174,8 +76,6 @@ export function TripsHomePage() {
         ) : (
           <div className="space-y-4">
             {trips.map((trip) => {
-              const isCanceled = trip.status === 'CANCELADA'
-
               return (
                 <article
                   key={trip.id}
@@ -187,7 +87,7 @@ export function TripsHomePage() {
                         {trip.origin} &#8594; {trip.destiny}
                       </h2>
                       <p className="mt-2 text-sm text-muted-foreground">
-                        {trip.trip_date} &#8226; {trip.departure_time} &#8226; {trip.bus_type}
+                        {trip.trip_date} &#8226; {trip.departure_time} &#8226; {trip.bus_brand}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
                         Status da viagem: {trip.status_trip}
@@ -195,29 +95,16 @@ export function TripsHomePage() {
                     </div>
 
                     <div className="flex items-center gap-3 self-end sm:self-auto">
-                      <span
-                        className={[
-                          'rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase',
-                          isCanceled
-                            ? 'bg-destructive/10 text-destructive'
-                            : trip.is_full
-                              ? 'bg-muted text-muted-foreground'
-                              : 'bg-primary/12 text-primary',
-                        ].join(' ')}
-                      >
-                        {isCanceled
-                          ? 'Cancelada'
-                          : trip.is_full
-                            ? 'Lotado'
-                            : `${trip.available_seats} vagas`}
+                      <span className="rounded-full bg-primary/12 px-3 py-1 text-xs font-semibold tracking-wide uppercase text-primary">
+                        {trip.available_seats} vagas
                       </span>
 
                       <Button
-                        variant={isCanceled || trip.is_full ? 'outline' : 'default'}
+                        variant="default"
                         size="sm"
-                        disabled={isCanceled}
+                        disabled={trip.available_seats <= 0}
                       >
-                        {isCanceled ? 'Indisponível' : trip.is_full ? 'Ver Lista' : 'Detalhes'}
+                        {trip.available_seats <= 0 ? 'Indisponível' : 'Reservar'}
                       </Button>
                     </div>
                   </div>
@@ -228,8 +115,7 @@ export function TripsHomePage() {
         )}
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          Regra aplicada no mock: sem check-in nos 2 minutos finais antes da partida, a
-          viagem é cancelada.
+          As viagens exibidas respeitam o prazo de reserva e a lotação disponível no backend.
         </p>
       </section>
     </AppLayout>
