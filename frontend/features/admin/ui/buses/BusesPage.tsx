@@ -16,18 +16,6 @@ export interface Bus {
 export function BusesPage() {
   const [buses, setBuses] = useState<Bus[]>([])
 
-  const loadBuses = async () => {
-    try {
-      const response = await apiFetch('/buses/', {
-        method: 'GET'
-      }) as Bus[]
-
-      setBuses(response)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
   const deleteBus = async (idBus: number) => {
     try {
       await apiFetch(`/buses/${idBus}/`, {
@@ -43,7 +31,19 @@ export function BusesPage() {
   }
 
   useEffect(() => {
-    loadBuses()
+    async function fetchBuses (){
+      try {
+        const response = await apiFetch('/buses/', {
+          method: 'GET'
+        }) as Bus[]
+
+        setBuses(response)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    fetchBuses()
   }, [])
 
   const addBus = (newBus: Bus) => {
