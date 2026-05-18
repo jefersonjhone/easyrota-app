@@ -40,10 +40,10 @@ export function UserHomeTripCard({
 }: UserHomeTripCardProps) {
   return (
     <Card className="border-border/70 bg-card/95">
-      <CardHeader className="border-b border-border/70 pb-5">
+        <CardHeader className="border-b border-border/70 pb-5">
         <CardTitle>Próxima viagem</CardTitle>
         <CardDescription>
-          Informações operacionais trazidas diretamente do backend.
+          Informações operacionais do sistema.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-6">

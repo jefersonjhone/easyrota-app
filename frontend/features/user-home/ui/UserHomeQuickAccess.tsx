@@ -1,3 +1,5 @@
+import { Button } from '@ui/button'
+
 export function UserHomeQuickAccess() {
   return (
     <section className="space-y-6">
@@ -16,6 +18,11 @@ export function UserHomeQuickAccess() {
               Acompanhe a viagem e confirme sua participação quando ela estiver
               disponível no fluxo operacional.
             </p>
+            <div className="mt-3">
+              <Button asChild size="sm" variant="outline">
+                <a href="/app">Ir para confirmação</a>
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-3xl bg-muted/30 p-4">
@@ -23,6 +30,11 @@ export function UserHomeQuickAccess() {
             <p className="mt-1 text-sm text-muted-foreground">
               Veja as viagens cadastradas, horários e disponibilidade.
             </p>
+            <div className="mt-3">
+              <Button asChild size="sm" variant="outline">
+                <a href="/app/viagens">Ver rotas</a>
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-3xl bg-muted/30 p-4">
@@ -30,6 +42,11 @@ export function UserHomeQuickAccess() {
             <p className="mt-1 text-sm text-muted-foreground">
               Acesse o histórico para conferir o andamento das suas reservas.
             </p>
+            <div className="mt-3">
+              <Button asChild size="sm" variant="outline">
+                <a href="/app">Ver histórico</a>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
