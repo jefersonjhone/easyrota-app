@@ -1,21 +1,13 @@
 import { Button } from '@ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
+import type { Bus } from './BusesPage'
 
-interface Bus {
-  id: string
-  plate: string
-  brand: string
-  capacity: number
-  status: 'active' | 'maintenance'
+interface BusesTableProps {
+  buses: Bus[]
+  onDeleteBus: (id: number) => void
 }
 
-const mockBuses: Bus[] = [
-  { id: '1', plate: 'ABC-1234', brand: 'Marcopolo Torino', capacity: 40, status: 'active' },
-  { id: '2', plate: 'XYZ-5678', brand: 'Mercedes-Benz Of', capacity: 45, status: 'active' },
-  { id: '3', plate: 'KGB-9900', brand: 'Volare Fly 10', capacity: 30, status: 'maintenance' },
-]
-
-export const BusesTable = () => {
+export const BusesTable = ({ buses, onDeleteBus }: BusesTableProps) => {
   return (
     <Card className="w-full max-w-4xl m-4 flex-1">
       <CardHeader>
@@ -38,16 +30,16 @@ export const BusesTable = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {mockBuses.map((bus) => (
+              {buses.map((bus) => (
                 <tr key={bus.id} className="hover:bg-muted/40 transition-colors">
                   <td className="p-4 font-mono font-bold text-foreground">
-                    {bus.plate}
+                    {bus.number_plate}
                   </td>
                   <td className="p-4 text-foreground">
                     {bus.brand}
                   </td>
                   <td className="p-4 text-center text-muted-foreground">
-                    {bus.capacity} assentos
+                    {bus.seating_capacity} assentos
                   </td>
                   <td className="p-4 text-center">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
@@ -59,7 +51,9 @@ export const BusesTable = () => {
                     </span>
                   </td>
                   <td className="p-4 text-right">
-                    <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10">
+                    <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10"
+                      onClick={() => onDeleteBus(bus.id)}>
+                        {/* TODO: Implementar pop-up de confirmação de deletar ônibus. */}
                       Excluir
                     </Button>
                   </td>

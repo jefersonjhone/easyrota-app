@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from 'react'
+import type { Bus } from './BusesPage'
 
 const busSchema = z.object({
   number_plate: z.string().min(1, "Placa obrigatória"),
@@ -16,12 +17,13 @@ const busSchema = z.object({
 
 type BusData = z.infer<typeof busSchema>
 
-export const CreateBusForm = () => {
+export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => void}) => {
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors },
+    reset,
   } = useForm<BusData>({
     resolver: zodResolver(busSchema),
     defaultValues: {
@@ -37,12 +39,15 @@ export const CreateBusForm = () => {
     setSuccess(null)
 
     try {
-      await apiFetch('/buses/', {
+      const response = await apiFetch('/buses/', {
         method: "POST",
         body: JSON.stringify(data)
-      })
+      }) as Bus
+
+      onBusCreated(response)
 
       setSuccess("Ônibus cadastrado com sucesso!")
+      reset()
     } catch (err){
       console.error (err);
 
