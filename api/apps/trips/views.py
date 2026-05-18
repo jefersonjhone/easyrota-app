@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..users.permissions import IsAdminOrReadOnly, IsDriver, IsDriverReadOnly
+from .filters import FilterTripViewSet
 from .models import Bus, Route, Trip
 from .serializers import (
     BusSerializer,
@@ -73,7 +74,16 @@ class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
 class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
+    filter_backends = [FilterTripViewSet]
 
+    def get(self, request, *args, **kwargs):
+        self.queryset = self.get_queryset()
+        serializer = self.get_serializer(self.queryset, many=True)
+        return Response(serializer.data)
+        
+    def get_queryset(self):
+        return Trip.objects.joinable_by_driver(self.request.user)
+    
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
             self.permission_classes = [permissions.IsAdminUser | IsDriverReadOnly]

@@ -1,4 +1,5 @@
 from django.db import models
+from .querysets import TripQuerySet
 
 
 class Bus(models.Model):
@@ -57,6 +58,9 @@ class Trip(models.Model):
 
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
+    
+    # for custom queryset methods
+    objects = TripQuerySet.as_manager()
 
     def __str__(self):
         return f"Trip on {self.trip_date} - ({self.route})"
