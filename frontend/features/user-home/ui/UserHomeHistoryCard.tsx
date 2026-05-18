@@ -27,7 +27,7 @@ export function UserHomeHistoryCard({
       <CardHeader className="border-b border-border/70 pb-5">
         <CardTitle>Histórico recente</CardTitle>
         <CardDescription>
-          Últimas reservas recuperadas da API de reservas.
+          Últimas reservas recuperadas do sistema de reservas.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-6">
