@@ -1,3 +1,4 @@
+import { apiFetch } from "@/lib/api"
 
 export type CreateRouteValues = {
   origin: string
@@ -31,7 +32,7 @@ export async function CreateRouteRequest(values: CreateRouteValues): Promise<Cre
       arrival_time: values.arrival_time,
       administrator: 0,
 }
-	const response = await fetch("/api/routes/", {
+	const response: CreateRouteResponse = await apiFetch("/routes/", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -39,8 +40,5 @@ export async function CreateRouteRequest(values: CreateRouteValues): Promise<Cre
 		body: JSON.stringify(_values),
 	})
 
-	const data: CreateRouteResponse = (await response.json())
-
-	if (!response.ok) { throw data }
-	return data
+	return response
 }
