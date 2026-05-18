@@ -97,7 +97,7 @@ export async function apiFetch<T>(
     throw { status: response.status, data: errorData };
   }
 
-  return response.json();
+  return safeJson(response);
 }
 
 async function safeJson(response: Response){
