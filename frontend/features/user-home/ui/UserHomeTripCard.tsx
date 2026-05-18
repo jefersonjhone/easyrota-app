@@ -104,7 +104,7 @@ export function UserHomeTripCard({
               </p>
             </div>
             <Button asChild size="sm">
-              <a href="/app/viagens">Explorar viagens disponíveis</a>
+                <a href="/app/current-trip">Explorar viagem atual</a>
             </Button>
           </div>
         )}
