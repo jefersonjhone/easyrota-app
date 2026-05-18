@@ -30,13 +30,10 @@ export async function CreateRouteRequest(values: CreateRouteValues): Promise<Cre
       destiny: values.destiny,
       departure_time: values.departure_time,
       arrival_time: values.arrival_time,
-      administrator: 0,
+      administrator: 1,
 }
 	const response: CreateRouteResponse = await apiFetch("/routes/", {
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
 		body: JSON.stringify(_values),
 	})
 

@@ -9,7 +9,7 @@ if (routes.length > 0) {
   <AppLayout>
     <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">Rotas</h1>
     <Separator className="max-w-xl mx-auto" />
-     <section className="mx-auto grid w-full max-w-3xl grid-cols-1 sm:grid-cols-1 px-4 sm:px-0">
+     <section className="mx-auto grid w-full max-w-3xl grid-cols-1 sm:grid-cols-1 gap-4 px-4 sm:px-0">
         {routes.map((route: RouteValues) => (
           <Card key={route.origin+"->"+route.destiny} className="flex flex-col overflow-hidden rounded-lg">
             <CardHeader>
