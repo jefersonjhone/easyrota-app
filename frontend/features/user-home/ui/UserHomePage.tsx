@@ -4,7 +4,6 @@ import { useAuthStore } from '@features/auth/store/auth-store'
 import { useUserHomeDashboard } from '../hooks/useUserHomeDashboard'
 import { UserHomeHero } from './UserHomeHero'
 import { UserHomeHistoryCard } from './UserHomeHistoryCard'
-import { UserHomeQuickAccess } from './UserHomeQuickAccess'
 import { UserHomeTripCard } from './UserHomeTripCard'
 
 export function UserHomePage() {
@@ -38,7 +37,6 @@ export function UserHomePage() {
           />
 
           <div className="space-y-6">
-            <UserHomeQuickAccess />
             <UserHomeHistoryCard
               reservations={reservationHistory.slice(0, 3)}
               error={historyError}
