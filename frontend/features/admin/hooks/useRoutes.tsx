@@ -1,4 +1,6 @@
+import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { CreateRouteRequest } from "@features/admin/services/createRouteRequest";
 
 export type RouteValues = {
   id: number;
@@ -41,4 +43,11 @@ export function useShowRoutes() {
     data,
     isLoading,
   };
+}
+
+
+export function useCreateRouteMutation() {
+	return useMutation({
+		mutationFn: CreateRouteRequest,
+	})
 }
