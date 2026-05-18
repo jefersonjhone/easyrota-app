@@ -1,0 +1,1 @@
+export { UserHomePage } from '@features/user-home/ui/UserHomePage'
