@@ -23,7 +23,6 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
     handleSubmit,
     setError,
     formState: { errors },
-    reset,
   } = useForm<BusData>({
     resolver: zodResolver(busSchema),
     defaultValues: {
@@ -47,7 +46,6 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
       onBusCreated(response)
 
       setSuccess("Ônibus cadastrado com sucesso!")
-      reset()
     } catch (err){
       console.error (err);
 
