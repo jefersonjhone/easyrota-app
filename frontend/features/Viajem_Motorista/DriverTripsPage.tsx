@@ -1,7 +1,8 @@
 import { ArrowRightIcon } from '@phosphor-icons/react'
+import { Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
-import AppLayout from '@layout/app-layout'
+import MotoraLayout from '@layout/Motora-layout'
 
 import './DriverTripsPage.css'
 
@@ -196,9 +197,6 @@ function normalizeTripFromModel(
 
   const availableSeats =
     typeof trip.available_seats === 'number' ? Math.max(trip.available_seats, 0) : null
-  const isFull =
-    typeof trip.is_full === 'boolean' ? trip.is_full : availableSeats !== null && availableSeats === 0
-
   return {
     id: trip.id,
     tripDate: normalizeDateToIso(trip.trip_date),
@@ -323,7 +321,7 @@ export function DriverTripsPage() {
   }, [])
 
   return (
-    <AppLayout user={{ name: 'Motorista', kind: 'driver' }}>
+    <MotoraLayout user={{ name: 'Motorista', kind: 'driver' }}>
       <section className="driver-trips" aria-labelledby="driver-trips-title">
         <header className="driver-trips__header">
           <p className="driver-trips__eyebrow">Viagens de hoje</p>
@@ -346,10 +344,8 @@ export function DriverTripsPage() {
             {trips.map((trip) => {
               const statusCard = getStatusCard(trip)
               const isCanceled = trip.status === 'CANCELADA'
-              const detailsUrl = `/app/driver/viagens/${trip.id}`
-
-              return (
-                <article key={trip.id} className="driver-trip-card">
+              const cardContent = (
+                <>
                   <div className="driver-trip-card__details">
                     <h2
                       className="driver-trip-card__route"
@@ -379,32 +375,39 @@ export function DriverTripsPage() {
                     </span>
                   </div>
 
-                  {isCanceled ? (
-                    <span className="driver-trip-card__action driver-trip-card__action--disabled">
-                      <span className="driver-trip-card__action-label">Indisponível</span>
-                      <span className="driver-trip-card__action-description">
-                        Viagem cancelada
-                      </span>
+                  <span
+                    className={`driver-trip-card__action${isCanceled ? ' driver-trip-card__action--disabled' : ''}`}
+                  >
+                    <span className="driver-trip-card__action-label">
+                      {isCanceled ? 'Indisponível' : 'Selecionar'}
                     </span>
-                  ) : (
-                    <a
-                      className="driver-trip-card__action"
-                      href={detailsUrl}
-                      aria-label={`Abrir detalhes da viagem ${trip.origin} para ${trip.destiny}`}
-                    >
-                      <span className="driver-trip-card__action-label">Detalhes</span>
-                      <span className="driver-trip-card__action-description">
-                        Abrir viagem
-                        <ArrowRightIcon aria-hidden="true" weight="bold" />
-                      </span>
-                    </a>
-                  )}
+                    <span className="driver-trip-card__action-description">
+                      {isCanceled ? 'Viagem cancelada' : 'Abrir viagem'}
+                      {isCanceled ? null : <ArrowRightIcon aria-hidden="true" weight="bold" />}
+                    </span>
+                  </span>
+                </>
+              )
+
+              return isCanceled ? (
+                <article key={trip.id} className="driver-trip-card">
+                  {cardContent}
                 </article>
+              ) : (
+                <Link
+                  key={trip.id}
+                  className="driver-trip-card driver-trip-card--link"
+                  to="/app/driver/viajem/$tripId"
+                  params={{ tripId: String(trip.id) }}
+                  aria-label={`Abrir detalhes da viagem ${trip.origin} para ${trip.destiny}`}
+                >
+                  {cardContent}
+                </Link>
               )
             })}
           </div>
         )}
       </section>
-    </AppLayout>
+    </MotoraLayout>
   )
 }
