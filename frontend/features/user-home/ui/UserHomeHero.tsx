@@ -62,7 +62,7 @@ export function UserHomeHero({
 
           <div className="flex flex-wrap gap-3">
             <Button asChild>
-              <a href="/app/current-trip">Ver viagem atual</a>
+              <a href="/app/viagens/atual">Ver viagem atual</a>
             </Button>
             <Button asChild variant="outline">
               <a href="/app/viagens">Ver todas as viagens</a>
