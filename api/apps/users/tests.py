@@ -6,8 +6,12 @@ from .models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
     StudentProfile,
+    DriverProfile
 )
+from django.core.exceptions import ValidationError
+
 from .models.user import CustomUser
+import pytest
 
 User = get_user_model()
 
@@ -234,3 +238,59 @@ class AdminDelegationViewTests(APITestCase):
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "level" in response.data
+
+
+class DriverProfileTests(APITestCase):
+    def test_create_driver_profile_with_valid_cnh(self):
+        user = CustomUser.objects.create_user(
+            email="driver@example.com",
+            password="SenhaSegura123",
+            full_name="Driver Test",
+        )
+        profile = DriverProfile(
+            user=user,
+            cnh="12345678901",
+        )
+        profile.full_clean()
+        profile.save()
+
+        assert profile.pk is not None
+
+    def test_driver_profile_invalid_cnh(self):
+        user = CustomUser.objects.create_user(
+            email="driver2@example.com",
+            password="SenhaSegura123",
+            full_name="Driver Invalid",
+        )
+        profile = DriverProfile(
+            user=user,
+            cnh="abc123",
+        )
+        with pytest.raises(ValidationError) as exc:
+            profile.full_clean()
+
+        assert "cnh" in exc.value.message_dict
+
+    def test_driver_profile_unique_cnh(self):
+        user1 = CustomUser.objects.create_user(
+            email="driver1@example.com",
+            password="SenhaSegura123",
+            full_name="Driver One",
+        )
+        user2 = CustomUser.objects.create_user(
+            email="driver2@example.com",
+            password="SenhaSegura123",
+            full_name="Driver Two",
+        )
+        DriverProfile.objects.create(
+            user=user1,
+            cnh="12345678901",
+        )
+        profile = DriverProfile(
+            user=user2,
+            cnh="12345678901",
+        )
+        with pytest.raises(ValidationError) as exc:
+            profile.full_clean()
+
+        assert "cnh" in exc.value.message_dict
