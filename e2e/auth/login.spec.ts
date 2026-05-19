@@ -7,25 +7,23 @@ test.describe('Login Page', () => {
   test('Can login as servant with valid credentials', async ({ page }) => {
     const credentials = await signupAsCivilServant(page, '12345678')
     const loginPage = new LoginPage(page)
-    await loginPage.goto()
 
     await loginPage.email.fill(credentials.email)
     await loginPage.password.fill(credentials.password)
     await loginPage.submitButton.click()
   
-    await expect(page.getByText('Logado com sucesso! Um dia')).toBeVisible()
+    await expect(page).toHaveURL('/app')
   })
 
   test('Can login as student with valid credentials', async ({ page }) => {
     const credentials = await signupAsStudent(page, '12345678')
     const loginPage = new LoginPage(page)
-    await loginPage.goto()
 
     await loginPage.email.fill(credentials.email)
     await loginPage.password.fill(credentials.password)
     await loginPage.submitButton.click()
   
-    await expect(page.getByText('Logado com sucesso! Um dia')).toBeVisible()
+    await expect(page).toHaveURL('/app')
   })
 
   test('Can go to Signup page', async ({ page }) => {
