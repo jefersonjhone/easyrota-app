@@ -20,6 +20,7 @@ import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as IndexRouteImport } from './pages/index'
 import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
+import { Route as AdminViagensRouteImport } from './pages/admin.viagens'
 import { Route as AdminRelatoriosRouteImport } from './pages/admin/relatorios'
 import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
 import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
@@ -82,9 +83,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppViagensRoute = AppViagensRouteImport.update({
-  id: '/app/viagens',
-  path: '/app/viagens',
+const AdminViagensRoute = AdminViagensRouteImport.update({
+  id: '/admin/viagens',
+  path: '/admin/viagens',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRelatoriosRoute = AdminRelatoriosRouteImport.update({
@@ -372,11 +373,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/viagens': {
-      id: '/app/viagens'
-      path: '/app/viagens'
-      fullPath: '/app/viagens'
-      preLoaderRoute: typeof AppViagensRouteImport
+    '/admin/viagens': {
+      id: '/admin/viagens'
+      path: '/admin/viagens'
+      fullPath: '/admin/viagens'
+      preLoaderRoute: typeof AdminViagensRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/relatorios': {

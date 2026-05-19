@@ -1,6 +1,6 @@
-import { Button } from '@ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
 import type { Bus } from './BusesPage'
+import { ConfirmDeleteDialog } from '@/lib/ui/delete-alert'
 
 interface BusesTableProps {
   buses: Bus[]
@@ -51,11 +51,9 @@ export const BusesTable = ({ buses, onDeleteBus }: BusesTableProps) => {
                     </span>
                   </td>
                   <td className="p-4 text-right">
-                    <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10"
-                      onClick={() => onDeleteBus(bus.id)}>
-                      {/* TODO: Implementar pop-up de confirmação de deletar ônibus. */}
-                      Excluir
-                    </Button>
+                      <ConfirmDeleteDialog
+                        onConfirm={() => onDeleteBus(bus.id)}
+                      />
                   </td>
                 </tr>
               ))}
