@@ -7,7 +7,6 @@ test.describe('Login Page', () => {
   test('Can login as servant with valid credentials', async ({ page }) => {
     const credentials = await signupAsCivilServant(page, '12345678')
     const loginPage = new LoginPage(page)
-    await loginPage.goto()
 
     await loginPage.email.fill(credentials.email)
     await loginPage.password.fill(credentials.password)
@@ -19,7 +18,6 @@ test.describe('Login Page', () => {
   test('Can login as student with valid credentials', async ({ page }) => {
     const credentials = await signupAsStudent(page, '12345678')
     const loginPage = new LoginPage(page)
-    await loginPage.goto()
 
     await loginPage.email.fill(credentials.email)
     await loginPage.password.fill(credentials.password)

@@ -20,7 +20,7 @@ test.describe('Signup Page', () => {
     await signupPage.confirmPassword.fill('12345678')
     await signupPage.submitButton.click()
 
-    await expect(page).toHaveURL('/app')
+    await expect(page).toHaveURL('/login')
   })
 
   test('Can create a new account as Student', async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe('Signup Page', () => {
     await signupPage.confirmPassword.fill('12345678')
     await signupPage.submitButton.click()
 
-    await expect(page).toHaveURL('/app')
+    await expect(page).toHaveURL('/login')
   })
 
   test('Can go to Login page', async ({ page }) => {
