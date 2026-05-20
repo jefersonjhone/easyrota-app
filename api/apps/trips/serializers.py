@@ -3,7 +3,10 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from django.utils import timezone
+from django.utils.http import original_urlencode
 from rest_framework import serializers
+
+from ..reservations.models import Reservation
 
 from .models import Bus, Route, Trip
 
@@ -95,10 +98,24 @@ class RouteSerializer(serializers.ModelSerializer):
 
 
 class TripSerializer(serializers.ModelSerializer):
+    origin = serializers.CharField(source="route.origin", read_only=True)
+    destiny = serializers.CharField(source="route.destiny", read_only=True)
+    active_reservations = serializers.SerializerMethodField(
+        read_only=True)
+
+    seating_capacity = serializers.IntegerField(
+        source="bus.seating_capacity",
+        read_only=True)
+    
     class Meta:
         model = Trip
         fields = "__all__"
-
+    
+    def get_active_reservations(self, obj) -> int:
+        """filter reservations by especific trip"""
+        reservations = Reservation.objects.filter(trip=obj).count()
+        return reservations
+    
     def validate_trip_date(self, value):
         today = timezone.now().date()
         if self.instance is None and value < today:
