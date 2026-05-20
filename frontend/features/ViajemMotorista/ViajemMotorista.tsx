@@ -26,12 +26,33 @@ type DriverTripDetail = {
   destiny: string
   departureTime: string
   busPlate: string
+  busId: number | null
   capacity: number
   associatedBuses: number
   passengers: PassengerBoardItem[]
 }
 
 type ApiList<T> = T[] | { results?: T[] }
+
+type TripModel = {
+  id: number
+  origin?: string | null
+  destiny?: string | null
+  departure_timestamp?: string | null
+  departure_time?: string | null
+  active_reservations?: number | null
+  seating_capacity?: number | null
+  bus?: number | null
+  bus_number_plate?: string | null
+}
+
+type CurrentTripModel = {
+  id: number
+  origin?: string | null
+  destiny?: string | null
+  departure_time?: string | null
+  bus_number_plate?: string | null
+}
 
 type BusModel = {
   id: number
@@ -52,93 +73,83 @@ type ViajemMotoristaProps = {
   tripId?: string
 }
 
-const mockTripDetails: Record<string, DriverTripDetail> = {
-  '1': {
-    id: '1',
-    origin: 'SALVADOR',
-    destiny: 'FEIRA',
-    departureTime: '07:20',
-    busPlate: 'ER-1024',
-    capacity: 46,
-    associatedBuses: 2,
-    passengers: [
-      { id: 1, name: 'Passageiro 001', source: 'QR' },
-      { id: 2, name: 'Passageiro 002', source: 'QR' },
-      { id: 3, name: 'Passageiro 003', source: 'Manual' },
-      { id: 4, name: 'Passageiro 004', source: 'QR' },
-      { id: 5, name: 'Passageiro 005', source: 'Manual' },
-      { id: 6, name: 'Passageiro 006', source: 'QR' },
-      { id: 7, name: 'Passageiro 007', source: 'QR' },
-    ],
-  },
-  '2': {
-    id: '2',
-    origin: 'FEIRA',
-    destiny: 'SALVADOR',
-    departureTime: '10:30',
-    busPlate: 'ER-2048',
-    capacity: 46,
-    associatedBuses: 1,
-    passengers: [
-      { id: 1, name: 'Passageiro 001', source: 'QR' },
-      { id: 2, name: 'Passageiro 002', source: 'Manual' },
-      { id: 3, name: 'Passageiro 003', source: 'QR' },
-    ],
-  },
-  '3': {
-    id: '3',
-    origin: 'FEIRA',
-    destiny: 'SALVADOR',
-    departureTime: '14:10',
-    busPlate: 'ER-4096',
-    capacity: 46,
-    associatedBuses: 2,
-    passengers: [
-      { id: 1, name: 'Passageiro 001', source: 'QR' },
-      { id: 2, name: 'Passageiro 002', source: 'QR' },
-      { id: 3, name: 'Passageiro 003', source: 'Manual' },
-      { id: 4, name: 'Passageiro 004', source: 'QR' },
-      { id: 5, name: 'Passageiro 005', source: 'QR' },
-      { id: 6, name: 'Passageiro 006', source: 'Manual' },
-      { id: 7, name: 'Passageiro 007', source: 'QR' },
-    ],
-  },
-  '4': {
-    id: '4',
-    origin: 'SALVADOR',
-    destiny: 'FEIRA',
-    departureTime: '18:40',
-    busPlate: 'ER-8192',
-    capacity: 46,
-    associatedBuses: 1,
-    passengers: [
-      { id: 1, name: 'Passageiro 001', source: 'Manual' },
-      { id: 2, name: 'Passageiro 002', source: 'QR' },
-      { id: 3, name: 'Passageiro 003', source: 'QR' },
-      { id: 4, name: 'Passageiro 004', source: 'QR' },
-    ],
-  },
-}
-
-function getTripDetail(tripId?: string) {
-  if (tripId && mockTripDetails[tripId]) {
-    return mockTripDetails[tripId]
-  }
-
-  return {
-    id: tripId ?? '0',
-    origin: 'Origem',
-    destiny: 'Destino',
-    departureTime: '00:00',
-    busPlate: 'ER-0000',
-    capacity: 46,
-    associatedBuses: 2,
-    passengers: mockTripDetails['1'].passengers,
-  }
-}
-
 function toList<T>(payload: ApiList<T>): T[] {
   return Array.isArray(payload) ? payload : payload.results ?? []
+}
+
+function normalizeTime(time?: string | null) {
+  if (!time) {
+    return '00:00'
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T/.test(time)) {
+    return time.slice(14, 19)
+  }
+
+  const timeMatch = time.match(/\d{2}:\d{2}/)
+
+  if (timeMatch) {
+    return timeMatch[0]
+  }
+
+  const date = new Date(time)
+
+  if (Number.isNaN(date.getTime())) {
+    return '00:00'
+  }
+
+  return date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function normalizeCapacity(capacity?: number | null) {
+  return typeof capacity === 'number' && capacity > 0 ? capacity : 46
+}
+
+function createPassengerPlaceholders(totalPassengers?: number | null): PassengerBoardItem[] {
+  const passengerCount =
+    typeof totalPassengers === 'number' && totalPassengers > 0 ? totalPassengers : 0
+
+  return Array.from({ length: passengerCount }, (_, index) => {
+    const id = index + 1
+
+    return {
+      id,
+      name: `Passageiro ${String(id).padStart(3, '0')}`,
+      source: 'Manual' as const,
+    }
+  })
+}
+
+function normalizeTripDetail(trip: TripModel, currentTrip: CurrentTripModel | null) {
+  const capacity = normalizeCapacity(trip.seating_capacity)
+
+  return {
+    id: String(trip.id),
+    origin: currentTrip?.origin ?? trip.origin ?? 'Origem',
+    destiny: currentTrip?.destiny ?? trip.destiny ?? 'Destino',
+    departureTime: normalizeTime(
+      currentTrip?.departure_time ?? trip.departure_time ?? trip.departure_timestamp,
+    ),
+    busPlate: currentTrip?.bus_number_plate ?? trip.bus_number_plate ?? '',
+    busId: trip.bus ?? null,
+    capacity,
+    associatedBuses: trip.bus ? 1 : 0,
+    passengers: createPassengerPlaceholders(
+      Math.min(trip.active_reservations ?? 0, capacity),
+    ),
+  }
+}
+
+async function getTripFromApi(tripId: string) {
+  const [trip, currentTrip] = await Promise.all([
+    apiFetch<TripModel>(`/trips/${tripId}/`),
+    apiFetch<CurrentTripModel>(`/trips/${tripId}/current/`).catch(() => null),
+  ])
+
+  return normalizeTripDetail(trip, currentTrip)
 }
 
 function normalizeBusOption(bus: BusModel): DriverBusOption | null {
@@ -165,27 +176,70 @@ async function getBusesFromApi() {
 }
 
 export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
-  const trip = getTripDetail(tripId)
-  const [boardedPassengers, setBoardedPassengers] = useState<PassengerBoardItem[]>(() => [
-    ...trip.passengers,
-  ])
+  const [trip, setTrip] = useState<DriverTripDetail | null>(null)
+  const [isTripLoading, setIsTripLoading] = useState(true)
+  const [tripError, setTripError] = useState<string | null>(null)
+  const [boardedPassengers, setBoardedPassengers] = useState<PassengerBoardItem[]>([])
   const [confirmation, setConfirmation] = useState<'back' | 'bus' | null>(null)
   const [busOptions, setBusOptions] = useState<DriverBusOption[]>([])
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null)
+  const tripBusId = trip?.busId ?? null
+  const tripBusPlate = trip?.busPlate ?? ''
   const selectedBus = busOptions.find((bus) => bus.id === selectedBusId) ?? null
-  const activeCapacity = selectedBus?.capacity ?? trip.capacity
+  const activeCapacity = selectedBus?.capacity ?? trip?.capacity ?? 46
   const embarkedCount = boardedPassengers.length
   const qrCount = boardedPassengers.filter((passenger) => passenger.source === 'QR').length
   const manualCount = boardedPassengers.filter((passenger) => passenger.source === 'Manual').length
   const occupancyPercent = Math.min((embarkedCount / activeCapacity) * 100, 100)
-  const shouldWarnBeforeRequestingBus = trip.associatedBuses >= 2
+  const shouldWarnBeforeRequestingBus = (trip?.associatedBuses ?? 0) >= 2
   const hasReachedCapacity = embarkedCount >= activeCapacity
   const whatsappRequestUrl =
     'https://wa.me/?text=Solicito%20um%20novo%20onibus%20para%20esta%20viagem.'
 
   useEffect(() => {
-    setBoardedPassengers([...trip.passengers])
-  }, [trip.id, trip.passengers])
+    let isMounted = true
+
+    const loadTrip = async () => {
+      if (!tripId) {
+        setTrip(null)
+        setTripError('Viagem nao encontrada.')
+        setIsTripLoading(false)
+        return
+      }
+
+      setIsTripLoading(true)
+      setTripError(null)
+
+      try {
+        const tripDetail = await getTripFromApi(tripId)
+
+        if (isMounted) {
+          setTrip(tripDetail)
+        }
+      } catch (error) {
+        console.warn('Nao foi possivel carregar a viagem selecionada:', error)
+
+        if (isMounted) {
+          setTrip(null)
+          setTripError('Nao foi possivel carregar a viagem selecionada.')
+        }
+      } finally {
+        if (isMounted) {
+          setIsTripLoading(false)
+        }
+      }
+    }
+
+    loadTrip()
+
+    return () => {
+      isMounted = false
+    }
+  }, [tripId])
+
+  useEffect(() => {
+    setBoardedPassengers(trip ? [...trip.passengers] : [])
+  }, [trip])
 
   useEffect(() => {
     let isMounted = true
@@ -200,13 +254,25 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
 
         setBusOptions(buses)
         setSelectedBusId((currentBusId) => {
-          if (currentBusId && buses.some((bus) => bus.id === currentBusId)) {
-            return currentBusId
+          if (tripBusId && buses.some((bus) => bus.id === tripBusId)) {
+            return tripBusId
           }
 
-          const matchingBus = buses.find((bus) => bus.plate === trip.busPlate)
+          const matchingBus = tripBusPlate
+            ? buses.find((bus) => bus.plate === tripBusPlate)
+            : null
 
-          return matchingBus?.id ?? buses[0]?.id ?? null
+          if (matchingBus) {
+            return matchingBus.id
+          }
+
+          if (tripBusId === null) {
+            return null
+          }
+
+          return currentBusId && buses.some((bus) => bus.id === currentBusId)
+            ? currentBusId
+            : null
         })
       } catch (error) {
         console.warn('Nao foi possivel carregar os onibus cadastrados:', error)
@@ -223,7 +289,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
     return () => {
       isMounted = false
     }
-  }, [trip.busPlate])
+  }, [tripBusId, tripBusPlate])
 
   const handleAddPassenger = () => {
     setBoardedPassengers((currentPassengers) => {
@@ -265,6 +331,36 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
 
       return [...currentPassengers, ...passengersToAdd]
     })
+  }
+
+  if (isTripLoading) {
+    return (
+      <MotoraLayout user={{ name: 'Motorista', kind: 'driver' }}>
+        <section className="driver-trip-screen" aria-labelledby="driver-trip-screen-title">
+          <div className="driver-trip-screen__panel">
+            <p id="driver-trip-screen-title" className="driver-trip-screen__feedback">
+              Carregando viagem selecionada...
+            </p>
+          </div>
+        </section>
+      </MotoraLayout>
+    )
+  }
+
+  if (tripError || !trip) {
+    return (
+      <MotoraLayout user={{ name: 'Motorista', kind: 'driver' }}>
+        <section className="driver-trip-screen" aria-labelledby="driver-trip-screen-title">
+          <div className="driver-trip-screen__panel">
+            <div className="driver-trip-screen__feedback">
+              <h1 id="driver-trip-screen-title">Viagem indisponivel</h1>
+              <p>{tripError ?? 'Nao foi possivel encontrar a viagem selecionada.'}</p>
+              <a href="/app/driver/viagens">Voltar para viagens</a>
+            </div>
+          </div>
+        </section>
+      </MotoraLayout>
+    )
   }
 
   return (
