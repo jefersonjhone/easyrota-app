@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import MotoraLayout from '@layout/Motora-layout'
 
 import './DriverTripsPage.css'
+import { apiFetch } from '@/lib/api'
 
 type TripModelStatus =
   | 'RISCO DE CANCELAMENTO'
@@ -15,23 +16,14 @@ type TripModelStatus =
   | 'CONCLUÍDA'
   | string
 
-type ApiList<T> = T[] | { results?: T[] }
-
-type RouteModel = {
-  id: number
-  origin: string
-  destiny: string
-  departure_time: string
-}
 
 type TripModel = {
   id: number
   trip_date: string
   status: TripModelStatus
-  route?: number | RouteModel | null
   origin?: string
   destiny?: string
-  departure_time?: string
+  departure_timestamp?: string
   available_seats?: number
   is_full?: boolean
 }
@@ -48,16 +40,6 @@ type DriverTrip = {
   availableSeats: number | null
 }
 
-type MockDriverTripSeed = {
-  id: number
-  origin: string
-  destiny: string
-  departure_time: string
-  status: TripModelStatus
-  seating_capacity: number
-  active_reservations: number
-}
-
 const statusLabels: Record<string, string> = {
   'RISCO DE CANCELAMENTO': 'Risco de cancelamento',
   CONFIRMADA: 'Confirmada',
@@ -65,69 +47,6 @@ const statusLabels: Record<string, string> = {
   'EM ANDAMENTO': 'Em andamento',
   CONCLUIDA: 'Concluída',
   CONCLUÍDA: 'Concluída',
-}
-
-const todayFormatter = new Intl.DateTimeFormat('pt-BR', {
-  timeZone: 'America/Sao_Paulo',
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-})
-
-const mockTripsSeed: MockDriverTripSeed[] = [
-  {
-    id: 1,
-    origin: 'SALVADOR',
-    destiny: 'FEIRA',
-    departure_time: '07:20',
-    status: 'CANCELADA',
-    seating_capacity: 40,
-    active_reservations: 36,
-  },
-  {
-    id: 2,
-    origin: 'FEIRA',
-    destiny: 'SALVADOR',
-    departure_time: '10:30',
-    status: 'CONFIRMADA',
-    seating_capacity: 44,
-    active_reservations: 32,
-  },
-  {
-    id: 3,
-    origin: 'FEIRA',
-    destiny: 'SALVADOR',
-    departure_time: '14:10',
-    status: 'CONFIRMADA',
-    seating_capacity: 46,
-    active_reservations: 46,
-  },
-  {
-    id: 4,
-    origin: 'SALVADOR',
-    destiny: 'FEIRA',
-    departure_time: '18:40',
-    status: 'EM ANDAMENTO',
-    seating_capacity: 44,
-    active_reservations: 18,
-  },
-]
-
-function toList<T>(payload: ApiList<T>): T[] {
-  return Array.isArray(payload) ? payload : payload.results ?? []
-}
-
-function getTodayIsoDate() {
-  const parts = todayFormatter.formatToParts(new Date())
-  const day = parts.find((part) => part.type === 'day')?.value ?? '01'
-  const month = parts.find((part) => part.type === 'month')?.value ?? '01'
-  const year = parts.find((part) => part.type === 'year')?.value ?? '2026'
-
-  return `${year}-${month}-${day}`
-}
-
-function getTodayLabel() {
-  return todayFormatter.format(new Date())
 }
 
 function normalizeDateToIso(date: string) {
@@ -157,7 +76,8 @@ function formatDateLabel(date: string) {
 }
 
 function normalizeTime(time?: string) {
-  return time ? time.slice(0, 5) : '00:00'
+  console.log(time)
+  return time ? time.slice(14, 19) : '00:00'
 }
 
 function toStatusLabel(status: TripModelStatus) {
@@ -165,35 +85,12 @@ function toStatusLabel(status: TripModelStatus) {
   return statusLabels[statusText] ?? statusText.toLowerCase()
 }
 
-function toMockDriverTrip(seed: MockDriverTripSeed): DriverTrip {
-  const availableSeats =  seed.active_reservations
-  const tripDate = getTodayIsoDate()
-
-  return {
-    id: seed.id,
-    tripDate,
-    tripDateLabel: getTodayLabel(),
-    origin: seed.origin,
-    destiny: seed.destiny,
-    departureTime: seed.departure_time,
-    status: seed.status,
-    statusLabel: toStatusLabel(seed.status),
-    availableSeats,
-  }
-}
-
 function normalizeTripFromModel(
   trip: TripModel,
-  routesById: Map<number, RouteModel>,
-): DriverTrip | null {
-  const route = typeof trip.route === 'object' ? trip.route : routesById.get(Number(trip.route))
-  const origin = trip.origin ?? route?.origin
-  const destiny = trip.destiny ?? route?.destiny
-  const departureTime = normalizeTime(trip.departure_time ?? route?.departure_time)
-
-  if (!origin || !destiny || !trip.trip_date) {
-    return null
-  }
+): DriverTrip {
+  const origin = trip.origin 
+  const destiny = trip.destiny 
+  const departureTime = normalizeTime(trip.departure_timestamp )
 
   const availableSeats =
     typeof trip.available_seats === 'number' ? Math.max(trip.available_seats, 0) : null
@@ -201,8 +98,8 @@ function normalizeTripFromModel(
     id: trip.id,
     tripDate: normalizeDateToIso(trip.trip_date),
     tripDateLabel: formatDateLabel(trip.trip_date),
-    origin,
-    destiny,
+    origin : origin? origin : "Origem com erro",
+    destiny : destiny? destiny : "Destino com erro",
     departureTime,
     status: trip.status,
     statusLabel: toStatusLabel(trip.status),
@@ -211,47 +108,16 @@ function normalizeTripFromModel(
 }
 
 async function getTripsFromApi() {
-  const requestJson = async <T,>(path: string): Promise<T> => {
-    const response = await fetch(`/api${path}`)
-
-    if (!response.ok) {
-      throw new Error(`Falha ao carregar ${path}`)
-    }
-
-    return response.json() as Promise<T>
-  }
-
-  const [tripsPayload, routesPayload] = await Promise.all([
-    requestJson<ApiList<TripModel>>('/trips/'),
-    requestJson<ApiList<RouteModel>>('/routes/'),
-  ])
-
-  const routesById = new Map(toList(routesPayload).map((route) => [route.id, route]))
-  const today = getTodayIsoDate()
-
-  return toList(tripsPayload)
-    .map((trip) => normalizeTripFromModel(trip, routesById))
-    .filter((trip): trip is DriverTrip => Boolean(trip))
-    .filter((trip) => trip.tripDate === today)
-    .sort((first, second) => first.departureTime.localeCompare(second.departureTime))
-}
-
-async function getFallbackTrips() {
-  await new Promise((resolve) => {
-    setTimeout(resolve, 350)
-  })
-
-  return mockTripsSeed
-    .map(toMockDriverTrip)
-    .sort((first, second) => first.departureTime.localeCompare(second.departureTime))
-}
-
-async function getDriverTrips() {
+  
   try {
-    return await getTripsFromApi()
+    const response = await apiFetch(`/trips/`)
+    console.log('response', response)
+    const data = response as TripModel[]
+    return data
+      .map((trip) => normalizeTripFromModel(trip))
+      .sort((first, second) => first.departureTime.localeCompare(second.departureTime))
   } catch (error) {
-    console.warn('Usando viagens temporárias para a tela do motorista:', error)
-    return getFallbackTrips()
+    throw new Error(`Falha ao carregar ${error}`)
   }
 }
 
@@ -295,7 +161,7 @@ export function DriverTripsPage() {
       setIsLoading(true)
 
       try {
-        const data = await getDriverTrips()
+        const data: DriverTrip[] = await getTripsFromApi()
 
         if (isMounted) {
           setTrips(data)
