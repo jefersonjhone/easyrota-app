@@ -1,5 +1,5 @@
 // Library
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -10,6 +10,7 @@ import { useLoginMutation } from "@features/auth/hooks/useLogin"
 // Routes
 import { Route as RecoveryRoute } from "@/pages/recuperar"
 import { Route as SignupRoute } from "@/pages/signup"
+import { Route as AppRoute } from "@/pages/app"
 
 // Components
 import HintInvalid from '@features/auth/ui/HintInvalid'
@@ -32,6 +33,7 @@ const schema = z.object({
 type Schema = z.infer<typeof schema>
 
 export function LoginForm() {
+	const navigate = useNavigate()
 	const loginMutation = useLoginMutation()
 	const form = useForm<Schema>({
     mode: 'onChange',
@@ -47,14 +49,7 @@ export function LoginForm() {
 
 	const onSubmit = async (data: Schema) => {
 		await loginMutation.mutateAsync(data)
-	}
-
-	if (loginMutation.isSuccess) {
-		return (
-			<div className="rounded-md bg-green-50 p-4 text-center text-green-600">
-				Logado com sucesso! Um dia voce chega na pagina...
-			</div>
-		)
+		navigate({ to: AppRoute.to, replace: true })
 	}
 
 	return (

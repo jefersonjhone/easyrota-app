@@ -1,6 +1,7 @@
 from django.db import models
 
 from .user import CustomUser
+from ..validators import validate_cnh
 
 
 class ProfileType(models.TextChoices):
@@ -45,8 +46,13 @@ class DriverProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="driver_profile",
     )
-    cnh = models.CharField(max_length=15, unique=True)
-
+    
+    cnh = models.CharField(max_length=11, unique=True, validators=[validate_cnh])
+    
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"DriverProfile({self.user.email})"
 

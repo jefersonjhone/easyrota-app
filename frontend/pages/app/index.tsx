@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { CurrentTripPage } from '@/components/current-trip/CurrentTripPage'
+import { UserHomePage } from '@/components/user-home/UserHomePage'
+import { requireAuth } from '@/features/auth/services/require-auth'
 
 export const Route = createFileRoute('/app/')({
-  component: CurrentTripPage,
+  beforeLoad: requireAuth,
+  component: UserHomePage,
 })
