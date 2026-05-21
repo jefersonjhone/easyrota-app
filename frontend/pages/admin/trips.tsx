@@ -15,7 +15,7 @@ import { Input } from '@ui/input'
 import { ConfirmDeleteDialog } from '@ui/delete-alert'
 import AppLayout from '@layout/app-layout'
 
-export const Route = createFileRoute('/app/trips')({
+export const Route = createFileRoute('/admin/trips')({
   beforeLoad: requireAuth,
   component: TripsPage,
 })

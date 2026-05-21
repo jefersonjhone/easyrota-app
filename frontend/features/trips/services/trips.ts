@@ -9,10 +9,6 @@ export function fetchTrip(id: number) {
   return apiFetch<Trip>(`/trips/${id}/`)
 }
 
-export function fetchCurrentTripDetail(id: number) {
-  return apiFetch<CurrentTripDetail>(`/trips/${id}/current/`)
-}
-
 export function fetchNextTrip() {
   return apiFetch<CurrentTripDetail>('/trips/current/')
 }
