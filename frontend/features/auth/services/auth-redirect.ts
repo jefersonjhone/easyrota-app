@@ -5,8 +5,8 @@ export function getAuthRedirect() {
   const { user, accessToken } = useAuthStore.getState()
 
   if (user && accessToken) {
-    
-    if (!!user?.admin_profile) {
+
+    if (user?.admin_profile) {
       throw redirect({ to: '/admin' })
     } else {
       throw redirect({ to: '/app' })
