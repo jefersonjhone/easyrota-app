@@ -1,4 +1,5 @@
 import { Button } from '@ui/button'
+import { useLogoutMutation } from '@/features/auth/hooks/useLogout'
 
 type UserHomeHeroProps = {
   fullName?: string | null
@@ -41,6 +42,8 @@ export function UserHomeHero({
   email,
   totalTrips,
 }: UserHomeHeroProps) {
+  const logoutMutation = useLogoutMutation()
+
   return (
     <div className="mb-8 overflow-hidden rounded-4xl border border-border/70 bg-card shadow-sm">
       <div className="grid gap-8 p-6 lg:grid-cols-[1.35fr_0.85fr] lg:p-8">
@@ -68,6 +71,10 @@ export function UserHomeHero({
               <a href="/app/viagens">Ver todas as viagens</a>
             </Button>
           </div>
+          <Button variant="ghost" className="text-destructive hover:bg-destructive/10"
+           onClick={() => logoutMutation.mutate()}>
+            Sair da Conta
+          </Button>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
