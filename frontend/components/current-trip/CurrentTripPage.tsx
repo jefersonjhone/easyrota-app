@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/lib
 import { FieldDescription } from '@/lib/ui/field'
 import { Separator } from '@/lib/ui/separator'
 import { apiFetch } from '@/lib/api'
+import { formatTripDate } from '@/features/user-home/config'
 
 type CurrentTripData = {
   id: number
@@ -25,6 +26,7 @@ export function CurrentTripPage() {
   const [trip, setTrip] = useState<CurrentTripData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const showMinutesCard = trip !== null && trip.minutes_remaining !== null
 
   useEffect(() => {
     const loadCurrentTrip = async () => {
@@ -92,7 +94,7 @@ export function CurrentTripPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-3 rounded-lg bg-slate-50 p-4">
                   <p className="text-sm text-slate-500">Data da Viagem</p>
-                  <p className="text-lg font-semibold">{trip.trip_date}</p>
+                  <p className="text-lg font-semibold">{formatTripDate(trip.trip_date)}</p>
 
                   <p className="text-sm text-slate-500">Horário da Partida</p>
                   <p className="text-lg font-semibold">{trip.departure_time}</p>
@@ -121,14 +123,14 @@ export function CurrentTripPage() {
 
               <Separator className="my-6" />
 
-              <div className={`grid gap-4 ${trip.minutes_remaining !== null ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+              <div className={`grid gap-4 items-stretch ${showMinutesCard ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                 
                 <div className="rounded-lg bg-white p-4 shadow-sm">
                   <p className="text-sm text-slate-500">Percentual concluído</p>
                   <p className="mt-2 text-2xl font-semibold">{trip.percentage_complete}%</p>
                 </div>
 
-                {trip.minutes_remaining !== null && (
+                {showMinutesCard && (
                   <div className="rounded-lg bg-white p-4 shadow-sm">
                     <p className="text-sm text-slate-500">Minutos restantes</p>
                     <p className="mt-2 text-2xl font-semibold">{trip.minutes_remaining}</p>

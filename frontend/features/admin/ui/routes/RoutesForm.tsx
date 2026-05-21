@@ -17,7 +17,11 @@ const schema = z.object({
 
 type Schema = z.infer<typeof schema>;
 
-export function CreateRouteForm() {
+type Props = {
+  onSuccess?: () => void;
+};
+
+export function RouteForm({ onSuccess }: Props) {
   const createRouteMutation = useCreateRouteMutation();
   const form = useForm<Schema>({
     mode: "onChange",
@@ -35,6 +39,9 @@ export function CreateRouteForm() {
 
   const onSubmit = async (data: Schema) => {
     await createRouteMutation.mutateAsync(data);
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   if (createRouteMutation.isSuccess) {
@@ -42,14 +49,14 @@ export function CreateRouteForm() {
   }
 
   return (
-    <section>
-      <h1 className="text-center text-4xl font-heading font-medium">
+    <>
+      <h1 className="text-center text-2xl font-heading font-medium">
         Configurar Nova Rota
       </h1>
       <Separator className="max-w-xl mx-auto " />
-      <Field className="max-w-6xl mx-auto text-2xl">
+      <Field className="px-4 text-2xl">
         <form id="createRoute" onSubmit={handleSubmit(onSubmit)}>
-          <section>
+          <section >
             <FieldLabel>PONTO DE PARTIDA</FieldLabel>
             <Input
               id="origin"
@@ -94,10 +101,15 @@ export function CreateRouteForm() {
             </section>
           </section>
         </form>
-        <Button form="createRoute" type="submit" className="w-full cursor-pointer" disabled={isSubmitting}>
-{isSubmitting ? "PUBLICANDO..." : "PUBLICAR ROTA NO SISTEMA" }
-</Button>
+        <Button
+          form="createRoute"
+          type="submit"
+          className="w-full cursor-pointer"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "PUBLICANDO..." : "PUBLICAR ROTA NO SISTEMA"}
+        </Button>
       </Field>
-    </section>
+    </>
   );
 }

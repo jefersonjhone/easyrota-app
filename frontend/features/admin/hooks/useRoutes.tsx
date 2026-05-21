@@ -16,38 +16,34 @@ export type RoutesResponse = RouteValues[];
 export type ShowRoutesErrors = Record<string, string[]>;
 
 export function useShowRoutes() {
-  const [data, setData] = useState<RoutesResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState<RoutesResponse>([]);
+  async function getResponse() {
+    try {
+      const response = await fetch("/api/routes/", {
+        method: "GET",
+      });
+      if (!response.ok) {
+        throw new Error("Erro ao buscar rotas");
+      }
+      const json: RoutesResponse = await response.json();
+      setData(json);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   useEffect(() => {
-    async function getResponse() {
-      try {
-        const response = await fetch("/api/routes/", {
-          method: "GET",
-        });
-        if (!response.ok) {
-          throw new Error("Erro ao buscar rotas");
-        } 
-        const json: RoutesResponse = await response.json();
-        setData(json);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
     getResponse();
   }, []);
 
   return {
     data,
-    isLoading,
+    refetch: getResponse,
   };
 }
 
-
 export function useCreateRouteMutation() {
-	return useMutation({
-		mutationFn: CreateRouteRequest,
-	})
+  return useMutation({
+    mutationFn: CreateRouteRequest,
+  });
 }
