@@ -3,11 +3,9 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from django.utils import timezone
-from django.utils.http import original_urlencode
 from rest_framework import serializers
 
 from ..reservations.models import Reservation
-
 from .models import Bus, Route, Trip
 
 
@@ -203,7 +201,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     data to the 'Current Trip' screen of the Frontend.
     """
 
-    trip_date = serializers.DateField(format="%d/%m/%Y", read_only=True)
+    trip_date = serializers.DateField(read_only=True)
     departure_time = serializers.TimeField(
         source="route.departure_time", format="%H:%M", read_only=True
     )
@@ -274,12 +272,11 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         return start_time, total_duration
 
     def get_percentage_complete(self, obj):
-        if obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO"]:
+        if obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO", "CONFIRMADA"]:
             return 0
-        if obj.status == "CONCLUÍDA" or obj.arrival_timestamp:
+        
+        if obj.status == "CONCLUÍDA":
             return 100
-        if obj.status == "CONFIRMADA" and not obj.departure_timestamp:
-            return 0
 
         now = timezone.now()
         start_time, total_duration = self._get_trip_metrics(obj)
@@ -303,7 +300,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         return int(pct)
 
     def get_minutes_remaining(self, obj):
-        if obj.status == "CONFIRMADA" and not obj.departure_timestamp:
+        if obj.status != "EM ANDAMENTO":
             return None
         
         if obj.status in [
