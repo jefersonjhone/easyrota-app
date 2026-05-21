@@ -35,18 +35,18 @@ export function LandingPage() {
               <h1>
                 De onde
                 <br />
-                voce <span className="destaque">esta,</span>
+                você <span className="destaque">está,</span>
                 <br />
-                ate onde
+                até onde
                 <br />
                 precisa
                 <br />
                 chegar.
               </h1>
               <p>
-                Plataforma de gestao de quorum para transporte intermunicipal
-                universitario. Professores e servidores confirmam presenca, a rota
-                sai quando o minimo e atingido.
+                Plataforma de gestão de quórum para transporte intermunicipal
+                universitário. Professores e servidores confirmam presença, a rota
+                sai quando o mínimo é atingido.
               </p>
 
               <div className="links">
@@ -87,8 +87,8 @@ export function LandingPage() {
               </div>
 
               <p>
-                Sem WhatsApp, sem planilha. A EasyRota centraliza a confirmacao de
-                presenca e libera a rota automaticamente quando o quorum minimo e
+                Sem WhatsApp, sem planilha. A EasyRota centraliza a confirmação de
+                presença e libera a rota automaticamente quando o quórum mínimo é
                 atingido.
               </p>
             </div>
@@ -99,7 +99,7 @@ export function LandingPage() {
                 <div className="step-icon">🔐</div>
                 <h3>Login</h3>
                 <p>
-                  Acesse a plataforma com seu vinculo institucional para liberar seu
+                  Acesse a plataforma com seu vínculo institucional para liberar seu
                   servidor da universidade.
                 </p>
               </article>
@@ -119,7 +119,7 @@ export function LandingPage() {
                 <div className="step-icon">✅</div>
                 <h3>Check-in</h3>
                 <p>
-                  No dia da viagem, faca o check-in digital pela plataforma para
+                  No dia da viagem, faça o check-in digital pela plataforma para
                   confirmar seu embarque.
                 </p>
               </article>
@@ -141,16 +141,16 @@ export function LandingPage() {
           <div className="route-container">
             <span className="route-eyebrow">Rota ativa</span>
             <h2>
-              Uma rota. <em>Feita para voce.</em>
+              Uma rota. <em>Feita para você.</em>
             </h2>
 
             <div className="route-grid">
               <article className="route-map-card">
-                <span className="route-badge">Unica rota disponivel</span>
+                <span className="route-badge">Única rota disponível</span>
                 <div className="route-map-pattern" />
 
                 <div className="route-map-text">
-                  <span>Rota diaria</span>
+                  <span>Rota diária</span>
                   <strong>Feira de Santana -&gt; Salvador</strong>
                   <p>Bahia · 110 km · aprox. 1h30</p>
                 </div>
@@ -158,8 +158,8 @@ export function LandingPage() {
 
               <article className="route-info-card">
                 <div className="route-warning">
-                  Aviso: a parceria com a Uninfra e inteiramente ficticia e existe
-                  apenas para fins academicos.
+                  Aviso: a parceria com a Uninfra é inteiramente fictícia e existe
+                  apenas para fins acadêmicos.
                 </div>
 
                 <span className="eyebrow">Parceria operacional</span>
@@ -170,14 +170,14 @@ export function LandingPage() {
                 <p>
                   A EasyRota atua em conjunto com a Uninfra para operar a rota
                   intermunicipal que atende professores e servidores da universidade.
-                  Os custos da passagem sao cobertos pelo convenio institucional, o
-                  passageiro so precisa confirmar presenca.
+                  Os custos da passagem são cobertos pelo convênio institucional, o
+                  passageiro só precisa confirmar presença.
                 </p>
 
                 <ul>
                   <li>Sem custo para o passageiro</li>
-                  <li>Rota confirmada via quorum digital</li>
-                  <li>Exclusiva para professores e servidores universitarios</li>
+                  <li>Rota confirmada via quórum digital</li>
+                  <li>Exclusiva para professores e servidores universitários</li>
                 </ul>
 
                 <a href="/login" className="route-button">
@@ -215,7 +215,7 @@ export function LandingPage() {
               <strong>
                 24<span>h</span>
               </strong>
-              <p>Monitoramento de quorum</p>
+              <p>Monitoramento de quórum</p>
             </article>
           </div>
         </section>
@@ -230,8 +230,8 @@ export function LandingPage() {
                 <div className="stars">★★★★★</div>
                 <p>
                   "Antes ficavamos no grupo de WhatsApp tentando organizar quem ia
-                  ou nao ia. Com a EasyRota, confirmo minha presenca em segundos e
-                  sei se a rota vai sair com antecedencia."
+                  ou não ia. Com a EasyRota, confirmo minha presença em segundos e
+                  sei se a rota vai sair com antecedência."
                 </p>
 
                 <div className="review-author">
@@ -246,16 +246,16 @@ export function LandingPage() {
               <article className="review-card">
                 <div className="stars">★★★★★</div>
                 <p>
-                  "A plataforma resolveu o problema de organizacao que a gente tinha
-                  ha anos. Agora o quorum e monitorado em tempo real e o onibus sai
+                  "A plataforma resolveu o problema de organização que a gente tinha
+                  há anos. Agora o quórum é monitorado em tempo real e o ônibus sai
                   na hora certa."
                 </p>
 
                 <div className="review-author">
                   <span>JF</span>
                   <div>
-                    <strong>Joao Ferreira</strong>
-                    <small>Servidor universitario · UEFS</small>
+                    <strong>João Ferreira</strong>
+                    <small>Servidor universitário · UEFS</small>
                   </div>
                 </div>
               </article>
@@ -263,15 +263,15 @@ export function LandingPage() {
               <article className="review-card">
                 <div className="stars">★★★★★</div>
                 <p>
-                  "Simples, direto e sem burocracia. Login, confirmo presenca e
-                  pronto. Recebo a notificacao quando o quorum e atingido. Exatamente
+                  "Simples, direto e sem burocracia. Login, confirmo presença e
+                  pronto. Recebo a notificação quando o quórum é atingido. Exatamente
                   o que faltava para nossa rota."
                 </p>
 
                 <div className="review-author">
                   <span>CR</span>
                   <div>
-                    <strong>Claudia Rodrigues</strong>
+                    <strong>Cláudia Rodrigues</strong>
                     <small>Professora · Feira de Santana</small>
                   </div>
                 </div>
@@ -287,14 +287,14 @@ export function LandingPage() {
             <h2>
               Pronto para confirmar
               <br />
-              sua presenca?
+              sua presença?
             </h2>
             <p>
-              Acesse o app, confirme presenca na rota e embarque sem preocupacao,
+              Acesse o app, confirme presença na rota e embarque sem preocupação,
               sem custo, sem WhatsApp.
             </p>
             <a href="/login" className="cta-button">
-              VAMOS LA -&gt;
+              VAMOS LÁ -&gt;
             </a>
           </div>
         </section>
@@ -308,22 +308,22 @@ export function LandingPage() {
             </a>
 
             <p>
-              Plataforma de gestao de quorum para transporte intermunicipal
-              universitario. Em parceria com a Uninfra, conectando Feira de
-              Santana a Salvador.
+              Plataforma de gestão de quórum para transporte intermunicipal
+              universitário. Em parceria com a Uninfra, conectando Feira de
+              Santana à Salvador.
             </p>
 
             <strong className="footer-since">✦ Desde 2026</strong>
 
             <div className="footer-warning">
-              ⚠ Projeto academico ficticio — EXA613 / PBL. A EasyRota nao existe
-              como pessoa juridica. A parceria com a Uninfra e simulada.
+              ⚠ Projeto acadêmico fictício — EXA613 / PBL. A EasyRota não existe
+              como pessoa jurídica. A parceria com a Uninfra é simulada.
             </div>
           </div>
 
           <div className="footer-column">
             <h3>Plataforma</h3>
-            <a href="/">Inicio</a>
+            <a href="/">Início</a>
             <a href="/sobre-projeto">Sobre o projeto</a>
             <a href="/equipe">Equipe</a>
             <a href="#depoimentos">Depoimentos</a>
@@ -349,7 +349,7 @@ export function LandingPage() {
         </div>
 
         <div className="footer-bottom">
-          <p>© 2026 EasyRota. Todos os direitos reservados. Projeto academico ficticio.</p>
+          <p>© 2026 EasyRota. Todos os direitos reservados. Projeto acadêmico fictício.</p>
         </div>
       </footer>
     </div>
