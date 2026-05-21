@@ -115,10 +115,10 @@ export function EquipePage() {
         <section id="equipe" className="team-hero">
           <div className="team-hero-content">
             <span className="eyebrow">A equipe</span>
-            <h1>As pessoas por tras da EasyRota</h1>
+            <h1>As pessoas por trás da EasyRota</h1>
             <p>
-              Organizacao, tecnologia e experiencia trabalhando juntas para
-              transformar o transporte em um processo simples, claro e confiavel.
+              Organização, tecnologia e experiência trabalhando juntas para
+              transformar o transporte em um processo simples, claro e confiável.
             </p>
           </div>
         </section>
@@ -126,8 +126,8 @@ export function EquipePage() {
         <section className="team-section team-section-featured">
           <div className="team-container">
             <div className="section-heading">
-              <span className="eyebrow">Direcao do projeto</span>
-              <h2>Nucleo principal</h2>
+              <span className="eyebrow">Direção do projeto</span>
+              <h2>Núcleo principal</h2>
             </div>
 
             <div className="team-grid team-grid-three">
@@ -142,7 +142,7 @@ export function EquipePage() {
           <div className="team-container">
             <div className="section-heading">
               <span className="eyebrow">Produto e interface</span>
-              <h2>Experiencia do usuario</h2>
+              <h2>Experiência do usuário</h2>
             </div>
 
             <div className="team-grid team-grid-four">
@@ -156,7 +156,7 @@ export function EquipePage() {
         <section className="team-section team-section-dark">
           <div className="team-container">
             <div className="section-heading">
-              <span className="eyebrow">Operacao e tecnologia</span>
+              <span className="eyebrow">Operação e tecnologia</span>
               <h2>Base da plataforma</h2>
             </div>
 
@@ -175,7 +175,7 @@ export function EquipePage() {
             <a href="/" className="footer-logo">
               Easy<span>Rota</span>
             </a>
-            <p>Plataforma de gestao de quorum para transporte intermunicipal universitario.</p>
+            <p>Plataforma de gestão de quórum para transporte intermunicipal universitário.</p>
           </div>
 
           <div className="footer-social-area">
