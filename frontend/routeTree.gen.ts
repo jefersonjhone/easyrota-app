@@ -22,16 +22,14 @@ import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
 import { Route as AdminViagensRouteImport } from './pages/admin.viagens'
 import { Route as AdminTripsRouteImport } from './pages/admin/trips'
+import { Route as AdminRotasRouteImport } from './pages/admin/rotas'
 import { Route as AdminRelatoriosRouteImport } from './pages/admin/relatorios'
 import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
 import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
 import { Route as AdminAdminsRouteImport } from './pages/admin/admins'
 import { Route as AppViagensIndexRouteImport } from './pages/app/viagens/index'
-import { Route as AdminRotasIndexRouteImport } from './pages/admin/rotas/index'
 import { Route as AppViagensAtualRouteImport } from './pages/app/viagens/atual'
 import { Route as AppDriverViagensRouteImport } from './pages/app/driver/viagens'
-import { Route as AdminRotasMostrarrotasRouteImport } from './pages/admin/rotas/mostrarrotas'
-import { Route as AdminRotasCriarrotasRouteImport } from './pages/admin/rotas/criarrotas'
 import { Route as AppDriverViajemTripIdRouteImport } from './pages/app/driver/viajem.$tripId'
 
 const App_rootRoute = App_rootRouteImport.update({
@@ -94,6 +92,9 @@ const AdminViagensRoute = AdminViagensRouteImport.update({
 const AdminTripsRoute = AdminTripsRouteImport.update({
   id: '/admin/trips',
   path: '/admin/trips',
+const AdminRotasRoute = AdminRotasRouteImport.update({
+  id: '/admin/rotas',
+  path: '/admin/rotas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRelatoriosRoute = AdminRelatoriosRouteImport.update({
@@ -121,11 +122,6 @@ const AppViagensIndexRoute = AppViagensIndexRouteImport.update({
   path: '/app/viagens/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRotasIndexRoute = AdminRotasIndexRouteImport.update({
-  id: '/admin/rotas/',
-  path: '/admin/rotas/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppViagensAtualRoute = AppViagensAtualRouteImport.update({
   id: '/app/viagens/atual',
   path: '/app/viagens/atual',
@@ -134,16 +130,6 @@ const AppViagensAtualRoute = AppViagensAtualRouteImport.update({
 const AppDriverViagensRoute = AppDriverViagensRouteImport.update({
   id: '/app/driver/viagens',
   path: '/app/driver/viagens',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRotasMostrarrotasRoute = AdminRotasMostrarrotasRouteImport.update({
-  id: '/admin/rotas/mostrarrotas',
-  path: '/admin/rotas/mostrarrotas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRotasCriarrotasRoute = AdminRotasCriarrotasRouteImport.update({
-  id: '/admin/rotas/criarrotas',
-  path: '/admin/rotas/criarrotas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppDriverViajemTripIdRoute = AppDriverViajemTripIdRouteImport.update({
@@ -165,16 +151,14 @@ export interface FileRoutesByFullPath {
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/trips': typeof AdminTripsRoute
+  '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof App_rootRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
-  '/admin/rotas/criarrotas': typeof AdminRotasCriarrotasRoute
-  '/admin/rotas/mostrarrotas': typeof AdminRotasMostrarrotasRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
   '/app/viagens': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
-  '/admin/rotas/': typeof AdminRotasIndexRoute
   '/app/viagens/': typeof AppViagensIndexRoute
   '/app/driver/viajem/$tripId': typeof AppDriverViajemTripIdRoute
 }
@@ -191,14 +175,12 @@ export interface FileRoutesByTo {
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/trips': typeof AdminTripsRoute
+  '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof AppIndexRoute
-  '/admin/rotas/criarrotas': typeof AdminRotasCriarrotasRoute
-  '/admin/rotas/mostrarrotas': typeof AdminRotasMostrarrotasRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
   '/app/viagens': typeof AppViagensIndexRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
-  '/admin/rotas': typeof AdminRotasIndexRoute
   '/app/driver/viajem/$tripId': typeof AppDriverViajemTripIdRoute
 }
 export interface FileRoutesById {
@@ -215,16 +197,14 @@ export interface FileRoutesById {
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/trips': typeof AdminTripsRoute
+  '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app/__root': typeof App_rootRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
-  '/admin/rotas/criarrotas': typeof AdminRotasCriarrotasRoute
-  '/admin/rotas/mostrarrotas': typeof AdminRotasMostrarrotasRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
   '/app/viagens/__root': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
-  '/admin/rotas/': typeof AdminRotasIndexRoute
   '/app/viagens/': typeof AppViagensIndexRoute
   '/app/driver/viajem/$tripId': typeof AppDriverViajemTripIdRoute
 }
@@ -243,16 +223,14 @@ export interface FileRouteTypes {
     | '/admin/onibus'
     | '/admin/relatorios'
     | '/admin/trips'
+    | '/admin/rotas'
     | '/admin/viagens'
     | '/app'
     | '/admin/'
     | '/app/'
-    | '/admin/rotas/criarrotas'
-    | '/admin/rotas/mostrarrotas'
     | '/app/driver/viagens'
     | '/app/viagens'
     | '/app/viagens/atual'
-    | '/admin/rotas/'
     | '/app/viagens/'
     | '/app/driver/viajem/$tripId'
   fileRoutesByTo: FileRoutesByTo
@@ -269,14 +247,12 @@ export interface FileRouteTypes {
     | '/admin/onibus'
     | '/admin/relatorios'
     | '/admin/trips'
+    | '/admin/rotas'
     | '/admin/viagens'
     | '/app'
-    | '/admin/rotas/criarrotas'
-    | '/admin/rotas/mostrarrotas'
     | '/app/driver/viagens'
     | '/app/viagens'
     | '/app/viagens/atual'
-    | '/admin/rotas'
     | '/app/driver/viajem/$tripId'
   id:
     | '__root__'
@@ -292,16 +268,14 @@ export interface FileRouteTypes {
     | '/admin/onibus'
     | '/admin/relatorios'
     | '/admin/trips'
+    | '/admin/rotas'
     | '/admin/viagens'
     | '/app/__root'
     | '/admin/'
     | '/app/'
-    | '/admin/rotas/criarrotas'
-    | '/admin/rotas/mostrarrotas'
     | '/app/driver/viagens'
     | '/app/viagens/__root'
     | '/app/viagens/atual'
-    | '/admin/rotas/'
     | '/app/viagens/'
     | '/app/driver/viajem/$tripId'
   fileRoutesById: FileRoutesById
@@ -319,16 +293,14 @@ export interface RootRouteChildren {
   AdminOnibusRoute: typeof AdminOnibusRoute
   AdminRelatoriosRoute: typeof AdminRelatoriosRoute
   AdminTripsRoute: typeof AdminTripsRoute
+  AdminRotasRoute: typeof AdminRotasRoute
   AdminViagensRoute: typeof AdminViagensRoute
   App_rootRoute: typeof App_rootRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
-  AdminRotasCriarrotasRoute: typeof AdminRotasCriarrotasRoute
-  AdminRotasMostrarrotasRoute: typeof AdminRotasMostrarrotasRoute
   AppDriverViagensRoute: typeof AppDriverViagensRoute
   AppViagens_rootRoute: typeof AppViagens_rootRoute
   AppViagensAtualRoute: typeof AppViagensAtualRoute
-  AdminRotasIndexRoute: typeof AdminRotasIndexRoute
   AppViagensIndexRoute: typeof AppViagensIndexRoute
   AppDriverViajemTripIdRoute: typeof AppDriverViajemTripIdRoute
 }
@@ -424,6 +396,11 @@ declare module '@tanstack/react-router' {
       path: '/admin/trips'
       fullPath: '/admin/trips'
       preLoaderRoute: typeof AdminTripsRouteImport
+    '/admin/rotas': {
+      id: '/admin/rotas'
+      path: '/admin/rotas'
+      fullPath: '/admin/rotas'
+      preLoaderRoute: typeof AdminRotasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/relatorios': {
@@ -461,13 +438,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppViagensIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/rotas/': {
-      id: '/admin/rotas/'
-      path: '/admin/rotas'
-      fullPath: '/admin/rotas/'
-      preLoaderRoute: typeof AdminRotasIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/app/viagens/atual': {
       id: '/app/viagens/atual'
       path: '/app/viagens/atual'
@@ -480,20 +450,6 @@ declare module '@tanstack/react-router' {
       path: '/app/driver/viagens'
       fullPath: '/app/driver/viagens'
       preLoaderRoute: typeof AppDriverViagensRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/rotas/mostrarrotas': {
-      id: '/admin/rotas/mostrarrotas'
-      path: '/admin/rotas/mostrarrotas'
-      fullPath: '/admin/rotas/mostrarrotas'
-      preLoaderRoute: typeof AdminRotasMostrarrotasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/rotas/criarrotas': {
-      id: '/admin/rotas/criarrotas'
-      path: '/admin/rotas/criarrotas'
-      fullPath: '/admin/rotas/criarrotas'
-      preLoaderRoute: typeof AdminRotasCriarrotasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/driver/viajem/$tripId': {
@@ -519,16 +475,14 @@ const rootRouteChildren: RootRouteChildren = {
   AdminOnibusRoute: AdminOnibusRoute,
   AdminRelatoriosRoute: AdminRelatoriosRoute,
   AdminTripsRoute: AdminTripsRoute,
+  AdminRotasRoute: AdminRotasRoute,
   AdminViagensRoute: AdminViagensRoute,
   App_rootRoute: App_rootRoute,
   AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
-  AdminRotasCriarrotasRoute: AdminRotasCriarrotasRoute,
-  AdminRotasMostrarrotasRoute: AdminRotasMostrarrotasRoute,
   AppDriverViagensRoute: AppDriverViagensRoute,
   AppViagens_rootRoute: AppViagens_rootRoute,
   AppViagensAtualRoute: AppViagensAtualRoute,
-  AdminRotasIndexRoute: AdminRotasIndexRoute,
   AppViagensIndexRoute: AppViagensIndexRoute,
   AppDriverViajemTripIdRoute: AppDriverViajemTripIdRoute,
 }

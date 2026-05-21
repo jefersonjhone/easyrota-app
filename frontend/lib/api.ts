@@ -13,9 +13,8 @@ async function handleRefresh(): Promise<void> {
   try {
     const data = await refreshSession()
 
-    useAuthStore.getState().setAuth(
+    useAuthStore.getState().setAccessToken(
       data.tokens?.access,
-      data.user,
     )
   } catch (error) {
     useAuthStore.getState().clearAuth()

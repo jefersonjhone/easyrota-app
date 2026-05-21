@@ -11,7 +11,7 @@ type AuthState = {
     accessToken: string,
     user: AuthUser
   ) => void
-
+  setAccessToken: (accessToken:string) => void
   clearAuth: () => void
 }
 
@@ -28,6 +28,13 @@ export const useAuthStore =
             user,
           }),
 
+        setAccessToken: (accessToken: string) =>
+          set((state) => ({
+            ...state,
+             accessToken 
+          })
+          ),
+            
         clearAuth: () =>
           set({
             accessToken: null,

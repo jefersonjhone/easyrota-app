@@ -400,9 +400,10 @@ class RefreshTokenView(generics.GenericAPIView):
 
         response = Response(
             {
-                "access": data["access"],
-            },
-            status=status.HTTP_200_OK,
+                "tokens": {
+                "access": data["access"]
+            }
+        }, status=status.HTTP_200_OK,
         )
 
         # Rotation enabled

@@ -25,11 +25,11 @@ export function SobreProjetoPage() {
         <section className="project-hero">
           <div className="project-hero-content">
             <span className="eyebrow">Sobre o projeto</span>
-            <h1>Mobilidade universitaria com organizacao digital</h1>
+            <h1>Mobilidade universitária com organização digital</h1>
             <p>
-              A EasyRota foi pensada como uma plataforma academica para facilitar a
-              confirmacao de presenca, o controle de quorum e a gestao de rotas
-              intermunicipais para a comunidade universitaria.
+              A EasyRota foi pensada como uma plataforma acadêmica para facilitar a
+              confirmação de presença, o controle de quórum e a gestão de rotas
+              intermunicipais para a comunidade universitária.
             </p>
           </div>
         </section>
@@ -44,15 +44,15 @@ export function SobreProjetoPage() {
 
               <div className="goal-text">
                 <p>
-                  O objetivo do projeto e centralizar a confirmacao de passageiros
-                  em uma experiencia simples, substituindo combinados dispersos por
-                  um sistema capaz de acompanhar o quorum em tempo real.
+                  O objetivo do projeto é centralizar a confirmação de passageiros
+                  em uma experiência simples, substituindo combinados dispersos por
+                  um sistema capaz de acompanhar o quórum em tempo real.
                 </p>
 
                 <p>
-                  Com isso, professores e servidores sabem com antecedencia se a rota
-                  sera realizada, enquanto a operacao ganha uma lista organizada de
-                  usuarios confirmados para cada deslocamento.
+                  Com isso, professores e servidores sabem com antecedência se a rota
+                  será realizada, enquanto a operação ganha uma lista organizada de
+                  usuários confirmados para cada deslocamento.
                 </p>
               </div>
             </div>
@@ -60,27 +60,27 @@ export function SobreProjetoPage() {
             <div className="goal-points">
               <article>
                 <strong>01</strong>
-                <h3>Confirmacao digital</h3>
+                <h3>Confirmação digital</h3>
                 <p>
-                  O usuario registra presenca direto na plataforma, sem depender de
+                  O usuário registra presença direto na plataforma, sem depender de
                   grupos ou planilhas.
                 </p>
               </article>
 
               <article>
                 <strong>02</strong>
-                <h3>Quorum minimo</h3>
+                <h3>Quórum</h3>
                 <p>
-                  A rota so e liberada quando atinge o numero necessario de
+                  A rota só é liberada quando atinge o número necessário de
                   passageiros confirmados.
                 </p>
               </article>
 
               <article>
                 <strong>03</strong>
-                <h3>Operacao clara</h3>
+                <h3>Operação clara</h3>
                 <p>
-                  A equipe responsavel acompanha a demanda e organiza a viagem com
+                  A equipe responsável acompanha a demanda e organiza a viagem com
                   mais previsibilidade.
                 </p>
               </article>
@@ -95,19 +95,19 @@ export function SobreProjetoPage() {
             </div>
 
             <div className="institution-text">
-              <span className="eyebrow">Instituicao</span>
+              <span className="eyebrow">Instituição</span>
               <h2>UEFS</h2>
               <p>
                 A Universidade Estadual de Feira de Santana representa o contexto
                 institucional do projeto. A proposta considera a rotina de
                 professores e servidores que precisam se deslocar entre cidades para
-                cumprir suas atividades academicas e administrativas.
+                cumprir suas atividades acadêmicas e administrativas.
               </p>
 
               <p>
-                Dentro desse cenario, a EasyRota funciona como uma solucao de apoio:
-                organiza a demanda, melhora a comunicacao da rota e oferece uma
-                forma mais objetiva de confirmar a presenca dos passageiros.
+                Dentro desse cenário, a EasyRota funciona como uma solução de apoio:
+                organiza a demanda, melhora a comunicação da rota e oferece uma
+                forma mais objetiva de confirmar a presença dos passageiros.
               </p>
             </div>
           </div>
@@ -123,20 +123,20 @@ export function SobreProjetoPage() {
               <span className="eyebrow">Parceria simulada</span>
               <h2>Uninfra</h2>
               <p>
-                A Uninfra aparece no projeto como uma parceira operacional ficticia,
-                responsavel por representar a estrutura que viabiliza a rota
+                A Uninfra aparece no projeto como uma parceira operacional fictícia,
+                responsável por representar a estrutura que viabiliza a rota
                 intermunicipal utilizada pela plataforma.
               </p>
 
               <p>
-                Essa parceria e usada apenas para fins academicos, ajudando a simular
-                como uma solucao real poderia conectar universidade, gestao de
-                transporte e usuarios em um mesmo fluxo digital.
+                Essa parceria é usada apenas para fins acadêmicos, ajudando a simular
+                como uma solução real poderia conectar universidade, gestão de
+                transporte e usuários em um mesmo fluxo digital.
               </p>
 
               <div className="warning-box">
-                Projeto academico ficticio. A EasyRota e a parceria com a Uninfra nao
-                representam uma operacao real.
+                Projeto acadêmico fictício. A EasyRota e a parceria com a Uninfra não
+                representam uma operação real.
               </div>
             </div>
           </div>
@@ -149,7 +149,7 @@ export function SobreProjetoPage() {
             <a href="/" className="footer-logo">
               Easy<span>Rota</span>
             </a>
-            <p>Plataforma de gestao de quorum para transporte intermunicipal universitario.</p>
+            <p>Plataforma de gestão de quórum para transporte intermunicipal universitário.</p>
           </div>
 
           <div className="footer-social-area">
