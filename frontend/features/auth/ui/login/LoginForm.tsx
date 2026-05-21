@@ -11,6 +11,7 @@ import { useLoginMutation } from "@features/auth/hooks/useLogin"
 import { Route as RecoveryRoute } from "@/pages/recuperar"
 import { Route as SignupRoute } from "@/pages/signup"
 import { Route as AppRoute } from "@/pages/app"
+import { Route as AdminRoute } from "@/pages/admin"
 
 // Components
 import HintInvalid from '@features/auth/ui/HintInvalid'
@@ -48,8 +49,14 @@ export function LoginForm() {
   const isSubmitting = state.isSubmitting || loginMutation.isPending
 
 	const onSubmit = async (data: Schema) => {
-		await loginMutation.mutateAsync(data)
+		const response = await loginMutation.mutateAsync(data)
+		const isAdmin = !!response.user?.admin_profile
+
+		if (isAdmin) {
+		navigate({ to: AdminRoute.to, replace: true })
+		} else {
 		navigate({ to: AppRoute.to, replace: true })
+		}
 	}
 
 	return (

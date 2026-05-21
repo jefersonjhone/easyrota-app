@@ -1,7 +1,6 @@
 // Components
 import { useShowRoutes } from "@/features/admin/hooks/useRoutes";
 import { RoutesView } from "./RoutesView";
-import AppLayout from "@/lib/layout/app-layout";
 import { RouteForm } from "./RoutesForm";
 import { Card } from "@/lib/ui/card";
 import { Button } from "@/lib/ui/button";
@@ -14,7 +13,7 @@ export default function RoutesPage() {
 
   console.log(data);
   return (
-    <AppLayout>
+    <>
       <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">
         Rotas
       </h1>
@@ -43,6 +42,6 @@ export default function RoutesPage() {
           <RoutesView routes={data} />
         </section>
       </section>
-    </AppLayout>
+    </>
   );
 }

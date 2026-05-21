@@ -39,8 +39,8 @@ export type Action = {
 
 export const actions: Action[] = [
   { 
-    title: "Frota Ativa",
-    description: "Veja a ocupação em tempo real.",
+    title: "Gestão de Viagens",
+    description: "Gerencie as viagens.",
     icon: BusInRouteIcon,
     background: BusInRouteImage,
     route: TravelRoute,
