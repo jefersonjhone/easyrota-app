@@ -163,7 +163,7 @@ export function TripsPage() {
             Viagens
           </p>
           <h1 className="font-heading text-4xl font-semibold tracking-tight">
-            {mode === 'create' ? 'Nova viagem' : mode === 'edit' ? 'Editar viagem' : 'Minhas viagens'}
+            {mode === 'create' ? 'Nova viagem' : mode === 'edit' ? 'Editar viagem' : 'Viagens Cadastradas'}
           </h1>
           <p className="text-muted-foreground">
             {isFormMode ? 'Preencha os dados da viagem abaixo.' : 'Acompanhe e gerencie todas as viagens.'}
