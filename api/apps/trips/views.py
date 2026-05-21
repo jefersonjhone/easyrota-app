@@ -143,7 +143,7 @@ class MyNextTripView(APIView):
         return trip
 
     def get(self, request):
-        now = timezone.now()
+        now = timezone.localtime()
         today = now.date()
         yesterday = today - timedelta(days=1)
         

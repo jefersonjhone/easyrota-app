@@ -5,13 +5,13 @@ from django.utils import timezone
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
+from ..trips.models import Trip
 from .models import Reservation
 from .serializers import (
     AvailableTripSerializer,
     ReservationHistorySerializer,
     ReservationSerializer,
 )
-from ..trips.models import Trip
 
 
 class ReservationCreateView(generics.CreateAPIView):
@@ -87,7 +87,9 @@ class AvailableTripListView(generics.ListAPIView):
                 current_tz,
             )
 
-            available_seats = trip.bus.seating_capacity - getattr(trip, "reserved_seats", 0)
+            available_seats = trip.bus.seating_capacity - getattr(
+                trip, "reserved_seats", 0
+                )
             if departure <= cutoff or available_seats <= 0:
                 continue
 
