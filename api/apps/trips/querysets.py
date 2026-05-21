@@ -1,5 +1,6 @@
-from ..users.models.profiles import DriverProfile
 from django.db import models
+
+from ..users.models.profiles import DriverProfile
 
 
 class TripQuerySet(models.QuerySet):

@@ -1,4 +1,4 @@
-from rest_framework import filters 
+from rest_framework import filters
 
 
 class FilterTripViewSet(filters.BaseFilterBackend):
