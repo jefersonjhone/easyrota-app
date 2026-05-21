@@ -336,7 +336,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         elif pct < 45:
             return "Trajeto em Andamento"
         elif 45 <= pct <= 55:
-            return "Metade do trajeto concluída"
+            return "Metade do trajeto concluído"
         elif pct < 99:
             return "Aproximando do Destino"
         else:

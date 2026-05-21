@@ -1,5 +1,6 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from .views.auth import (
     LoginView,
     LoginView2fa,
@@ -9,7 +10,7 @@ from .views.auth import (
     RegisterView2fa,
     Verify2FAView,
 )
-from .views.users import AdminDelegationView, HealthCheckView, DriverViewSet
+from .views.users import AdminDelegationView, DriverViewSet, HealthCheckView
 
 router = DefaultRouter()
 router.register(r'drivers', DriverViewSet, basename='drivers')
