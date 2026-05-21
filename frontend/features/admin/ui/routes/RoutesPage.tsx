@@ -23,7 +23,7 @@ export default function RoutesPage() {
         {creating && (
           <Card className="flex flex-col overflow-hidden rounded-lg margin-auto max-w-3xl">
             <RouteForm
-              onSuccess={() => {
+              onCreate={() => {
                 refetch();
                 setCreating(false);
               }}
@@ -31,7 +31,7 @@ export default function RoutesPage() {
           </Card>
         )}
         {!creating && (
-          <Button
+          <Button className="w-full"
             onClick={() => {
               setCreating(true);
             }}
@@ -39,8 +39,8 @@ export default function RoutesPage() {
             Criar rota
           </Button>
         )}
-        <section className="mx-auto grid w-full max-w-7xl grid-cols-1 sm:grid-cols-2 gap-4 px-4 sm:px-0">
-          <RoutesView routes={data} />
+        <section className="mx-auto grid w-full max-w-7xl grid-cols-1 sm:grid-cols-1 gap-4 px-4 sm:px-0">
+          <RoutesView routes={data} onRefresh={() => {refetch()}}/>
         </section>
       </section>
     </AppLayout>

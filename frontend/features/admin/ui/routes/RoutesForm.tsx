@@ -18,10 +18,10 @@ const schema = z.object({
 type Schema = z.infer<typeof schema>;
 
 type Props = {
-  onSuccess?: () => void;
+  onCreate?: () => void;
 };
 
-export function RouteForm({ onSuccess }: Props) {
+export function RouteForm({ onCreate }: Props) {
   const createRouteMutation = useCreateRouteMutation();
   const form = useForm<Schema>({
     mode: "onChange",
@@ -39,8 +39,8 @@ export function RouteForm({ onSuccess }: Props) {
 
   const onSubmit = async (data: Schema) => {
     await createRouteMutation.mutateAsync(data);
-    if (onSuccess) {
-      onSuccess();
+    if (onCreate) {
+      onCreate();
     }
   };
 

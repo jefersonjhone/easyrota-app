@@ -39,3 +39,9 @@ export async function CreateRouteRequest(values: CreateRouteValues): Promise<Cre
 
 	return response
 }
+
+export async function DeleteRoute(routeId: number) {
+	await apiFetch("/routes/"+routeId+"/", {
+		method: "DELETE",
+	})
+}
