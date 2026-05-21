@@ -7,7 +7,7 @@ export function requireAdmin() {
 
   const user = useAuthStore.getState().user
 
-  const isAdmin = user?.profile_type === "ADMIN"
+  const isAdmin = !!user?.admin_profile
 
   if (!isAdmin) {
     throw redirect({ to: "/app" })
