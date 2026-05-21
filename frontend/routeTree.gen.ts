@@ -20,6 +20,7 @@ import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as IndexRouteImport } from './pages/index'
 import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
+import { Route as AppTripsRouteImport } from './pages/app/trips'
 import { Route as AdminViagensRouteImport } from './pages/admin.viagens'
 import { Route as AdminRelatoriosRouteImport } from './pages/admin/relatorios'
 import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
@@ -83,6 +84,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppTripsRoute = AppTripsRouteImport.update({
+  id: '/app/trips',
+  path: '/app/trips',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminViagensRoute = AdminViagensRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof App_rootRoute
+  '/app/trips': typeof AppTripsRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/rotas/criarrotas': typeof AdminRotasCriarrotasRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof AppIndexRoute
+  '/app/trips': typeof AppTripsRoute
   '/admin/rotas/criarrotas': typeof AdminRotasCriarrotasRoute
   '/admin/rotas/mostrarrotas': typeof AdminRotasMostrarrotasRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/admin/relatorios': typeof AdminRelatoriosRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app/__root': typeof App_rootRoute
+  '/app/trips': typeof AppTripsRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/rotas/criarrotas': typeof AdminRotasCriarrotasRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/relatorios'
     | '/admin/viagens'
     | '/app'
+    | '/app/trips'
     | '/admin/'
     | '/app/'
     | '/admin/rotas/criarrotas'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/admin/relatorios'
     | '/admin/viagens'
     | '/app'
+    | '/app/trips'
     | '/admin/rotas/criarrotas'
     | '/admin/rotas/mostrarrotas'
     | '/app/driver/viagens'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/admin/relatorios'
     | '/admin/viagens'
     | '/app/__root'
+    | '/app/trips'
     | '/admin/'
     | '/app/'
     | '/admin/rotas/criarrotas'
@@ -308,6 +320,7 @@ export interface RootRouteChildren {
   AdminRelatoriosRoute: typeof AdminRelatoriosRoute
   AdminViagensRoute: typeof AdminViagensRoute
   App_rootRoute: typeof App_rootRoute
+  AppTripsRoute: typeof AppTripsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
   AdminRotasCriarrotasRoute: typeof AdminRotasCriarrotasRoute
@@ -397,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/trips': {
+      id: '/app/trips'
+      path: '/app/trips'
+      fullPath: '/app/trips'
+      preLoaderRoute: typeof AppTripsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/viagens': {
@@ -500,6 +520,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRelatoriosRoute: AdminRelatoriosRoute,
   AdminViagensRoute: AdminViagensRoute,
   App_rootRoute: App_rootRoute,
+  AppTripsRoute: AppTripsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
   AdminRotasCriarrotasRoute: AdminRotasCriarrotasRoute,
