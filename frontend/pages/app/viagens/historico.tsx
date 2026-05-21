@@ -1,13 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AdminLayout } from '@features/admin/ui/Layout'
 import { TripsHistoryPage } from '@features/admin/ui/routes/TripsHistoryPage'
 import { requireAuth } from '@/features/auth/services/require-auth'
+import AppLayout from '@/lib/layout/app-layout'
 
-export const Route = createFileRoute('/admin/viagens')({
+export const Route = createFileRoute('/app/viagens/historico')({
   beforeLoad: requireAuth,
   component: () => (
-    <AdminLayout>
+    <AppLayout>
       <TripsHistoryPage />
-    </AdminLayout>
-  ),
+    </AppLayout>
+  )
 })
