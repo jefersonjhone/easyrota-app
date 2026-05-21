@@ -75,11 +75,6 @@ class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
     filter_backends = [FilterTripViewSet]
-
-    def get(self, request, *args, **kwargs):
-        self.queryset = self.get_queryset()
-        serializer = self.get_serializer(self.queryset, many=True)
-        return Response(serializer.data)
         
     def get_queryset(self):
         return Trip.objects.joinable_by_driver(self.request.user)
@@ -91,16 +86,6 @@ class TripViewSet(viewsets.ModelViewSet):
             self.permission_classes = [permissions.IsAdminUser]
 
         return super().get_permissions()
-
-
-class CurrentTripDetailView(generics.RetrieveAPIView):
-    """
-    Returns the processed data for a specific trip to the Current Trip screen.
-    """
-
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Trip.objects.all()
-    serializer_class = TripCurrentScreenSerializer
 
 
 class MyNextTripView(APIView):
