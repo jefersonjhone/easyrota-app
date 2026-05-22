@@ -97,6 +97,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
     status_trip = serializers.SerializerMethodField()
     available_seats = serializers.SerializerMethodField()
     is_full = serializers.SerializerMethodField()
+    is_reservable = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -110,6 +111,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
             "status_trip",
             "available_seats",
             "is_full",
+            "is_reservable",
         ]
 
     def get_status_trip(self, obj):
@@ -121,3 +123,22 @@ class AvailableTripSerializer(serializers.ModelSerializer):
 
     def get_is_full(self, obj):
         return self.get_available_seats(obj) == 0
+
+    def get_is_reservable(self, obj):
+        cutoff = timezone.now() + timedelta(hours=3)
+        current_tz = timezone.get_current_timezone()
+        departure = timezone.make_aware(
+            datetime.combine(obj.trip_date, obj.route.departure_time),
+            current_tz,
+        )
+        if departure <= cutoff:
+            return False
+        if obj.status != "CONFIRMADA":
+            return False
+        return self.get_available_seats(obj) > 0
+
+
+class ManageReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = "__all__"

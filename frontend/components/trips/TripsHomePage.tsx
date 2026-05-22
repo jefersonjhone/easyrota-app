@@ -14,6 +14,7 @@ type AvailableTrip = {
   bus_brand: string
   status_trip: string
   available_seats: number
+  is_reservable: boolean
 }
 
 export function TripsHomePage() {
@@ -102,9 +103,9 @@ export function TripsHomePage() {
                       <Button
                         variant="default"
                         size="sm"
-                        disabled={trip.available_seats <= 0}
+                        disabled={!trip.is_reservable}
                       >
-                        {trip.available_seats <= 0 ? 'Indisponível' : 'Reservar'}
+                        {!trip.is_reservable ? 'Indisponível' : 'Reservar'}
                       </Button>
                     </div>
                   </div>
