@@ -15,10 +15,12 @@ const AdminPage = () => (
      <section className="mx-auto grid w-full max-w-3xl grid-cols-1 sm:grid-cols-3 gap-6 px-4 sm:px-0">
         {actions.map((link) => (
           <Link to={link.route.to} key={link.title} 
-            className="w-full hover:scale-[1.02] transition-transform">
+            className="w-full hover:scale-[1.02] transition-transform group">
             <Card size="sm" key={link.title} className="flex flex-col overflow-hidden">
               <img src={link.background} alt={link.title}
-                className="w-full h-30 sm:aspect-video object-cover brightness-80 grayscale dark:brightness-40"/>
+                className="w-full h-30 sm:aspect-video object-cover 
+                  brightness-80 dark:brightness-40 grayscale group-hover:grayscale-0
+                  transition-all duration-300"/>
               <CardHeader>
                 <CardTitle>{link.title}</CardTitle>
                 <CardDescription>{link.description}</CardDescription>
