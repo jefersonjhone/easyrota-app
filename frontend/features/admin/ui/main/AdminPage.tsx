@@ -17,7 +17,7 @@ const AdminPage = () => (
         {actions.map((link) => (
           <Card size="sm" key={link.title} className="flex flex-col overflow-hidden rounded-lg">
             <img src={link.background} alt={link.title}
-              className="w-full h-40 sm:aspect-video object-cover brightness-80 grayscale dark:brightness-40"/>
+              className="w-full h-30 sm:aspect-video object-cover brightness-80 grayscale dark:brightness-40"/>
             <CardHeader>
               <CardTitle>{link.title}</CardTitle>
               <CardDescription>{link.description}</CardDescription>
