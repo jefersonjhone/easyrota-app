@@ -12,21 +12,6 @@ class ReservationSerializer(serializers.ModelSerializer):
         model = Reservation
         fields = ["trip"]
 
-    def validate_trip(self, trip):
-        """Ensures the trip still has 3 hours until departure time.
-        A seat must be reserved ONLY up to 3 hours before departure time."""
-
-        departure = timezone.make_aware(
-            datetime.combine(trip.trip_date, trip.route.departure_time)
-        )
-
-        limit = departure - timedelta(hours=3)
-
-        if timezone.now() >= limit:
-            raise serializers.ValidationError("Prazo de reserva encerrado.")
-
-        return trip
-
     # TODO: Implement priority business rules 
     # (students, civil servants, guests and punishments)
 
@@ -125,14 +110,6 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         return self.get_available_seats(obj) == 0
 
     def get_is_reservable(self, obj):
-        cutoff = timezone.now() + timedelta(hours=3)
-        current_tz = timezone.get_current_timezone()
-        departure = timezone.make_aware(
-            datetime.combine(obj.trip_date, obj.route.departure_time),
-            current_tz,
-        )
-        if departure <= cutoff:
-            return False
         if obj.status != "CONFIRMADA":
             return False
         return self.get_available_seats(obj) > 0
