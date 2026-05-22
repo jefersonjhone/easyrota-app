@@ -13,9 +13,10 @@ import { ConfirmDeleteDialog } from "@/lib/ui/delete-alert";
 type Props = {
   routes: RouteValues[];
   onRefresh?: () => void;
+  onInteract?: () => void;
 };
 
-export function RoutesView({ routes, onRefresh }: Props) {
+export function RoutesView({ routes, onRefresh, onInteract }: Props) {
   const [clicked, setClicked] = useState(false);
   const [cardId, setCardId] = useState(-1);
   const [editing, setEditing] = useState(false);
@@ -37,6 +38,9 @@ export function RoutesView({ routes, onRefresh }: Props) {
                         setClicked(true);
                         setCardId(route.id);
                         setEditing(false);
+                        if (onInteract) {
+                          onInteract();
+                        }
                       }}
                     >
                       <CardTitle>
