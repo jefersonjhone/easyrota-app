@@ -16,7 +16,7 @@ const AdminPage = () => (
         {actions.map((link) => (
           <Link to={link.route.to} key={link.title} 
             className="w-full hover:scale-[1.02] transition-transform">
-            <Card size="sm" key={link.title} className="flex flex-col overflow-hidden rounded-lg">
+            <Card size="sm" key={link.title} className="flex flex-col overflow-hidden">
               <img src={link.background} alt={link.title}
                 className="w-full h-30 sm:aspect-video object-cover brightness-80 grayscale dark:brightness-40"/>
               <CardHeader>
