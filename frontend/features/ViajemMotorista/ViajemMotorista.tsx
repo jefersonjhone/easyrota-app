@@ -1,5 +1,6 @@
 import {
   BusIcon,
+  CheckCircleIcon,
   QrCodeIcon,
   SignOutIcon,
   UserPlusIcon,
@@ -8,7 +9,7 @@ import {
 } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 
-import logo from '@assets/logo-light-mode.svg'
+
 import { apiFetch } from '@lib/api'
 import MotoraLayout from '@layout/Motora-layout'
 
@@ -175,16 +176,29 @@ async function getBusesFromApi() {
     .filter((bus): bus is DriverBusOption => Boolean(bus))
 }
 
+async function assignDriverToBus(busId: number) {
+  await apiFetch(`/buses/${busId}/assign_driver/`, { method: 'POST' })
+}
+
+async function unassignDriverFromBus() {
+  await apiFetch('/buses/unassign_driver/', { method: 'POST' })
+}
+
+async function finishTrip(tripId: string) {
+  await apiFetch(`/trips/${tripId}/finish_trip/`, { method: 'POST' })
+}
+
 export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   const [trip, setTrip] = useState<DriverTripDetail | null>(null)
   const [isTripLoading, setIsTripLoading] = useState(true)
   const [tripError, setTripError] = useState<string | null>(null)
   const [boardedPassengers, setBoardedPassengers] = useState<PassengerBoardItem[]>([])
-  const [confirmation, setConfirmation] = useState<'back' | 'bus' | null>(null)
+  const [confirmation, setConfirmation] = useState<'back' | 'bus' | 'finish' | null>(null)
   const [busOptions, setBusOptions] = useState<DriverBusOption[]>([])
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null)
-  const tripBusId = trip?.busId ?? null
-  const tripBusPlate = trip?.busPlate ?? ''
+  const [isBusActionLoading, setIsBusActionLoading] = useState(false)
+  const [isConfirmationLoading, setIsConfirmationLoading] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
   const selectedBus = busOptions.find((bus) => bus.id === selectedBusId) ?? null
   const activeCapacity = selectedBus?.capacity ?? trip?.capacity ?? 46
   const embarkedCount = boardedPassengers.length
@@ -193,8 +207,13 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   const occupancyPercent = Math.min((embarkedCount / activeCapacity) * 100, 100)
   const shouldWarnBeforeRequestingBus = (trip?.associatedBuses ?? 0) >= 2
   const hasReachedCapacity = embarkedCount >= activeCapacity
-  const whatsappRequestUrl =
-    'https://wa.me/?text=Solicito%20um%20novo%20onibus%20para%20esta%20viagem.'
+  const selectedBusPlate = selectedBus?.plate ?? trip?.busPlate ?? 'Sem onibus'
+  const whatsappAlertUrl = `https://wa.me/?text=${encodeURIComponent(
+    `Estou com problema no ônibus ${selectedBusPlate} na viajem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
+  )}`
+  const whatsappRequestUrl = `https://wa.me/?text=${encodeURIComponent(
+    `Solicito novo ônibus para a viajem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
+  )}`
 
   useEffect(() => {
     let isMounted = true
@@ -244,6 +263,37 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   useEffect(() => {
     let isMounted = true
 
+    const startWithoutAssignedBus = async () => {
+      setSelectedBusId(null)
+      setIsBusActionLoading(true)
+      setActionError(null)
+
+      try {
+        await unassignDriverFromBus()
+      } catch (error) {
+        console.warn('Nao foi possivel iniciar a viagem sem onibus selecionado:', error)
+
+        if (isMounted) {
+          setActionError('Nao foi possivel iniciar a tela sem onibus selecionado.')
+        }
+      } finally {
+        if (isMounted) {
+          setSelectedBusId(null)
+          setIsBusActionLoading(false)
+        }
+      }
+    }
+
+    startWithoutAssignedBus()
+
+    return () => {
+      isMounted = false
+    }
+  }, [tripId])
+
+  useEffect(() => {
+    let isMounted = true
+
     const loadBuses = async () => {
       try {
         const buses = await getBusesFromApi()
@@ -253,27 +303,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
         }
 
         setBusOptions(buses)
-        setSelectedBusId((currentBusId) => {
-          if (tripBusId && buses.some((bus) => bus.id === tripBusId)) {
-            return tripBusId
-          }
-
-          const matchingBus = tripBusPlate
-            ? buses.find((bus) => bus.plate === tripBusPlate)
-            : null
-
-          if (matchingBus) {
-            return matchingBus.id
-          }
-
-          if (tripBusId === null) {
-            return null
-          }
-
-          return currentBusId && buses.some((bus) => bus.id === currentBusId)
-            ? currentBusId
-            : null
-        })
+        setSelectedBusId(null)
       } catch (error) {
         console.warn('Nao foi possivel carregar os onibus cadastrados:', error)
 
@@ -289,7 +319,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
     return () => {
       isMounted = false
     }
-  }, [tripBusId, tripBusPlate])
+  }, [])
 
   const handleAddPassenger = () => {
     setBoardedPassengers((currentPassengers) => {
@@ -333,6 +363,73 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
     })
   }
 
+  const handleBusSelection = async (nextBusId: number | null) => {
+    const previousBusId = selectedBusId
+
+    setSelectedBusId(nextBusId)
+    setIsBusActionLoading(true)
+    setActionError(null)
+
+    try {
+      if (nextBusId) {
+        await assignDriverToBus(nextBusId)
+      } else {
+        await unassignDriverFromBus()
+      }
+    } catch (error) {
+      console.warn('Nao foi possivel atualizar o onibus selecionado:', error)
+      setSelectedBusId(previousBusId)
+      setActionError('Nao foi possivel atualizar o onibus selecionado.')
+    } finally {
+      setIsBusActionLoading(false)
+    }
+  }
+
+  const handleConfirmBack = async () => {
+    setIsConfirmationLoading(true)
+    setActionError(null)
+
+    try {
+      await unassignDriverFromBus()
+      window.location.href = '/app/driver/viagens'
+    } catch (error) {
+      console.warn('Nao foi possivel desassociar o motorista do onibus:', error)
+      setActionError('Nao foi possivel desassociar o motorista antes de voltar.')
+      setIsConfirmationLoading(false)
+    }
+  }
+
+  const handleFinishTrip = async () => {
+    if (!trip) {
+      return
+    }
+
+    setIsConfirmationLoading(true)
+    setActionError(null)
+
+    try {
+      await finishTrip(trip.id)
+      window.location.href = '/app/driver/viagens'
+    } catch (error) {
+      console.warn('Nao foi possivel finalizar a viagem:', error)
+      setActionError('Nao foi possivel finalizar a viagem.')
+      setIsConfirmationLoading(false)
+    }
+  }
+
+  const confirmationTitle =
+    confirmation === 'back'
+      ? 'Atenção ao voltar'
+      : confirmation === 'finish'
+        ? 'Finalizar viagem'
+        : 'Solicitar novo ônibus'
+  const confirmationDescription =
+    confirmation === 'back'
+      ? 'Se o motorista voltar, ele será desassociado da viagem.'
+      : confirmation === 'finish'
+        ? 'Deseja finalizar esta viagem? Esta acao marcara a viagem como concluida.'
+        : 'já existem 2 onibus associados a essa viajem, deseja solicitar mais?'
+
   if (isTripLoading) {
     return (
       <MotoraLayout user={{ name: 'Motorista', kind: 'driver' }}>
@@ -368,22 +465,52 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
       <section className="driver-trip-screen" aria-labelledby="driver-trip-screen-title">
         <div className="driver-trip-screen__panel">
           <header className="driver-trip-screen__header">
-            <button
-              type="button"
-              className="driver-trip-screen__back"
-              onClick={() => setConfirmation('back')}
-            >
-              <SignOutIcon aria-hidden="true" weight="bold" />
-              VOLTAR
-            </button>
-
-            <div className="driver-trip-screen__brand" aria-label="EasyRota">
-              <img src={logo} alt="" />
-              <span>
-                <strong>Easy</strong>Rota
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <button
+                type="button"
+                className="driver-trip-screen__back"
+                onClick={() => setConfirmation('back')}
+                disabled={isConfirmationLoading}
+              >
+                <SignOutIcon aria-hidden="true" weight="bold" />
+                VOLTAR
+              </button>
+              <button
+                type="button"
+                className="driver-trip-screen__back"
+                onClick={() => setConfirmation('finish')}
+                disabled={isConfirmationLoading}
+                style={{
+                  borderColor: 'var(--primary)',
+                  background: 'var(--primary)',
+                  color: 'var(--primary-foreground)',
+                }}
+              >
+                <CheckCircleIcon aria-hidden="true" weight="bold" />
+                Finalizar viagem
+              </button>
             </div>
+
+            
           </header>
+
+          {actionError ? (
+            <p
+              role="alert"
+              style={{
+                margin: 0,
+                borderBottom: '1px solid color-mix(in oklch, #dc2626 28%, var(--border))',
+                background: 'color-mix(in oklch, #dc2626 10%, var(--background))',
+                padding: '0.75rem 1rem',
+                color: '#b91c1c',
+                fontSize: '0.86rem',
+                fontWeight: 800,
+                textAlign: 'center',
+              }}
+            >
+              {actionError}
+            </p>
+          ) : null}
 
           <div className="driver-trip-screen__body">
             <section className="driver-trip-control" aria-labelledby="driver-trip-screen-title">
@@ -399,10 +526,11 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                     <select
                       aria-label="Selecionar onibus da viagem"
                       value={selectedBusId ?? ''}
+                      disabled={isBusActionLoading}
                       onChange={(event) => {
                         const nextBusId = event.target.value
 
-                        setSelectedBusId(nextBusId ? Number(nextBusId) : null)
+                        handleBusSelection(nextBusId ? Number(nextBusId) : null)
                       }}
                     >
                       <option value="">Sem onibus</option>
@@ -440,6 +568,8 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                   onClick={() => {
                     if (shouldWarnBeforeRequestingBus) {
                       setConfirmation('bus')
+                    } else {
+                      window.open(whatsappRequestUrl, '_blank', 'noreferrer')
                     }
                   }}
                 >
@@ -482,7 +612,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
 
           <a
             className="driver-trip-alert-button"
-            href={whatsappRequestUrl}
+            href={whatsappAlertUrl}
             target="_blank"
             rel="noreferrer"
             aria-label="Enviar alerta pelo WhatsApp"
@@ -495,20 +625,42 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
           <div className="driver-trip-confirmation" role="dialog" aria-modal="true">
             <div className="driver-trip-confirmation__card">
               <WarningCircleIcon aria-hidden="true" weight="fill" />
-              <h2>
-                {confirmation === 'back' ? 'Atenção ao voltar' : 'Solicitar novo ônibus'}
-              </h2>
-              <p>
-                {confirmation === 'back'
-                  ? 'Se o motorista voltar, ele será desassociado da viagem.'
-                  : 'já existem 2 onibus associados a essa viajem, deseja solicitar mais?'}
-              </p>
+              <h2>{confirmationTitle}</h2>
+              <p>{confirmationDescription}</p>
+              {actionError ? (
+                <p role="alert" style={{ color: '#b91c1c', fontWeight: 800 }}>
+                  {actionError}
+                </p>
+              ) : null}
               <div className="driver-trip-confirmation__actions">
-                <button type="button" onClick={() => setConfirmation(null)}>
+                <button
+                  type="button"
+                  onClick={() => setConfirmation(null)}
+                  disabled={isConfirmationLoading}
+                >
                   Cancelar
                 </button>
                 {confirmation === 'back' ? (
-                  <a href="/app/driver/viagens">OK</a>
+                  <button
+                    type="button"
+                    onClick={handleConfirmBack}
+                    disabled={isConfirmationLoading}
+                  >
+                    OK
+                  </button>
+                ) : confirmation === 'finish' ? (
+                  <button
+                    type="button"
+                    onClick={handleFinishTrip}
+                    disabled={isConfirmationLoading}
+                    style={{
+                      borderColor: 'var(--primary)',
+                      background: 'var(--primary)',
+                      color: 'var(--primary-foreground)',
+                    }}
+                  >
+                    OK
+                  </button>
                 ) : (
                   <a href={whatsappRequestUrl} target="_blank" rel="noreferrer">
                     OK
