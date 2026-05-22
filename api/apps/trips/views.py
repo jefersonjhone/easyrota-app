@@ -57,7 +57,9 @@ class BusViewSet(viewsets.ModelViewSet):
         driver = request.user.driver_profile
         bus_count = Bus.objects.filter(driver=driver).update(driver=None)
         return Response(
-            {"status": f"Motorista desassociado de {bus_count} onibus com sucesso."}, status=status.HTTP_200_OK
+            {
+                "status": f"Motorista desassociado de {bus_count} onibus com sucesso."
+            }, status=status.HTTP_200_OK
         )
 
 
