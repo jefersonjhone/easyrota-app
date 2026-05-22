@@ -53,16 +53,14 @@ export function LoginForm() {
   } | null
 
 	const onSubmit = async (data: Schema) => {
-		try {
-			const response = await loginMutation.mutateAsync(data)
-			const isAdmin = !!response.user?.admin_profile
+		const response = await loginMutation.mutateAsync(data)
+		const isAdmin = !!response.user?.admin_profile
 
-			if (isAdmin) {
-			navigate({ to: AdminRoute.to, replace: true })
-			} else {
-			navigate({ to: AppRoute.to, replace: true })
-			}
-		} catch {}
+		if (isAdmin) {
+		navigate({ to: AdminRoute.to, replace: true })
+		} else {
+		navigate({ to: AppRoute.to, replace: true })
+		}
 	}
 
 	return (
