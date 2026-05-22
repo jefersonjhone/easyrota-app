@@ -48,6 +48,10 @@ export function LoginForm() {
   const { register, handleSubmit, formState: state } = form
   const isSubmitting = state.isSubmitting || loginMutation.isPending
 
+  const error = loginMutation.error as {
+	detail?: string[]
+  } | null
+
 	const onSubmit = async (data: Schema) => {
 		const response = await loginMutation.mutateAsync(data)
 		const isAdmin = !!response.user?.admin_profile
@@ -94,6 +98,12 @@ export function LoginForm() {
 						</Field>
 					</FieldGroup>
 				</form>
+
+				{error?.detail?.[0] && (
+				<p className="mt-3 text-red-700">
+					{error.detail[0]}
+				</p>
+				)}
 			</CardContent>
       <CardFooter className="flex-col">
         <Button form="login" type="submit" className="w-full cursor-pointer" disabled={isSubmitting}>
