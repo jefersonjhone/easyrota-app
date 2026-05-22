@@ -39,7 +39,7 @@ export default function RoutesPage() {
           </Button>
         )}
         <section className="mx-auto grid w-full max-w-7xl grid-cols-1 sm:grid-cols-1 gap-4 px-4 sm:px-0">
-          <RoutesView routes={data} onRefresh={() => {refetch()}}/>
+          <RoutesView routes={data} onRefresh={() => {refetch()}} onInteract={()=>{setCreating(false)}}/>
         </section>
       </section>
     </>
