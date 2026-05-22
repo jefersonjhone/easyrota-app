@@ -11,7 +11,8 @@ const AdminPage = () => (
   <AppLayout>
     <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">Painel de Controle</h1>
     <Separator className="max-w-xl mx-auto" />
-     <section className="mx-auto grid w-full max-w-3xl grid-cols-1 sm:grid-cols-3 gap-6 px-4 sm:px-0">
+     <section className="mx-auto grid w-full max-w-5xl 
+        grid-cols-1 min-[430px]:grid-cols-2 min-[600px]:grid-cols-3 gap-6 px-4">
         {actions.map((link) => (
           <ActionCard
             route={link.route.to}
