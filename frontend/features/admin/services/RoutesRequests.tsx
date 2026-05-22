@@ -52,7 +52,7 @@ export async function DeleteRoute(routeId: number) {
   })
 }
 
-export async function Updateroute(routeId: number, values: CreateRouteValues): Promise<CreateRouteResponse> {
+export async function UpdateRoute(routeId: number, values: CreateRouteValues): Promise<CreateRouteResponse> {
   const response: CreateRouteResponse = await apiFetch("/routes/"+routeId+"/", {
     method: "PUT",
     body: JSON.stringify(values),

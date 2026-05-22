@@ -1,7 +1,6 @@
 import type { RouteValues } from "@/features/admin/hooks/useRoutes";
 import { Button } from "@/lib/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/lib/ui/card";
-import { Separator } from "@/lib/ui/separator";
 import { useState } from "react";
 import { DeleteRoute } from "../../services/RoutesRequests";
 
@@ -88,10 +87,6 @@ export function RoutesView({ routes, onRefresh }: Props) {
   }
   return (
     <>
-      <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">
-        Rotas
-      </h1>
-      <Separator className="max-w-xl mx-auto" />
       <p className="text-center text-sm sm:text-base font-heading">
         Nenhuma rota disponível
       </p>
