@@ -30,7 +30,7 @@ class BusViewSet(viewsets.ModelViewSet):
         """Allows full access for administrators and only GET requests for drivers."""
         if self.action in ["list", "retrieve"]:
             self.permission_classes = [permissions.IsAdminUser | IsDriverReadOnly]
-        elif self.action == "assign_driver":
+        elif self.action in ["assign_driver", "unassign_driver"]:
             self.permission_classes = [IsDriver]
         else:
             self.permission_classes = [permissions.IsAdminUser]
@@ -44,12 +44,22 @@ class BusViewSet(viewsets.ModelViewSet):
     def assign_driver(self, request, pk=None):
         bus = self.get_object()
         driver = request.user.driver_profile
-
+        Bus.objects.filter(driver=driver).update(driver=None)
         bus.driver = driver
         bus.save()
 
         return Response(
             {"status": "Motorista associado com sucesso."}, status=status.HTTP_200_OK
+        )
+    
+    @action(detail=False, methods=["post"])
+    def unassign_driver(self, request):
+        driver = request.user.driver_profile
+        bus_count = Bus.objects.filter(driver=driver).update(driver=None)
+        return Response(
+            {
+                "status": f"Motorista desassociado de {bus_count} onibus com sucesso."
+            }, status=status.HTTP_200_OK
         )
 
 
@@ -76,12 +86,20 @@ class TripViewSet(viewsets.ModelViewSet):
     serializer_class = TripSerializer
     filter_backends = [FilterTripViewSet]
         
+    @action(detail=True, methods=["post"])
+    def finish_trip(self, request, pk=None):
+        # here we should verify if status trips already is 'concluida'
+        Trip.objects.filter(id=pk).update(status="CONCLUÍDA")
+        return Response("trip concluída com sucesso", status.HTTP_200_OK)
+
     def get_queryset(self):
         return Trip.objects.joinable_by_driver(self.request.user)
     
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
-            self.permission_classes = [permissions.IsAdminUser | IsDriverReadOnly]
+            self.permission_classes = [permissions.IsAuthenticated]
+        elif self.action in ["finish_trip"]: 
+            self.permission_classes = [IsDriver]
         else:
             self.permission_classes = [permissions.IsAdminUser]
 
