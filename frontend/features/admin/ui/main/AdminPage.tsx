@@ -34,9 +34,9 @@ type ActionCardProps = {
 
 const ActionCard: React.FC<ActionCardProps> = ({ route, title, description, background }) => (
   <Link to={route} key={title} 
-    className="w-full hover:scale-[1.02] transition-transform group">
+    className="w-full h-full hover:scale-[1.02] transition-transform group">
     <Card size="sm" key={title} 
-      className="flex flex-col overflow-hidden 
+      className="flex flex-col overflow-hidden h-full
         ring-0 ring-primary 
         group-hover:ring-1 transition-all duration-300 ease-in-out">
       <img src={background} alt={title}
