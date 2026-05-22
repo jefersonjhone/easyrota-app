@@ -12,11 +12,6 @@ import { Separator } from '@ui/separator'
 const AdminPage = () => (
   <AppLayout>
     <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">Painel de Controle</h1>
-    <p className="text-center text-sm sm:text-base font-heading">
-      Bem-vindo ao centro de gestão {" "}
-      <span>EasyRota</span> {" "}
-      Uninfra
-    </p>
     <Separator className="max-w-xl mx-auto" />
      <section className="mx-auto grid w-full max-w-3xl grid-cols-1 sm:grid-cols-2 gap-6 px-4 sm:px-0">
         {actions.map((link) => (
