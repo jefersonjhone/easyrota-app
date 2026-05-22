@@ -20,7 +20,7 @@ const AdminPage = () => (
     <Separator className="max-w-xl mx-auto" />
      <section className="mx-auto grid w-full max-w-3xl grid-cols-1 sm:grid-cols-2 gap-6 px-4 sm:px-0">
         {actions.map((link) => (
-          <Card key={link.title} className="flex flex-col overflow-hidden rounded-lg">
+          <Card size="sm" key={link.title} className="flex flex-col overflow-hidden rounded-lg">
             <img src={link.background} alt={link.title}
               className="w-full h-40 sm:aspect-video object-cover brightness-80 grayscale dark:brightness-40"/>
             <CardHeader>
