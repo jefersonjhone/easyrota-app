@@ -2,11 +2,15 @@ import { Field, FieldLabel } from "@/lib/ui/field";
 import { Button } from "@ui/button";
 import { Separator } from "@ui/separator";
 import { Input } from "@/lib/ui/input";
-import { useCreateRouteMutation } from "@features/admin/hooks/useRoutes";
+import {
+  useCreateRouteMutation,
+  type RouteValues,
+} from "@features/admin/hooks/useRoutes";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import HintInvalid from "@/features/auth/ui/HintInvalid";
+import type { CreateRouteValues } from "../../services/RoutesRequests";
 
 const schema = z.object({
   origin: z.string().nonempty("Informe a origem"),
@@ -19,18 +23,30 @@ type Schema = z.infer<typeof schema>;
 
 type Props = {
   onCreate?: () => void;
+  title?: string;
+  routeValues?: RouteValues;
+  buttonCaption?: string;
+  buttonCaptionLoad?: string;
+  onSend?: (values: CreateRouteValues) => void;
 };
 
-export function RouteForm({ onCreate }: Props) {
+export function RouteForm({
+  onCreate,
+  title,
+  routeValues,
+  buttonCaption,
+  buttonCaptionLoad,
+  onSend,
+}: Props) {
   const createRouteMutation = useCreateRouteMutation();
   const form = useForm<Schema>({
     mode: "onChange",
     resolver: zodResolver(schema),
     defaultValues: {
-      origin: "",
-      destiny: "",
-      departure_time: "",
-      arrival_time: "",
+      origin: routeValues ? routeValues.origin : "",
+      destiny: routeValues ? routeValues.destiny : "",
+      departure_time: routeValues ? routeValues.departure_time : "",
+      arrival_time: routeValues ? routeValues.arrival_time : "",
     },
   });
 
@@ -38,25 +54,31 @@ export function RouteForm({ onCreate }: Props) {
   const isSubmitting = state.isSubmitting || createRouteMutation.isPending;
 
   const onSubmit = async (data: Schema) => {
-    await createRouteMutation.mutateAsync(data);
+    if (onSend ) {
+      const values: CreateRouteValues = {
+        origin: data.origin,
+        destiny: data.destiny,
+        departure_time: data.departure_time,
+        arrival_time: data.arrival_time,
+      };
+      onSend(values);
+    } else {
+      await createRouteMutation.mutateAsync(data);
+    }
     if (onCreate) {
       onCreate();
     }
   };
 
-  if (createRouteMutation.isSuccess) {
-    alert("Rota Criada!");
-  }
-
   return (
     <>
       <h1 className="text-center text-2xl font-heading font-medium">
-        Configurar Nova Rota
+        {title ? title : "Configurar Nova Rota"}
       </h1>
       <Separator className="max-w-xl mx-auto " />
       <Field className="px-4 text-2xl">
         <form id="createRoute" onSubmit={handleSubmit(onSubmit)}>
-          <section >
+          <section>
             <FieldLabel>PONTO DE PARTIDA</FieldLabel>
             <Input
               id="origin"
@@ -94,6 +116,7 @@ export function RouteForm({ onCreate }: Props) {
                 type="time"
                 step="60"
                 placeholder="Ex: 10:30 AM"
+                defaultValue={routeValues ? routeValues.arrival_time : ""}
                 required
                 {...register("arrival_time")}
               ></Input>
@@ -107,7 +130,13 @@ export function RouteForm({ onCreate }: Props) {
           className="w-full cursor-pointer"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "PUBLICANDO..." : "PUBLICAR ROTA NO SISTEMA"}
+          {isSubmitting
+            ? buttonCaptionLoad
+              ? buttonCaptionLoad
+              : "PUBLICANDO..."
+            : buttonCaption
+              ? buttonCaption
+              : "PUBLICAR ROTA NO SISTEMA"}
         </Button>
       </Field>
     </>
