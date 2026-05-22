@@ -8,6 +8,7 @@ import {
   type CreateRouteValues,
 } from "../../services/RoutesRequests";
 import { RouteForm } from "./RoutesForm";
+import { ConfirmDeleteDialog } from "@/lib/ui/delete-alert";
 
 type Props = {
   routes: RouteValues[];
@@ -35,6 +36,7 @@ export function RoutesView({ routes, onRefresh }: Props) {
                       onClick={() => {
                         setClicked(true);
                         setCardId(route.id);
+                        setEditing(false);
                       }}
                     >
                       <CardTitle>
@@ -51,7 +53,8 @@ export function RoutesView({ routes, onRefresh }: Props) {
                     <div className="grid grid-cols-2">
                       {clicked && route.id === cardId && (
                         <Button
-                          className="w-full max-w-xl mx-auto "
+                          variant={"ghost"}
+                          className="w-full max-w-xl mx-auto"
                           onClick={async () => {
                             setEditing(true);
                           }}
@@ -60,24 +63,16 @@ export function RoutesView({ routes, onRefresh }: Props) {
                         </Button>
                       )}
                       {clicked && route.id === cardId && (
-                        <Button
-                          className="w-full max-w-xl mx-auto bg-destructive hover:bg-destructive/80"
-                          onClick={async () => {
-                            const resp = confirm(
-                              "Tem certeza que quer apagar a rota?",
-                            );
-                            if (resp) {
-                              await DeleteRoute(cardId);
-                              if (onRefresh) {
-                                onRefresh();
-                              }
+                        <ConfirmDeleteDialog
+                          onConfirm={async () => {
+                            await DeleteRoute(cardId);
+                            if (onRefresh) {
+                              onRefresh();
                             }
                             setClicked(false);
                             setCardId(-1);
                           }}
-                        >
-                          Apagar
-                        </Button>
+                        />
                       )}
                     </div>
                   </Card>
@@ -91,7 +86,7 @@ export function RoutesView({ routes, onRefresh }: Props) {
                     await UpdateRoute(route.id, values);
                     setClicked(false);
                     setCardId(-1);
-                    setEditing(false)
+                    setEditing(false);
                     if (onRefresh) {
                       onRefresh();
                     }
