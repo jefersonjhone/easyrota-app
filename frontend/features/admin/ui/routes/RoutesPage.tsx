@@ -1,5 +1,6 @@
 // Components
 import { useShowRoutes } from "@/features/admin/hooks/useRoutes";
+import { AdminLayout } from '@/features/admin/ui/Layout'
 import { RoutesView } from "./RoutesView";
 import { RouteForm } from "./RoutesForm";
 import { Card } from "@/lib/ui/card";
@@ -13,7 +14,7 @@ export default function RoutesPage() {
 
   console.log(data);
   return (
-    <>
+    <AdminLayout>
       <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">
         Rotas
       </h1>
@@ -42,6 +43,6 @@ export default function RoutesPage() {
           <RoutesView routes={data} onRefresh={() => {refetch()}} onInteract={()=>{setCreating(false)}}/>
         </section>
       </section>
-    </>
+    </AdminLayout>
   );
 }

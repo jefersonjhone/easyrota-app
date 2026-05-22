@@ -6,7 +6,7 @@ import { Input } from "@/lib/ui/input"
 import { Label } from "@/lib/ui/label"
 
 import { apiFetch } from '@/lib/api'
-import AppLayout from '@/lib/layout/app-layout'
+import { AdminLayout } from '@/features/admin/ui/Layout'
 
 interface Driver {
   id: string
@@ -177,7 +177,7 @@ export function ManageDriversPage() {
   }
 
   return (
-    <AppLayout>
+    <AdminLayout>
       <div className="p-6">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Motoristas</h1>
@@ -427,6 +427,6 @@ export function ManageDriversPage() {
           )}
         </div>
       </div>
-    </AppLayout>
+    </AdminLayout>
   )
 }
