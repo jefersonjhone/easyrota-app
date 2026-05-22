@@ -88,7 +88,6 @@ class TripViewSet(viewsets.ModelViewSet):
         
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
-        # here we should verify if status trips already is 'concluida'
         Trip.objects.filter(id=pk).update(status="CONCLUÍDA")
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
 
@@ -114,8 +113,7 @@ class MyNextTripView(APIView):
         Check the schedules and update the trip status in the database, 
         relieving the Serializer of this responsibility.
         """
-        
-        if trip.status in ["CANCELADA", "RISCO DE CANCELAMENTO"]:
+        if trip.status in ["CONCLUÍDA", "CANCELADA", "RISCO DE CANCELAMENTO"]:
             return trip
 
         now = timezone.now()
@@ -132,12 +130,17 @@ class MyNextTripView(APIView):
         if expected_arr <= expected_dep:
             expected_arr += timedelta(days=1)
 
-        if now < expected_dep:
+        total_duration = expected_arr - expected_dep
+        
+        if not trip.departure_timestamp:
             real_status = "CONFIRMADA"
-        elif expected_dep <= now < expected_arr:
-            real_status = "EM ANDAMENTO"
         else:
-            real_status = "CONCLUÍDA"
+            real_end = trip.departure_timestamp + total_duration
+            
+            if now >= real_end:
+                real_status = "CONCLUÍDA"
+            else:
+                real_status = "EM ANDAMENTO"
 
         if trip.status != real_status:
             trip.status = real_status
@@ -163,19 +166,20 @@ class MyNextTripView(APIView):
             ).exclude(status__in=["CONCLUÍDA", "CANCELADA"])
             
         else:
-            user_reservation_filter = (
+            user_trip_filter = (
                 Q(reservation__student__user=request.user) | 
-                Q(reservation__civil_servant__user=request.user)
+                Q(reservation__civil_servant__user=request.user) |
+                Q(bus__driver__user=request.user)
             )
             
             base_running_query = Trip.objects.filter(
-                user_reservation_filter,
+                user_trip_filter,
                 status="EM ANDAMENTO", 
                 trip_date__gte=yesterday
             )
             
             base_next_query = Trip.objects.filter(
-                user_reservation_filter,
+                user_trip_filter,
                 trip_date__gte=today
             ).exclude(status__in=["CONCLUÍDA", "CANCELADA"])
 

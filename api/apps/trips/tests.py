@@ -1,4 +1,3 @@
-import pytest
 from datetime import time, timedelta
 
 from django.contrib.auth import get_user_model
@@ -375,18 +374,19 @@ class TripAPITestCase(APITestCase):
         response = self.client.post(self.trip_list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @pytest.mark.skip(reason="Temporarily disabled until fix")
     def test_current_trip_screen_endpoint(self):
-        """Check if the view prepared for the front-end returns the
-        data with the correct structure."""
+        """
+        Check if the view prepared for the front-end returns the
+        data with the correct structure.
+        """
 
         self.client.force_authenticate(user=self.driver_user)
 
-        trip = Trip.objects.create(
+        Trip.objects.create(
             trip_date=self.today, bus=self.bus, route=self.route_morning
         )
 
-        url = reverse("trip-current-screen", kwargs={"pk": trip.id})
+        url = reverse("trip-current")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -402,7 +402,9 @@ class TripAPITestCase(APITestCase):
 
 class CurrentTripPassengerAPITests(APITestCase):
     def setUp(self):
-        """Setup focado no Passageiro e suas Reservas."""
+        """
+        Setup focused on the passenger and their reservations.
+        """
         self.url = reverse("trip-current")
 
         self.admin_user = CustomUser.objects.create_superuser(
@@ -443,7 +445,9 @@ class CurrentTripPassengerAPITests(APITestCase):
         )
 
     def test_no_upcoming_trips_returns_404(self):
-        """Deve retornar 404 se o passageiro não tiver nenhuma viagem próxima."""
+        """
+        It should return 404 if the passenger has no upcoming trips.
+        """
         self.client.force_authenticate(user=self.passenger_user)
         response = self.client.get(self.url)
         
@@ -451,7 +455,9 @@ class CurrentTripPassengerAPITests(APITestCase):
         self.assertEqual(response.data["detail"], "Nenhuma viagem próxima.")
 
     def test_ignores_trips_without_user_reservation(self):
-        """Garante que um passageiro não veja a viagem atual de outra pessoa."""
+        """
+        It ensures that one passenger cannot see another person's current trip.
+        """
         
         trip = Trip.objects.create(
             trip_date=timezone.now().date(),
@@ -472,8 +478,10 @@ class CurrentTripPassengerAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_returns_trip_in_progress(self):
-        """Deve retornar a viagem se o usuário 
-        tiver reserva e ela estiver em andamento."""
+        """
+        The trip should be returned if the user 
+        has a reservation and it is in progress.
+        """
         
         trip = Trip.objects.create(
             trip_date=timezone.now().date(),
@@ -493,18 +501,19 @@ class CurrentTripPassengerAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], trip.id)
 
-    @pytest.mark.skip(reason="Temporarily disabled until fix")
     def test_updates_status_automatically(self):
         """
-        Testa o método _update_trip_status da View.
-        Se a viagem está 'CONFIRMADA', mas o horário atual já passou do horário 
-        de partida, a view deve atualizar automaticamente para 'EM ANDAMENTO'.
+       Test the View's _update_trip_status method.
+        If the trip is 'CONFIRMED', but the current 
+        time has already passed the departure time, 
+        the view should automatically update to 'IN PROGRESS'.
         """
         trip = Trip.objects.create(
             trip_date=timezone.now().date(),
             bus=self.bus,
             route=self.route_active,
-            status="CONFIRMADA"
+            status="CONFIRMADA",
+            departure_timestamp=timezone.now() - timedelta(minutes=5)
         )
         Reservation.objects.create(
             trip=trip, 
@@ -521,11 +530,10 @@ class CurrentTripPassengerAPITests(APITestCase):
         trip.refresh_from_db()
         self.assertEqual(trip.status, "EM ANDAMENTO")
 
-    @pytest.mark.skip(reason="Temporarily disabled until fix")
     def test_percentage_logic_with_departure_timestamp(self):
         """
-        Testa se o Serializer calcula a porcentagem corretamente com base
-        no momento em que o motorista de fato apertou 'Iniciar Viagem'.
+        Tests whether the Serializer calculates the percentage correctly 
+        based on the moment the driver actually pressed 'Start Trip'.
         """
         now = timezone.now()
         

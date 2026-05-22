@@ -302,13 +302,6 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     def get_minutes_remaining(self, obj):
         if obj.status != "EM ANDAMENTO":
             return None
-        
-        if obj.status in [
-            "CONCLUÍDA", 
-            "CANCELADA", 
-            "RISCO DE CANCELAMENTO"
-            ] or obj.arrival_timestamp:
-            return 0
 
         now = timezone.now()
         start_time, total_duration = self._get_trip_metrics(obj)
