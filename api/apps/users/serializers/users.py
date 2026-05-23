@@ -115,7 +115,7 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
         if admin_profile is not None:
             return "ADMIN"
 
-        civil_servant = getattr(obj, "civil_servant", None)
+        civil_servant = getattr(obj, "civil_servant_profile", None)
         if civil_servant is not None:
             return "CIVIL-SERVANT"
 
@@ -123,7 +123,7 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
         if student_profile is not None:
             return "STUDENT"
 
-        driver = getattr(obj, "driver", None)
+        driver = getattr(obj, "driver_profile", None)
         if driver is not None:
             return "DRIVER"
 
