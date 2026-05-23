@@ -103,42 +103,36 @@ class CreateSubAdminSerializer(serializers.Serializer):
 class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
     """Authenticated user representation, including admin hierarchy when available."""
 
-    profile = serializers.SerializerMethodField()
+    profile_type = serializers.SerializerMethodField()
+    admin_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ("id", "email", "full_name", "profile")
+        fields = ("id", "email", "full_name", "profile_type", "admin_profile")
 
-    def get_profile(self, obj):
-        print("testando se o bo e aqui")
+    def get_profile_type(self, obj):
         admin_profile = getattr(obj, "admin_profile", None)
         if admin_profile is not None:
-            return {
-                "role": "admin",
-                "data":  AdministratorProfileSerializer(admin_profile).data
-            }
+            return "ADMIN"
 
         civil_servant = getattr(obj, "civil_servant", None)
         if civil_servant is not None:
-            return {
-                "role": "civil-servant",
-                "data":  CivilServantProfileSerializer(civil_servant).data
-            }
+            return "CIVIL-SERVANT"
 
         student_profile = getattr(obj, "student_profile", None)
         if student_profile is not None:
-            return {
-                "role": "student",
-                "data":  StudentProfileSerializer(student_profile).data
-            }
+            return "STUDENT"
 
         driver = getattr(obj, "driver", None)
         if driver is not None:
-            return {
-                "role": "driver",
-                "data":  DriverSerializer(driver).data
-            }
+            return "DRIVER"
 
+        return None
+
+    def get_admin_profile(self, obj):
+        admin_profile = getattr(obj, "admin_profile", None)
+        if admin_profile is not None:
+            return AdministratorProfileSerializer(admin_profile).data
         return None
 
 
