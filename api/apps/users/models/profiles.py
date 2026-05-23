@@ -9,6 +9,10 @@ class ProfileType(models.TextChoices):
 
     CIVIL_SERVANT = ("civil-servant", "Civil servant")
 
+    ADMIN = "admin", "Admin"
+
+    DRIVER = "driver", "Driver"
+
 
 class StudentProfile(models.Model):
     """Profile data specific to student accounts."""

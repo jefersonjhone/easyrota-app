@@ -59,7 +59,8 @@ class CreateSubAdminSerializer(serializers.Serializer):
     def validate_email(self, value):
         email = value.strip().lower()
         if CustomUser.objects.filter(email=email).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+            raise serializers.ValidationError(
+                "A user with this email already exists.")
         return email
 
     def validate_level(self, value):
@@ -73,7 +74,8 @@ class CreateSubAdminSerializer(serializers.Serializer):
     def create(self, validated_data):
         creator_profile = self.context["request"].user.admin_profile
         password = validated_data.pop("password")
-        level = validated_data.pop("level", AdministratorProfile.Level.SUBADMIN)
+        level = validated_data.pop(
+            "level", AdministratorProfile.Level.SUBADMIN)
         role = validated_data.pop("role")
 
         user = CustomUser.objects.create_user(
@@ -91,27 +93,47 @@ class CreateSubAdminSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         return {
-            "user": AuthenticatedUserWithAdminProfileSerializer(instance["user"]).data,
+            "user": AuthenticatedUserWithProfileSerializer(instance["user"]).data,
             "admin_profile": AdministratorProfileSerializer(
                 instance["admin_profile"]
             ).data,
         }
 
 
-class AuthenticatedUserWithAdminProfileSerializer(serializers.ModelSerializer):
+class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
     """Authenticated user representation, including admin hierarchy when available."""
 
+    profile_type = serializers.SerializerMethodField()
     admin_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ("id", "email", "full_name", "admin_profile")
+        fields = ("id", "email", "full_name", "profile_type", "admin_profile")
+
+    def get_profile_type(self, obj):
+        admin_profile = getattr(obj, "admin_profile", None)
+        if admin_profile is not None:
+            return "ADMIN"
+
+        civil_servant = getattr(obj, "civil_servant_profile", None)
+        if civil_servant is not None:
+            return "CIVIL-SERVANT"
+
+        student_profile = getattr(obj, "student_profile", None)
+        if student_profile is not None:
+            return "STUDENT"
+
+        driver = getattr(obj, "driver_profile", None)
+        if driver is not None:
+            return "DRIVER"
+
+        return None
 
     def get_admin_profile(self, obj):
         admin_profile = getattr(obj, "admin_profile", None)
-        if admin_profile is None:
-            return None
-        return AdministratorProfileSerializer(admin_profile).data
+        if admin_profile is not None:
+            return AdministratorProfileSerializer(admin_profile).data
+        return None
 
 
 class DriverSerializer(serializers.ModelSerializer):
@@ -122,53 +144,55 @@ class DriverSerializer(serializers.ModelSerializer):
         required=False,
         style={'input_type': 'password'}
     )
+
     class Meta:
         model = DriverProfile
         fields = [
             'id', 'full_name', 'email', 'password',
-            'cnh', 
+            'cnh',
         ]
-        
+
     def create(self, validated_data):
         print(validated_data)
         user_data = validated_data.pop('user')
-        password = validated_data.pop('password')  
-    
+        password = validated_data.pop('password')
+
         user = CustomUser.objects.create_user(
             full_name=user_data['full_name'],
             email=user_data['email'],
             password=password
         )
-        driver_profile = DriverProfile.objects.create(user=user, **validated_data)
+        driver_profile = DriverProfile.objects.create(
+            user=user, **validated_data)
         return driver_profile
-        
+
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", {})
-    
+
         user = instance.user
-    
+
         user.email = user_data.get("email", user.email)
         user.full_name = user_data.get("full_name", user.full_name)
-    
+
         password = user_data.pop("password", None)
 
         if password:
             user.set_password(password)
         user.save()
-            
+
         instance.cnh = validated_data.get("cnh", instance.cnh)
-    
+
         instance.save()
-    
+
         return instance
-        
+
     def validate(self, attrs):
         if self.instance is None and not attrs.get("password"):
             raise serializers.ValidationError({
                 "password": "This field is required."
             })
         return attrs
-            
+
     def validate_cnh(self, value):
         validate_cnh(value)
         return value

@@ -31,7 +31,7 @@ from ..serializers.auth import (
     StudentRegistrationSerializer,
     Verify2FASerializer,
 )
-from ..serializers.users import AuthenticatedUserWithAdminProfileSerializer
+from ..serializers.users import AuthenticatedUserWithProfileSerializer
 
 logger = logging.getLogger("api")
 
@@ -113,6 +113,8 @@ class LoginView(generics.GenericAPIView):
 
         user = serializer.user
 
+        print("user: ", type(user))
+
         refresh = RefreshToken.for_user(user)
 
         access_token = str(refresh.access_token)
@@ -123,7 +125,7 @@ class LoginView(generics.GenericAPIView):
             {
                 # may be should returned inside a token payload,
                 # if dont have sensitive data
-                "user": AuthenticatedUserWithAdminProfileSerializer(user).data,
+                "user": AuthenticatedUserWithProfileSerializer(user).data,
                 "tokens": {
                     "access": access_token,
                 },
