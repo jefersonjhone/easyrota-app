@@ -56,3 +56,8 @@ run = "poetry run python manage.py migrate"
 description = "Create new migration files based on model changes"
 dir = "api"
 run = "poetry run python manage.py makemigrations"
+
+[tasks."api.createsuperuser"]
+description = "Create Django superuser"
+dir = "api"
+run = "poetry run python manage.py createsuperuser"
