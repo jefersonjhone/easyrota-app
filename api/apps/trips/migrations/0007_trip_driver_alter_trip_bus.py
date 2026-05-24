@@ -7,8 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("trips", "0006_alter_trip_status"),
-        ("users", "0007_alter_driverprofile_cnh"),
+        ("trips", "0006_alter_trip_status")
     ]
 
     operations = [
