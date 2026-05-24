@@ -15,7 +15,7 @@ export type Trip = {
   status: TripStatus
   departure_timestamp: string | null
   arrival_timestamp: string | null
-  bus: number
+  bus: number | null
   route: number
 }
 

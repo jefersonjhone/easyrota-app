@@ -1,6 +1,3 @@
-from datetime import datetime, timedelta
-
-from django.utils import timezone
 from rest_framework import serializers
 
 from ..trips.models import Trip

@@ -40,7 +40,8 @@ class Route(models.Model):
 
 
 class Trip(models.Model):
-    """Represents a scheduled trip instance, linking a specific bus and route
+    """
+    Represents a scheduled trip instance, linking a specific bus and route
     to a date and its current operational status.
     """
 
@@ -53,11 +54,12 @@ class Trip(models.Model):
     )
 
     trip_date = models.DateField()
-    status = models.CharField(max_length=25, choices=STATUS_TRIP, default="CONFIRMADA")
+    status = models.CharField(max_length=25, choices=STATUS_TRIP, 
+                              default="RISCO DE CANCELAMENTO")
     departure_timestamp = models.DateTimeField(null=True, blank=True)
     arrival_timestamp = models.DateTimeField(null=True, blank=True)
 
-    bus = models.ForeignKey(Bus, on_delete=models.CASCADE)
+    bus = models.ForeignKey(Bus, on_delete=models.CASCADE, null=True, blank=True)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
     
     # for custom queryset methods
