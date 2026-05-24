@@ -100,15 +100,29 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         return obj.get_status_display()
 
     def get_available_seats(self, obj):
+        DEFAULT_SEATING_CAPACITY = 46
         reserved_seats = getattr(obj, "reserved_seats", 0)
-        return max(obj.bus.seating_capacity - reserved_seats, 0)
+        
+        seating_capacity = (
+            obj.bus.seating_capacity
+            if obj.bus
+            else DEFAULT_SEATING_CAPACITY
+        )
+        
+        return max(seating_capacity - reserved_seats, 0)
 
     def get_is_full(self, obj):
         return self.get_available_seats(obj) == 0
 
     def get_is_reservable(self, obj):
-        if obj.status != "CONFIRMADA":
+        RESERVABLE_STATUSES = {
+            "RISCO DE CANCELAMENTO",
+            "CONFIRMADA",
+        }
+        
+        if obj.status not in RESERVABLE_STATUSES:
             return False
+        
         return self.get_available_seats(obj) > 0
 
 
