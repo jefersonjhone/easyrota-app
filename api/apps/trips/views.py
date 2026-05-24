@@ -88,7 +88,8 @@ class TripViewSet(viewsets.ModelViewSet):
         
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
-        Trip.objects.filter(id=pk).update(status="CONCLUÍDA")
+        Trip.objects.filter(id=pk).update(status="CONCLUÍDA",
+                                          arrival_timestamp=timezone.now())
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
 
     def get_queryset(self):
@@ -110,37 +111,43 @@ class MyNextTripView(APIView):
     
     def _update_trip_status(self, trip):
         """
-        Check the schedules and update the trip status in the database, 
-        relieving the Serializer of this responsibility.
+        Check schedules, reservations and driver actions 
+        to update the trip status in the database.
         """
-        if trip.status in ["CONCLUÍDA", "CANCELADA", "RISCO DE CANCELAMENTO"]:
+        if trip.status in ["CONCLUÍDA", "CANCELADA"]:
             return trip
 
         now = timezone.now()
-        time_zone = timezone.get_current_timezone()
 
-        expected_dep = timezone.make_aware(
-            datetime.combine(trip.trip_date, trip.route.departure_time), time_zone
-        )
-        
-        expected_arr = timezone.make_aware(
-            datetime.combine(trip.trip_date, trip.route.arrival_time), time_zone
-        )
-
-        if expected_arr <= expected_dep:
-            expected_arr += timedelta(days=1)
-
-        total_duration = expected_arr - expected_dep
-        
-        if not trip.departure_timestamp:
-            real_status = "CONFIRMADA"
+        if trip.arrival_timestamp:
+            real_status = "CONCLUÍDA"
+        elif trip.departure_timestamp:
+            real_status = "EM ANDAMENTO"
         else:
-            real_end = trip.departure_timestamp + total_duration
+            has_civil_servant = trip.reservation_set.filter(
+                civil_servant__isnull=False).exists()
             
-            if now >= real_end:
-                real_status = "CONCLUÍDA"
+            time_zone = timezone.get_current_timezone()
+            expected_dep = timezone.make_aware(
+                datetime.combine(trip.trip_date, trip.route.departure_time), time_zone
+            )
+            expected_arr = timezone.make_aware(
+                datetime.combine(trip.trip_date, trip.route.arrival_time), time_zone
+            )
+            
+            if expected_arr <= expected_dep:
+                expected_arr += timedelta(days=1)
+
+            if not has_civil_servant:
+                if now >= expected_dep:
+                    real_status = "CANCELADA"
+                else:
+                    real_status = "RISCO DE CANCELAMENTO"
             else:
-                real_status = "EM ANDAMENTO"
+                if now >= expected_arr:
+                    real_status = "CANCELADA"
+                else:
+                    real_status = "CONFIRMADA"
 
         if trip.status != real_status:
             trip.status = real_status
@@ -183,26 +190,22 @@ class MyNextTripView(APIView):
                 trip_date__gte=today
             ).exclude(status__in=["CONCLUÍDA", "CANCELADA"])
 
-        trip_running = (
-            base_running_query
-            .order_by("trip_date", "route__departure_time")
-            .first()
-        )
+        running_trips = base_running_query.order_by(
+            "trip_date", "route__departure_time"
+            )
+        
+        for trip in running_trips:
+            updated_trip = self._update_trip_status(trip)
+            if updated_trip.status == "EM ANDAMENTO":
+                serializer = TripCurrentScreenSerializer(updated_trip)
+                return Response(serializer.data)
 
-        if trip_running:
-            trip_running = self._update_trip_status(trip_running)
-            serializer = TripCurrentScreenSerializer(trip_running)
-            return Response(serializer.data)
+        next_trips = base_next_query.order_by("trip_date", "route__departure_time")
+        
+        for trip in next_trips:
+            updated_trip = self._update_trip_status(trip)
+            if updated_trip.status not in ["CONCLUÍDA", "CANCELADA"]:
+                serializer = TripCurrentScreenSerializer(updated_trip)
+                return Response(serializer.data)
 
-        next_trip = (
-            base_next_query
-            .order_by("trip_date", "route__departure_time")
-            .first()
-        )
-
-        if not next_trip:
-            return Response({"detail": "Nenhuma viagem próxima."}, status=404)
-
-        next_trip = self._update_trip_status(next_trip)
-        serializer = TripCurrentScreenSerializer(next_trip)
-        return Response(serializer.data)
+        return Response({"detail": "Nenhuma viagem próxima."}, status=404)
