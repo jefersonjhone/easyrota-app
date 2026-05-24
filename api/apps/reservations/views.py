@@ -1,17 +1,15 @@
-from datetime import datetime, timedelta
-
 from django.db.models import Count, Q
 from django.utils import timezone
 from rest_framework import generics, viewsets
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from ..trips.models import Trip
 from .models import Reservation
 from .serializers import (
     AvailableTripSerializer,
+    ManageReservationSerializer,
     ReservationHistorySerializer,
     ReservationSerializer,
-    ManageReservationSerializer,
 )
 
 
@@ -66,9 +64,10 @@ class AvailableTripListView(generics.ListAPIView):
 
     def get_queryset(self):
         reserved_statuses = ["CONFIRMADA", "PENDENTE"]
-        
+
         available_trips = (
-            Trip.objects.filter(trip_date__gte=timezone.now().date())
+            Trip.objects
+            .filter(trip_date__gte=timezone.now().date())
             .select_related("route", "bus")
             .annotate(
                 reserved_seats=Count(
@@ -81,8 +80,10 @@ class AvailableTripListView(generics.ListAPIView):
 
         return available_trips
 
+
 class ReservationViewSet(viewsets.ModelViewSet):
     """ViewSet for managing all reservations by admins."""
+
     queryset = Reservation.objects.all()
     serializer_class = ManageReservationSerializer
     permission_classes = [IsAdminUser]

@@ -1,24 +1,21 @@
 from datetime import time, timedelta
 
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.reservations.models import Reservation
+from apps.trips.models import Bus, Route, Trip
 from apps.users.models import CustomUser
 from apps.users.models.profiles import (
     AdministratorProfile,
     DriverProfile,
     StudentProfile,
 )
-from apps.trips.models import Bus, Route, Trip
-
-from django.test import TestCase
-from rest_framework.test import APIClient
-from rest_framework_simplejwt.tokens import RefreshToken
-
 
 User = get_user_model()
 
@@ -187,7 +184,7 @@ class TripAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.driver_user)
 
         Trip.objects.create(
-            trip_date=self.today, 
+            trip_date=self.today,
             bus=self.bus,
             route=self.route_morning,
             driver=self.driver_profile,
@@ -223,7 +220,7 @@ class CurrentTripPassengerAPITests(APITestCase):
             email="estudante@teste.com", password="123", is_active=True
         )
         self.student_profile = StudentProfile.objects.create(
-            user=self.passenger_user, 
+            user=self.passenger_user,
         )
 
         self.other_user = CustomUser.objects.create_user(
@@ -231,15 +228,15 @@ class CurrentTripPassengerAPITests(APITestCase):
         )
 
         self.bus = Bus.objects.create(
-            number_plate="XYZ-9876", 
-            seating_capacity=40, 
+            number_plate="XYZ-9876",
+            seating_capacity=40,
             brand="Mercedes-Benz",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
-        
+
         now = timezone.now()
         time_zone = timezone.get_current_timezone()
-        
+
         self.past_time = (now - timedelta(hours=1)).astimezone(time_zone).time()
         self.future_time = (now + timedelta(hours=1)).astimezone(time_zone).time()
 
@@ -257,7 +254,7 @@ class CurrentTripPassengerAPITests(APITestCase):
         """
         self.client.force_authenticate(user=self.passenger_user)
         response = self.client.get(self.url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data["detail"], "Nenhuma viagem próxima.")
 
@@ -265,42 +262,38 @@ class CurrentTripPassengerAPITests(APITestCase):
         """
         It ensures that one passenger cannot see another person's current trip.
         """
-        
+
         trip = Trip.objects.create(
             trip_date=timezone.now().date(),
             bus=self.bus,
             route=self.route_active,
-            status="CONFIRMADA"
+            status="CONFIRMADA",
         )
-        
+
         Reservation.objects.create(
-            trip=trip, 
-            student=self.student_profile, 
-            status="CONFIRMADA"
-            )
+            trip=trip, student=self.student_profile, status="CONFIRMADA"
+        )
 
         self.client.force_authenticate(user=self.other_user)
         response = self.client.get(self.url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_returns_trip_in_progress(self):
         """
-        The trip should be returned if the user 
+        The trip should be returned if the user
         has a reservation and it is in progress.
         """
-        
+
         trip = Trip.objects.create(
             trip_date=timezone.now().date(),
             bus=self.bus,
             route=self.route_active,
-            status="EM ANDAMENTO"
+            status="EM ANDAMENTO",
         )
         Reservation.objects.create(
-            trip=trip, 
-            student=self.student_profile, 
-            status="CONFIRMADA"
-            )
+            trip=trip, student=self.student_profile, status="CONFIRMADA"
+        )
 
         self.client.force_authenticate(user=self.passenger_user)
         response = self.client.get(self.url)
@@ -310,65 +303,64 @@ class CurrentTripPassengerAPITests(APITestCase):
 
     def test_updates_status_automatically(self):
         """
-       Test the View's _update_trip_status method.
-        If the trip is 'CONFIRMED', but the current 
-        time has already passed the departure time, 
-        the view should automatically update to 'IN PROGRESS'.
+        Test the View's _update_trip_status method.
+         If the trip is 'CONFIRMED', but the current
+         time has already passed the departure time,
+         the view should automatically update to 'IN PROGRESS'.
         """
         trip = Trip.objects.create(
             trip_date=timezone.now().date(),
             bus=self.bus,
             route=self.route_active,
             status="CONFIRMADA",
-            departure_timestamp=timezone.now() - timedelta(minutes=5)
+            departure_timestamp=timezone.now() - timedelta(minutes=5),
         )
         Reservation.objects.create(
-            trip=trip, 
-            student=self.student_profile, 
-            status="CONFIRMADA"
-            )
+            trip=trip, student=self.student_profile, status="CONFIRMADA"
+        )
 
         self.client.force_authenticate(user=self.passenger_user)
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status_trip"], "Em Andamento")
-        
+
         trip.refresh_from_db()
         self.assertEqual(trip.status, "EM ANDAMENTO")
 
     def test_percentage_logic_with_departure_timestamp(self):
         """
-        Tests whether the Serializer calculates the percentage correctly 
+        Tests whether the Serializer calculates the percentage correctly
         based on the moment the driver actually pressed 'Start Trip'.
         """
         now = timezone.now()
-        
+
         trip = Trip.objects.create(
             trip_date=now.date(),
             bus=self.bus,
             route=self.route_active,
             status="EM ANDAMENTO",
-            departure_timestamp=now - timedelta(hours=1)
+            departure_timestamp=now - timedelta(hours=1),
         )
         Reservation.objects.create(
-            trip=trip, 
-            student=self.student_profile, 
-            status="CONFIRMADA"
-            )
+            trip=trip, student=self.student_profile, status="CONFIRMADA"
+        )
 
         self.client.force_authenticate(user=self.passenger_user)
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         percentage = response.data["percentage_complete"]
         minutes_left = response.data["minutes_remaining"]
-        
-        self.assertTrue(49 <= percentage <= 51, 
-                        f"Porcentagem esperada ~50%, recebido {percentage}")
-        self.assertTrue(59 <= minutes_left <= 61, 
-        f"Minutos restantes esperados ~60, recebido {minutes_left}")
+
+        self.assertTrue(
+            49 <= percentage <= 51, f"Porcentagem esperada ~50%, recebido {percentage}"
+        )
+        self.assertTrue(
+            59 <= minutes_left <= 61,
+            f"Minutos restantes esperados ~60, recebido {minutes_left}",
+        )
 
 
 class TripAssignDriverTestCase(TestCase):
@@ -377,24 +369,17 @@ class TripAssignDriverTestCase(TestCase):
     def setUp(self):
         """Initialize test data and API client"""
         self.admin_user = User.objects.create_user(
-            full_name="admin1",
-            email="admin1@test.com",
-            password="testpass123"
+            full_name="admin1", email="admin1@test.com", password="testpass123"
         )
 
-        self.admin_profile = AdministratorProfile.objects.create(
-            user=self.admin_user
-        )
+        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
 
         self.driver_user = User.objects.create_user(
-            full_name="driver1",
-            email="driver1@test.com",
-            password="testpass123"
+            full_name="driver1", email="driver1@test.com", password="testpass123"
         )
 
         self.driver_profile = DriverProfile.objects.create(
-            user=self.driver_user,
-            cnh="12345678901"
+            user=self.driver_user, cnh="12345678901"
         )
 
         self.route = Route.objects.create(
@@ -402,13 +387,11 @@ class TripAssignDriverTestCase(TestCase):
             destiny="Rio de Janeiro",
             departure_time="10:00:00",
             arrival_time="16:00:00",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.trip = Trip.objects.create(
-            trip_date="2026-05-25",
-            status="CONFIRMADA",
-            route=self.route
+            trip_date="2026-05-25", status="CONFIRMADA", route=self.route
         )
 
         self.client = APIClient()
@@ -447,15 +430,10 @@ class TripAssignDriverTestCase(TestCase):
     def test_assign_driver_already_assigned_different_driver(self):
         """Test assignment failure when trip has a different driver"""
         other_user = User.objects.create_user(
-            full_name="driver2",
-            email="driver2@test.com",
-            password="testpass123"
+            full_name="driver2", email="driver2@test.com", password="testpass123"
         )
 
-        other_driver = DriverProfile.objects.create(
-            user=other_user,
-            cnh="12345678201"
-        )
+        other_driver = DriverProfile.objects.create(user=other_user, cnh="12345678201")
 
         self.trip.driver = other_driver
         self.trip.save()
@@ -490,24 +468,17 @@ class TripUnassignDriverTestCase(TestCase):
     def setUp(self):
         """Initialize test data and API client"""
         self.admin_user = User.objects.create_user(
-            full_name="admin2",
-            email="admin2@test.com",
-            password="testpass123"
+            full_name="admin2", email="admin2@test.com", password="testpass123"
         )
 
-        self.admin_profile = AdministratorProfile.objects.create(
-            user=self.admin_user
-        )
+        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
 
         self.driver_user = User.objects.create_user(
-            full_name="driver3",
-            email="driver3@test.com",
-            password="testpass123"
+            full_name="driver3", email="driver3@test.com", password="testpass123"
         )
 
         self.driver_profile = DriverProfile.objects.create(
-            user=self.driver_user,
-            cnh="12345678201"
+            user=self.driver_user, cnh="12345678201"
         )
 
         self.route = Route.objects.create(
@@ -515,14 +486,14 @@ class TripUnassignDriverTestCase(TestCase):
             destiny="Goiânia",
             departure_time="08:00:00",
             arrival_time="10:30:00",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.trip = Trip.objects.create(
             trip_date="2026-05-26",
             status="CONFIRMADA",
             route=self.route,
-            driver=self.driver_profile
+            driver=self.driver_profile,
         )
 
         self.client = APIClient()
@@ -561,15 +532,10 @@ class TripUnassignDriverTestCase(TestCase):
     def test_unassign_driver_different_driver(self):
         """Test unassignment failure when different driver tries to unassign"""
         other_user = User.objects.create_user(
-            full_name="driver4",
-            email="driver4@test.com",
-            password="testpass123"
+            full_name="driver4", email="driver4@test.com", password="testpass123"
         )
 
-        other_driver = DriverProfile.objects.create(
-            user=other_user,
-            cnh="12345671201"
-        )
+        other_driver = DriverProfile.objects.create(user=other_user, cnh="12345671201")
 
         self.trip.driver = other_driver
         self.trip.save()
@@ -620,31 +586,24 @@ class TripAssignBusTestCase(TestCase):
     def setUp(self):
         """Initialize test data and API client"""
         self.admin_user = User.objects.create_user(
-            full_name="admin3",
-            email="admin3@test.com",
-            password="testpass123"
+            full_name="admin3", email="admin3@test.com", password="testpass123"
         )
 
-        self.admin_profile = AdministratorProfile.objects.create(
-            user=self.admin_user
-        )
+        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
 
         self.driver_user = User.objects.create_user(
-            full_name="driver5",
-            email="driver5@test.com",
-            password="testpass123"
+            full_name="driver5", email="driver5@test.com", password="testpass123"
         )
 
         self.driver_profile = DriverProfile.objects.create(
-            user=self.driver_user,
-            cnh="12345678301"
+            user=self.driver_user, cnh="12345678301"
         )
 
         self.bus = Bus.objects.create(
             number_plate="ABC1234",
             seating_capacity=50,
             brand="Volvo B7R",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.route = Route.objects.create(
@@ -652,14 +611,14 @@ class TripAssignBusTestCase(TestCase):
             destiny="Rio de Janeiro",
             departure_time="10:00:00",
             arrival_time="16:00:00",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.trip = Trip.objects.create(
             trip_date="2026-05-25",
             status="CONFIRMADA",
             route=self.route,
-            driver=self.driver_profile
+            driver=self.driver_profile,
         )
 
         self.client = APIClient()
@@ -704,18 +663,15 @@ class TripAssignBusTestCase(TestCase):
     def test_assign_bus_not_trip_driver(self):
         """Test assignment failure when user is not the trip driver"""
         other_user = User.objects.create_user(
-            full_name="driver6",
-            email="driver6@test.com",
-            password="testpass123"
+            full_name="driver6", email="driver6@test.com", password="testpass123"
         )
 
-        other_driver = DriverProfile.objects.create(
-            user=other_user, 
-            cnh="12345621201"
-        )
+        DriverProfile.objects.create(user=other_user, cnh="12345621201")
 
         other_refresh = RefreshToken.for_user(other_user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {other_refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {other_refresh.access_token}"
+        )
 
         url = f"/api/trips/{self.trip.id}/assign_bus/"
         data = {"bus": self.bus.id}
@@ -741,7 +697,7 @@ class TripAssignBusTestCase(TestCase):
             number_plate="XYZ5678",
             seating_capacity=45,
             brand="Scania K420",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.trip.bus = self.bus
@@ -772,31 +728,24 @@ class TripUnassignBusTestCase(TestCase):
     def setUp(self):
         """Initialize test data and API client"""
         self.admin_user = User.objects.create_user(
-            full_name="admin4",
-            email="admin4@test.com",
-            password="testpass123"
+            full_name="admin4", email="admin4@test.com", password="testpass123"
         )
 
-        self.admin_profile = AdministratorProfile.objects.create(
-            user=self.admin_user
-        )
+        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
 
         self.driver_user = User.objects.create_user(
-            full_name="driver7",
-            email="driver7@test.com",
-            password="testpass123"
+            full_name="driver7", email="driver7@test.com", password="testpass123"
         )
 
         self.driver_profile = DriverProfile.objects.create(
-            user=self.driver_user,
-            cnh="12345678405"
+            user=self.driver_user, cnh="12345678405"
         )
 
         self.bus = Bus.objects.create(
             number_plate="DEF9999",
             seating_capacity=55,
             brand="Mercedes-Benz O500",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.route = Route.objects.create(
@@ -804,7 +753,7 @@ class TripUnassignBusTestCase(TestCase):
             destiny="Goiânia",
             departure_time="08:00:00",
             arrival_time="10:30:00",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.trip = Trip.objects.create(
@@ -812,7 +761,7 @@ class TripUnassignBusTestCase(TestCase):
             status="CONFIRMADA",
             route=self.route,
             driver=self.driver_profile,
-            bus=self.bus
+            bus=self.bus,
         )
 
         self.client = APIClient()
@@ -840,18 +789,15 @@ class TripUnassignBusTestCase(TestCase):
     def test_unassign_bus_not_trip_driver(self):
         """Test unassignment failure when user is not the trip driver"""
         other_user = User.objects.create_user(
-            full_name="driver8",
-            email="driver8@test.com",
-            password="testpass123"
+            full_name="driver8", email="driver8@test.com", password="testpass123"
         )
 
-        other_driver = DriverProfile.objects.create(
-            user=other_user,
-            cnh="12335678501"
-        )
+        DriverProfile.objects.create(user=other_user, cnh="12335678501")
 
         other_refresh = RefreshToken.for_user(other_user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {other_refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {other_refresh.access_token}"
+        )
 
         url = f"/api/trips/{self.trip.id}/unassign_bus/"
 
@@ -912,31 +858,24 @@ class TripDriverBusIntegrationTestCase(TestCase):
     def setUp(self):
         """Initialize test data"""
         self.admin_user = User.objects.create_user(
-            full_name="admin5",
-            email="admin5@test.com",
-            password="testpass123"
+            full_name="admin5", email="admin5@test.com", password="testpass123"
         )
 
-        self.admin_profile = AdministratorProfile.objects.create(
-            user=self.admin_user
-        )
+        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
 
         self.driver_user = User.objects.create_user(
-            full_name="driver9",
-            email="driver9@test.com",
-            password="testpass123"
+            full_name="driver9", email="driver9@test.com", password="testpass123"
         )
 
         self.driver_profile = DriverProfile.objects.create(
-            user=self.driver_user,
-            cnh="14345678901"
+            user=self.driver_user, cnh="14345678901"
         )
 
         self.bus = Bus.objects.create(
             number_plate="GHI4567",
             seating_capacity=40,
             brand="Isuzu LT",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.route = Route.objects.create(
@@ -944,13 +883,11 @@ class TripDriverBusIntegrationTestCase(TestCase):
             destiny="São Paulo",
             departure_time="12:00:00",
             arrival_time="15:00:00",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         self.trip = Trip.objects.create(
-            trip_date="2026-05-27",
-            status="CONFIRMADA",
-            route=self.route
+            trip_date="2026-05-27", status="CONFIRMADA", route=self.route
         )
 
         self.client = APIClient()
@@ -961,7 +898,8 @@ class TripDriverBusIntegrationTestCase(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
 
     def test_full_workflow_assign_then_unassign(self):
-        """Test complete workflow: assign driver, assign bus, unassign bus, unassign driver"""
+        """Test complete workflow: assign driver, 
+        assign bus, unassign bus, unassign driver"""
         self.authenticate_driver()
 
         self.assertIsNone(self.trip.driver)
@@ -975,7 +913,9 @@ class TripDriverBusIntegrationTestCase(TestCase):
         self.assertEqual(self.trip.driver, self.driver_profile)
 
         url_assign_bus = f"/api/trips/{self.trip.id}/assign_bus/"
-        response = self.client.post(url_assign_bus, data={"bus": self.bus.id}, format="json")
+        response = self.client.post(
+            url_assign_bus, data={"bus": self.bus.id}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.trip.refresh_from_db()
@@ -1012,7 +952,7 @@ class TripDriverBusIntegrationTestCase(TestCase):
             number_plate="JKL8901",
             seating_capacity=50,
             brand="Mercedes-Benz",
-            administrator=self.admin_profile
+            administrator=self.admin_profile,
         )
 
         trip1 = Trip.objects.create(
@@ -1020,7 +960,7 @@ class TripDriverBusIntegrationTestCase(TestCase):
             status="CONFIRMADA",
             route=self.route,
             driver=self.driver_profile,
-            bus=self.bus
+            bus=self.bus,
         )
 
         trip2 = Trip.objects.create(
@@ -1028,7 +968,7 @@ class TripDriverBusIntegrationTestCase(TestCase):
             status="CONFIRMADA",
             route=self.route,
             driver=self.driver_profile,
-            bus=bus2
+            bus=bus2,
         )
 
         driver_trips = Trip.objects.filter(driver=self.driver_profile)
@@ -1043,7 +983,7 @@ class TripDriverBusIntegrationTestCase(TestCase):
             status="CONFIRMADA",
             route=self.route,
             driver=self.driver_profile,
-            bus=self.bus
+            bus=self.bus,
         )
 
         bus_trips = Trip.objects.filter(bus=self.bus)

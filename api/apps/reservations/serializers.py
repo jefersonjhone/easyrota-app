@@ -1,6 +1,3 @@
-from datetime import datetime, timedelta
-
-from django.utils import timezone
 from rest_framework import serializers
 
 from ..trips.models import Trip
@@ -12,7 +9,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         model = Reservation
         fields = ["trip"]
 
-    # TODO: Implement priority business rules 
+    # TODO: Implement priority business rules
     # (students, civil servants, guests and punishments)
 
 

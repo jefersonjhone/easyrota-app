@@ -8,7 +8,6 @@ from apps.users.models.profiles import (
     AdministratorProfile,
     DriverProfile,
 )
-from apps.trips.models import Bus
 
 User = get_user_model()
 
@@ -85,5 +84,3 @@ class BusViewTests(APITestCase):
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["number_plate"] == "ABC123"
         assert response.data["administrator"] == self.admin.id
-
-    

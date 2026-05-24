@@ -13,8 +13,8 @@ class Bus(models.Model):
     number_plate = models.CharField(max_length=10, unique=True)
     seating_capacity = models.IntegerField()
     brand = models.CharField(max_length=100)
-    # add field "status" (dont delete my comment pls, 
-    # i will remove it in the future lol) 
+    # add field "status" (dont delete my comment pls,
+    # i will remove it in the future lol)
     administrator = models.ForeignKey(
         "users.AdministratorProfile", on_delete=models.SET_NULL, null=True
     )
@@ -59,12 +59,10 @@ class Trip(models.Model):
 
     bus = models.ForeignKey(Bus, on_delete=models.SET_NULL, null=True, blank=True)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
-    driver = models.ForeignKey(DriverProfile, 
-        on_delete=models.SET_NULL, 
-        null=True,
-        blank=True
+    driver = models.ForeignKey(
+        DriverProfile, on_delete=models.SET_NULL, null=True, blank=True
     )
-    
+
     # for custom queryset methods
     objects = TripQuerySet.as_manager()
 

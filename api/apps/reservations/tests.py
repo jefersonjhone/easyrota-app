@@ -1,6 +1,6 @@
-import pytest
 from datetime import time, timedelta
 
+import pytest
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -107,7 +107,7 @@ class ReservationTest(BaseReservationTestCase):
 
     @pytest.mark.skip(reason="Temporarily disabled until fix")
     def test_create_reservation_after_limit(self):
-        """Creating a reservation after the limit (3 hours before bus departure) 
+        """Creating a reservation after the limit (3 hours before bus departure)
         should display an error message."""
 
         self.client.force_authenticate(user=self.student)
@@ -120,7 +120,7 @@ class ReservationTest(BaseReservationTestCase):
         self.assertIn("Prazo de reserva encerrado.", str(response.data))
 
     def test_create_reservation_successfully(self):
-        """Creating a reservation before the limit (3 hours before bus departure) 
+        """Creating a reservation before the limit (3 hours before bus departure)
         should create a successful reservation."""
 
         self.client.force_authenticate(user=self.student)

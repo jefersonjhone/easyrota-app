@@ -13,7 +13,7 @@ from .views.auth import (
 from .views.users import AdminDelegationView, DriverViewSet, HealthCheckView
 
 router = DefaultRouter()
-router.register(r'drivers', DriverViewSet, basename='drivers')
+router.register(r"drivers", DriverViewSet, basename="drivers")
 
 urlpatterns = [
     path("health/", HealthCheckView.as_view()),
