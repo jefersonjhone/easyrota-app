@@ -254,6 +254,8 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     percentage_complete = serializers.SerializerMethodField()
     minutes_remaining = serializers.SerializerMethodField()
     status_route = serializers.SerializerMethodField()
+    
+    passenger_identifier = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -270,6 +272,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             "percentage_complete",
             "minutes_remaining",
             "status_route",
+            "passenger_identifier"
         ]
 
     def get_status_trip(self, obj):
@@ -369,3 +372,11 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             return "Aproximando do Destino"
         else:
             return "Finalizando Trajeto"
+
+    def get_passenger_identifier(self, obj):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            return str(request.user.id)
+            
+            # lembrar substituir por return str(request.user.uuid) mais tarde
+        return None

@@ -258,7 +258,8 @@ class MyNextTripView(APIView):
         for trip in running_trips:
             updated_trip = self._update_trip_status(trip)
             if updated_trip.status == "EM ANDAMENTO":
-                serializer = TripCurrentScreenSerializer(updated_trip)
+                serializer = TripCurrentScreenSerializer(
+                    updated_trip, context={"request": request})
                 return Response(serializer.data)
 
         next_trips = base_next_query.order_by("trip_date", "route__departure_time")
@@ -266,7 +267,8 @@ class MyNextTripView(APIView):
         for trip in next_trips:
             updated_trip = self._update_trip_status(trip)
             if updated_trip.status not in ["CONCLUÍDA", "CANCELADA"]:
-                serializer = TripCurrentScreenSerializer(updated_trip)
+                serializer = TripCurrentScreenSerializer(
+                    updated_trip, context={"request": request})
                 return Response(serializer.data)
 
         return Response({"detail": "Nenhuma viagem próxima."}, status=404)
