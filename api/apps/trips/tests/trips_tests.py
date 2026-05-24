@@ -54,6 +54,12 @@ class TripAPITestCase(APITestCase):
             brand="Mercedes-Benz",
             administrator=self.admin_profile,
         )
+        
+        now = timezone.now()
+        time_zone = timezone.get_current_timezone()
+        
+        self.past_time = (now - timedelta(hours=1)).astimezone(time_zone).time()
+        self.future_time = (now + timedelta(hours=1)).astimezone(time_zone).time()
 
         self.route_morning = Route.objects.create(
             origin="Salvador",
@@ -76,6 +82,14 @@ class TripAPITestCase(APITestCase):
             destiny="Recife",
             departure_time=time(22, 0),
             arrival_time=time(5, 0),
+            administrator=self.admin_profile,
+        )
+        
+        self.route_active = Route.objects.create(
+            origin="Feira de Santana",
+            destiny="Salvador",
+            departure_time=self.past_time,
+            arrival_time=self.future_time,
             administrator=self.admin_profile,
         )
 
@@ -186,8 +200,9 @@ class TripAPITestCase(APITestCase):
         Trip.objects.create(
             trip_date=self.today,
             bus=self.bus,
-            route=self.route_morning,
+            route=self.route_active,
             driver=self.driver_profile,
+            departure_timestamp=timezone.now() - timedelta(minutes=15)
         )
 
         url = reverse("trip-current")
@@ -290,9 +305,13 @@ class CurrentTripPassengerAPITests(APITestCase):
             bus=self.bus,
             route=self.route_active,
             status="EM ANDAMENTO",
+            departure_timestamp=timezone.now() - timedelta(minutes=15)
         )
+        
         Reservation.objects.create(
-            trip=trip, student=self.student_profile, status="CONFIRMADA"
+            trip=trip, 
+            student=self.student_profile, 
+            status="CONFIRMADA"
         )
 
         self.client.force_authenticate(user=self.passenger_user)

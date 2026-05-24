@@ -9,13 +9,15 @@ export type Trip = {
   id: number
   origin: string
   destiny: string
+  departure_time: string
+  arrival_time: string
   active_reservations: number
   seating_capacity: number
   trip_date: string
   status: TripStatus
   departure_timestamp: string | null
   arrival_timestamp: string | null
-  bus: number
+  bus: number | null
   route: number
 }
 
