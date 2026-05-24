@@ -8,7 +8,11 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..users.permissions import IsAdminOrReadOnly, IsDriver, IsDriverReadOnly
+from ..users.permissions import (
+    IsAdminOrReadOnly,
+    IsDriver,
+    IsDriverReadOnly,
+)
 from .filters import FilterTripViewSet
 from .models import Bus, Route, Trip
 from .serializers import (
@@ -30,8 +34,6 @@ class BusViewSet(viewsets.ModelViewSet):
         """Allows full access for administrators and only GET requests for drivers."""
         if self.action in ["list", "retrieve"]:
             self.permission_classes = [permissions.IsAdminUser | IsDriverReadOnly]
-        elif self.action in ["assign_driver", "unassign_driver"]:
-            self.permission_classes = [IsDriver]
         else:
             self.permission_classes = [permissions.IsAdminUser]
 
@@ -39,28 +41,6 @@ class BusViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(administrator=self.request.user.admin_profile)
-
-    @action(detail=True, methods=["post"])
-    def assign_driver(self, request, pk=None):
-        bus = self.get_object()
-        driver = request.user.driver_profile
-        Bus.objects.filter(driver=driver).update(driver=None)
-        bus.driver = driver
-        bus.save()
-
-        return Response(
-            {"status": "Motorista associado com sucesso."}, status=status.HTTP_200_OK
-        )
-    
-    @action(detail=False, methods=["post"])
-    def unassign_driver(self, request):
-        driver = request.user.driver_profile
-        bus_count = Bus.objects.filter(driver=driver).update(driver=None)
-        return Response(
-            {
-                "status": f"Motorista desassociado de {bus_count} onibus com sucesso."
-            }, status=status.HTTP_200_OK
-        )
 
 
 class RouteListCreateView(generics.ListCreateAPIView):
@@ -85,20 +65,103 @@ class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
     filter_backends = [FilterTripViewSet]
-        
+
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
         Trip.objects.filter(id=pk).update(status="CONCLUÍDA",
                                           arrival_timestamp=timezone.now())
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
 
+    @action(detail=True, methods=["post"])
+    def assign_driver(self, request, pk=None):
+        driver = request.user.driver_profile
+        trip = Trip.objects.get(id=pk)
+        if trip.driver and trip.driver != driver:
+            return Response(
+                {"error": "Você não é o motorista desta viagem."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        trip.driver = driver
+        trip.save()
+        return Response(
+            {"status": "Motorista associado com sucesso."}, status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=["post"])
+    def unassign_driver(self, request, pk):
+        trip = Trip.objects.get(id=pk)
+        if trip.driver and trip.driver == request.user.driver_profile:
+            trip.driver = None
+            trip.save()
+            return Response(
+                {"status": "Motorista desassociado com sucesso."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"error": "Você não é o motorista desta viagem."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    @action(detail=True, methods=["post"])
+    def assign_bus(self, request, pk=None):
+        bus = request.data.get("bus")
+        if not bus:
+            return Response(
+                {"error": "O campo 'bus' é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # verify if bus already is in use
+        # create a custom queryset in bus model todo it and reuse
+        bus = Bus.objects.get(id=bus)
+        if not bus:
+            return Response(
+                {"error": "Onibus não encontrado."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        trip = Trip.objects.get(id=pk)
+
+        if trip.driver and trip.driver == request.user.driver_profile:
+            trip.bus = bus
+            trip.save()
+            return Response(
+                {"status": "Onibus associado com sucesso."}, status=status.HTTP_200_OK
+            )
+        return Response(
+            {"error": "Você não é o motorista desta viagem."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    @action(detail=True, methods=["post"])
+    def unassign_bus(self, request, pk):
+        trip = Trip.objects.get(id=pk)
+
+        if trip.driver and trip.driver == request.user.driver_profile:
+            trip.bus = None
+            trip.save()
+            return Response(
+                {"status": "Onibus desassociado com sucesso."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"error": "Você não é o motorista desta viagem."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     def get_queryset(self):
         return Trip.objects.joinable_by_driver(self.request.user)
-    
+
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
             self.permission_classes = [permissions.IsAuthenticated]
-        elif self.action in ["finish_trip"]: 
+        elif self.action in [
+            "finish_trip",
+            "start_trip",
+            "assign_bus",
+            "unassign_bus",
+            "assign_driver",
+            "unassign_driver",
+        ]:
             self.permission_classes = [IsDriver]
         else:
             self.permission_classes = [permissions.IsAdminUser]
@@ -108,7 +171,7 @@ class TripViewSet(viewsets.ModelViewSet):
 
 class MyNextTripView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def _update_trip_status(self, trip):
         """
         Check schedules, reservations and driver actions 
@@ -152,42 +215,38 @@ class MyNextTripView(APIView):
         if trip.status != real_status:
             trip.status = real_status
             trip.save(update_fields=["status"])
-            
+
         return trip
 
     def get(self, request):
         now = timezone.localtime()
         today = now.date()
         yesterday = today - timedelta(days=1)
-        
+
         is_admin = hasattr(request.user, "admin_profile") or request.user.is_staff
 
         if is_admin:
             base_running_query = Trip.objects.filter(
-                status="EM ANDAMENTO", 
-                trip_date__gte=yesterday
+                status="EM ANDAMENTO", trip_date__gte=yesterday
             )
-            
-            base_next_query = Trip.objects.filter(
-                trip_date__gte=today
-            ).exclude(status__in=["CONCLUÍDA", "CANCELADA"])
-            
+
+            base_next_query = Trip.objects.filter(trip_date__gte=today).exclude(
+                status__in=["CONCLUÍDA", "CANCELADA"]
+            )
+
         else:
             user_trip_filter = (
-                Q(reservation__student__user=request.user) | 
-                Q(reservation__civil_servant__user=request.user) |
-                Q(bus__driver__user=request.user)
+                Q(reservation__student__user=request.user)
+                | Q(reservation__civil_servant__user=request.user)
+                | Q(driver__user=request.user)
             )
-            
+
             base_running_query = Trip.objects.filter(
-                user_trip_filter,
-                status="EM ANDAMENTO", 
-                trip_date__gte=yesterday
+                user_trip_filter, status="EM ANDAMENTO", trip_date__gte=yesterday
             )
-            
+
             base_next_query = Trip.objects.filter(
-                user_trip_filter,
-                trip_date__gte=today
+                user_trip_filter, trip_date__gte=today
             ).exclude(status__in=["CONCLUÍDA", "CANCELADA"])
 
         running_trips = base_running_query.order_by(

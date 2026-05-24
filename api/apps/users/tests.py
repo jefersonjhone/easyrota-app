@@ -1,17 +1,16 @@
+import pytest
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from .models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
+    DriverProfile,
     StudentProfile,
-    DriverProfile
 )
-from django.core.exceptions import ValidationError
-
 from .models.user import CustomUser
-import pytest
 
 User = get_user_model()
 

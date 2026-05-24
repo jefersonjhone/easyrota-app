@@ -15,7 +15,7 @@ class BusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bus
         fields = "__all__"
-        read_only_fields = ["administrator", "driver"]
+        read_only_fields = ["administrator"]
 
     def validate_seating_capacity(self, value):
         """Ensures seating_capacity is greater than 0 and less than or equal to 120."""
@@ -98,22 +98,21 @@ class RouteSerializer(serializers.ModelSerializer):
 class TripSerializer(serializers.ModelSerializer):
     origin = serializers.CharField(source="route.origin", read_only=True)
     destiny = serializers.CharField(source="route.destiny", read_only=True)
-    active_reservations = serializers.SerializerMethodField(
-        read_only=True)
+    active_reservations = serializers.SerializerMethodField(read_only=True)
 
     seating_capacity = serializers.IntegerField(
-        source="bus.seating_capacity",
-        read_only=True)
-    
+        source="bus.seating_capacity", read_only=True
+    )
+
     class Meta:
         model = Trip
         fields = "__all__"
-    
+
     def get_active_reservations(self, obj) -> int:
         """filter reservations by especific trip"""
         reservations = Reservation.objects.filter(trip=obj).count()
         return reservations
-    
+
     def validate_trip_date(self, value):
         today = timezone.localtime().date()
         if self.instance is None and value < today:
@@ -246,7 +245,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     status_trip = serializers.SerializerMethodField()
 
     bus_number_plate = serializers.CharField(source="bus.number_plate", read_only=True)
-    driver = serializers.CharField(source="bus.driver.user.full_name", read_only=True)
+    driver = serializers.CharField(source="driver.user.full_name", read_only=True)
 
     percentage_complete = serializers.SerializerMethodField()
     minutes_remaining = serializers.SerializerMethodField()
@@ -271,15 +270,15 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
     def get_status_trip(self, obj):
         return obj.get_status_display()
-    
+
     def _get_trip_metrics(self, obj):
         """
         It calculates the actual start time and duration based on the route.
         This serves as the basis for percentage and remaining time considering delays.
         """
-        
+
         time_zone = timezone.get_current_timezone()
-        
+
         if not obj.trip_date or not getattr(obj, "route", None):
             now = timezone.now()
             return now, 0
@@ -287,7 +286,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         expected_dep = timezone.make_aware(
             datetime.combine(obj.trip_date, obj.route.departure_time), time_zone
         )
-        
+
         expected_arr = timezone.make_aware(
             datetime.combine(obj.trip_date, obj.route.arrival_time), time_zone
         )
@@ -299,14 +298,14 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
         start_time = (
             obj.departure_timestamp if obj.departure_timestamp else expected_dep
-            )
+        )
 
         return start_time, total_duration
 
     def get_percentage_complete(self, obj):
         if obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO", "CONFIRMADA"]:
             return 0
-        
+
         if obj.status == "CONCLUÍDA":
             return 100
 
@@ -324,7 +323,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         pct = (elapsed / total_duration) * 100
 
         if pct >= 100:
-            return 99 
+            return 99
 
         if 0 < pct < 1:
             return 1
@@ -337,7 +336,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
         now = timezone.now()
         start_time, total_duration = self._get_trip_metrics(obj)
-        
+
         real_expected_arr = start_time + timedelta(seconds=total_duration)
 
         if now >= real_expected_arr:

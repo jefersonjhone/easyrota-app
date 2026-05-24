@@ -1,5 +1,7 @@
 from django.db import models
 
+from apps.users.models.profiles import DriverProfile
+
 from .querysets import TripQuerySet
 
 
@@ -11,10 +13,8 @@ class Bus(models.Model):
     number_plate = models.CharField(max_length=10, unique=True)
     seating_capacity = models.IntegerField()
     brand = models.CharField(max_length=100)
-
-    driver = models.ForeignKey(
-        "users.DriverProfile", on_delete=models.SET_NULL, blank=True, null=True
-    )
+    # add field "status" (dont delete my comment pls,
+    # i will remove it in the future lol)
     administrator = models.ForeignKey(
         "users.AdministratorProfile", on_delete=models.SET_NULL, null=True
     )
@@ -59,9 +59,12 @@ class Trip(models.Model):
     departure_timestamp = models.DateTimeField(null=True, blank=True)
     arrival_timestamp = models.DateTimeField(null=True, blank=True)
 
-    bus = models.ForeignKey(Bus, on_delete=models.CASCADE, null=True, blank=True)
+    bus = models.ForeignKey(Bus, on_delete=models.SET_NULL, null=True, blank=True)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
-    
+    driver = models.ForeignKey(
+        DriverProfile, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
     # for custom queryset methods
     objects = TripQuerySet.as_manager()
 

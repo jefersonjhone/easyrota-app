@@ -1,14 +1,14 @@
 from django.db import transaction
 from rest_framework import serializers
-from ..validators import validate_cnh
 
 from ..models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
+    DriverProfile,
     StudentProfile,
-    DriverProfile
 )
 from ..models.user import CustomUser
+from ..validators import validate_cnh
 
 
 class UserSummarySerializer(serializers.ModelSerializer):
@@ -137,19 +137,20 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
 
 
 class DriverSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(source='user.full_name')
-    email = serializers.EmailField(source='user.email')
+    full_name = serializers.CharField(source="user.full_name")
+    email = serializers.EmailField(source="user.email")
     password = serializers.CharField(
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'}
+        write_only=True, required=False, style={"input_type": "password"}
     )
 
     class Meta:
         model = DriverProfile
         fields = [
-            'id', 'full_name', 'email', 'password',
-            'cnh',
+            "id",
+            "full_name",
+            "email",
+            "password",
+            "cnh",
         ]
 
     def create(self, validated_data):
@@ -158,9 +159,9 @@ class DriverSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
 
         user = CustomUser.objects.create_user(
-            full_name=user_data['full_name'],
-            email=user_data['email'],
-            password=password
+            full_name=user_data["full_name"],
+            email=user_data["email"],
+            password=password,
         )
         driver_profile = DriverProfile.objects.create(
             user=user, **validated_data)
@@ -188,9 +189,7 @@ class DriverSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if self.instance is None and not attrs.get("password"):
-            raise serializers.ValidationError({
-                "password": "This field is required."
-            })
+            raise serializers.ValidationError({"password": "This field is required."})
         return attrs
 
     def validate_cnh(self, value):

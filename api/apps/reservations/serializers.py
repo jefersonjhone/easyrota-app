@@ -9,7 +9,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         model = Reservation
         fields = ["trip"]
 
-    # TODO: Implement priority business rules 
+    # TODO: Implement priority business rules
     # (students, civil servants, guests and punishments)
 
 

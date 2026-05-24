@@ -64,9 +64,10 @@ class AvailableTripListView(generics.ListAPIView):
 
     def get_queryset(self):
         reserved_statuses = ["CONFIRMADA", "PENDENTE"]
-        
+
         available_trips = (
-            Trip.objects.filter(trip_date__gte=timezone.now().date())
+            Trip.objects
+            .filter(trip_date__gte=timezone.now().date())
             .select_related("route", "bus")
             .annotate(
                 reserved_seats=Count(
@@ -82,6 +83,7 @@ class AvailableTripListView(generics.ListAPIView):
 
 class ReservationViewSet(viewsets.ModelViewSet):
     """ViewSet for managing all reservations by admins."""
+
     queryset = Reservation.objects.all()
     serializer_class = ManageReservationSerializer
     permission_classes = [IsAdminUser]

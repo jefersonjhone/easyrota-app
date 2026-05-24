@@ -401,11 +401,8 @@ class RefreshTokenView(generics.GenericAPIView):
         data = serializer.validated_data
 
         response = Response(
-            {
-                "tokens": {
-                "access": data["access"]
-            }
-        }, status=status.HTTP_200_OK,
+            {"tokens": {"access": data["access"]}},
+            status=status.HTTP_200_OK,
         )
 
         # Rotation enabled
