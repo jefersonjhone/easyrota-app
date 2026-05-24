@@ -21,6 +21,7 @@ type CurrentTripData = {
   percentage_complete: number
   minutes_remaining: number | null
   status_route: string
+  passenger_identifier: string
 }
 
 export function CurrentTripPage() {
@@ -28,7 +29,6 @@ export function CurrentTripPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const showMinutesCard = trip !== null && trip.minutes_remaining !== null
-  const userEmailTemporario = "passageiro@email.com";
 
   useEffect(() => {
     const loadCurrentTrip = async () => {
@@ -86,7 +86,7 @@ export function CurrentTripPage() {
           </div>
         ) : trip ? (
           <div className="space-y-6">
-            <PassengerQRCode identifier={userEmailTemporario} />
+            <PassengerQRCode identifier={trip.passenger_identifier} />
 
             <Card className="rounded-xl border">
               <CardHeader>
