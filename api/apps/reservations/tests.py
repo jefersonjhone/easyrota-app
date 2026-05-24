@@ -50,7 +50,6 @@ class BaseReservationTestCase(APITestCase):
             number_plate="ABC-1234",
             seating_capacity=40,
             brand="Mercedes-Benz",
-            driver=self.driver_profile,
             administrator=self.admin_profile,
         )
 
