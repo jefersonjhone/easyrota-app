@@ -6,8 +6,8 @@ from .models import Bus, Occurrence, Route, Trip
 
 
 class BusList(admin.ModelAdmin):
-    list_display = ("number_plate", "seating_capacity", "driver", "administrator")
-    search_fields = ("number_plate", "driver__user__full_name")
+    list_display = ("number_plate", "seating_capacity", "administrator")
+    search_fields = ("number_plate",)
     list_filter = ("seating_capacity",)
 
 
@@ -18,10 +18,13 @@ class RouteList(admin.ModelAdmin):
 
 
 class TripList(admin.ModelAdmin):
-    list_display = ("trip_date", "route", "bus", "status", "departure_timestamp")
+    list_display = ("trip_date", "route", "bus", "driver", "status", "departure_timestamp")
     list_editable = ("status",)
     list_filter = ("status", "trip_date", "route")
-    search_fields = ("bus__number_plate", "route__origin", "route__destiny")
+    search_fields = ("bus__number_plate",
+        "route__origin", 
+        "route__destiny", 
+        "driver__user__full_name")
     date_hierarchy = "trip_date"
 
 

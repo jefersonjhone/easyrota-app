@@ -15,7 +15,7 @@ class BusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bus
         fields = "__all__"
-        read_only_fields = ["administrator", "driver"]
+        read_only_fields = ["administrator"]
 
     def validate_seating_capacity(self, value):
         """Ensures seating_capacity is greater than 0 and less than or equal to 120."""
@@ -214,7 +214,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     status_trip = serializers.SerializerMethodField()
 
     bus_number_plate = serializers.CharField(source="bus.number_plate", read_only=True)
-    driver = serializers.CharField(source="bus.driver.user.full_name", read_only=True)
+    driver = serializers.CharField(source="driver.user.full_name", read_only=True)
 
     percentage_complete = serializers.SerializerMethodField()
     minutes_remaining = serializers.SerializerMethodField()
