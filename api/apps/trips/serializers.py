@@ -375,11 +375,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
     def get_passenger_identifier(self, obj):
         request = self.context.get('request')
-        print("Objeto: ", obj)
-        print("Contexto: ", self.context)
-        print("Request", request)
         if request and request.user and request.user.is_authenticated:
-            print("ID usuário: ", request.user.id)
             return str(request.user.id)
             
             # lembrar substituir por return str(request.user.uuid) mais tarde
