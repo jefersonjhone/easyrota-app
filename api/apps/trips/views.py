@@ -202,7 +202,9 @@ class MyNextTripView(APIView):
                 expected_arr += timedelta(days=1)
 
             if not has_civil_servant:
-                if now >= expected_dep:
+                cancel_limit = expected_dep + timedelta(minutes=30)
+                
+                if now >= cancel_limit:
                     real_status = "CANCELADA"
                 else:
                     real_status = "RISCO DE CANCELAMENTO"

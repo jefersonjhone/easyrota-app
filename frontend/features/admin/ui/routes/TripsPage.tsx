@@ -285,7 +285,13 @@ export function TripsPage() {
                       {trip.origin} &#8594; {trip.destiny}
                     </h2>
                     <p className="text-sm text-muted-foreground">{formatDate(trip.trip_date)}</p>
-                    <OccupancyBar active={trip.active_reservations} capacity={trip.seating_capacity} />
+                    <p className="text-sm text-muted-foreground">{trip.departure_time} → {trip.arrival_time}</p>
+                    {trip.bus ? 
+                      (<OccupancyBar active={trip.active_reservations} capacity={trip.seating_capacity}/>) : (
+                        <p className="text-sm text-muted-foreground">
+                          Sem ônibus cadastrado
+                        </p>)
+                    }
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-auto">

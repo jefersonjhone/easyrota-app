@@ -99,6 +99,10 @@ class TripSerializer(serializers.ModelSerializer):
     origin = serializers.CharField(source="route.origin", read_only=True)
     destiny = serializers.CharField(source="route.destiny", read_only=True)
     active_reservations = serializers.SerializerMethodField(read_only=True)
+    departure_time = serializers.CharField(
+        source="route.departure_time", read_only=True
+        )
+    arrival_time = serializers.CharField(source="route.arrival_time", read_only=True)
 
     seating_capacity = serializers.IntegerField(
         source="bus.seating_capacity", read_only=True
