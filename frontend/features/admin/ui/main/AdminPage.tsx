@@ -1,55 +1,85 @@
-// Configs
-import { actions } from '@/features/admin/config/actions'
+import { useState } from 'react'
 
 // Components
-import AppLayout from '@layout/app-layout'
-import { Link } from '@tanstack/react-router'
-import { Card, CardDescription, CardHeader, CardTitle } from '@ui/card'
-import { Separator } from '@ui/separator'
+import { AdminLayout } from '@/features/admin/ui/Layout'
+import { TotalUsersCard } from '@/features/admin/ui/main/cards/usersCard'
+import { TotalBusesCard } from '@/features/admin/ui/main/cards/busesCard'
+import { TotalTripsCard, TripsInProgress } from '@/features/admin/ui/main/cards/tripsCard'
+import { TotalDriversCard } from '@/features/admin/ui/main/cards/driversCard'
+import { TripsTable } from '@/features/admin/ui/main/charts/routes'
+import { MostReservedTripsTable } from '@/features/admin/ui/main/charts/reservations'
+import { ChartLineDefault, ChartBarMixed } from '@/features/admin/ui/main/charts/trips'
 
-const AdminPage = () => (
-  <AppLayout>
-    <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">Painel de Controle</h1>
-    <Separator className="max-w-xl mx-auto" />
-     <section className="mx-auto grid w-full max-w-5xl 
-        grid-cols-1 min-[430px]:grid-cols-2 min-[600px]:grid-cols-3 gap-6 px-4">
-        {actions.map((link) => (
-          <ActionCard
-            route={link.route.to}
-            title={link.title}
-            description={link.description}
-            background={link.background}
-          />
-        ))}
+// hooks
+import { useIsMobile } from '@/lib/ui/hooks/use-mobile'
+import { useUsersGrowth } from '@/features/admin/hooks/dashboard/useUsersCount'
+import { useDriversCount } from '@/features/admin/hooks/dashboard/useDriversCount'
+import { useBusCount } from '@/features/admin/hooks/dashboard/useBusCount'
+import { useTripsCreatedCount } from '@/features/admin/hooks/dashboard/useTripsCreatedCount'
+import { useTripsInProgressCount } from '@/features/admin/hooks/dashboard/useTripsInProgressCount'
+import { useTripsHistory } from '@/features/admin/hooks/dashboard/useTripsHistory'
+import { useTripsByStatus } from '@/features/admin/hooks/dashboard/useTripsByStatus'
+import { useTripsByRoute } from '@/features/admin/hooks/dashboard/useTripsByRoute'
+import { CheckinStatsCard } from '@/features/admin/ui/main/charts/checkin'
+import { useCheckinStats } from '@/features/admin/hooks/dashboard/useCheckinStats'
+import { useReservationsByRoute } from '@/features/admin/hooks/dashboard/useReservationsByRoute'
+
+
+
+
+
+const AdminPage = () => {
+  const [filter, setFilter] = useState(-1)
+  const [days, setDays] = useState(0)
+  const [historyDays, setHistoryDays] = useState(7)
+  const [statusDays, setStatusDays] = useState(7)
+  const [routeDays, setRouteDays] = useState(7)
+  const [checkinDays, setCheckinDays] = useState(7)
+  const [reservationDays, setReservationDays] = useState(7)
+  const isMobile = useIsMobile()
+  
+  const { data: usersData} = useUsersGrowth(filter)
+  const { data: driversData} = useDriversCount()
+  const { data: busesData} = useBusCount()
+  const { data: tripsData} = useTripsCreatedCount(days)
+  const { data: tripsInProgressData} = useTripsInProgressCount()
+  const { data: tripsHistoryData} = useTripsHistory(historyDays)
+  const { data: tripsByStatusData } = useTripsByStatus(statusDays)
+  const { data: tripsByRouteData} = useTripsByRoute(routeDays)
+  const { data: checkinStatsData} = useCheckinStats(checkinDays)
+  const { data: reservationsByRouteData} = useReservationsByRoute(reservationDays)
+
+  return (
+    <AdminLayout>
+      <section className="max-w-300 mx-auto flex flex-col gap-y-12 md:gap-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-6 md:h-82 mb-12">
+          {
+            usersData !== undefined && <TotalUsersCard
+            users_data={usersData}
+            onFilterChange={setFilter}
+            isMobile={isMobile}
+            />
+          }
+          <div className='grid grid-cols-2 md:col-span-2 w-full gap-2 md:gap-6'>
+            <TotalDriversCard total={driversData?.total_drivers ?? 0} />
+             <TotalBusesCard total={busesData?.total_buses ?? 0} />
+             <TotalTripsCard total={tripsData?.total_trips ?? 0} onFilterChange={setDays} />
+            <TripsInProgress total={tripsInProgressData?.total_trips ?? 0} />
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <ChartLineDefault chartData={tripsHistoryData??[]} onFilterChange={setHistoryDays} />
+          <ChartBarMixed chartData={tripsByStatusData ?? { days: 0, total_trips: 0, trips: [] }} onFilterChange={setStatusDays} />
+        </div>
+        <TripsTable data={tripsByRouteData ?? []} onFilterChange={setRouteDays} />
+       <CheckinStatsCard data={checkinStatsData ?? { total_checkins: 0, without_checkin: 0, checkin_rate: 0 }} onFilterChange={setCheckinDays} />
+      <MostReservedTripsTable
+          data={reservationsByRouteData ?? []}
+          onFilterChange={setReservationDays} />
       </section>
-  </AppLayout>
-)
-
-type ActionCardProps = {
-  route: string,
-  title: string
-  description: string
-  background: string
+    </AdminLayout>
+  ) 
 }
-
-const ActionCard: React.FC<ActionCardProps> = ({ route, title, description, background }) => (
-  <Link to={route} key={title} 
-    className="w-full h-full hover:scale-[1.02] transition-transform group">
-    <Card size="sm" key={title} 
-      className="flex flex-col overflow-hidden h-full
-        ring-0 ring-primary 
-        group-hover:ring-1 transition-all duration-300 ease-in-out">
-      <img src={background} alt={title}
-        className="w-full h-30 sm:aspect-video object-cover 
-          brightness-80 dark:brightness-40 grayscale group-hover:grayscale-0
-          transition-all duration-300"/>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-    </Card>
-  </Link>
-)
 
 
 export default AdminPage

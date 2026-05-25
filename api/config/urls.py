@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/", include("apps.trips.urls")),
     path("api-auth/", include("rest_framework.urls")),
     path("api/", include("apps.reservations.urls")),
+    path("api/dashboard/", include("apps.dashboard.urls")),
 ]
 
 if settings.DEBUG:

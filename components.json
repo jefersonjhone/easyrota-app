@@ -13,6 +13,7 @@
   "iconLibrary": "phosphor",
   "rtl": false,
   "aliases": {
+    "components": "@/lib/ui",
     "features": "@/features",
     "lib": "@/lib",
     "utils": "@/lib/utils",
