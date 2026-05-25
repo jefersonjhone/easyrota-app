@@ -20,6 +20,7 @@ import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as IndexRouteImport } from './pages/index'
 import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
+import { Route as AppProfileRouteImport } from './pages/app/profile'
 import { Route as AdminViagensRouteImport } from './pages/admin/viagens'
 import { Route as AdminRotasRouteImport } from './pages/admin/rotas'
 import { Route as AdminRelatoriosRouteImport } from './pages/admin/relatorios'
@@ -82,6 +83,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/app/profile',
+  path: '/app/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminViagensRoute = AdminViagensRouteImport.update({
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof App_rootRoute
+  '/app/profile': typeof AppProfileRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof AppIndexRoute
+  '/app/profile': typeof AppProfileRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
   '/app/viagens': typeof AppViagensIndexRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app/__root': typeof App_rootRoute
+  '/app/profile': typeof AppProfileRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/admin/rotas'
     | '/admin/viagens'
     | '/app'
+    | '/app/profile'
     | '/admin/'
     | '/app/'
     | '/app/driver/viagens'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/admin/rotas'
     | '/admin/viagens'
     | '/app'
+    | '/app/profile'
     | '/app/driver/viagens'
     | '/app/viagens'
     | '/app/viagens/atual'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/admin/rotas'
     | '/admin/viagens'
     | '/app/__root'
+    | '/app/profile'
     | '/admin/'
     | '/app/'
     | '/app/driver/viagens'
@@ -297,6 +309,7 @@ export interface RootRouteChildren {
   AdminRotasRoute: typeof AdminRotasRoute
   AdminViagensRoute: typeof AdminViagensRoute
   App_rootRoute: typeof App_rootRoute
+  AppProfileRoute: typeof AppProfileRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDriverViagensRoute: typeof AppDriverViagensRoute
@@ -384,6 +397,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/profile': {
+      id: '/app/profile'
+      path: '/app/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/viagens': {
@@ -481,6 +501,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRotasRoute: AdminRotasRoute,
   AdminViagensRoute: AdminViagensRoute,
   App_rootRoute: App_rootRoute,
+  AppProfileRoute: AppProfileRoute,
   AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
   AppDriverViagensRoute: AppDriverViagensRoute,
