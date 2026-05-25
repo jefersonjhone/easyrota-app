@@ -9,6 +9,7 @@ from .views.auth import (
     RegisterView,
     RegisterView2fa,
     Verify2FAView,
+    DeleteOwnAccountView,
 )
 from .views.users import AdminDelegationView, DriverViewSet, HealthCheckView
 
@@ -26,5 +27,6 @@ urlpatterns = [
     path("auth/verify-2fa", Verify2FAView.as_view(), name="verify-2fa"),
     path("auth/refresh", RefreshTokenView.as_view(), name="refresh-token"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
+    path("auth/delete-account/", DeleteOwnAccountView.as_view(), name="delete-account"),
     path("", include(router.urls)),
 ]

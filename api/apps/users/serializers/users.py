@@ -195,3 +195,14 @@ class DriverSerializer(serializers.ModelSerializer):
     def validate_cnh(self, value):
         validate_cnh(value)
         return value
+
+class DeleteOwnAccountSerializer (serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+
+    def validate_password(self, value):
+        user = self.context["request"].user
+
+        if not user.check_password(value):
+            raise serializers.ValidationError("Invalid password.")
+        
+        return value
