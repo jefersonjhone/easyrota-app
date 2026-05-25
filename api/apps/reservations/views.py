@@ -1,10 +1,13 @@
 from django.db.models import Count, Q
-from django.utils import timezone
-from rest_framework import generics, viewsets
+from rest_framework import generics, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 
 from ..trips.models import Trip
 from .models import Reservation
+from .services import promote_next_waitlisted_reservation, sync_trip_status
 from .serializers import (
     AvailableTripSerializer,
     ManageReservationSerializer,
@@ -19,12 +22,12 @@ class ReservationCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = self.request.user
+        reservation = serializer.save(
+            student=getattr(user, "student_profile", None),
+            civil_servant=getattr(user, "civil_servant_profile", None),
+        )
 
-        if hasattr(user, "student_profile"):
-            serializer.save(student=user.student_profile)
-
-        elif hasattr(user, "civil_servant_profile"):
-            serializer.save(civil_servant=user.civil_servant_profile)
+        sync_trip_status(reservation.trip)
 
 
 class ReservationHistoryView(generics.ListAPIView):
@@ -67,7 +70,7 @@ class AvailableTripListView(generics.ListAPIView):
 
         available_trips = (
             Trip.objects
-            .filter(trip_date__gte=timezone.now().date())
+            .filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
             .select_related("route", "bus")
             .annotate(
                 reserved_seats=Count(
@@ -87,3 +90,30 @@ class ReservationViewSet(viewsets.ModelViewSet):
     queryset = Reservation.objects.all()
     serializer_class = ManageReservationSerializer
     permission_classes = [IsAdminUser]
+
+    def get_permissions(self):
+        if self.action == "cancel":
+            return [IsAuthenticated()]
+
+        return super().get_permissions()
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def cancel(self, request, pk=None):
+        reservation = self.get_object()
+        user = request.user
+
+        owns_reservation = (
+            hasattr(user, "student_profile") and reservation.student_id == user.student_profile.id
+        ) or (
+            hasattr(user, "civil_servant_profile") and reservation.civil_servant_id == user.civil_servant_profile.id
+        )
+
+        if not owns_reservation and not request.user.is_staff:
+            raise PermissionDenied("Você não pode cancelar esta reserva.")
+
+        trip = reservation.trip
+        reservation.delete()
+        promote_next_waitlisted_reservation(trip)
+        sync_trip_status(trip)
+
+        return Response({"status": "Reserva cancelada com sucesso."}, status=status.HTTP_200_OK)

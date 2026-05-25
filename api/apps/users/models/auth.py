@@ -54,3 +54,17 @@ class MFAChallenge(models.Model):
     def can_attempt(self):
 
         return self.attempts < self.max_attempts
+
+
+class AllowedStaff(models.Model):
+    """Staff imported from the official ODS file."""
+
+    name = models.CharField(max_length=255)
+    registration_number = models.CharField(max_length=32, unique=True)
+
+    class Meta:
+        db_table = "users_allowed_staff"
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.registration_number})"

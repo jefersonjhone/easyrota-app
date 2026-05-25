@@ -61,12 +61,12 @@ class BaseReservationTestCase(APITestCase):
             administrator=self.admin_profile,
         )
 
-    def create_civil_servant(self):
+    def create_civil_servant(self, email="civil-servant@teste.com", civil_servant_id="12345"):
         """Creates civil servant user and profile"""
         user = CustomUser.objects.create_user(
-            email="civil-servant@teste.com", password="12345678"
+            email=email, password="12345678"
         )
-        civil_servant = CivilServantProfile.objects.create(user=user)
+        civil_servant = CivilServantProfile.objects.create(user=user, civil_servant_id=civil_servant_id)
 
         return user, civil_servant
 
@@ -104,9 +104,8 @@ class ReservationTest(BaseReservationTestCase):
         self.url = reverse("reservation-create")
         self.student, self.student_profile = self.create_student()
 
-    @pytest.mark.skip(reason="Temporarily disabled until fix")
     def test_create_reservation_after_limit(self):
-        """Creating a reservation after the limit (3 hours before bus departure)
+        """Creating a reservation after the limit (30 minutes before bus departure)
         should display an error message."""
 
         self.client.force_authenticate(user=self.student)
@@ -119,7 +118,7 @@ class ReservationTest(BaseReservationTestCase):
         self.assertIn("Prazo de reserva encerrado.", str(response.data))
 
     def test_create_reservation_successfully(self):
-        """Creating a reservation before the limit (3 hours before bus departure)
+        """Creating a reservation before the limit (30 minutes before bus departure)
         should create a successful reservation."""
 
         self.client.force_authenticate(user=self.student)
@@ -129,6 +128,23 @@ class ReservationTest(BaseReservationTestCase):
         response = self.client.post(self.url, data={"trip": trip.id}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class ReservationCancelTest(BaseReservationTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user, self.student_profile = self.create_student()
+        self.trip = self.create_trip(days_ahead=1)
+        self.reservation = self.create_reservation(student=self.student_profile, trip=self.trip)
+        self.url = reverse("reservation-manage-cancel", args=[self.reservation.id])
+
+    def test_cancel_reservation(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(self.url, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Reservation.objects.filter(id=self.reservation.id).exists())
 
 
 class ReservationHistoryTest(BaseReservationTestCase):
@@ -170,7 +186,6 @@ class AvailableTripsTest(BaseReservationTestCase):
         self.url = reverse("reservation-available-trips")
         self.user, self.student_profile = self.create_student()
 
-    @pytest.mark.skip(reason="Temporarily disabled until fix")
     def test_returns_available_trips_with_reserved_seats(self):
         trip = self.create_trip(days_ahead=2)
         Reservation.objects.create(
@@ -180,12 +195,12 @@ class AvailableTripsTest(BaseReservationTestCase):
         )
         Reservation.objects.create(
             trip=trip,
-            civil_servant=self.create_civil_servant()[1],
+            civil_servant=self.create_civil_servant(email="cv1@teste.com", civil_servant_id="111")[1],
             status="PENDENTE",
         )
         Reservation.objects.create(
             trip=trip,
-            civil_servant=self.create_civil_servant()[1],
+            civil_servant=self.create_civil_servant(email="cv2@teste.com", civil_servant_id="222")[1],
             status="LISTA SECUNDÁRIA",
         )
 

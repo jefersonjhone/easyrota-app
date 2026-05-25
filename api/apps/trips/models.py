@@ -92,3 +92,22 @@ class Occurrence(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TripPassenger(models.Model):
+    """Stores a non-account passenger record for a trip."""
+
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+    allowed_staff = models.ForeignKey(
+        "users.AllowedStaff", on_delete=models.CASCADE, related_name="trip_passengers"
+    )
+    recorded_by = models.ForeignKey(
+        DriverProfile, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "trips_trip_passengers"
+
+    def __str__(self):
+        return f"{self.allowed_staff} on {self.trip}"

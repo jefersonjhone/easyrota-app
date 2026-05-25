@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     AdministratorProfile,
+    AllowedStaff,
     CivilServantProfile,
     CustomUser,
     DriverProfile,
@@ -58,8 +59,15 @@ class DriverProfileList(admin.ModelAdmin):
         return obj.user.email
 
 
+class AllowedStaffList(admin.ModelAdmin):
+    list_display = ("name", "registration_number")
+    search_fields = ("name", "registration_number")
+    ordering = ("name",)
+
+
 admin.site.register(CustomUser, CustomUserList)
 admin.site.register(StudentProfile, StudentProfileList)
 admin.site.register(CivilServantProfile)
 admin.site.register(DriverProfile, DriverProfileList)
 admin.site.register(AdministratorProfile)
+admin.site.register(AllowedStaff, AllowedStaffList)

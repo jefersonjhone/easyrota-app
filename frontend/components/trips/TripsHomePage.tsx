@@ -15,12 +15,15 @@ type AvailableTrip = {
   status_trip: string
   available_seats: number
   is_reservable: boolean
+  quorum_met?: boolean
+  reservation_deadline?: string
 }
 
 export function TripsHomePage() {
   const [trips, setTrips] = useState<AvailableTrip[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [savingTripId, setSavingTripId] = useState<number | null>(null)
 
   useEffect(() => {
     const loadTrips = async () => {
@@ -44,6 +47,25 @@ export function TripsHomePage() {
 
     loadTrips()
   }, [])
+
+  const handleReserve = async (tripId: number) => {
+    setSavingTripId(tripId)
+    setError(null)
+
+    try {
+      await apiFetch('/reservations/', {
+        method: 'POST',
+        body: JSON.stringify({ trip: tripId }),
+      })
+      const data = await apiFetch<AvailableTrip[]>('/reservations/available-trips/')
+      setTrips(data)
+    } catch (err) {
+      const errorData = err as { data?: { detail?: string } } | undefined
+      setError(errorData?.data?.detail || 'Não foi possível reservar esta viagem.')
+    } finally {
+      setSavingTripId(null)
+    }
+  }
 
   return (
     <AppLayout>
@@ -103,11 +125,26 @@ export function TripsHomePage() {
                       <Button
                         variant="default"
                         size="sm"
-                        disabled={!trip.is_reservable}
+                        disabled={!trip.is_reservable || savingTripId === trip.id}
+                        onClick={() => handleReserve(trip.id)}
                       >
-                        {!trip.is_reservable ? 'Indisponível' : 'Reservar'}
+                        {!trip.is_reservable
+                          ? 'Indisponível'
+                          : savingTripId === trip.id
+                            ? 'Reservando...'
+                            : 'Reservar'}
                       </Button>
                     </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span className="rounded-full bg-muted px-3 py-1">
+                      Quórum: {trip.quorum_met ? 'atingido' : 'pendente'}
+                    </span>
+                    {trip.reservation_deadline ? (
+                      <span className="rounded-full bg-muted px-3 py-1">
+                        Limite: {new Date(trip.reservation_deadline).toLocaleString('pt-BR')}
+                      </span>
+                    ) : null}
                   </div>
                 </article>
               )

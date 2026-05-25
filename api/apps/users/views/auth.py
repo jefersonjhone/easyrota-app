@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password, make_password
-from django.db import transaction
+from django.core.mail import send_mail
 from django.urls.base import reverse
 from django.utils import timezone
 from rest_framework import generics, status
@@ -29,6 +29,7 @@ from ..serializers.auth import (
     LoginSerializer,
     RegistrationResponseSerializer,
     StudentRegistrationSerializer,
+    VerifyRegistrationOTPSerializer,
     Verify2FASerializer,
 )
 from ..serializers.users import (
@@ -52,6 +53,102 @@ def unauthorized(message):
     response.delete_cookie("refresh_token")
 
     return response
+
+
+def send_registration_otp(email, code):
+    send_mail(
+        subject="Código de confirmação EasyRota",
+        message=f"Seu código de confirmação é: {code}",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+    )
+
+
+def handle_registration(request):
+    profile_type = request.data.get("profile_type")
+
+    serializer_class = {
+        ProfileType.STUDENT: StudentRegistrationSerializer,
+        ProfileType.CIVIL_SERVANT: CivilServantRegistrationSerializer,
+    }.get(profile_type)
+
+    if not serializer_class:
+        return Response(
+            {"profile_type": ["Invalid profile type."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    serializer = serializer_class(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    created = serializer.save()
+    user = created["user"]
+
+    if profile_type == ProfileType.STUDENT:
+        token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REGISTER)
+        code = generate_otp()
+
+        MFAChallenge.objects.create(
+            user=user,
+            jti=jti,
+            purpose=MFAChallenge.Purpose.REGISTER,
+            code_hash=make_password(code),
+            expires_at=timezone.now() + timedelta(minutes=5),
+        )
+        send_registration_otp(user.email, code)
+
+        return Response(
+            {
+                "status": "verification_required",
+                "token": token,
+                "otp_destination": user.email,
+                "user": RegistrationResponseSerializer(created).data,
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    return Response(
+        {
+            "user": RegistrationResponseSerializer(created).data,
+            "status": "created",
+        },
+        status=status.HTTP_201_CREATED,
+    )
+
+
+def consume_registration_challenge(token, code):
+    payload = PartialTokenService.decode(token)
+    if payload["type"] != "2fa_pending":
+        raise AuthenticationFailed("Invalid token type")
+
+    challenge = (
+        MFAChallenge.objects.filter(jti=payload["jti"]).select_related("user").first()
+    )
+
+    if not challenge:
+        raise AuthenticationFailed("Challenge not found")
+    if challenge.used:
+        raise AuthenticationFailed("Challenge already used")
+    if challenge.revoked:
+        raise AuthenticationFailed("Challenge revoked")
+    if challenge.is_expired():
+        raise AuthenticationFailed("Challenge expired")
+
+    if not challenge.can_attempt():
+        challenge.revoked = True
+        challenge.save(update_fields=["revoked"])
+        raise AuthenticationFailed("Too many attempts")
+
+    challenge.attempts += 1
+    challenge.save(update_fields=["attempts"])
+
+    if not check_password(code, challenge.code_hash):
+        raise AuthenticationFailed("Invalid code")
+
+    challenge.used = True
+    challenge.save(update_fields=["used"])
+
+    return challenge
 
 
 class LoginView2fa(generics.GenericAPIView):
@@ -157,118 +254,23 @@ class RegisterView(APIView):
 
     permission_classes = (AllowAny,)
 
-    SERIALIZERS = {
-        ProfileType.STUDENT: StudentRegistrationSerializer,
-        ProfileType.CIVIL_SERVANT: CivilServantRegistrationSerializer,
-    }
-
     def post(self, request):
-
-        profile_type = request.data.get("profile_type")
-
-        serializer_class = self.SERIALIZERS.get(profile_type)
-
-        if not serializer_class:
-            return Response(
-                {"profile_type": ["Invalid profile type."]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        serializer = serializer_class(data=request.data)
-
-        serializer.is_valid(raise_exception=True)
-
-        created = serializer.save()
-
-        user = created["user"]
-
-        refresh = RefreshToken.for_user(user)
-
-        access_token = str(refresh.access_token)
-
-        refresh_token = str(refresh)
-
-        response = Response(
-            {
-                "user": RegistrationResponseSerializer(created).data,
-                "tokens": {"access": access_token},
-            },
-            status=status.HTTP_201_CREATED,
-        )
-
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="Lax",
-            max_age=SIMPLE_JWT_REFRESH_TOKEN_LIFETIME,
-            path=reverse("refresh-token"),
-        )
-
-        return response
+        return handle_registration(request)
 
 
-class RegisterView2fa(generics.GenericAPIView):
-    """A register view with a aditional verification layer.
-    A user is created but the field `is_active`is setted to false
-    until the 2fa verification be done.
-
-    it have an edge case when the acess token expire, because user are already
-    created but can regenerate the token, so they can't acess and can't regenerate token
-    """
-
+class VerifyRegistrationOTPView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
 
-    SERIALIZERS = {
-        ProfileType.STUDENT: StudentRegistrationSerializer,
-        ProfileType.CIVIL_SERVANT: CivilServantRegistrationSerializer,
-    }
-
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-
-        profile_type = request.data.get("profile_type")
-
-        serializer_class = self.SERIALIZERS.get(profile_type)
-
-        if serializer_class is None:
-            return Response(
-                {"profile_type": ["Invalid profile type."]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        serializer = serializer_class(data=request.data)
-
+    def post(self, request):
+        serializer = VerifyRegistrationOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        created = serializer.save()
-
-        user = created["user"]
-
-        token, jti = PartialTokenService.create(
-            user=user,
-            purpose=(MFAChallenge.Purpose.REGISTER),
+        challenge = consume_registration_challenge(
+            serializer.validated_data["token"], serializer.validated_data["code"]
         )
+        challenge.user.is_active = True
+        challenge.user.save(update_fields=["is_active"])
 
-        code = generate_otp()
-        logger.debug(f"OTP CODE: {code} for {user} generated")
-
-        MFAChallenge.objects.create(
-            user=user,
-            jti=jti,
-            purpose=(MFAChallenge.Purpose.REGISTER),
-            code_hash=make_password(code),
-            expires_at=(timezone.now() + timedelta(minutes=5)),
-        )
-
-        return Response(
-            {
-                "status": "verification_required",
-                "token": token,
-            },
-            status=status.HTTP_202_ACCEPTED,
-        )
+        return Response({"status": "verified"}, status=status.HTTP_200_OK)
 
 
 class Verify2FAView(generics.GenericAPIView):
@@ -287,52 +289,9 @@ class Verify2FAView(generics.GenericAPIView):
 
         serializer.is_valid(raise_exception=True)
 
-        payload = PartialTokenService.decode(serializer.validated_data["token"])
-
-        if payload["type"] != "2fa_pending":
-            raise AuthenticationFailed("Invalid token type")
-
-        challenge = (
-            MFAChallenge.objects
-            .filter(jti=payload["jti"])
-            .select_related("user")
-            .first()
+        challenge = consume_registration_challenge(
+            serializer.validated_data["token"], serializer.validated_data["code"]
         )
-
-        if not challenge:
-            raise AuthenticationFailed("Challenge not found")
-
-        if challenge.used:
-            raise AuthenticationFailed("Challenge already used")
-
-        if challenge.revoked:
-            raise AuthenticationFailed("Challenge revoked")
-
-        if challenge.is_expired():
-            raise AuthenticationFailed("Challenge expired")
-
-        if not challenge.can_attempt():
-            challenge.revoked = True
-
-            challenge.save(update_fields=["revoked"])
-
-            raise AuthenticationFailed("Too many attempts")
-
-        challenge.attempts += 1
-
-        challenge.save(update_fields=["attempts"])
-
-        valid_code = check_password(
-            serializer.validated_data["code"],
-            challenge.code_hash,
-        )
-
-        if not valid_code:
-            raise AuthenticationFailed("Invalid code")
-
-        challenge.used = True
-
-        challenge.save(update_fields=["used"])
 
         if challenge.purpose == MFAChallenge.Purpose.REGISTER:
             challenge.user.is_active = True
