@@ -2,6 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views.auth import (
+    DeleteOwnAccountView,
     LoginView,
     LoginView2fa,
     LogoutView,
@@ -9,7 +10,6 @@ from .views.auth import (
     RegisterView,
     RegisterView2fa,
     Verify2FAView,
-    DeleteOwnAccountView,
 )
 from .views.users import AdminDelegationView, DriverViewSet, HealthCheckView
 

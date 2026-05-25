@@ -196,6 +196,7 @@ class DriverSerializer(serializers.ModelSerializer):
         validate_cnh(value)
         return value
 
+
 class DeleteOwnAccountSerializer (serializers.Serializer):
     password = serializers.CharField(write_only=True)
 

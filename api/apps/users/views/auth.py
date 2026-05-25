@@ -31,7 +31,10 @@ from ..serializers.auth import (
     StudentRegistrationSerializer,
     Verify2FASerializer,
 )
-from ..serializers.users import AuthenticatedUserWithProfileSerializer, DeleteOwnAccountSerializer
+from ..serializers.users import (
+    AuthenticatedUserWithProfileSerializer,
+    DeleteOwnAccountSerializer,
+)
 
 logger = logging.getLogger("api")
 
@@ -456,7 +459,8 @@ class DeleteOwnAccountView(APIView):
         if not allowed:
             return Response(status=403)
         
-        serializer = DeleteOwnAccountSerializer(data=request.data, context={"request": request})
+        serializer = DeleteOwnAccountSerializer(
+            data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         user.delete()
