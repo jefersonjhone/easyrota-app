@@ -56,7 +56,10 @@ class RegisterViewTests(APITestCase):
 
     def test_register_civil_servant_creates_user_profile_and_tokens(self):
         """A civil servant registration should validate against AllowedStaff."""
-        AllowedStaff.objects.create(name="SERVIDOR EXEMPLO", registration_number="87654321")
+        AllowedStaff.objects.create(
+            name="SERVIDOR EXEMPLO",
+            registration_number="87654321",
+        )
         payload = {
             "email": "servidor@uefs.br",
             "full_name": "Servidor Exemplo",
@@ -323,7 +326,10 @@ class AllowedStaffValidationTests(APITestCase):
         self.url = "/api/register/"
 
     def test_civil_servant_registration_matches_allowed_staff(self):
-        AllowedStaff.objects.create(name="SERVIDOR TESTE", registration_number="11112222")
+        AllowedStaff.objects.create(
+            name="SERVIDOR TESTE",
+            registration_number="11112222",
+        )
 
         payload = {
             "email": "servidor3@uefs.br",
@@ -346,7 +352,10 @@ class AllowedStaffValidationTests(APITestCase):
             password="12345678",
             is_active=True,
         )
-        DriverProfile.objects.create(user=driver_user, cnh="12345678901")
+        DriverProfile.objects.create(
+            user=driver_user,
+            cnh="12345678901",
+        )
         admin_user = CustomUser.objects.create_superuser(
             email="admin@teste.com",
             full_name="Admin Teste",
@@ -372,7 +381,10 @@ class AllowedStaffValidationTests(APITestCase):
             route=route,
             status="CONFIRMADA",
         )
-        AllowedStaff.objects.create(name="SERVIDOR BUSCA", registration_number="99998888")
+        AllowedStaff.objects.create(
+            name="SERVIDOR BUSCA",
+            registration_number="99998888",
+        )
 
         self.client.force_authenticate(user=driver_user)
 
@@ -382,7 +394,11 @@ class AllowedStaffValidationTests(APITestCase):
 
         create_response = self.client.post(
             "/api/staff/passengers/",
-            {"trip": trip.id, "name": "SERVIDOR BUSCA", "registration_number": "99998888"},
+            {
+                "trip": trip.id,
+                "name": "SERVIDOR BUSCA",
+                "registration_number": "99998888",
+            },
             format="json",
         )
 
@@ -432,10 +448,7 @@ class DriverProfileTests(APITestCase):
             password="SenhaSegura123",
             full_name="Driver Two",
         )
-        DriverProfile.objects.create(
-            user=user1,
-            cnh="12345678901",
-        )
+        DriverProfile.objects.create(user=user1, cnh="12345678901")
         profile = DriverProfile(
             user=user2,
             cnh="12345678901",

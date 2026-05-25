@@ -6,7 +6,10 @@ from ..models.auth import AllowedStaff
 from ..models.profiles import DriverProfile
 from ..permissions import IsDriver, IsSuperAdmin
 from ..serializers.users import CreateSubAdminSerializer, DriverSerializer
-from ..serializers.auth import AllowedStaffSearchSerializer, CivilServantAllowedStaffSerializer
+from ..serializers.auth import (
+    AllowedStaffSearchSerializer,
+    CivilServantAllowedStaffSerializer,
+)
 from ...trips.models import TripPassenger
 
 
@@ -49,7 +52,10 @@ class AllowedStaffSearchView(views.APIView):
         queryset = AllowedStaff.objects.all()
         if q:
             queryset = queryset.filter(name__icontains=q)
-        serializer = AllowedStaffSearchSerializer(queryset.order_by("name")[:20], many=True)
+        serializer = AllowedStaffSearchSerializer(
+            queryset.order_by("name")[:20],
+            many=True,
+        )
         return Response(serializer.data)
 
 
@@ -62,7 +68,10 @@ class DriverTripPassengerView(views.APIView):
 
         trip_id = request.data.get("trip")
         if not trip_id:
-            return Response({"trip": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"trip": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         allowed_staff = AllowedStaff.objects.get(
             name__iexact=serializer.validated_data["name"],

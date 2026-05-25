@@ -23,7 +23,9 @@ class ReservationSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         user = request.user
 
-        if not hasattr(user, "student_profile") and not hasattr(user, "civil_servant_profile"):
+        if not hasattr(user, "student_profile") and not hasattr(
+            user, "civil_servant_profile"
+        ):
             raise serializers.ValidationError("Perfil sem permissão para reservar.")
 
         if trip.status == "CANCELADA":
@@ -66,7 +68,9 @@ class ReservationSerializer(serializers.ModelSerializer):
         elif hasattr(user, "civil_servant_profile"):
             reservation.civil_servant = user.civil_servant_profile
 
-        reservation.status = "CONFIRMADA" if trip_has_capacity(trip) else "LISTA SECUNDÁRIA"
+        reservation.status = (
+            "CONFIRMADA" if trip_has_capacity(trip) else "LISTA SECUNDÁRIA"
+        )
         reservation.save()
         return reservation
 
@@ -187,7 +191,11 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         return self.get_available_seats(obj) == 0
 
     def get_is_reservable(self, obj):
-        return obj.status != "CANCELADA" and is_reservation_open(obj) and self.get_available_seats(obj) > 0
+        return (
+            obj.status != "CANCELADA"
+            and is_reservation_open(obj)
+            and self.get_available_seats(obj) > 0
+        )
 
     def get_quorum_met(self, obj):
         return trip_has_quorum(obj)

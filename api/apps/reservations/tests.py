@@ -61,12 +61,17 @@ class BaseReservationTestCase(APITestCase):
             administrator=self.admin_profile,
         )
 
-    def create_civil_servant(self, email="civil-servant@teste.com", civil_servant_id="12345"):
+    def create_civil_servant(
+        self,
+        email="civil-servant@teste.com",
+        civil_servant_id="12345",
+    ):
         """Creates civil servant user and profile"""
-        user = CustomUser.objects.create_user(
-            email=email, password="12345678"
+        user = CustomUser.objects.create_user(email=email, password="12345678")
+        civil_servant = CivilServantProfile.objects.create(
+            user=user,
+            civil_servant_id=civil_servant_id,
         )
-        civil_servant = CivilServantProfile.objects.create(user=user, civil_servant_id=civil_servant_id)
 
         return user, civil_servant
 
@@ -135,7 +140,10 @@ class ReservationCancelTest(BaseReservationTestCase):
         super().setUp()
         self.user, self.student_profile = self.create_student()
         self.trip = self.create_trip(days_ahead=1)
-        self.reservation = self.create_reservation(student=self.student_profile, trip=self.trip)
+        self.reservation = self.create_reservation(
+            student=self.student_profile,
+            trip=self.trip,
+        )
         self.url = reverse("reservation-manage-cancel", args=[self.reservation.id])
 
     def test_cancel_reservation(self):
@@ -195,12 +203,18 @@ class AvailableTripsTest(BaseReservationTestCase):
         )
         Reservation.objects.create(
             trip=trip,
-            civil_servant=self.create_civil_servant(email="cv1@teste.com", civil_servant_id="111")[1],
+            civil_servant=self.create_civil_servant(
+                email="cv1@teste.com",
+                civil_servant_id="111",
+            )[1],
             status="PENDENTE",
         )
         Reservation.objects.create(
             trip=trip,
-            civil_servant=self.create_civil_servant(email="cv2@teste.com", civil_servant_id="222")[1],
+            civil_servant=self.create_civil_servant(
+                email="cv2@teste.com",
+                civil_servant_id="222",
+            )[1],
             status="LISTA SECUNDÁRIA",
         )
 

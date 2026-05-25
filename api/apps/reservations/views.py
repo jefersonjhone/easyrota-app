@@ -103,9 +103,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
         user = request.user
 
         owns_reservation = (
-            hasattr(user, "student_profile") and reservation.student_id == user.student_profile.id
+            hasattr(user, "student_profile")
+            and reservation.student_id == user.student_profile.id
         ) or (
-            hasattr(user, "civil_servant_profile") and reservation.civil_servant_id == user.civil_servant_profile.id
+            hasattr(user, "civil_servant_profile")
+            and reservation.civil_servant_id == user.civil_servant_profile.id
         )
 
         if not owns_reservation and not request.user.is_staff:
@@ -116,4 +118,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         promote_next_waitlisted_reservation(trip)
         sync_trip_status(trip)
 
-        return Response({"status": "Reserva cancelada com sucesso."}, status=status.HTTP_200_OK)
+        return Response(
+            {"status": "Reserva cancelada com sucesso."},
+            status=status.HTTP_200_OK,
+        )
