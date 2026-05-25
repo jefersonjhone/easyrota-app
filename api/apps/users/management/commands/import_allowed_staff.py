@@ -1,4 +1,5 @@
 import zipfile
+from pathlib import Path
 from xml.etree import ElementTree as ET
 
 from django.core.management.base import BaseCommand, CommandError
@@ -20,9 +21,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         ods_path = options["ods_path"]
+        ods_file = Path(ods_path)
+
+        if not ods_file.is_file():
+            repo_root = Path(__file__).resolve().parents[5]
+            candidate = repo_root / ods_path
+            if candidate.is_file():
+                ods_file = candidate
 
         try:
-            with zipfile.ZipFile(ods_path) as archive:
+            with zipfile.ZipFile(ods_file) as archive:
                 content = archive.read("content.xml")
         except FileNotFoundError as exc:
             raise CommandError(f"Arquivo não encontrado: {ods_path}") from exc
