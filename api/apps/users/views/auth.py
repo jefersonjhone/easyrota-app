@@ -9,7 +9,7 @@ from django.urls.base import reverse
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import ExpiredTokenError
@@ -31,7 +31,10 @@ from ..serializers.auth import (
     StudentRegistrationSerializer,
     Verify2FASerializer,
 )
-from ..serializers.users import AuthenticatedUserWithProfileSerializer
+from ..serializers.users import (
+    AuthenticatedUserWithProfileSerializer,
+    DeleteOwnAccountSerializer,
+)
 
 logger = logging.getLogger("api")
 
@@ -431,6 +434,36 @@ class LogoutView(APIView):
             token = RefreshToken(refresh_token)
 
             token.blacklist()
+
+        response = Response(status=204)
+
+        response.delete_cookie(
+            "refresh_token",
+            path=reverse("refresh-token"),
+        )
+
+        return response
+
+
+class DeleteOwnAccountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request):
+        user = request.user
+        
+        allowed = (
+            hasattr(user, "student_profile")
+            or hasattr(user, "civil_servant_profile")
+        )
+
+        if not allowed:
+            return Response(status=403)
+        
+        serializer = DeleteOwnAccountSerializer(
+            data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        user.delete()
 
         response = Response(status=204)
 
