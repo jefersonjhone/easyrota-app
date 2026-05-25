@@ -1,11 +1,11 @@
 import {
-  Settings,
-  ChevronsUpDown,
-  LogOut,
-  User,
-  LifeBuoy,
-  AlertCircle
-} from "lucide-react"
+  GearIcon,
+  CaretUpDownIcon,
+  SignOutIcon,
+  UserCircleIcon,
+  LifebuoyIcon,
+  WarningIcon
+} from "@phosphor-icons/react"
 
 import {
   Avatar,
@@ -58,7 +58,7 @@ export function NavUser() {
                 <span className="truncate font-medium">{user?.full_name}</span>
                 <span className="truncate text-xs">{user?.email}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <CaretUpDownIcon className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -87,12 +87,12 @@ export function NavUser() {
               </DropdownMenuLabel>
               <Link to="/app/profile">
                 <DropdownMenuItem>
-                    <User />
+                    <UserCircleIcon />
                     Profile
                 </DropdownMenuItem>
               </Link>
               <DropdownMenuItem>
-                <Settings />
+                <GearIcon />
                 Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -107,12 +107,12 @@ export function NavUser() {
               SYSTEM
               </DropdownMenuLabel>
               <DropdownMenuItem>
-                <Key />
+                <KeyIcon />
                 Permissions
               </DropdownMenuItem>
               
               <DropdownMenuItem>
-                <ClockCheck />
+                <ClockCheckIcon />
                 Activity
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -124,18 +124,18 @@ export function NavUser() {
                 SUPPORT
                 </DropdownMenuLabel>
               <DropdownMenuItem>
-                <LifeBuoy />
+                <LifebuoyIcon />
                 Help
               </DropdownMenuItem>
               
               <DropdownMenuItem>
-                <AlertCircle />
+                <WarningIcon />
                 Report issue
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
-              <LogOut />
+              <SignOutIcon />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -1,9 +1,8 @@
 import { CardContent } from "@/lib/ui/card"
-import { ArrowUpRight } from "lucide-react"
 
 import { Link } from '@tanstack/react-router'
 import { Card, CardHeader, CardTitle } from '@ui/card'
-import { BusIcon} from "@phosphor-icons/react"
+import { BusIcon, ArrowUpRightIcon } from "@phosphor-icons/react"
 
 
 export function TotalBusesCard({ total }: { total: number }) {
@@ -15,7 +14,7 @@ export function TotalBusesCard({ total }: { total: number }) {
           <CardTitle className="text-sm font-semibold text-center">
             Onibus cadastrados
           </CardTitle>
-          <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition" />
+          <ArrowUpRightIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition" />
         </CardHeader>
         </Link>
 
