@@ -113,7 +113,7 @@ class TripsSelectors:
 
     @staticmethod
     def get_trips_in_progress():
-        trips = Trip.objects.filter(status=Trip.Status.IN_PROGRESS)
+        trips = Trip.objects.filter(status="EM ANDAMENTO")
 
         return {
             "total_trips": trips.count(),
