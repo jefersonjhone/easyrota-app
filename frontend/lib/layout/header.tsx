@@ -33,9 +33,6 @@ const Header = ({ description, user, paths }: Props) => {
           </div>
         </a>
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
-            <a href="/profile">Perfil</a>
-          </Button>
           <Button asChild size="sm">
             <a href={paths[user?.kind || 'passager']}>
               Painel
