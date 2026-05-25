@@ -58,7 +58,7 @@ class RegisterViewTests(APITestCase):
         """A civil servant registration should validate against AllowedStaff."""
         AllowedStaff.objects.create(
             name="SERVIDOR EXEMPLO",
-            registration_number="87654321",
+            registration_number="87654322",
         )
         payload = {
             "email": "servidor@uefs.br",
@@ -66,7 +66,7 @@ class RegisterViewTests(APITestCase):
             "password": "senha1234",
             "password_confirmation": "senha1234",
             "profile_type": "civil-servant",
-            "civil_servant_id": "87654321",
+            "civil_servant_id": "87654322",
         }
 
         response = self.client.post(self.url, payload, format="json")
