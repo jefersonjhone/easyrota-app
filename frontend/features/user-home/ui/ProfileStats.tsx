@@ -27,7 +27,7 @@ const InfoCard = ({ title, value }: { title: string; value: number;}) => {
 }
 export const ProfileStats = ({ user }: { user: ProfileUser }) => {
   return (
-    <div className="grid grid-cols-3 gap-1 md:gap-4 p-0 h-16 md:h-22 mt-4 px-2 sm:px-0">
+    <div className="grid grid-cols-3 gap-1 mt-2 mb-6 md:gap-4 p-0 h-16 md:h-22 px-2 sm:px-0">
       <InfoCard title="Reservas ativas" value={user.active_reservations} />
       <InfoCard title="Viagens realizadas" value={user.checkins_count} />
       <InfoCard title="Reservas solicitadas" value={user.reservations_count} />

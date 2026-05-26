@@ -1,5 +1,7 @@
 import logo from "@assets/logo-light-mode.svg"
 import { Button } from "@ui/button"
+import { UserIcon } from "@phosphor-icons/react"
+
 
 type User = {
   name: string
@@ -20,7 +22,7 @@ const Header = ({ description, user, paths }: Props) => {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/75">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <a href="/app" className="flex items-center gap-3 rounded-2xl text-foreground transition-colors hover:text-primary">
+        <a href={paths[user?.kind || 'passager']} className="flex items-center gap-3 rounded-2xl text-foreground transition-colors hover:text-primary">
           <img src={logo} alt="EasyRota" className="h-10 w-10" />
           <div className="leading-none">
             <h1 className="font-heading text-lg font-semibold tracking-tight">
@@ -33,12 +35,10 @@ const Header = ({ description, user, paths }: Props) => {
           </div>
         </a>
         <div className="flex items-center gap-2">
-          <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
-            <a href="/app/perfil">Perfil</a>
-          </Button>
-          <Button asChild size="sm">
-            <a href={paths[user?.kind || 'passager']}>
-              Painel
+          <Button asChild variant="outline" size="sm" className=" sm:inline-flex">
+            <a href="/app/perfil">
+              <UserIcon  />
+              Perfil
             </a>
           </Button>
         </div>

@@ -36,9 +36,9 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
             </Avatar>
             
             <div className='flex flex-col pb-2 m-0 '>
-                <h1 className='text-2xl font-bold '>{user.full_name}</h1>
+                <h1 className='text-lg md:text-2xl font-bold '>{user.full_name}</h1>
                 <p className='text-gray-500 text-base'>{user.email}</p>
-              <div className="font-medium text-sm sm:text-base font-">
+              <div className="text-sm sm:text-base font-">
                 <p className='text-gray-600 mt-1 md:mt-2'>
                   <UserSquareIcon className='inline-block mr-1' />
                   <span>
@@ -48,7 +48,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
                 
               <p className='text-gray-600 '>
                 <IdentificationBadgeIcon className='inline-block mr-1' />
-                <span className="font-medium">
+                <span className="">
                   
                   Matrícula: {user.student_id ?? user.civil_servant_id}
                 </span>
@@ -63,7 +63,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
 
           <div className='flex gap-2 items-start pt-2 mt-4 md:mt-10'>
             <button
-              className='px-4 md:px-8 py-2 bg-slate-500  text-sm text-white border border-white
+              className='px-4 md:px-8 py-2 bg-slate-400  text-sm text-white border border-white
               rounded-full font-medium md:font-bold hover:opacity-90' 
               onClick={()=>{alert("um dia teremos um modal de configurações")}}
             >

@@ -14,7 +14,6 @@ export function ProfilePage() {
   return <AppLayout >
     <div className='max-w-270 w-full mx-auto items-start mt-4 h-fit'>
       <ProfileHeader user={profileUser} />
-      <hr/>
       <ProfileStats user={profileUser} />
       
       <div className="w-full sm:px-0 mt-6 ">
