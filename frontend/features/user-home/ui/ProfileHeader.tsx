@@ -96,14 +96,14 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
         </div>
       </div>
       <Dialog open={openSettings} onOpenChange={setOpenSettings}>
-        <DialogContent className="w-full max-w-lg space-y-6">
+        <DialogContent className="w-full max-w-lg space-y-2  md:space-y-6">
       
           <section className="space-y-3">
             <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
               Notificações
             </h2>
       
-            <FieldGroup className="space-y-2">
+            <FieldGroup className="space-y-1">
               <Field orientation="horizontal">
                 <Switch
                   id="email-notifications"
