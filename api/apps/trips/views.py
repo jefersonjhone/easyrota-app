@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from django.db.models import Q
 from django.utils import timezone
@@ -65,6 +65,22 @@ class TripViewSet(viewsets.ModelViewSet):
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
     filter_backends = [FilterTripViewSet]
+
+    def create(self, request, *args, **kwargs):
+        trip_date = request.data.get("trip_date")
+        if trip_date:
+            try:
+                parsed_trip_date = date.fromisoformat(trip_date)
+            except ValueError:
+                parsed_trip_date = None
+
+            if parsed_trip_date and parsed_trip_date < timezone.localtime().date():
+                return Response(
+                    {"trip_date": ["A data da viagem não pode estar no passado."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        return super().create(request, *args, **kwargs)
 
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):

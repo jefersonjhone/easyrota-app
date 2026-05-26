@@ -139,10 +139,10 @@ class TripAPITestCase(APITestCase):
 
         response = self.client.post(self.trip_list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("non_field_errors", response.data)
+        self.assertIn("route", response.data)
         self.assertIn(
-            "A data da viagem não pode estar no passado.",
-            response.data["non_field_errors"],
+            "Não é possível agendar uma viagem para um horário que já passou hoje.",
+            response.data["route"],
         )
 
     def test_double_booking_standard(self):
