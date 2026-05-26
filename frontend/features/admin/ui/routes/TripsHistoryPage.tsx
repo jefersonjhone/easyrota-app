@@ -9,12 +9,16 @@ interface TripReservation {
   destiny: string
   trip_date: string
   trip_history_status: 'PENDENTE' | 'CONCLUÍDA' | 'CANCELADA' | 'FALTA'
+  reservation_status: 'PENDENTE' | 'CONFIRMADA' | 'LISTA SECUNDÁRIA'
+  can_cancel: boolean
+  quorum_met: boolean
   created_at: string
 }
 
 export function TripsHistoryPage() {
   const [trips, setTrips] = useState<TripReservation[]>([])
   const [loading, setLoading] = useState(true)
+  const [cancelingId, setCancelingId] = useState<number | null>(null)
 
   useEffect(() => {
     apiFetch<TripReservation[]>('/reservations/history/')
@@ -24,6 +28,21 @@ export function TripsHistoryPage() {
       .catch((err) => console.error('Erro ao buscar histórico:', err))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleCancel = async (reservationId: number) => {
+    setCancelingId(reservationId)
+    try {
+      await apiFetch(`/reservations/manage/${reservationId}/cancel/`, {
+        method: 'POST',
+      })
+      const data = await apiFetch<TripReservation[]>('/reservations/history/')
+      setTrips(data)
+    } catch (err) {
+      console.error('Erro ao cancelar reserva:', err)
+    } finally {
+      setCancelingId(null)
+    }
+  }
 
   const getStatusStyles = (status: TripReservation['trip_history_status']) => {
     switch (status) {
@@ -89,15 +108,29 @@ export function TripsHistoryPage() {
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold border ${getStatusStyles(trip.trip_history_status)}`}>
                       {getStatusLabel(trip.trip_history_status)}
                     </span>
+                    <div className="mt-2 flex gap-2 text-xs text-muted-foreground">
+                      <span className="rounded-full bg-muted px-3 py-1">
+                        Reserva: {trip.reservation_status}
+                      </span>
+                      <span className="rounded-full bg-muted px-3 py-1">
+                        Quórum: {trip.quorum_met ? 'atingido' : 'pendente'}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-end gap-3 pt-2 md:pt-0 border-t border-border md:border-none">
                     <Button variant="outline" size="sm" className="font-bold text-xs h-9 px-4">
                       Detalhes
                     </Button>
-                    {trip.trip_history_status === 'PENDENTE' && (
-                      <Button variant="outline" size="sm" className="font-bold text-xs h-9 px-4 text-destructive hover:bg-destructive/10 border-destructive/20">
-                        Cancelar
+                    {trip.can_cancel && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="font-bold text-xs h-9 px-4 text-destructive hover:bg-destructive/10 border-destructive/20"
+                        onClick={() => handleCancel(trip.id)}
+                        disabled={cancelingId === trip.id}
+                      >
+                        {cancelingId === trip.id ? 'Cancelando...' : 'Cancelar'}
                       </Button>
                     )}
                   </div>

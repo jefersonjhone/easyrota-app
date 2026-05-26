@@ -1,7 +1,9 @@
 from django.contrib.auth import authenticate
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import serializers
 
+from ..models.auth import AllowedStaff, MFAChallenge
 from ..models.profiles import CivilServantProfile, ProfileType, StudentProfile
 from ..models.user import CustomUser
 from ..serializers.users import (
@@ -76,6 +78,7 @@ class StudentRegistrationSerializer(BaseUserRegistrationSerializer):
 
         user = CustomUser.objects.create_user(
             password=password,
+            is_active=False,
             **validated_data,
         )
 
@@ -85,6 +88,14 @@ class StudentRegistrationSerializer(BaseUserRegistrationSerializer):
         )
 
         return {"user": user, "profile": profile, "profile_type": ProfileType.STUDENT}
+
+    def validate_email(self, value):
+        email = super().validate_email(value)
+        if not email.endswith("@discente.uefs.br"):
+            raise serializers.ValidationError(
+                "E-mail institucional de aluno deve terminar com @discente.uefs.br."
+            )
+        return email
 
 
 class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
@@ -115,6 +126,55 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
             "profile": profile,
             "profile_type": ProfileType.CIVIL_SERVANT,
         }
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        full_name = attrs["full_name"].strip().upper()
+        civil_servant_id = attrs["civil_servant_id"].strip()
+
+        if not AllowedStaff.objects.filter(
+            name__iexact=full_name,
+            registration_number=civil_servant_id,
+        ).exists():
+            raise serializers.ValidationError(
+                {"detail": "Servidor não encontrado na base autorizada."}
+            )
+
+        attrs["full_name"] = full_name
+        attrs["civil_servant_id"] = civil_servant_id
+        return attrs
+
+
+class VerifyRegistrationOTPSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    code = serializers.CharField(max_length=6)
+
+
+class CivilServantAllowedStaffSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    registration_number = serializers.CharField(max_length=32)
+
+    def validate(self, attrs):
+        normalized_name = attrs["name"].strip().upper()
+        normalized_registration = attrs["registration_number"].strip()
+
+        if not AllowedStaff.objects.filter(
+            name__iexact=normalized_name,
+            registration_number=normalized_registration,
+        ).exists():
+            raise serializers.ValidationError(
+                {"detail": "Servidor não encontrado na base autorizada."}
+            )
+
+        attrs["name"] = normalized_name
+        attrs["registration_number"] = normalized_registration
+        return attrs
+
+
+class AllowedStaffSearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AllowedStaff
+        fields = ("id", "name", "registration_number")
 
 
 class RegistrationResponseSerializer(serializers.Serializer):

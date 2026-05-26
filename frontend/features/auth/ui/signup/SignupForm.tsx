@@ -1,4 +1,5 @@
 // Library
+import { useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -14,7 +15,6 @@ import HintInvalid from "@features/auth/ui/HintInvalid"
 import { Button } from "@ui/button"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
 import { Input } from "@ui/input"
-import { Route as LoginRoute } from "@pages/login"
 
 
 const signupSchema = z.object({
@@ -68,8 +68,8 @@ const variantConfig: Record<SignupVariant, {
 export default function SignupForm(props: Props) {
   const { variant, paths } = props
   const config = variantConfig[variant]
-  
-  const navigate = LoginRoute.useNavigate()
+
+  const navigate = useNavigate()
 
   const signupMutation = useSignupMutation(variant)
   const form = useForm<SignupSchema>({
@@ -90,7 +90,7 @@ export default function SignupForm(props: Props) {
   const onSubmit = async (data: SignupSchema) => {
     try {
       await signupMutation.mutateAsync(data)
-      navigate({ to: LoginRoute.to, replace: true })
+      await navigate({ to: paths.login, replace: true })
     } catch (error: unknown) {
       const errors = error as Record<string, string[]>
       Object.entries(errors).forEach(([field, messages]) => {

@@ -13,7 +13,7 @@ export class LoginPage {
   }
 
   get password(): Locator {
-    return this.page.getByRole('textbox', { name: 'Senha' })
+    return this.page.getByRole('textbox', { name: 'Senha', exact: true })
   }
 
   get submitButton(): Locator {

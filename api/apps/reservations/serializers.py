@@ -1,16 +1,78 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from ..trips.models import Trip
 from .models import Reservation
+from .services import (
+    is_reservation_open,
+    reservation_cutoff,
+    trip_has_quorum,
+    trip_has_capacity,
+)
 
 
 class ReservationSerializer(serializers.ModelSerializer):
+    status = serializers.CharField(read_only=True)
+
     class Meta:
         model = Reservation
-        fields = ["trip"]
+        fields = ["id", "trip", "status", "created_at"]
+        read_only_fields = ["id", "status", "created_at"]
 
-    # TODO: Implement priority business rules
-    # (students, civil servants, guests and punishments)
+    def validate_trip(self, trip):
+        request = self.context["request"]
+        user = request.user
+
+        if not hasattr(user, "student_profile") and not hasattr(
+            user, "civil_servant_profile"
+        ):
+            raise serializers.ValidationError("Perfil sem permissão para reservar.")
+
+        if trip.status == "CANCELADA":
+            raise serializers.ValidationError("Esta viagem foi cancelada.")
+
+        if not is_reservation_open(trip):
+            raise serializers.ValidationError("Prazo de reserva encerrado.")
+
+        if hasattr(user, "civil_servant_profile"):
+            current_date = timezone.localdate()
+            if (
+                trip.trip_date.isocalendar().week != current_date.isocalendar().week
+                or trip.trip_date.isocalendar().year != current_date.isocalendar().year
+            ):
+                raise serializers.ValidationError(
+                    "Servidor só pode reservar durante a semana vigente."
+                )
+
+        if hasattr(user, "student_profile") and Reservation.objects.filter(
+            trip=trip, student=user.student_profile
+        ).exists():
+            raise serializers.ValidationError("Você já possui reserva nesta viagem.")
+
+        if hasattr(user, "civil_servant_profile") and Reservation.objects.filter(
+            trip=trip, civil_servant=user.civil_servant_profile
+        ).exists():
+            raise serializers.ValidationError("Você já possui reserva nesta viagem.")
+
+        return trip
+
+    def create(self, validated_data):
+        request = self.context["request"]
+        user = request.user
+        trip = validated_data["trip"]
+
+        reservation = Reservation(trip=trip)
+
+        if hasattr(user, "student_profile"):
+            reservation.student = user.student_profile
+        elif hasattr(user, "civil_servant_profile"):
+            reservation.civil_servant = user.civil_servant_profile
+
+        reservation.status = (
+            "CONFIRMADA" if trip_has_capacity(trip) else "LISTA SECUNDÁRIA"
+        )
+        reservation.save()
+        return reservation
 
 
 class ReservationHistorySerializer(serializers.ModelSerializer):
@@ -26,6 +88,9 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
     )
     
     trip_history_status = serializers.SerializerMethodField()
+    reservation_status = serializers.CharField(source="status")
+    can_cancel = serializers.SerializerMethodField()
+    quorum_met = serializers.SerializerMethodField()
     total_trips = serializers.SerializerMethodField()
 
     class Meta:
@@ -38,6 +103,9 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
             "trip_date",
             "trip_departure",
             "trip_history_status",
+            "reservation_status",
+            "can_cancel",
+            "quorum_met",
             "total_trips",
             "created_at",
         ]
@@ -58,6 +126,17 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
                 return "CONCLUÍDA"
 
             return "FALTA"
+
+        return "PENDENTE"
+
+    def get_can_cancel(self, obj):
+        return is_reservation_open(obj.trip) and obj.trip.status not in {
+            "CANCELADA",
+            "CONCLUÍDA",
+        }
+
+    def get_quorum_met(self, obj):
+        return trip_has_quorum(obj.trip)
 
     def get_total_trips(self, obj):
         """Returns the total number of trips the user has booked."""
@@ -87,6 +166,8 @@ class AvailableTripSerializer(serializers.ModelSerializer):
     available_seats = serializers.SerializerMethodField()
     is_full = serializers.SerializerMethodField()
     is_reservable = serializers.SerializerMethodField()
+    quorum_met = serializers.SerializerMethodField()
+    reservation_deadline = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -101,36 +182,33 @@ class AvailableTripSerializer(serializers.ModelSerializer):
             "available_seats",
             "is_full",
             "is_reservable",
+            "quorum_met",
+            "reservation_deadline",
         ]
 
     def get_status_trip(self, obj):
         return obj.get_status_display()
 
     def get_available_seats(self, obj):
-        DEFAULT_SEATING_CAPACITY = 46
         reserved_seats = getattr(obj, "reserved_seats", 0)
-        
-        seating_capacity = (
-            obj.bus.seating_capacity
-            if obj.bus
-            else DEFAULT_SEATING_CAPACITY
-        )
-        
+        seating_capacity = obj.bus.seating_capacity if obj.bus else 0
         return max(seating_capacity - reserved_seats, 0)
 
     def get_is_full(self, obj):
         return self.get_available_seats(obj) == 0
 
     def get_is_reservable(self, obj):
-        RESERVABLE_STATUSES = {
-            "RISCO DE CANCELAMENTO",
-            "CONFIRMADA",
-        }
-        
-        if obj.status not in RESERVABLE_STATUSES:
-            return False
-        
-        return self.get_available_seats(obj) > 0
+        return (
+            obj.status != "CANCELADA"
+            and is_reservation_open(obj)
+            and self.get_available_seats(obj) > 0
+        )
+
+    def get_quorum_met(self, obj):
+        return trip_has_quorum(obj)
+
+    def get_reservation_deadline(self, obj):
+        return reservation_cutoff(obj)
 
 
 class ManageReservationSerializer(serializers.ModelSerializer):

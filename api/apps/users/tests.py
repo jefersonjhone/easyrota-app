@@ -1,15 +1,23 @@
 import pytest
+from unittest.mock import patch
+from datetime import time, timedelta
+
+from django.core.management import call_command
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from apps.trips.models import Bus, Route, Trip
 from .models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
     DriverProfile,
     StudentProfile,
 )
+from .models.auth import AllowedStaff, MFAChallenge
 from .models.user import CustomUser
 
 User = get_user_model()
@@ -23,7 +31,7 @@ class RegisterViewTests(APITestCase):
         self.url = "/api/register/"
 
     def test_register_student_creates_user_profile_and_tokens(self):
-        """A student registration should create both records and return JWTs."""
+        """A student registration should create the user and return OTP flow."""
         payload = {
             "email": "aluno@discente.uefs.br",
             "full_name": "Aluno Exemplo",
@@ -33,25 +41,32 @@ class RegisterViewTests(APITestCase):
             "student_id": "12345678",
         }
 
-        response = self.client.post(self.url, payload, format="json")
+        with patch("apps.users.views.auth.send_mail") as mocked_send_mail:
+            response = self.client.post(self.url, payload, format="json")
 
-        assert response.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_202_ACCEPTED
         assert response.data["user"]["user"]["email"] == payload["email"]
         assert response.data["user"]["profile_type"] == "student"
-        assert "tokens" in response.data
-        assert response.data["tokens"]["access"]
+        assert response.data["status"] == "verification_required"
+        assert response.data["otp_destination"] == payload["email"]
         assert CustomUser.objects.filter(email=payload["email"]).exists()
         assert StudentProfile.objects.filter(student_id=payload["student_id"]).exists()
+        assert MFAChallenge.objects.filter(user__email=payload["email"]).exists()
+        assert mocked_send_mail.called
 
     def test_register_civil_servant_creates_user_profile_and_tokens(self):
-        """A civil servant registration should create both records and return JWTs."""
+        """A civil servant registration should validate against AllowedStaff."""
+        AllowedStaff.objects.create(
+            name="SERVIDOR EXEMPLO",
+            registration_number="87654322",
+        )
         payload = {
             "email": "servidor@uefs.br",
             "full_name": "Servidor Exemplo",
             "password": "senha1234",
             "password_confirmation": "senha1234",
             "profile_type": "civil-servant",
-            "civil_servant_id": "87654321",
+            "civil_servant_id": "87654322",
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -59,12 +74,70 @@ class RegisterViewTests(APITestCase):
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["user"]["user"]["email"] == payload["email"]
         assert response.data["user"]["profile_type"] == "civil-servant"
-        assert "tokens" in response.data
-        assert response.data["tokens"]["access"]
+        assert response.data["status"] == "created"
         assert CustomUser.objects.filter(email=payload["email"]).exists()
         assert CivilServantProfile.objects.filter(
             civil_servant_id=payload["civil_servant_id"]
         ).exists()
+
+    def test_register_student_rejects_invalid_email_domain(self):
+        payload = {
+            "email": "aluno@uefs.br",
+            "full_name": "Aluno Exemplo",
+            "password": "senha1234",
+            "password_confirmation": "senha1234",
+            "profile_type": "student",
+            "student_id": "12345678",
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "email" in response.data
+
+    def test_verify_registration_otp_activates_student(self):
+        payload = {
+            "email": "aluno2@discente.uefs.br",
+            "full_name": "Aluno Exemplo 2",
+            "password": "senha1234",
+            "password_confirmation": "senha1234",
+            "profile_type": "student",
+            "student_id": "12345679",
+        }
+
+        with patch("apps.users.views.auth.send_mail"):
+            response = self.client.post(self.url, payload, format="json")
+
+        token = response.data["token"]
+        challenge = MFAChallenge.objects.get(user__email=payload["email"])
+        verify_url = reverse("verify-registration-otp")
+
+        with patch("apps.users.views.auth.check_password", return_value=True):
+            verify_response = self.client.post(
+                verify_url,
+                {"token": token, "code": "123456"},
+                format="json",
+            )
+
+        assert verify_response.status_code == status.HTTP_200_OK
+        challenge.refresh_from_db()
+        assert challenge.used is True
+        assert CustomUser.objects.get(email=payload["email"]).is_active is True
+
+    def test_civil_servant_registration_rejects_unknown_staff(self):
+        payload = {
+            "email": "servidor2@uefs.br",
+            "full_name": "Servidor Desconhecido",
+            "password": "senha1234",
+            "password_confirmation": "senha1234",
+            "profile_type": "civil-servant",
+            "civil_servant_id": "11111111",
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "detail" in response.data or "civil_servant_id" in response.data
 
     def test_register_rejects_password_mismatch(self):
         """The API should reject payloads with inconsistent passwords."""
@@ -239,6 +312,100 @@ class AdminDelegationViewTests(APITestCase):
         assert "level" in response.data
 
 
+class AllowedStaffImportTests(APITestCase):
+    def test_import_allowed_staff_command(self):
+        call_command("import_allowed_staff", "servidores.ods")
+
+        assert AllowedStaff.objects.exists()
+        assert AllowedStaff.objects.filter(registration_number="71654523").exists()
+
+
+class AllowedStaffValidationTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = "/api/register/"
+
+    def test_civil_servant_registration_matches_allowed_staff(self):
+        AllowedStaff.objects.create(
+            name="SERVIDOR TESTE",
+            registration_number="11112222",
+        )
+
+        payload = {
+            "email": "servidor3@uefs.br",
+            "full_name": "Servidor Teste",
+            "password": "senha1234",
+            "password_confirmation": "senha1234",
+            "profile_type": "civil-servant",
+            "civil_servant_id": "11112222",
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["status"] == "created"
+
+    def test_driver_search_and_passenger_registration(self):
+        driver_user = CustomUser.objects.create_user(
+            email="motorista@teste.com",
+            full_name="Motorista Teste",
+            password="12345678",
+            is_active=True,
+        )
+        DriverProfile.objects.create(
+            user=driver_user,
+            cnh="12345678901",
+        )
+        admin_user = CustomUser.objects.create_superuser(
+            email="admin@teste.com",
+            full_name="Admin Teste",
+            password="12345678",
+        )
+        admin_profile = AdministratorProfile.objects.create(user=admin_user)
+        bus = Bus.objects.create(
+            number_plate="TRIP-1234",
+            seating_capacity=40,
+            brand="Mercedes-Benz",
+            administrator=admin_profile,
+        )
+        route = Route.objects.create(
+            origin="Feira de Santana",
+            destiny="Salvador",
+            departure_time=time(8, 0),
+            arrival_time=time(10, 0),
+            administrator=admin_profile,
+        )
+        trip = Trip.objects.create(
+            trip_date=timezone.now().date() + timedelta(days=1),
+            bus=bus,
+            route=route,
+            status="CONFIRMADA",
+        )
+        AllowedStaff.objects.create(
+            name="SERVIDOR BUSCA",
+            registration_number="99998888",
+        )
+
+        self.client.force_authenticate(user=driver_user)
+
+        search_response = self.client.get("/api/staff/search/", {"q": "SERVIDOR"})
+        assert search_response.status_code == status.HTTP_200_OK
+        assert len(search_response.data) >= 1
+
+        create_response = self.client.post(
+            "/api/staff/passengers/",
+            {
+                "trip": trip.id,
+                "name": "SERVIDOR BUSCA",
+                "registration_number": "99998888",
+            },
+            format="json",
+        )
+
+        assert create_response.status_code == status.HTTP_201_CREATED
+        assert create_response.data["id"]
+
+
 class DriverProfileTests(APITestCase):
     def test_create_driver_profile_with_valid_cnh(self):
         user = CustomUser.objects.create_user(
@@ -281,10 +448,7 @@ class DriverProfileTests(APITestCase):
             password="SenhaSegura123",
             full_name="Driver Two",
         )
-        DriverProfile.objects.create(
-            user=user1,
-            cnh="12345678901",
-        )
+        DriverProfile.objects.create(user=user1, cnh="12345678901")
         profile = DriverProfile(
             user=user2,
             cnh="12345678901",
