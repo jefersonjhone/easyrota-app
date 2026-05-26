@@ -4,7 +4,13 @@ from rest_framework.response import Response
 
 from ..models.profiles import DriverProfile
 from ..permissions import IsSuperAdmin
-from ..serializers.users import CreateSubAdminSerializer, DriverSerializer
+from ..serializers.users import (
+    AuthenticatedUserWithProfileSerializer,
+    CreateSubAdminSerializer,
+    DriverSerializer,
+)
+from apps.users.models import CustomUser
+from apps.reservations.models import Reservation
 
 
 class HealthCheckView(views.APIView):
@@ -14,6 +20,55 @@ class HealthCheckView(views.APIView):
 
     def get(self, request):
         return Response({"status": "ok"})
+
+
+class SelfProfileView(views.APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = self.request.user
+        serializer = AuthenticatedUserWithProfileSerializer(user)
+
+        reservations = Reservation.objects.none()
+        info_data = {}
+        if hasattr(user, "student_profile"):
+            info_data = {
+                "student_id": user.student_profile.student_id,
+            }
+            reservations = (
+                Reservation.objects
+                .filter(student=user.student_profile)
+                .select_related("trip", "trip__route")
+                .order_by("-created_at")
+            )
+        elif hasattr(user, "civil_servant_profile"):
+            info_data = {
+                "civil_servant_id": user.civil_servant_profile.civil_servant_id,
+            }
+            reservations = (
+                Reservation.objects
+                .filter(civil_servant=user.civil_servant_profile)
+                .select_related("trip", "trip__route")
+                .order_by("-created_at")
+            )
+        
+        reservations_list = list(reservations)
+        
+        data = {
+            **serializer.data,
+            **info_data,
+            "joined_at": user.date_joined.strftime("%Y-%m-%d"),
+            "checkins_count": sum(1 for r in reservations_list if r.check_in),
+            "reservations_count": len(reservations_list),
+            "active_reservations": sum(
+                1 for r in reservations_list
+                if r.trip.status in [
+                    "CONFIRMADA", "RISCO DE CANCELAMENTO"
+                ] or print(r.status)
+            ),
+        }
+        
+        return Response(data)
 
 
 class AdminDelegationView(generics.GenericAPIView):

@@ -10,7 +10,12 @@ from .views.auth import (
     RegisterView2fa,
     Verify2FAView,
 )
-from .views.users import AdminDelegationView, DriverViewSet, HealthCheckView
+from .views.users import (
+    AdminDelegationView,
+    DriverViewSet,
+    HealthCheckView,
+    SelfProfileView,
+)
 
 router = DefaultRouter()
 router.register(r"drivers", DriverViewSet, basename="drivers")
@@ -20,6 +25,7 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
     path("admins/", AdminDelegationView.as_view(), name="create-subadmin"),
+    path("profile/", SelfProfileView.as_view(), name="profile"),
     # auth views, 2fa enabled to login and register
     path("auth/login/", LoginView2fa.as_view(), name="login-2fa"),
     path("auth/register/", RegisterView2fa.as_view(), name="register-2fa"),
