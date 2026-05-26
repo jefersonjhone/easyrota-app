@@ -15,7 +15,6 @@ import HintInvalid from "@features/auth/ui/HintInvalid"
 import { Button } from "@ui/button"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
 import { Input } from "@ui/input"
-import { Route as LoginRoute } from "@pages/login"
 
 
 const signupSchema = z.object({
@@ -91,7 +90,7 @@ export default function SignupForm(props: Props) {
   const onSubmit = async (data: SignupSchema) => {
     try {
       await signupMutation.mutateAsync(data)
-      navigate({ to: LoginRoute.to, replace: true })
+      await navigate({ to: paths.login, replace: true })
     } catch (error: unknown) {
       const errors = error as Record<string, string[]>
       Object.entries(errors).forEach(([field, messages]) => {
