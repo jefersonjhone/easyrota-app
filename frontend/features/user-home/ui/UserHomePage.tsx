@@ -21,7 +21,7 @@ export function UserHomePage() {
 
   return (
     <AppLayout>
-      <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 mt-8">
         <UserHomeHero
           fullName={user?.full_name}
           profileType={user?.profile_type}
