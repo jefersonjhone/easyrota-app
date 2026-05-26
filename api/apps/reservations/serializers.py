@@ -19,7 +19,12 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
     origin = serializers.CharField(source="trip.route.origin")
     destiny = serializers.CharField(source="trip.route.destiny")
     trip_date = serializers.DateField(source="trip.trip_date")
-
+    trip_id = serializers.IntegerField(source="trip.id")
+    trip_departure = serializers.DateTimeField(
+        source="trip.departure_timestamp",
+        format="%H:%M:%S",
+    )
+    
     trip_history_status = serializers.SerializerMethodField()
     total_trips = serializers.SerializerMethodField()
 
@@ -29,7 +34,9 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
             "id",
             "origin",
             "destiny",
+            "trip_id",
             "trip_date",
+            "trip_departure",
             "trip_history_status",
             "total_trips",
             "created_at",
