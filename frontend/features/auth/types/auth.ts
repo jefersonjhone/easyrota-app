@@ -4,7 +4,7 @@ export type AuthUser = {
   id: number
   email: string
   full_name: string
-  profile_type: "STUDENT" | "CIVIL_SERVANT" | "ADMIN" | "DRIVER"
+  profile_type: "STUDENT" | "CIVIL-SERVANT" | "ADMIN" | "DRIVER"
   admin_profile?: {
     id: number
     role: string

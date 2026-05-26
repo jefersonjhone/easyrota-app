@@ -42,7 +42,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
   const [confirmPassword, setConfirmPassword] = useState("")
   const canDeleteAccount =
     user.profile_type === "STUDENT" ||
-    user.profile_type === "CIVIL_SERVANT"
+    user.profile_type === "CIVIL-SERVANT"
 
   
   return (
