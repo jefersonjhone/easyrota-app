@@ -20,7 +20,7 @@ import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as IndexRouteImport } from './pages/index'
 import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
-import { Route as AppProfileRouteImport } from './pages/app/profile'
+import { Route as AppPerfilRouteImport } from './pages/app/perfil'
 import { Route as AdminViagensRouteImport } from './pages/admin/viagens'
 import { Route as AdminRotasRouteImport } from './pages/admin/rotas'
 import { Route as AdminRelatoriosRouteImport } from './pages/admin/relatorios'
@@ -85,9 +85,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppProfileRoute = AppProfileRouteImport.update({
-  id: '/app/profile',
-  path: '/app/profile',
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/app/perfil',
+  path: '/app/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminViagensRoute = AdminViagensRouteImport.update({
@@ -161,7 +161,7 @@ export interface FileRoutesByFullPath {
   '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof App_rootRoute
-  '/app/profile': typeof AppProfileRoute
+  '/app/perfil': typeof AppPerfilRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
@@ -186,7 +186,7 @@ export interface FileRoutesByTo {
   '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof AppIndexRoute
-  '/app/profile': typeof AppProfileRoute
+  '/app/perfil': typeof AppPerfilRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
   '/app/viagens': typeof AppViagensIndexRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
@@ -209,7 +209,7 @@ export interface FileRoutesById {
   '/admin/rotas': typeof AdminRotasRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app/__root': typeof App_rootRoute
-  '/app/profile': typeof AppProfileRoute
+  '/app/perfil': typeof AppPerfilRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
@@ -236,7 +236,7 @@ export interface FileRouteTypes {
     | '/admin/rotas'
     | '/admin/viagens'
     | '/app'
-    | '/app/profile'
+    | '/app/perfil'
     | '/admin/'
     | '/app/'
     | '/app/driver/viagens'
@@ -261,7 +261,7 @@ export interface FileRouteTypes {
     | '/admin/rotas'
     | '/admin/viagens'
     | '/app'
-    | '/app/profile'
+    | '/app/perfil'
     | '/app/driver/viagens'
     | '/app/viagens'
     | '/app/viagens/atual'
@@ -283,7 +283,7 @@ export interface FileRouteTypes {
     | '/admin/rotas'
     | '/admin/viagens'
     | '/app/__root'
-    | '/app/profile'
+    | '/app/perfil'
     | '/admin/'
     | '/app/'
     | '/app/driver/viagens'
@@ -309,7 +309,7 @@ export interface RootRouteChildren {
   AdminRotasRoute: typeof AdminRotasRoute
   AdminViagensRoute: typeof AdminViagensRoute
   App_rootRoute: typeof App_rootRoute
-  AppProfileRoute: typeof AppProfileRoute
+  AppPerfilRoute: typeof AppPerfilRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDriverViagensRoute: typeof AppDriverViagensRoute
@@ -399,11 +399,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/profile': {
-      id: '/app/profile'
-      path: '/app/profile'
-      fullPath: '/app/profile'
-      preLoaderRoute: typeof AppProfileRouteImport
+    '/app/perfil': {
+      id: '/app/perfil'
+      path: '/app/perfil'
+      fullPath: '/app/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/viagens': {
@@ -501,7 +501,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRotasRoute: AdminRotasRoute,
   AdminViagensRoute: AdminViagensRoute,
   App_rootRoute: App_rootRoute,
-  AppProfileRoute: AppProfileRoute,
+  AppPerfilRoute: AppPerfilRoute,
   AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
   AppDriverViagensRoute: AppDriverViagensRoute,

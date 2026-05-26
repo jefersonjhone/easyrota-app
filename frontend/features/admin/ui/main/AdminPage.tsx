@@ -53,13 +53,14 @@ const AdminPage = () => {
     <AdminLayout>
       <section className="max-w-300 mx-auto flex flex-col gap-y-12 md:gap-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-6 md:h-82 mb-12">
-          {
-            usersData !== undefined && <TotalUsersCard
-            users_data={usersData}
+           <TotalUsersCard
+            users_data={usersData ?? {
+              total_users: 0,
+              profiles: [],
+            }}
             onFilterChange={setFilter}
             isMobile={isMobile}
             />
-          }
           <div className='grid grid-cols-2 md:col-span-2 w-full gap-2 md:gap-6'>
             <TotalDriversCard total={driversData?.total_drivers ?? 0} />
              <TotalBusesCard total={busesData?.total_buses ?? 0} />

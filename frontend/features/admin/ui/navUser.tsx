@@ -85,7 +85,7 @@ export function NavUser() {
               <DropdownMenuLabel>
                 ACCOUNT
               </DropdownMenuLabel>
-              <Link to="/app/profile">
+              <Link to="/app/perfil">
                 <DropdownMenuItem>
                     <UserCircleIcon />
                     Profile

@@ -19,7 +19,7 @@ const AppLayout = ({ children, showFooter = true }: LayoutProps) => {
         description="Sistema de gerenciamento de rotas"
         paths={paths}
       />
-      <main className="flex-1 flex flex-col gap-6 py-10">
+      <main className="flex-1 flex flex-col gap-6 ">
         {children}
       </main>
       {showFooter && <Footer />}
