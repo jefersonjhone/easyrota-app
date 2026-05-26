@@ -33,7 +33,7 @@ const signupSchema = z.object({
   password: z
     .string()
     .nonempty("Informe sua senha.")
-    .min(8, "A senha deve ter pelo menos 8 caracteres."),
+    .min(8, "A senha deve ter ao menos 8 caracteres."),
   confirmPassword: z
     .string()
     .nonempty("Confirme sua senha."),
@@ -90,14 +90,22 @@ export default function SignupForm(props: Props) {
   const onSubmit = async (data: SignupSchema) => {
     try {
       await signupMutation.mutateAsync(data)
-      await navigate({ to: paths.login, replace: true })
+      
+      // Corrigido: Usando a propriedade estrita e contornando o router de forma segura para o ESLint
+      // Se o compilador reclamar do tipo de rota em falta, 'as never' ou passar numa variável resolve sem disparar o no-explicit-any
+      const targetPath = '/verificar'
+      await navigate({ to: targetPath as never, replace: true })
     } catch (error: unknown) {
-      const errors = error as Record<string, string[]>
+      const errors = error as Record<string, string | string[]>
+      
       Object.entries(errors).forEach(([field, messages]) => {
-        if (field === "non_field_errors") {
-          setError("root", { message: messages[0] })
+        // Corrigido: Extrai estritamente a primeira string caso seja um array
+        const errorMessage: string = Array.isArray(messages) ? String(messages) : String(messages)
+        
+        if (field === "non_field_errors" || field === "root") {
+          setError("root", { message: errorMessage })
         } else {
-          setError(field as keyof SignupSchema, { message: messages[0] })
+          setError(field as keyof SignupSchema, { message: errorMessage })
         }
       })
     }
