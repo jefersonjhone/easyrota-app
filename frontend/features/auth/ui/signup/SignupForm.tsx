@@ -1,4 +1,5 @@
 // Library
+import { useNavigate } from "@tanstack/react-router"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -68,8 +69,8 @@ const variantConfig: Record<SignupVariant, {
 export default function SignupForm(props: Props) {
   const { variant, paths } = props
   const config = variantConfig[variant]
-  
-  const navigate = LoginRoute.useNavigate()
+
+  const navigate = useNavigate()
 
   const signupMutation = useSignupMutation(variant)
   const form = useForm<SignupSchema>({
