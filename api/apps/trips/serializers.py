@@ -132,6 +132,11 @@ class TripSerializer(serializers.ModelSerializer):
         )
         route = data.get("route", self.instance.route if self.instance else None)
         status = data.get("status", self.instance.status if self.instance else None)
+
+        if self.instance is None and trip_date and trip_date < timezone.localtime().date():
+            raise serializers.ValidationError({
+                "trip_date": "A data da viagem não pode estar no passado."
+            })
         
         now = timezone.localtime()
         tz = timezone.get_current_timezone()

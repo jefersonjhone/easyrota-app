@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
@@ -117,7 +118,20 @@ class ReservationTest(BaseReservationTestCase):
 
         trip = self.create_trip(days_ahead=0)
 
-        response = self.client.post(self.url, data={"trip": trip.id}, format="json")
+        cutoff_time = timezone.make_aware(
+            timezone.datetime.combine(
+                trip.trip_date,
+                trip.route.departure_time,
+            ),
+            timezone.get_current_timezone(),
+        ) + timedelta(minutes=31)
+
+        with patch("apps.reservations.services.timezone.now", return_value=cutoff_time):
+            response = self.client.post(
+                self.url,
+                data={"trip": trip.id},
+                format="json",
+            )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Prazo de reserva encerrado.", str(response.data))
