@@ -3,6 +3,7 @@ import {
   civilServantName,
   civilServantRegistration,
   uniqueEmail,
+  uniqueStudentEmail,
   uniqueRegistration,
 } from '../utils/auth'
 import { SignupPage } from '../pages/signup'
@@ -18,7 +19,7 @@ test.describe('Signup Page', () => {
 
     await signupPage.asCivilServant()
 
-    await signupPage.email.fill(uniqueEmail())
+    await signupPage.email.fill(uniqueStudentEmail())
     await signupPage.fullName.fill(civilServantName)
     await signupPage.registration.fill(civilServantRegistration)
     await signupPage.password.fill('12345678')

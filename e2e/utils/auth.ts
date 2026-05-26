@@ -3,7 +3,8 @@ import { SignupPage } from '../pages/signup'
 
 export const unique = () => `${Date.now()}.${Math.random().toString(36).slice(2)}`
 export const uniqueRegistration = () => `${Date.now()}${Math.floor(Math.random() * 1_000_000)}`.slice(-8)
-export const uniqueEmail = () => `john.doe+${unique()}@example.com`
+export const uniqueEmail = () => `john.doe+${unique()}@discente.uefs.br`
+export const uniqueStudentEmail = () => `${uniqueRegistration()}@discente.uefs.br`
 export const civilServantName = 'Professor da Silva Santos'
 export const civilServantRegistration = '87654321'
 
@@ -29,7 +30,7 @@ export const signupAsStudent = async (
   page: Page, 
   password: string
 ): Promise<{ email: string, password: string }> => {
-  const email = uniqueEmail()
+  const email = uniqueStudentEmail()
 
   const signupPage = new SignupPage(page)
   await signupPage.goto()
