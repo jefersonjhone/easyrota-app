@@ -84,7 +84,7 @@ def handle_registration(request):
     created = serializer.save()
     user = created["user"]
 
-    if profile_type == ProfileType.STUDENT:
+    if profile_type in [ProfileType.STUDENT, ProfileType.CIVIL_SERVANT]:
         token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REGISTER)
         code = generate_otp()
 
