@@ -57,6 +57,7 @@ poetry install --no-interaction
 # 4. Preparar Banco de Dados
 echo -e "${GREEN}[4/6] Preparando banco de dados...${NC}"
 poetry run python api/manage.py migrate
+poetry run python api/manage.py loaddata api/apps/users/fixtures/allowed_staff.json
 
 # 5. Criar um Superusuário de teste (opcional/silencioso)
 echo -e "${GREEN}[5/6] Garantindo que existam dados mínimos...${NC}"
