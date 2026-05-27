@@ -23,7 +23,7 @@ class PartialTokenService:
             "purpose": purpose,
             "jti": jti,
             "iat": int(timezone.now().timestamp()),
-            "exp": int((timezone.now() + timedelta(minutes=5)).timestamp()),
+            "exp": int((timezone.now() + timedelta(minutes=10)).timestamp()),
         }
 
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")

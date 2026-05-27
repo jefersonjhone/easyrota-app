@@ -166,6 +166,10 @@ class VerifyRegistrationOTPSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=6)
 
 
+class ResendOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
 class CivilServantAllowedStaffSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     registration_number = serializers.CharField(max_length=32)

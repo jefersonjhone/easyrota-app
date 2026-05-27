@@ -8,6 +8,46 @@ export function VerifyCodePage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
+
+  const handleResend = async () => {
+    const params = new URLSearchParams(window.location.search)
+    const email = params.get('email')
+
+    if (!email) {
+      setError('E-mail não encontrado. Por favor, tente se cadastrar novamente.')
+      return
+    }
+
+    setResendLoading(true)
+    setError(null)
+    setResendSuccess(false)
+
+    try {
+      const response = await apiFetch('/auth/resend-otp/', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      })
+      
+      const data = await (response as Response).json()
+      
+      // Atualiza o token na URL para o novo token gerado
+      if (data.token) {
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.set('token', data.token)
+        window.history.replaceState({}, '', newUrl.toString())
+      }
+
+      setResendSuccess(true)
+      setTimeout(() => setResendSuccess(false), 5000)
+    } catch (err: unknown) {
+      console.error(err)
+      setError('Erro ao reenviar o código. Tente novamente mais tarde.')
+    } finally {
+      setResendLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,6 +132,20 @@ export function VerifyCodePage() {
               >
                 {loading ? 'Validando...' : 'Ativar Minha Conta'}
               </Button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendLoading}
+                  className="text-sm text-[#b84d05] hover:text-[#963e04] font-medium transition-colors disabled:opacity-50"
+                >
+                  {resendLoading ? 'Enviando...' : 'Reenviar código por e-mail'}
+                </button>
+                {resendSuccess && (
+                  <p className="text-xs text-emerald-500 mt-1">Novo código enviado!</p>
+                )}
+              </div>
             </form>
           )}
         </CardContent>
