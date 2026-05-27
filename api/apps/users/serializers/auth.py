@@ -41,10 +41,7 @@ class Verify2FASerializer(serializers.Serializer):
 from rest_framework.validators import UniqueValidator
 
 class BaseUserRegistrationSerializer(serializers.Serializer):
-    email = serializers.EmailField(
-        write_only=True,
-        validators=[UniqueValidator(queryset=CustomUser.objects.all())]
-    )
+    email = serializers.EmailField(write_only=True)
     full_name = serializers.CharField(write_only=True, max_length=255)
 
     password = serializers.CharField(
@@ -57,7 +54,16 @@ class BaseUserRegistrationSerializer(serializers.Serializer):
     )
 
     def validate_email(self, value):
-        return value.strip().lower()
+        email = value.strip().lower()
+        user = CustomUser.objects.filter(email=email).first()
+        if user:
+            if not user.is_active:
+                raise serializers.ValidationError(
+                    "Este e-mail já está cadastrado, mas a conta ainda não foi ativada. "
+                    "Por favor, verifique seu e-mail ou peça um novo código."
+                )
+            raise serializers.ValidationError("Este e-mail já está em uso.")
+        return email
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirmation"]:
