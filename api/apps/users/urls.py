@@ -8,6 +8,7 @@ from .views.auth import (
     LogoutView,
     RefreshTokenView,
     RegisterView,
+    ResendOTPView,
     VerifyRegistrationOTPView,
     Verify2FAView,
 )
@@ -37,6 +38,11 @@ urlpatterns = [
         "auth/verify-registration-otp/",
         VerifyRegistrationOTPView.as_view(),
         name="verify-registration-otp",
+    ),
+    path(
+        "auth/resend-otp/",
+        ResendOTPView.as_view(),
+        name="resend-otp",
     ),
     path("auth/refresh", RefreshTokenView.as_view(), name="refresh-token"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
