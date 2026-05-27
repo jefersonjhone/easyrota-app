@@ -10,6 +10,12 @@ export function VerifyCodePage() {
   const [success, setSuccess] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
+  
+  // Usar estado para o token para garantir re-renderização e uso do valor atualizado
+  const [token, setToken] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('token')
+  })
 
   const handleResend = async () => {
     const params = new URLSearchParams(window.location.search)
@@ -30,10 +36,13 @@ export function VerifyCodePage() {
         body: JSON.stringify({ email })
       })
       
-      const data = await (response as Response).json()
+      // Se apiFetch retornar a resposta bruta ou o JSON depende da implementação
+      // Geralmente em projetos React/TanStack ele retorna o dado se for OK
+      const data = await (response as any).json?.() || response
       
-      // Atualiza o token na URL para o novo token gerado
       if (data.token) {
+        setToken(data.token)
+        // Atualiza a URL apenas para consistência visual/refresh
         const newUrl = new URL(window.location.href)
         newUrl.searchParams.set('token', data.token)
         window.history.replaceState({}, '', newUrl.toString())
@@ -43,7 +52,9 @@ export function VerifyCodePage() {
       setTimeout(() => setResendSuccess(false), 5000)
     } catch (err: unknown) {
       console.error(err)
-      setError('Erro ao reenviar o código. Tente novamente mais tarde.')
+      // Se o backend deu 200 (como visto no log), o erro aqui é no processamento do JSON ou na lógica do apiFetch
+      // Vamos tentar extrair a mensagem de erro se houver
+      setError('Erro ao reenviar o código. Verifique se o e-mail está correto.')
     } finally {
       setResendLoading(false)
     }
@@ -55,20 +66,11 @@ export function VerifyCodePage() {
     setError(null)
 
     try {
-      // O backend espera o código e o token (parcial) gerado no registro
-      // Como o token é retornado no registro, para simplificar nesta tela 
-      // e dado que o backend exige o token para o desafio JTI, 
-      // vamos tentar capturar o token que deveria ter sido passado via rota ou state.
-      // Se não houver, o backend falhará na validação do JTI.
-      
-      const params = new URLSearchParams(window.location.search)
-      const token = params.get('token')
-
       await apiFetch('/auth/verify-registration-otp/', {
         method: 'POST',
         body: JSON.stringify({ 
           code: code.trim(),
-          token: token 
+          token: token // Usa o token do estado (atualizado pelo reenvio)
         })
       })
       
