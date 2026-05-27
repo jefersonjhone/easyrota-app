@@ -11,7 +11,7 @@ export interface Bus {
   number_plate: string
   brand: string
   seating_capacity: number
-  status: 'active' | 'maintenance'
+  status: 'ATIVO' | 'MANUTENÇÃO'
 }
 
 export function BusesPage() {

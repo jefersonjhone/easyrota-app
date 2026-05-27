@@ -9,8 +9,11 @@ import type { Bus } from './BusesPage'
 const editBusSchema = z.object({
   number_plate: z.string().min(1, "Placa obrigatória"),
   brand: z.string().min(1, "Marca obrigatória"),
-  seating_capacity: z.number().min(1, "Mínimo 1 assento").max(120, "Máximo 120 assentos"),
-  status: z.enum(['active', 'maintenance'])
+  seating_capacity: z.number(
+    "Capacidade é obrigatória."
+  )
+  .min(1, "Mínimo 1 assento").max(120, "Máximo 120 assentos"),
+  status: z.enum(['ATIVO', 'MANUTENÇÃO'])
 })
 
 type EditBusData = z.infer<typeof editBusSchema>
@@ -59,7 +62,7 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
     } catch (err) {
       console.error(err)
       const errorData = err as { data?: { detail?: string, number_plate?: string[] } } | undefined
-      const plateError = errorData?.data?.number_plate?.
+      const plateError = errorData?.data?.number_plate?.[0]
 
       if (plateError) {
         setError("number_plate", { message: "A placa inserida já está cadastrada." })
@@ -141,8 +144,8 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
                 id="edit_status"
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none cursor-pointer"
               >
-                <option value="active">Ativo</option>
-                <option value="maintenance">Manutenção</option>
+                <option value="ATIVO">Ativo</option>
+                <option value="MANUTENÇÃO">Manutenção</option>
               </select>
             </div>
           </div>

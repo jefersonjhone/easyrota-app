@@ -10,11 +10,15 @@ class Bus(models.Model):
     Stores vehicle identification, capacity, and assigned personnel.
     """
 
+    BUS_STATUS = (
+        ("ATIVO", "Ativo"),
+        ("MANUTENÇÃO", "Manutenção"),
+    )
+
     number_plate = models.CharField(max_length=10, unique=True)
     seating_capacity = models.IntegerField()
     brand = models.CharField(max_length=100)
-    # add field "status" (dont delete my comment pls,
-    # i will remove it in the future lol)
+    status = models.CharField(max_length=25, choices=BUS_STATUS, default="ATIVO")
     administrator = models.ForeignKey(
         "users.AdministratorProfile", on_delete=models.SET_NULL, null=True
     )

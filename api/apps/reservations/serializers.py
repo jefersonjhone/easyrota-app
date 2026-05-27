@@ -6,8 +6,8 @@ from .models import Reservation
 from .services import (
     is_reservation_open,
     reservation_cutoff,
-    trip_has_quorum,
     trip_has_capacity,
+    trip_has_quorum,
 )
 
 

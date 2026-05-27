@@ -29,8 +29,8 @@ from ..serializers.auth import (
     LoginSerializer,
     RegistrationResponseSerializer,
     StudentRegistrationSerializer,
-    VerifyRegistrationOTPSerializer,
     Verify2FASerializer,
+    VerifyRegistrationOTPSerializer,
 )
 from ..serializers.users import (
     AuthenticatedUserWithProfileSerializer,

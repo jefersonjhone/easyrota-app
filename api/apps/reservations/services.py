@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-from django.db.models import Q
 from django.utils import timezone
 
 from .models import Punishment, Reservation

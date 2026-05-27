@@ -8,8 +8,8 @@ from .views.auth import (
     LogoutView,
     RefreshTokenView,
     RegisterView,
-    VerifyRegistrationOTPView,
     Verify2FAView,
+    VerifyRegistrationOTPView,
 )
 from .views.users import (
     AdminDelegationView,

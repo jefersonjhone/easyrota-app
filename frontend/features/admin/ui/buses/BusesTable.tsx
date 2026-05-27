@@ -51,11 +51,11 @@ export const BusesTable = ({ buses, onDeleteBus, onEditBus }: BusesTableProps) =
                     </td>
                     <td className="p-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        bus.status === 'active' 
+                        bus.status === 'ATIVO' 
                           ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
                           : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                       }`}>
-                        {bus.status === 'active' ? 'Ativo' : 'Manutenção'}
+                        {bus.status === 'ATIVO' ? 'Ativo' : 'Manutenção'}
                       </span>
                     </td>
                     <td className="p-4 text-right">

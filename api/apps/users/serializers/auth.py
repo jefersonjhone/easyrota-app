@@ -1,9 +1,8 @@
 from django.contrib.auth import authenticate
 from django.db import transaction
-from django.utils import timezone
 from rest_framework import serializers
 
-from ..models.auth import AllowedStaff, MFAChallenge
+from ..models.auth import AllowedStaff
 from ..models.profiles import CivilServantProfile, ProfileType, StudentProfile
 from ..models.user import CustomUser
 from ..serializers.users import (

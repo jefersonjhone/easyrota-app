@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand, CommandError
 
 from apps.users.models import AllowedStaff
 
-
 NAMESPACES = {
     "table": "urn:oasis:names:tc:opendocument:xmlns:table:1.0",
     "text": "urn:oasis:names:tc:opendocument:xmlns:text:1.0",
