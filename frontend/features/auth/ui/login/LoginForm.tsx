@@ -62,6 +62,13 @@ export function LoginForm() {
 		}
 	}
 
+	const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === 'Enter') {
+			e.preventDefault()
+			handleSubmit(onSubmit)()
+		}
+	}
+
 	return (
 		<Card className="w-full max-w-sm">
 			<CardHeader>
@@ -92,7 +99,7 @@ export function LoginForm() {
                   </Button>
 								</Link>
 							</div>
-							<Input id="password" type="password" required {...register("password")}/>
+							<Input id="password" type="password" required onKeyDown={handlePasswordKeyDown} {...register("password")}/>
               <HintInvalid for={state.errors.password} />
 						</Field>
 					</FieldGroup>
