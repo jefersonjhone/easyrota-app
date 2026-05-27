@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { AdminLayout } from '@features/admin/ui/Layout'
 import { CreateBusForm } from '@features/admin/ui/buses/CreateForm'
 import { BusesTable } from '@features/admin/ui/buses/BusesTable'
+import { Button } from '@ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@ui/dialog'
+import { PlusIcon } from '@phosphor-icons/react'
 
 export interface Bus {
   id: number
@@ -15,6 +18,7 @@ export interface Bus {
 
 export function BusesPage() {
   const [buses, setBuses] = useState<Bus[]>([])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const deleteBus = async (idBus: number) => {
     try {
@@ -48,13 +52,30 @@ export function BusesPage() {
 
   const addBus = (newBus: Bus) => {
     setBuses((prev) => [...prev, newBus])
+    setIsDialogOpen(false)
   }
   
   return (
     <AdminLayout>
       {/* Alinhamento vertical travado para não quebrar com a barra lateral */}
       <div className="flex flex-col gap-6 p-4 items-start w-full max-w-4xl mx-auto box-border">
-        <CreateBusForm onBusCreated={addBus}/>
+        <div className="flex justify-between items-center w-full">
+          <h1 className="text-2xl font-bold">Frota de Veículos</h1>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="cursor-pointer">
+                <PlusIcon className="mr-2" weight="bold" size={20} />
+                Cadastrar Veículo
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cadastrar novo veículo</DialogTitle>
+              </DialogHeader>
+              <CreateBusForm onBusCreated={addBus}/>
+            </DialogContent>
+          </Dialog>
+        </div>
         <BusesTable
          buses={buses}
          onDeleteBus={deleteBus}/>
