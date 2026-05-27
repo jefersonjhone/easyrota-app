@@ -1,13 +1,16 @@
+
+
+
 import {
   BusIcon,
   CheckCircleIcon,
+  PlayCircleIcon,
   QrCodeIcon,
   SignOutIcon,
   UserPlusIcon,
-  UsersThreeIcon,
   WarningCircleIcon,
 } from '@phosphor-icons/react'
-import { useEffect, useState } from 'react'
+import { type CSSProperties, useEffect, useState } from 'react'
 
 
 import { apiFetch } from '@lib/api'
@@ -19,7 +22,10 @@ type PassengerBoardItem = {
   id: number
   name: string
   source: 'QR' | 'Manual'
+  kind?: PassengerKind
 }
+
+type PassengerKind = 'Servidor' | 'Convidado'
 
 type DriverTripDetail = {
   id: string
@@ -31,6 +37,7 @@ type DriverTripDetail = {
   capacity: number
   associatedBuses: number
   passengers: PassengerBoardItem[]
+  status: string
 }
 
 type ApiList<T> = T[] | { results?: T[] }
@@ -45,6 +52,7 @@ type TripModel = {
   seating_capacity?: number | null
   bus?: number | null
   bus_number_plate?: string | null
+  status?: string | null
 }
 
 type CurrentTripModel = {
@@ -53,6 +61,8 @@ type CurrentTripModel = {
   destiny?: string | null
   departure_time?: string | null
   bus_number_plate?: string | null
+  status?: string | null
+  status_trip?: string | null
 }
 
 type BusModel = {
@@ -72,6 +82,27 @@ type DriverBusOption = {
 
 type ViajemMotoristaProps = {
   tripId?: string
+}
+
+const startTripButtonStyle: CSSProperties = {
+  borderColor: '#16a34a',
+  background: '#16a34a',
+  color: '#ffffff',
+}
+
+const finishTripButtonStyle: CSSProperties = {
+  borderColor: 'var(--primary)',
+  background: 'var(--primary)',
+  color: 'var(--primary-foreground)',
+}
+
+const disabledTripButtonStyle: CSSProperties = {
+  borderColor: '#d1d5db',
+  background: '#e5e7eb',
+  color: '#6b7280',
+  cursor: 'not-allowed',
+  opacity: 1,
+  transform: 'none',
 }
 
 function toList<T>(payload: ApiList<T>): T[] {
@@ -103,6 +134,14 @@ function normalizeTime(time?: string | null) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function normalizeTripStatus(status?: string | null) {
+  return (status ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toUpperCase()
 }
 
 function normalizeCapacity(capacity?: number | null) {
@@ -138,6 +177,7 @@ function normalizeTripDetail(trip: TripModel, currentTrip: CurrentTripModel | nu
     busId: trip.bus ?? null,
     capacity,
     associatedBuses: trip.bus ? 1 : 0,
+    status: currentTrip?.status ?? currentTrip?.status_trip ?? trip.status ?? '',
     passengers: createPassengerPlaceholders(
       Math.min(trip.active_reservations ?? 0, capacity),
     ),
@@ -176,12 +216,27 @@ async function getBusesFromApi() {
     .filter((bus): bus is DriverBusOption => Boolean(bus))
 }
 
-async function assignDriverToBus(busId: number) {
-  await apiFetch(`/buses/${busId}/assign_driver/`, { method: 'POST' })
+async function assignDriverToTrip(tripId: string) {
+  await apiFetch(`/trips/${tripId}/assign_driver/`, { method: 'POST' })
 }
 
-async function unassignDriverFromBus() {
-  await apiFetch('/buses/unassign_driver/', { method: 'POST' })
+async function unassignDriverFromTrip(tripId: string) {
+  await apiFetch(`/trips/${tripId}/unassign_driver/`, { method: 'POST' })
+}
+
+async function assignBusToTrip(tripId: string, busId: number) {
+  await apiFetch(`/trips/${tripId}/assign_bus/`, {
+    method: 'POST',
+    body: JSON.stringify({ bus: busId }),
+  })
+}
+
+async function unassignBusFromTrip(tripId: string) {
+  await apiFetch(`/trips/${tripId}/unassign_bus/`, { method: 'POST' })
+}
+
+async function startTrip(tripId: string) {
+  await apiFetch(`/trips/${tripId}/start_trip/`, { method: 'POST' })
 }
 
 async function finishTrip(tripId: string) {
@@ -193,12 +248,17 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   const [isTripLoading, setIsTripLoading] = useState(true)
   const [tripError, setTripError] = useState<string | null>(null)
   const [boardedPassengers, setBoardedPassengers] = useState<PassengerBoardItem[]>([])
-  const [confirmation, setConfirmation] = useState<'back' | 'bus' | 'finish' | null>(null)
+  const [confirmation, setConfirmation] = useState<'back' | 'bus' | 'start' | 'finish' | null>(null)
   const [busOptions, setBusOptions] = useState<DriverBusOption[]>([])
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null)
   const [isBusActionLoading, setIsBusActionLoading] = useState(false)
   const [isConfirmationLoading, setIsConfirmationLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [isPassengerMenuOpen, setIsPassengerMenuOpen] = useState(false)
+  const [passengerName, setPassengerName] = useState('')
+  const [passengerKind, setPassengerKind] = useState<PassengerKind>('Servidor')
+  const tripBusId = trip?.busId ?? null
+  const tripBusPlate = trip?.busPlate ?? ''
   const selectedBus = busOptions.find((bus) => bus.id === selectedBusId) ?? null
   const activeCapacity = selectedBus?.capacity ?? trip?.capacity ?? 46
   const embarkedCount = boardedPassengers.length
@@ -208,6 +268,11 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   const shouldWarnBeforeRequestingBus = (trip?.associatedBuses ?? 0) >= 2
   const hasReachedCapacity = embarkedCount >= activeCapacity
   const selectedBusPlate = selectedBus?.plate ?? trip?.busPlate ?? 'Sem onibus'
+  const normalizedTripStatus = normalizeTripStatus(trip?.status)
+  const isTripInProgress = normalizedTripStatus === 'EM ANDAMENTO'
+  const isTripFinished = normalizedTripStatus.startsWith('CONCLU')
+  const isStartTripDisabled = isConfirmationLoading || isTripInProgress || isTripFinished
+  const isFinishTripDisabled = isConfirmationLoading || isTripFinished
   const whatsappAlertUrl = `https://wa.me/?text=${encodeURIComponent(
     `Estou com problema no ônibus ${selectedBusPlate} na viajem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
   )}`
@@ -263,37 +328,6 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   useEffect(() => {
     let isMounted = true
 
-    const startWithoutAssignedBus = async () => {
-      setSelectedBusId(null)
-      setIsBusActionLoading(true)
-      setActionError(null)
-
-      try {
-        await unassignDriverFromBus()
-      } catch (error) {
-        console.warn('Nao foi possivel iniciar a viagem sem onibus selecionado:', error)
-
-        if (isMounted) {
-          setActionError('Nao foi possivel iniciar a tela sem onibus selecionado.')
-        }
-      } finally {
-        if (isMounted) {
-          setSelectedBusId(null)
-          setIsBusActionLoading(false)
-        }
-      }
-    }
-
-    startWithoutAssignedBus()
-
-    return () => {
-      isMounted = false
-    }
-  }, [tripId])
-
-  useEffect(() => {
-    let isMounted = true
-
     const loadBuses = async () => {
       try {
         const buses = await getBusesFromApi()
@@ -303,7 +337,6 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
         }
 
         setBusOptions(buses)
-        setSelectedBusId(null)
       } catch (error) {
         console.warn('Nao foi possivel carregar os onibus cadastrados:', error)
 
@@ -321,49 +354,63 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
     }
   }, [])
 
+  useEffect(() => {
+    if (busOptions.length === 0) {
+      setSelectedBusId(null)
+      return
+    }
+
+    if (tripBusId && busOptions.some((bus) => bus.id === tripBusId)) {
+      setSelectedBusId(tripBusId)
+      return
+    }
+
+    const matchingBus = tripBusPlate
+      ? busOptions.find((bus) => bus.plate === tripBusPlate)
+      : null
+
+    setSelectedBusId(matchingBus?.id ?? null)
+  }, [busOptions, tripBusId, tripBusPlate])
+
   const handleAddPassenger = () => {
+    if (hasReachedCapacity) {
+      return
+    }
+
+    setPassengerName('')
+    setPassengerKind('Servidor')
+    setIsPassengerMenuOpen(true)
+  }
+
+  const handleRegisterPassenger = () => {
     setBoardedPassengers((currentPassengers) => {
       if (currentPassengers.length >= activeCapacity) {
         return currentPassengers
       }
 
       const nextId = currentPassengers.length + 1
+      const nextName = passengerName.trim() || `Passageiro ${String(nextId).padStart(3, '0')}`
 
       return [
         ...currentPassengers,
         {
           id: nextId,
-          name: `Passageiro ${String(nextId).padStart(3, '0')}`,
+          name: nextName,
           source: 'Manual',
+          kind: passengerKind,
         },
       ]
     })
-  }
-
-  const handleFillBus = () => {
-    setBoardedPassengers((currentPassengers) => {
-      if (currentPassengers.length >= activeCapacity) {
-        return currentPassengers
-      }
-
-      const passengersToAdd = Array.from(
-        { length: activeCapacity - currentPassengers.length },
-        (_, index) => {
-          const nextId = currentPassengers.length + index + 1
-
-          return {
-            id: nextId,
-            name: `Passageiro ${String(nextId).padStart(3, '0')}`,
-            source: 'Manual' as const,
-          }
-        },
-      )
-
-      return [...currentPassengers, ...passengersToAdd]
-    })
+    setPassengerName('')
+    setPassengerKind('Servidor')
+    setIsPassengerMenuOpen(false)
   }
 
   const handleBusSelection = async (nextBusId: number | null) => {
+    if (!trip) {
+      return
+    }
+
     const previousBusId = selectedBusId
 
     setSelectedBusId(nextBusId)
@@ -372,29 +419,56 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
 
     try {
       if (nextBusId) {
-        await assignDriverToBus(nextBusId)
+        await assignDriverToTrip(trip.id)
+        await assignBusToTrip(trip.id, nextBusId)
       } else {
-        await unassignDriverFromBus()
+        await unassignBusFromTrip(trip.id)
       }
     } catch (error) {
-      console.warn('Nao foi possivel atualizar o onibus selecionado:', error)
+      console.warn('Nao foi possivel atualizar o onibus da viagem:', error)
       setSelectedBusId(previousBusId)
-      setActionError('Nao foi possivel atualizar o onibus selecionado.')
+      setActionError('Nao foi possivel atualizar o onibus da viagem.')
     } finally {
       setIsBusActionLoading(false)
     }
   }
 
   const handleConfirmBack = async () => {
+    if (!trip) {
+      return
+    }
+
     setIsConfirmationLoading(true)
     setActionError(null)
 
     try {
-      await unassignDriverFromBus()
+      await unassignDriverFromTrip(trip.id)
       window.location.href = '/app/driver/viagens'
     } catch (error) {
-      console.warn('Nao foi possivel desassociar o motorista do onibus:', error)
+      console.warn('Nao foi possivel desassociar o motorista da viagem:', error)
       setActionError('Nao foi possivel desassociar o motorista antes de voltar.')
+      setIsConfirmationLoading(false)
+    }
+  }
+
+  const handleStartTrip = async () => {
+    if (!trip) {
+      return
+    }
+
+    setIsConfirmationLoading(true)
+    setActionError(null)
+
+    try {
+      await startTrip(trip.id)
+      setTrip((currentTrip) =>
+        currentTrip ? { ...currentTrip, status: 'EM ANDAMENTO' } : currentTrip,
+      )
+      setConfirmation(null)
+    } catch (error) {
+      console.warn('Nao foi possivel iniciar a viagem:', error)
+      setActionError('Nao foi possivel iniciar a viagem.')
+    } finally {
       setIsConfirmationLoading(false)
     }
   }
@@ -420,12 +494,16 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   const confirmationTitle =
     confirmation === 'back'
       ? 'Atenção ao voltar'
+      : confirmation === 'start'
+        ? 'Iniciar viagem'
       : confirmation === 'finish'
         ? 'Finalizar viagem'
         : 'Solicitar novo ônibus'
   const confirmationDescription =
     confirmation === 'back'
       ? 'Se o motorista voltar, ele será desassociado da viagem.'
+      : confirmation === 'start'
+        ? 'Deseja iniciar esta viagem? Esta acao marcara a viagem como em andamento.'
       : confirmation === 'finish'
         ? 'Deseja finalizar esta viagem? Esta acao marcara a viagem como concluida.'
         : 'já existem 2 onibus associados a essa viajem, deseja solicitar mais?'
@@ -465,7 +543,14 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
       <section className="driver-trip-screen" aria-labelledby="driver-trip-screen-title">
         <div className="driver-trip-screen__panel">
           <header className="driver-trip-screen__header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: '0.65rem',
+              }}
+            >
               <button
                 type="button"
                 className="driver-trip-screen__back"
@@ -478,13 +563,19 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
               <button
                 type="button"
                 className="driver-trip-screen__back"
+                onClick={() => setConfirmation('start')}
+                disabled={isStartTripDisabled}
+                style={isStartTripDisabled ? disabledTripButtonStyle : startTripButtonStyle}
+              >
+                <PlayCircleIcon aria-hidden="true" weight="bold" />
+                Iniciar viagem
+              </button>
+              <button
+                type="button"
+                className="driver-trip-screen__back"
                 onClick={() => setConfirmation('finish')}
-                disabled={isConfirmationLoading}
-                style={{
-                  borderColor: 'var(--primary)',
-                  background: 'var(--primary)',
-                  color: 'var(--primary-foreground)',
-                }}
+                disabled={isFinishTripDisabled}
+                style={isFinishTripDisabled ? disabledTripButtonStyle : finishTripButtonStyle}
               >
                 <CheckCircleIcon aria-hidden="true" weight="bold" />
                 Finalizar viagem
@@ -554,13 +645,14 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
               </div>
 
               <div className="driver-trip-actions" aria-label="Ações da viagem">
-                <button type="button" onClick={handleAddPassenger} disabled={hasReachedCapacity}>
+                <button
+                  type="button"
+                  className="driver-trip-actions__wide driver-trip-actions__primary"
+                  onClick={handleAddPassenger}
+                  disabled={hasReachedCapacity}
+                >
                   <UserPlusIcon aria-hidden="true" weight="bold" />
                   ADD Passageiro
-                </button>
-                <button type="button" onClick={handleFillBus} disabled={hasReachedCapacity}>
-                  <UsersThreeIcon aria-hidden="true" weight="bold" />
-                  Lotar Onibus
                 </button>
                 <button
                   type="button"
@@ -621,6 +713,52 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
           </a>
         </div>
 
+        {isPassengerMenuOpen ? (
+          <div className="driver-trip-confirmation" role="dialog" aria-modal="true">
+            <form
+              className="driver-trip-confirmation__card driver-passenger-form"
+              onSubmit={(event) => {
+                event.preventDefault()
+                handleRegisterPassenger()
+              }}
+            >
+              <UserPlusIcon aria-hidden="true" weight="fill" />
+              <h2>Cadastrar passageiro</h2>
+              <label>
+                Nome
+                <input
+                  type="text"
+                  value={passengerName}
+                  onChange={(event) => setPassengerName(event.target.value)}
+                  autoFocus
+                  required
+                />
+              </label>
+              <label>
+                Tipo
+                <select
+                  value={passengerKind}
+                  onChange={(event) => setPassengerKind(event.target.value as PassengerKind)}
+                >
+                  <option value="Servidor">Servidor</option>
+                  <option value="Convidado">Convidado</option>
+                </select>
+              </label>
+              <div className="driver-trip-confirmation__actions">
+                <button
+                  type="button"
+                  onClick={() => setIsPassengerMenuOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" disabled={!passengerName.trim()}>
+                  Cadastrar
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
+
         {confirmation ? (
           <div className="driver-trip-confirmation" role="dialog" aria-modal="true">
             <div className="driver-trip-confirmation__card">
@@ -648,16 +786,21 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                   >
                     OK
                   </button>
+                ) : confirmation === 'start' ? (
+                  <button
+                    type="button"
+                    onClick={handleStartTrip}
+                    disabled={isConfirmationLoading}
+                    style={startTripButtonStyle}
+                  >
+                    OK
+                  </button>
                 ) : confirmation === 'finish' ? (
                   <button
                     type="button"
                     onClick={handleFinishTrip}
                     disabled={isConfirmationLoading}
-                    style={{
-                      borderColor: 'var(--primary)',
-                      background: 'var(--primary)',
-                      color: 'var(--primary-foreground)',
-                    }}
+                    style={finishTripButtonStyle}
                   >
                     OK
                   </button>

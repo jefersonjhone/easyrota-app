@@ -87,6 +87,12 @@ class TripViewSet(viewsets.ModelViewSet):
         Trip.objects.filter(id=pk).update(status="CONCLUÍDA",
                                           arrival_timestamp=timezone.now())
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
+    
+    @action(detail=True, methods=["post"])
+    def start_trip(self, request,pk=None): #CONTRIBUIÇÃO ENORME DE MATHEUS PRO BACKEND
+        Trip.objects.filter(id=pk).update(status="EM ANDAMENTO",
+                                          departure_timestamp=timezone.now())
+        return Response("trip iniciada com sucesso", status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"])
     def assign_driver(self, request, pk=None):
@@ -128,7 +134,7 @@ class TripViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         # verify if bus already is in use
-        # create a custom queryset in bus model todo it and reuse
+        # create a custom queryset in bus model to do it and reuse
         bus = Bus.objects.get(id=bus)
         if not bus:
             return Response(
