@@ -25,6 +25,7 @@ from ..auth.otp import generate_otp
 from ..auth.tokens import PartialTokenService
 from ..models.auth import MFAChallenge
 from ..models.profiles import ProfileType
+from ..models.user import CustomUser
 from ..serializers.auth import (
     CivilServantRegistrationSerializer,
     LoginSerializer,
