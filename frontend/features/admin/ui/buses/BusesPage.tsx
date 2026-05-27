@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { AdminLayout } from '@features/admin/ui/Layout'
 import { CreateBusForm } from '@features/admin/ui/buses/CreateForm'
 import { BusesTable } from '@features/admin/ui/buses/BusesTable'
+import { EditBusModal } from '@features/admin/ui/buses/EditBusModal'
 
 export interface Bus {
   id: number
@@ -15,6 +16,8 @@ export interface Bus {
 
 export function BusesPage() {
   const [buses, setBuses] = useState<Bus[]>([])
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [selectedBus, setSelectedBus] = useState<Bus | null>(null)
 
   const deleteBus = async (idBus: number) => {
     try {
@@ -26,7 +29,7 @@ export function BusesPage() {
         prev.filter((bus) => bus.id !== idBus)
       )
     } catch (err) {
-      console.error (err);
+      console.error(err)
     }
   }
 
@@ -49,16 +52,38 @@ export function BusesPage() {
   const addBus = (newBus: Bus) => {
     setBuses((prev) => [...prev, newBus])
   }
+
+  const handleOpenEditModal = (bus: Bus) => {
+    setSelectedBus(bus)
+    setIsEditModalOpen(true)
+  }
+
+  const handleBusUpdated = (updatedBus: Bus) => {
+    setBuses((prev) =>
+      prev.map((bus) => (bus.id === updatedBus.id ? updatedBus : bus))
+    )
+  }
   
   return (
     <AdminLayout>
-      {/* Alinhamento vertical travado para não quebrar com a barra lateral */}
       <div className="flex flex-col gap-6 p-4 items-start w-full max-w-4xl mx-auto box-border">
         <CreateBusForm onBusCreated={addBus}/>
         <BusesTable
-         buses={buses}
-         onDeleteBus={deleteBus}/>
+          buses={buses}
+          onDeleteBus={deleteBus}
+          onEditBus={handleOpenEditModal} 
+        />
       </div>
+
+      <EditBusModal
+        bus={selectedBus}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedBus(null)
+        }}
+        onBusUpdated={handleBusUpdated}
+      />
     </AdminLayout>
   )
 }
