@@ -9,7 +9,6 @@ from .views.auth import (
     RefreshTokenView,
     RegisterView,
     ResendOTPView,
-    VerifyRegistrationOTPView,
     Verify2FAView,
     VerifyRegistrationOTPView,
 )
