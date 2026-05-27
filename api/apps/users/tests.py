@@ -70,16 +70,19 @@ class RegisterViewTests(APITestCase):
             "civil_servant_id": "87654322",
         }
 
-        response = self.client.post(self.url, payload, format="json")
+        with patch("apps.users.views.auth.send_mail") as mocked_send_mail:
+            response = self.client.post(self.url, payload, format="json")
 
-        assert response.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_202_ACCEPTED
         assert response.data["user"]["user"]["email"] == payload["email"]
         assert response.data["user"]["profile_type"] == "civil-servant"
-        assert response.data["status"] == "created"
+        assert response.data["status"] == "verification_required"
         assert CustomUser.objects.filter(email=payload["email"]).exists()
         assert CivilServantProfile.objects.filter(
             civil_servant_id=payload["civil_servant_id"]
         ).exists()
+        assert MFAChallenge.objects.filter(user__email=payload["email"]).exists()
+        assert mocked_send_mail.called
 
     def test_register_student_rejects_invalid_email_domain(self):
         payload = {
@@ -341,10 +344,11 @@ class AllowedStaffValidationTests(APITestCase):
             "civil_servant_id": "11112222",
         }
 
-        response = self.client.post(self.url, payload, format="json")
+        with patch("apps.users.views.auth.send_mail"):
+            response = self.client.post(self.url, payload, format="json")
 
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["status"] == "created"
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert response.data["status"] == "verification_required"
 
     def test_driver_search_and_passenger_registration(self):
         driver_user = CustomUser.objects.create_user(

@@ -62,6 +62,13 @@ export function LoginForm() {
 		}
 	}
 
+	const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === 'Enter') {
+			e.preventDefault()
+			handleSubmit(onSubmit)()
+		}
+	}
+
 	return (
 		<Card className="w-full max-w-sm">
 			<CardHeader>
@@ -79,20 +86,20 @@ export function LoginForm() {
 					<FieldGroup>
 						<Field className="grid gap-2">
 							<FieldLabel htmlFor="email">Email Institucional</FieldLabel>
-							<Input id="email" type="email" placeholder="joao@uefs.br" required {...register("email")}/>
+						<Input id="email" type="email" placeholder="joao@uefs.br" required tabIndex={1} {...register("email")}/>
               <HintInvalid for={state.errors.email} />
 						</Field>
 
 						<Field className="grid gap-2">
 							<div className="flex items-center">
 								<FieldLabel htmlFor="password">Senha</FieldLabel>
-								<Link to={RecoveryRoute.to} className="ml-auto">
-									<Button variant="link" className="text-black/50 cursor-pointer">
+							<Link to={RecoveryRoute.to} className="ml-auto" tabIndex={3}>
+								<Button variant="link" className="text-black/50 cursor-pointer">
                     Esqueceu sua senha?
                   </Button>
-								</Link>
-							</div>
-							<Input id="password" type="password" required {...register("password")}/>
+							</Link>
+						</div>
+						<Input id="password" type="password" required tabIndex={2} onKeyDown={handlePasswordKeyDown} {...register("password")}/>
               <HintInvalid for={state.errors.password} />
 						</Field>
 					</FieldGroup>
@@ -105,7 +112,7 @@ export function LoginForm() {
 				)}
 			</CardContent>
       <CardFooter className="flex-col">
-        <Button form="login" type="submit" className="w-full cursor-pointer" disabled={isSubmitting}>
+        <Button form="login" type="submit" className="w-full cursor-pointer" disabled={isSubmitting} tabIndex={4}>
           {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </CardFooter>

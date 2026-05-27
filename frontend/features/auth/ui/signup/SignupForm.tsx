@@ -33,7 +33,7 @@ const signupSchema = z.object({
   password: z
     .string()
     .nonempty("Informe sua senha.")
-    .min(8, "A senha deve ter pelo menos 8 caracteres."),
+    .min(8, "A senha deve ter ao menos 8 caracteres."),
   confirmPassword: z
     .string()
     .nonempty("Confirme sua senha."),
@@ -89,15 +89,31 @@ export default function SignupForm(props: Props) {
 
   const onSubmit = async (data: SignupSchema) => {
     try {
-      await signupMutation.mutateAsync(data)
-      await navigate({ to: paths.login, replace: true })
+      const response = await signupMutation.mutateAsync(data)
+      
+      // O backend retorna um token no registro para vincular ao desafio OTP
+      const token = (response as { token?: string }).token
+      const email = data.email
+      const targetPath = `/verificar?token=${token}&email=${email}`
+      
+      await navigate({ to: targetPath as never, replace: true })
     } catch (error: unknown) {
-      const errors = error as Record<string, string[]>
+      const errors = error as Record<string, string | string[]>
+      
       Object.entries(errors).forEach(([field, messages]) => {
-        if (field === "non_field_errors") {
-          setError("root", { message: messages[0] })
+        const errorMessage: string = Array.isArray(messages) ? String(messages) : String(messages)
+        
+        if (errorMessage.includes("ainda não foi ativada")) {
+            const email = form.getValues("email")
+            if (window.confirm(errorMessage + "\n\nDeseja ir para a tela de verificação agora?")) {
+                navigate({ to: `/verificar?email=${email}` as never, replace: true })
+            }
+        }
+
+        if (field === "non_field_errors" || field === "root") {
+          setError("root", { message: errorMessage })
         } else {
-          setError(field as keyof SignupSchema, { message: messages[0] })
+          setError(field as keyof SignupSchema, { message: errorMessage })
         }
       })
     }

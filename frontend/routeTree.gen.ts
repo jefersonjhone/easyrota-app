@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './pages/__root'
 import { Route as App_rootRouteImport } from './pages/app/__root'
 import { Route as Admin_rootRouteImport } from './pages/admin/__root'
 import { Route as AppViagens_rootRouteImport } from './pages/app/viagens/__root'
+import { Route as VerificarRouteImport } from './pages/verificar'
 import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecuperarRouteImport } from './pages/recuperar'
@@ -43,6 +44,11 @@ const Admin_rootRoute = Admin_rootRouteImport.update({
 } as any)
 const AppViagens_rootRoute = AppViagens_rootRouteImport.update({
   id: '/app/viagens/__root',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerificarRoute = VerificarRouteImport.update({
+  id: '/verificar',
+  path: '/verificar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SobreProjetoRoute = SobreProjetoRouteImport.update({
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/verificar': typeof VerificarRoute
   '/admin': typeof Admin_rootRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/verificar': typeof VerificarRoute
   '/admin': typeof AdminIndexRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/verificar': typeof VerificarRoute
   '/admin/__root': typeof Admin_rootRoute
   '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/verificar'
     | '/admin'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/verificar'
     | '/admin'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/verificar'
     | '/admin/__root'
     | '/admin/admins'
     | '/admin/motoristas'
@@ -301,6 +313,7 @@ export interface RootRouteChildren {
   RecuperarRoute: typeof RecuperarRoute
   SignupRoute: typeof SignupRoute
   SobreProjetoRoute: typeof SobreProjetoRoute
+  VerificarRoute: typeof VerificarRoute
   Admin_rootRoute: typeof Admin_rootRoute
   AdminAdminsRoute: typeof AdminAdminsRoute
   AdminMotoristasRoute: typeof AdminMotoristasRoute
@@ -341,6 +354,13 @@ declare module '@tanstack/react-router' {
       path: '/app/viagens'
       fullPath: '/app/viagens'
       preLoaderRoute: typeof AppViagens_rootRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verificar': {
+      id: '/verificar'
+      path: '/verificar'
+      fullPath: '/verificar'
+      preLoaderRoute: typeof VerificarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sobre-projeto': {
@@ -493,6 +513,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecuperarRoute: RecuperarRoute,
   SignupRoute: SignupRoute,
   SobreProjetoRoute: SobreProjetoRoute,
+  VerificarRoute: VerificarRoute,
   Admin_rootRoute: Admin_rootRoute,
   AdminAdminsRoute: AdminAdminsRoute,
   AdminMotoristasRoute: AdminMotoristasRoute,
