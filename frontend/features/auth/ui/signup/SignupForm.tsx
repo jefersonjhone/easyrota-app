@@ -101,9 +101,15 @@ export default function SignupForm(props: Props) {
       const errors = error as Record<string, string | string[]>
       
       Object.entries(errors).forEach(([field, messages]) => {
-        // Corrigido: Extrai estritamente a primeira string caso seja um array
         const errorMessage: string = Array.isArray(messages) ? String(messages) : String(messages)
         
+        if (errorMessage.includes("ainda não foi ativada")) {
+            const email = form.getValues("email")
+            if (window.confirm(errorMessage + "\n\nDeseja ir para a tela de verificação agora?")) {
+                navigate({ to: `/verificar?email=${email}` as never, replace: true })
+            }
+        }
+
         if (field === "non_field_errors" || field === "root") {
           setError("root", { message: errorMessage })
         } else {
