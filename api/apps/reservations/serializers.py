@@ -8,6 +8,7 @@ from .services import (
     reservation_cutoff,
     trip_has_quorum,
     trip_has_capacity,
+    get_reservation_status_for_user,
 )
 
 
@@ -68,9 +69,10 @@ class ReservationSerializer(serializers.ModelSerializer):
         elif hasattr(user, "civil_servant_profile"):
             reservation.civil_servant = user.civil_servant_profile
 
-        reservation.status = (
-            "CONFIRMADA" if trip_has_capacity(trip) else "LISTA SECUNDÁRIA"
-        )
+        if trip_has_capacity(trip):
+            reservation.status = get_reservation_status_for_user(user, trip)
+        else:
+            reservation.status = "LISTA SECUNDÁRIA"
         reservation.save()
         return reservation
 

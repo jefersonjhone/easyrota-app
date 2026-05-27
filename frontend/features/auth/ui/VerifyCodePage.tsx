@@ -15,9 +15,21 @@ export function VerifyCodePage() {
     setError(null)
 
     try {
-      await apiFetch('/auth/verify/', {
+      // O backend espera o código e o token (parcial) gerado no registro
+      // Como o token é retornado no registro, para simplificar nesta tela 
+      // e dado que o backend exige o token para o desafio JTI, 
+      // vamos tentar capturar o token que deveria ter sido passado via rota ou state.
+      // Se não houver, o backend falhará na validação do JTI.
+      
+      const params = new URLSearchParams(window.location.search)
+      const token = params.get('token')
+
+      await apiFetch('/auth/verify-registration-otp/', {
         method: 'POST',
-        body: JSON.stringify({ code: code.trim() })
+        body: JSON.stringify({ 
+          code: code.trim(),
+          token: token 
+        })
       })
       
       setSuccess(true)

@@ -89,11 +89,12 @@ export default function SignupForm(props: Props) {
 
   const onSubmit = async (data: SignupSchema) => {
     try {
-      await signupMutation.mutateAsync(data)
+      const response = await signupMutation.mutateAsync(data)
       
-      // Corrigido: Usando a propriedade estrita e contornando o router de forma segura para o ESLint
-      // Se o compilador reclamar do tipo de rota em falta, 'as never' ou passar numa variável resolve sem disparar o no-explicit-any
-      const targetPath = '/verificar'
+      // O backend retorna um token no registro para vincular ao desafio OTP
+      const token = (response as { token?: string }).token
+      const targetPath = `/verificar?token=${token}`
+      
       await navigate({ to: targetPath as never, replace: true })
     } catch (error: unknown) {
       const errors = error as Record<string, string | string[]>

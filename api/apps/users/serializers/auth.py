@@ -38,8 +38,13 @@ class Verify2FASerializer(serializers.Serializer):
     code = serializers.CharField(max_length=6)
 
 
+from rest_framework.validators import UniqueValidator
+
 class BaseUserRegistrationSerializer(serializers.Serializer):
-    email = serializers.EmailField(write_only=True)
+    email = serializers.EmailField(
+        write_only=True,
+        validators=[UniqueValidator(queryset=CustomUser.objects.all())]
+    )
     full_name = serializers.CharField(write_only=True, max_length=255)
 
     password = serializers.CharField(
@@ -67,6 +72,7 @@ class StudentRegistrationSerializer(BaseUserRegistrationSerializer):
     student_id = serializers.CharField(
         allow_blank=False,
         allow_null=False,
+        validators=[UniqueValidator(queryset=StudentProfile.objects.all())]
     )
 
     @transaction.atomic
@@ -102,6 +108,7 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
     civil_servant_id = serializers.CharField(
         allow_blank=False,
         allow_null=False,
+        validators=[UniqueValidator(queryset=CivilServantProfile.objects.all())]
     )
 
     @transaction.atomic
@@ -113,6 +120,7 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
 
         user = CustomUser.objects.create_user(
             password=password,
+            is_active=False,
             **validated_data,
         )
 
@@ -126,6 +134,14 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
             "profile": profile,
             "profile_type": ProfileType.CIVIL_SERVANT,
         }
+
+    def validate_email(self, value):
+        email = super().validate_email(value)
+        if not email.endswith("@uefs.br"):
+            raise serializers.ValidationError(
+                "E-mail institucional de servidor deve terminar com @uefs.br."
+            )
+        return email
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
