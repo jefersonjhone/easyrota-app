@@ -2,23 +2,21 @@ from rest_framework import generics, status, views, viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.reservations.models import Reservation
+
+from ...trips.models import TripPassenger
 from ..models.auth import AllowedStaff
 from ..models.profiles import DriverProfile
-
+from ..permissions import IsDriver, IsSuperAdmin
+from ..serializers.auth import (
+    AllowedStaffSearchSerializer,
+    CivilServantAllowedStaffSerializer,
+)
 from ..serializers.users import (
     AuthenticatedUserWithProfileSerializer,
     CreateSubAdminSerializer,
     DriverSerializer,
 )
-from apps.users.models import CustomUser
-from apps.reservations.models import Reservation
-from ..permissions import IsDriver, IsSuperAdmin
-
-from ..serializers.auth import (
-    AllowedStaffSearchSerializer,
-    CivilServantAllowedStaffSerializer,
-)
-from ...trips.models import TripPassenger
 
 
 class HealthCheckView(views.APIView):

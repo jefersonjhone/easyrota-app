@@ -1,23 +1,24 @@
-import pytest
-from unittest.mock import patch
 from datetime import time, timedelta
+from unittest.mock import patch
 
-from django.core.management import call_command
+import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from apps.trips.models import Bus, Route, Trip
+
+from .models.auth import AllowedStaff, MFAChallenge
 from .models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
     DriverProfile,
     StudentProfile,
 )
-from .models.auth import AllowedStaff, MFAChallenge
 from .models.user import CustomUser
 
 User = get_user_model()

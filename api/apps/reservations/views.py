@@ -1,19 +1,19 @@
 from django.db.models import Count, Q
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
 
 from ..trips.models import Trip
 from .models import Reservation
-from .services import promote_next_waitlisted_reservation, sync_trip_status
 from .serializers import (
     AvailableTripSerializer,
     ManageReservationSerializer,
     ReservationHistorySerializer,
     ReservationSerializer,
 )
+from .services import promote_next_waitlisted_reservation, sync_trip_status
 
 
 class ReservationCreateView(generics.CreateAPIView):

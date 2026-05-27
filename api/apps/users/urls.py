@@ -9,8 +9,8 @@ from .views.auth import (
     RefreshTokenView,
     RegisterView,
     ResendOTPView,
-    VerifyRegistrationOTPView,
     Verify2FAView,
+    VerifyRegistrationOTPView,
 )
 from .views.users import (
     AdminDelegationView,

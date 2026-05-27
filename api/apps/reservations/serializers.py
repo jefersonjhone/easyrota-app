@@ -4,11 +4,11 @@ from rest_framework import serializers
 from ..trips.models import Trip
 from .models import Reservation
 from .services import (
+    get_reservation_status_for_user,
     is_reservation_open,
     reservation_cutoff,
-    trip_has_quorum,
     trip_has_capacity,
-    get_reservation_status_for_user,
+    trip_has_quorum,
 )
 
 

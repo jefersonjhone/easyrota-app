@@ -32,8 +32,8 @@ from ..serializers.auth import (
     RegistrationResponseSerializer,
     ResendOTPSerializer,
     StudentRegistrationSerializer,
-    VerifyRegistrationOTPSerializer,
     Verify2FASerializer,
+    VerifyRegistrationOTPSerializer,
 )
 from ..serializers.users import (
     AuthenticatedUserWithProfileSerializer,
@@ -123,7 +123,8 @@ def consume_registration_challenge(token, code):
     try:
         payload = PartialTokenService.decode(token)
     except jwt.ExpiredSignatureError:
-        raise AuthenticationFailed("O link de verificação expirou. Por favor, cadastre-se novamente.")
+        raise AuthenticationFailed(
+            "O link de verificação expirou. Por favor, cadastre-se novamente.")
     except jwt.InvalidTokenError:
         raise AuthenticationFailed("Token de verificação inválido.")
 
