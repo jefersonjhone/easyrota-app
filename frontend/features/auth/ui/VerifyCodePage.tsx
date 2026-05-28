@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
@@ -36,13 +36,10 @@ export function VerifyCodePage() {
         body: JSON.stringify({ email })
       })
       
-      // Se apiFetch retornar a resposta bruta ou o JSON depende da implementação
-      // Geralmente em projetos React/TanStack ele retorna o dado se for OK
       const data = await (response as any).json?.() || response
       
       if (data.token) {
         setToken(data.token)
-        // Atualiza a URL apenas para consistência visual/refresh
         const newUrl = new URL(window.location.href)
         newUrl.searchParams.set('token', data.token)
         window.history.replaceState({}, '', newUrl.toString())
@@ -52,13 +49,21 @@ export function VerifyCodePage() {
       setTimeout(() => setResendSuccess(false), 5000)
     } catch (err: unknown) {
       console.error(err)
-      // Se o backend deu 200 (como visto no log), o erro aqui é no processamento do JSON ou na lógica do apiFetch
-      // Vamos tentar extrair a mensagem de erro se houver
       setError('Erro ao reenviar o código. Verifique se o e-mail está correto.')
     } finally {
       setResendLoading(false)
     }
   }
+
+  // Efeito para reenvio automático caso chegue na página sem token (vindo da tela de erro)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const email = params.get('email')
+    
+    if (email && !token) {
+      handleResend()
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
