@@ -387,6 +387,5 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.user and request.user.is_authenticated:
             return str(request.user.id)
-            
-            # lembrar substituir por return str(request.user.uuid) mais tarde
         return None
+
