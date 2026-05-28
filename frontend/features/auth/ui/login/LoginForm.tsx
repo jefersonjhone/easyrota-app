@@ -49,16 +49,28 @@ export function LoginForm() {
   const isSubmitting = state.isSubmitting || loginMutation.isPending
 
   const error = loginMutation.error as {
-	detail?: string[]
+	detail?: string | string[]
   } | null
 
 	const onSubmit = async (data: Schema) => {
-		const response = await loginMutation.mutateAsync(data)
-		const isAdmin = response.user?.admin_profile
-		if (isAdmin) {
-		navigate({ to: AdminRoute.to, replace: true })
-		} else {
-		navigate({ to: AppRoute.to, replace: true })
+		try {
+			const response = await loginMutation.mutateAsync(data)
+			const isAdmin = response.user?.admin_profile
+			if (isAdmin) {
+			navigate({ to: AdminRoute.to, replace: true })
+			} else {
+			navigate({ to: AppRoute.to, replace: true })
+			}
+		} catch (err: unknown) {
+			const errorData = err as { detail?: string | string[] }
+			const message = Array.isArray(errorData.detail) ? errorData.detail[0] : errorData.detail
+			
+			if (message?.includes("ainda não foi ativada")) {
+				const email = form.getValues("email")
+				if (window.confirm(message + "\n\nDeseja ir para a tela de verificação agora?")) {
+					navigate({ to: `/verificar?email=${email}` as never, replace: true })
+				}
+			}
 		}
 	}
 

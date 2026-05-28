@@ -23,6 +23,14 @@ class LoginSerializer(serializers.Serializer):
         """Check if email and password are valid fields"""
         email = data["email"]
         password = data["password"]
+
+        # Verifica se a conta existe mas está inativa antes de autenticar
+        user_check = CustomUser.objects.filter(email=email).first()
+        if user_check and not user_check.is_active:
+            raise serializers.ValidationError({
+                "detail": "Sua conta ainda não foi ativada. Por favor, verifique seu e-mail."
+            })
+
         user = authenticate(email=email, password=password)
 
         if user is None:
