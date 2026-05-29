@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     AvailableTripListView,
+    PunishmentHistoryView,
     ReservationCreateView,
     ReservationHistoryView,
     ReservationViewSet,
@@ -24,4 +25,9 @@ urlpatterns = [
         name="reservation-history",
     ),
     path("reservations/", include(router.urls)),
+    path(
+        "reservations/punishments/",
+        PunishmentHistoryView.as_view(),
+        name="reservation-punishments-history",
+    ),
 ]

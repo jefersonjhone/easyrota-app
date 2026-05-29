@@ -15,7 +15,7 @@ from ..users.models import (
     StudentProfile,
 )
 from .models import Punishment, Reservation
-from .services import process_trip_punishments
+from .services import get_priority_tuple, process_trip_punishments
 
 
 class BaseReservationTestCase(APITestCase):
@@ -327,3 +327,45 @@ class PunishmentSystemTestCase(BaseReservationTestCase):
         ).exists()
         
         self.assertFalse(punishment_exists)
+    
+    def test_priority_calculation_based_on_punishments(self):
+        """
+        Ensures get_priority_tuple calculates the correct priority 
+        based on the number of active punishments (1, 2, or 3).
+        """
+        clean_user, clean_profile = self.create_student(
+            email="clean@test.com", 
+            student_id="003"
+        )
+        
+        new_reservation = self.create_reservation(
+            trip=self.trip,
+            student=clean_profile
+        )
+
+        priority, _ = get_priority_tuple(new_reservation)
+        self.assertEqual(priority, 1)
+
+        old_trip_1 = self.create_trip(days_ahead=-1)
+        old_res_1 = self.create_reservation(trip=old_trip_1, student=clean_profile)
+        Punishment.objects.create(
+            student=clean_profile,
+            reservation=old_res_1,
+            is_active=True,
+            description="Primeira Falta"
+        )
+        
+        priority, _ = get_priority_tuple(new_reservation)
+        self.assertEqual(priority, 2)
+
+        old_trip_2 = self.create_trip(days_ahead=-2)
+        old_res_2 = self.create_reservation(trip=old_trip_2, student=clean_profile)
+        Punishment.objects.create(
+            student=clean_profile,
+            reservation=old_res_2,
+            is_active=True,
+            description="Segunda Falta"
+        )
+        
+        priority, _ = get_priority_tuple(new_reservation)
+        self.assertEqual(priority, 3)

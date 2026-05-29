@@ -61,6 +61,10 @@ class Punishment(models.Model):
     student = models.ForeignKey("users.StudentProfile", on_delete=models.CASCADE)
 
     reservation = models.OneToOneField(Reservation, on_delete=models.CASCADE)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Punishment for {self.student}: {self.description}"
+        status = "Ativa" if self.is_active else "Inativa"
+        return (f"Punishment for {self.student}: {self.description}, "
+                f"{self.created_at} ({status})")
