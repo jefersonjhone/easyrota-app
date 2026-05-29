@@ -49,16 +49,35 @@ export function LoginForm() {
   const isSubmitting = state.isSubmitting || loginMutation.isPending
 
   const error = loginMutation.error as {
-	detail?: string[]
+	detail?: string | string[]
   } | null
 
 	const onSubmit = async (data: Schema) => {
-		const response = await loginMutation.mutateAsync(data)
-		const isAdmin = response.user?.admin_profile
-		if (isAdmin) {
-		navigate({ to: AdminRoute.to, replace: true })
-		} else {
-		navigate({ to: AppRoute.to, replace: true })
+		try {
+			const response = await loginMutation.mutateAsync(data)
+			const isAdmin = response.user?.admin_profile
+			if (isAdmin) {
+			navigate({ to: AdminRoute.to, replace: true })
+			} else {
+			navigate({ to: AppRoute.to, replace: true })
+			}
+		} catch (err: unknown) {
+			const errorData = err as { detail?: string | string[] }
+			const message = Array.isArray(errorData.detail) ? errorData.detail[0] : errorData.detail
+			
+			if (message?.includes("ainda não foi ativada")) {
+				const email = form.getValues("email")
+				if (window.confirm(message + "\n\nDeseja ir para a tela de verificação agora?")) {
+					navigate({ to: `/verificar?email=${email}` as never, replace: true })
+				}
+			}
+		}
+	}
+
+	const handlePasswordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === 'Enter') {
+			e.preventDefault()
+			handleSubmit(onSubmit)()
 		}
 	}
 
@@ -79,20 +98,20 @@ export function LoginForm() {
 					<FieldGroup>
 						<Field className="grid gap-2">
 							<FieldLabel htmlFor="email">Email Institucional</FieldLabel>
-							<Input id="email" type="email" placeholder="joao@uefs.br" required {...register("email")}/>
+						<Input id="email" type="email" placeholder="joao@uefs.br" required tabIndex={1} {...register("email")}/>
               <HintInvalid for={state.errors.email} />
 						</Field>
 
 						<Field className="grid gap-2">
 							<div className="flex items-center">
 								<FieldLabel htmlFor="password">Senha</FieldLabel>
-								<Link to={RecoveryRoute.to} className="ml-auto">
-									<Button variant="link" className="text-black/50 cursor-pointer">
+							<Link to={RecoveryRoute.to} className="ml-auto" tabIndex={3}>
+								<Button variant="link" className="text-black/50 cursor-pointer">
                     Esqueceu sua senha?
                   </Button>
-								</Link>
-							</div>
-							<Input id="password" type="password" required {...register("password")}/>
+							</Link>
+						</div>
+						<Input id="password" type="password" required tabIndex={2} onKeyDown={handlePasswordKeyDown} {...register("password")}/>
               <HintInvalid for={state.errors.password} />
 						</Field>
 					</FieldGroup>
@@ -105,7 +124,7 @@ export function LoginForm() {
 				)}
 			</CardContent>
       <CardFooter className="flex-col">
-        <Button form="login" type="submit" className="w-full cursor-pointer" disabled={isSubmitting}>
+        <Button form="login" type="submit" className="w-full cursor-pointer" disabled={isSubmitting} tabIndex={4}>
           {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </CardFooter>

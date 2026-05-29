@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+import jwt
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password, make_password
@@ -24,13 +25,15 @@ from ..auth.otp import generate_otp
 from ..auth.tokens import PartialTokenService
 from ..models.auth import MFAChallenge
 from ..models.profiles import ProfileType
+from ..models.user import CustomUser
 from ..serializers.auth import (
     CivilServantRegistrationSerializer,
     LoginSerializer,
     RegistrationResponseSerializer,
+    ResendOTPSerializer,
     StudentRegistrationSerializer,
-    VerifyRegistrationOTPSerializer,
     Verify2FASerializer,
+    VerifyRegistrationOTPSerializer,
 )
 from ..serializers.users import (
     AuthenticatedUserWithProfileSerializer,
@@ -84,7 +87,7 @@ def handle_registration(request):
     created = serializer.save()
     user = created["user"]
 
-    if profile_type == ProfileType.STUDENT:
+    if profile_type in [ProfileType.STUDENT, ProfileType.CIVIL_SERVANT]:
         token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REGISTER)
         code = generate_otp()
 
@@ -93,7 +96,7 @@ def handle_registration(request):
             jti=jti,
             purpose=MFAChallenge.Purpose.REGISTER,
             code_hash=make_password(code),
-            expires_at=timezone.now() + timedelta(minutes=5),
+            expires_at=timezone.now() + timedelta(minutes=10),
         )
         send_registration_otp(user.email, code)
 
@@ -117,7 +120,14 @@ def handle_registration(request):
 
 
 def consume_registration_challenge(token, code):
-    payload = PartialTokenService.decode(token)
+    try:
+        payload = PartialTokenService.decode(token)
+    except jwt.ExpiredSignatureError:
+        raise AuthenticationFailed(
+            "O link de verificação expirou. Por favor, cadastre-se novamente.")
+    except jwt.InvalidTokenError:
+        raise AuthenticationFailed("Token de verificação inválido.")
+
     if payload["type"] != "2fa_pending":
         raise AuthenticationFailed("Invalid token type")
 
@@ -185,7 +195,7 @@ class LoginView2fa(generics.GenericAPIView):
             user=user,
             jti=jti,
             code_hash=make_password(code),
-            expires_at=timezone.now() + timedelta(minutes=5),
+            expires_at=timezone.now() + timedelta(minutes=10),
         )
 
         logger.debug(f"OTP CODE: {code} for {user} generated")
@@ -271,6 +281,51 @@ class VerifyRegistrationOTPView(generics.GenericAPIView):
         challenge.user.save(update_fields=["is_active"])
 
         return Response({"status": "verified"}, status=status.HTTP_200_OK)
+
+
+class ResendOTPView(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ResendOTPSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+
+        user = CustomUser.objects.filter(email=email, is_active=False).first()
+        if not user:
+            return Response(
+                {"detail": "Usuário não encontrado ou já ativado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Revoga desafios anteriores
+        MFAChallenge.objects.filter(
+            user=user, 
+            purpose=MFAChallenge.Purpose.REGISTER, 
+            used=False
+        ).update(revoked=True)
+
+        token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REGISTER)
+        code = generate_otp()
+
+        MFAChallenge.objects.create(
+            user=user,
+            jti=jti,
+            purpose=MFAChallenge.Purpose.REGISTER,
+            code_hash=make_password(code),
+            expires_at=timezone.now() + timedelta(minutes=10),
+        )
+        send_registration_otp(user.email, code)
+
+        return Response(
+            {
+                "status": "verification_required",
+                "token": token,
+                "otp_destination": user.email,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class Verify2FAView(generics.GenericAPIView):

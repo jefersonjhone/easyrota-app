@@ -1,23 +1,24 @@
-import pytest
-from unittest.mock import patch
 from datetime import time, timedelta
+from unittest.mock import patch
 
-from django.core.management import call_command
+import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from apps.trips.models import Bus, Route, Trip
+
+from .models.auth import AllowedStaff, MFAChallenge
 from .models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
     DriverProfile,
     StudentProfile,
 )
-from .models.auth import AllowedStaff, MFAChallenge
 from .models.user import CustomUser
 
 User = get_user_model()
@@ -69,16 +70,19 @@ class RegisterViewTests(APITestCase):
             "civil_servant_id": "87654322",
         }
 
-        response = self.client.post(self.url, payload, format="json")
+        with patch("apps.users.views.auth.send_mail") as mocked_send_mail:
+            response = self.client.post(self.url, payload, format="json")
 
-        assert response.status_code == status.HTTP_201_CREATED
+        assert response.status_code == status.HTTP_202_ACCEPTED
         assert response.data["user"]["user"]["email"] == payload["email"]
         assert response.data["user"]["profile_type"] == "civil-servant"
-        assert response.data["status"] == "created"
+        assert response.data["status"] == "verification_required"
         assert CustomUser.objects.filter(email=payload["email"]).exists()
         assert CivilServantProfile.objects.filter(
             civil_servant_id=payload["civil_servant_id"]
         ).exists()
+        assert MFAChallenge.objects.filter(user__email=payload["email"]).exists()
+        assert mocked_send_mail.called
 
     def test_register_student_rejects_invalid_email_domain(self):
         payload = {
@@ -340,10 +344,11 @@ class AllowedStaffValidationTests(APITestCase):
             "civil_servant_id": "11112222",
         }
 
-        response = self.client.post(self.url, payload, format="json")
+        with patch("apps.users.views.auth.send_mail"):
+            response = self.client.post(self.url, payload, format="json")
 
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["status"] == "created"
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert response.data["status"] == "verification_required"
 
     def test_driver_search_and_passenger_registration(self):
         driver_user = CustomUser.objects.create_user(

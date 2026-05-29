@@ -1,6 +1,5 @@
 import { apiFetch } from '@/lib/api'
 import { Button } from '@ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@ui/field'
 import { Input } from '@ui/input'
 import { useForm } from 'react-hook-form'
@@ -76,14 +75,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
   }
 
   return (
-    <Card className="w-full max-w-2xl m-4">
-      <CardHeader>
-        <CardTitle>Cadastrar novo veículo</CardTitle>
-        <CardDescription>
-          Informe placa, modelo e capacidade para registrar um ônibus na frota.
-        </CardDescription>
-      </CardHeader>
-
+    <div className="w-full">
       {errors.root?.serverError && (
         <FieldDescription className="mb-4 rounded-md bg-red-50 p-3 text-red-700">
           {errors.root.serverError.message}
@@ -96,7 +88,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
         </FieldDescription>
       )}
 
-      <CardContent>
+      <div>
         <form onSubmit={handleSubmit(onSubmit)}>
           <FieldGroup>
             <Field>
@@ -138,7 +130,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
             </Field>
           </FieldGroup>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

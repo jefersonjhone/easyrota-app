@@ -1,9 +1,9 @@
 from django.contrib.auth import authenticate
 from django.db import transaction
-from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
-from ..models.auth import AllowedStaff, MFAChallenge
+from ..models.auth import AllowedStaff
 from ..models.profiles import CivilServantProfile, ProfileType, StudentProfile
 from ..models.user import CustomUser
 from ..serializers.users import (
@@ -23,6 +23,14 @@ class LoginSerializer(serializers.Serializer):
         """Check if email and password are valid fields"""
         email = data["email"]
         password = data["password"]
+
+        # Verifica se a conta existe mas está inativa antes de autenticar
+        user_check = CustomUser.objects.filter(email=email).first()
+        if user_check and not user_check.is_active:
+            raise serializers.ValidationError({
+                "detail": "Sua conta ainda não foi ativada. Por favor, verifique seu e-mail."
+            })
+
         user = authenticate(email=email, password=password)
 
         if user is None:
@@ -52,7 +60,16 @@ class BaseUserRegistrationSerializer(serializers.Serializer):
     )
 
     def validate_email(self, value):
-        return value.strip().lower()
+        email = value.strip().lower()
+        user = CustomUser.objects.filter(email=email).first()
+        if user:
+            if not user.is_active:
+                raise serializers.ValidationError(
+                    "Este e-mail já está cadastrado, mas a conta ainda não foi ativada."
+                    "Por favor, verifique seu e-mail ou peça um novo código."
+                )
+            raise serializers.ValidationError("Este e-mail já está em uso.")
+        return email
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirmation"]:
@@ -67,6 +84,7 @@ class StudentRegistrationSerializer(BaseUserRegistrationSerializer):
     student_id = serializers.CharField(
         allow_blank=False,
         allow_null=False,
+        validators=[UniqueValidator(queryset=StudentProfile.objects.all())]
     )
 
     @transaction.atomic
@@ -102,6 +120,7 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
     civil_servant_id = serializers.CharField(
         allow_blank=False,
         allow_null=False,
+        validators=[UniqueValidator(queryset=CivilServantProfile.objects.all())]
     )
 
     @transaction.atomic
@@ -113,6 +132,7 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
 
         user = CustomUser.objects.create_user(
             password=password,
+            is_active=False,
             **validated_data,
         )
 
@@ -126,6 +146,14 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
             "profile": profile,
             "profile_type": ProfileType.CIVIL_SERVANT,
         }
+
+    def validate_email(self, value):
+        email = super().validate_email(value)
+        if not email.endswith("@uefs.br"):
+            raise serializers.ValidationError(
+                "E-mail institucional de servidor deve terminar com @uefs.br."
+            )
+        return email
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -148,6 +176,10 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
 class VerifyRegistrationOTPSerializer(serializers.Serializer):
     token = serializers.CharField()
     code = serializers.CharField(max_length=6)
+
+
+class ResendOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
 
 class CivilServantAllowedStaffSerializer(serializers.Serializer):

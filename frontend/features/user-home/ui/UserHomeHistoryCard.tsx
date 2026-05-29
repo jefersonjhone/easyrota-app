@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -5,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@ui/card'
+import { Button } from '@ui/button'
 
 import {
   formatReservationCreatedAt,
@@ -25,10 +27,19 @@ export function UserHomeHistoryCard({
   return (
     <Card id="historico" className="border-border/70 bg-card/95">
       <CardHeader className="border-b border-border/70 pb-5">
-        <CardTitle>Histórico recente</CardTitle>
-        <CardDescription>
-          Últimas reservas recuperadas do sistema de reservas.
-        </CardDescription>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <CardTitle>Histórico recente</CardTitle>
+            <CardDescription>
+              Últimas reservas recuperadas do sistema de reservas.
+            </CardDescription>
+          </div>
+          <Link to="/app/viagens/historico">
+            <Button variant="outline" size="sm">
+              Ver tudo
+            </Button>
+          </Link>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-6">
         {error ? (
