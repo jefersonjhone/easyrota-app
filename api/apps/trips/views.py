@@ -12,6 +12,8 @@ from rest_framework.views import APIView
 
 from ..reservations.models import Reservation
 from ..reservations.services import ACTIVE_RESERVATION_STATUSES
+from apps.reservations.services import process_trip_punishments
+
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
@@ -90,8 +92,13 @@ class TripViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
+        trip = self.get_object()
+        
         Trip.objects.filter(id=pk).update(status="CONCLUÍDA",
                                           arrival_timestamp=timezone.now())
+        
+        process_trip_punishments(trip)
+        
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
     
     @action(detail=True, methods=["post"])

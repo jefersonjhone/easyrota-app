@@ -2,7 +2,7 @@ from rest_framework import generics, status, views, viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from apps.reservations.models import Reservation
+from apps.reservations.models import Punishment, Reservation
 
 from ...trips.models import TripPassenger
 from ..models.auth import AllowedStaff
@@ -37,16 +37,25 @@ class SelfProfileView(views.APIView):
 
         reservations = Reservation.objects.none()
         info_data = {}
+        active_punishments_count = 0
+        
         if hasattr(user, "student_profile"):
             info_data = {
                 "student_id": user.student_profile.student_id,
             }
+            
             reservations = (
                 Reservation.objects
                 .filter(student=user.student_profile)
                 .select_related("trip", "trip__route")
                 .order_by("-created_at")
             )
+            
+            active_punishments_count = Punishment.objects.filter(
+                student=user.student_profile, 
+                is_active=True
+            ).count()
+            
         elif hasattr(user, "civil_servant_profile"):
             info_data = {
                 "civil_servant_id": user.civil_servant_profile.civil_servant_id,
@@ -72,6 +81,7 @@ class SelfProfileView(views.APIView):
                     "CONFIRMADA", "RISCO DE CANCELAMENTO"
                 ]
             ),
+            "active_punishments": active_punishments_count,
         }
         
         return Response(data)

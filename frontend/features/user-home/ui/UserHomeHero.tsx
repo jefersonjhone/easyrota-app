@@ -41,6 +41,12 @@ export function UserHomeHero({
   email,
   totalTrips,
 }: UserHomeHeroProps) {
+  const roleLabel: string = {
+    STUDENT: 'Estudante',
+    DRIVER: 'Motorista',
+    ADMIN: 'Administrador',
+    'CIVIL-SERVANT': 'Funcionário Público',
+  }[profileType ?? ''] || 'Passageiro'
 
   return (
     <div className="mb-8 overflow-hidden rounded-4xl border border-border/70 bg-card shadow-sm">
@@ -75,7 +81,7 @@ export function UserHomeHero({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           <UserHomeMetricCard
             label="Perfil"
-            value={profileType || 'PASSAGEIRO'}
+            value={roleLabel || 'Passageiro'}
             description={email || 'Conta autenticada na plataforma'}
             className="rounded-3xl bg-muted/40 p-5 ring-1 ring-border/70"
             labelClassName="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase"

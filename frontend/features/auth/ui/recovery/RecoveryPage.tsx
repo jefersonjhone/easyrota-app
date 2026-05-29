@@ -12,6 +12,9 @@ import { RequestRecoveryForms } from "./steps/RequestRecoveryForms"
 
 export const RecoveryPage = () => {
   const [email, setEmail] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [otp, setOtp] = useState<string | null>(null)
+
   return (
     <AuthLayout>
       <StepsRoot stepsOrder={["request", "confirm", "reset"]}>
@@ -23,14 +26,20 @@ export const RecoveryPage = () => {
 
         <Step value="request">
           <RequestRecoveryForms 
-            onSuccess={(form: FormData) => setEmail(form.get("email") as string)} 
+            onSuccess={(emailValue: string, tokenValue: string) => {
+              setEmail(emailValue)
+              setToken(tokenValue)
+            }} 
           />
         </Step>
         <Step value="confirm">
-          <ConfirmPinForms email={email} />
+          <ConfirmPinForms 
+            email={email} 
+            onSuccess={(otpValue: string) => setOtp(otpValue)} 
+          />
         </Step>
         <Step value="reset">
-          <ChangePasswordForms/>
+          <ChangePasswordForms token={token} otp={otp} />
         </Step>
       </StepsRoot>
     </AuthLayout>

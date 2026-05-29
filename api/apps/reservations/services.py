@@ -71,10 +71,21 @@ def get_priority_tuple(reservation):
         return (0, reservation.created_at)
 
     if reservation.student_id:
-        has_punishment = Punishment.objects.filter(student=reservation.student).exists()
-        return (2 if has_punishment else 1, reservation.created_at)
+        active_punishments_count = Punishment.objects.filter(
+            student=reservation.student,
+            is_active=True
+            ).count()
+        
+        if active_punishments_count >= 2:
+            priority = 3
+        elif active_punishments_count == 1:
+            priority = 2
+        else:
+            priority = 1
+        
+        return (priority, reservation.created_at)
 
-    return (3, reservation.created_at)
+    return (4, reservation.created_at)
 
 
 def promote_next_waitlisted_reservation(trip):
@@ -117,6 +128,41 @@ def sync_trip_status(trip):
 
     return trip
 
+
+def process_trip_punishments(trip):
+    """
+    It processes absences and presences at the end of a trip.
+    It applies penalties to those who were absent and forgives 
+    those who traveled.
+    """
+    
+    reservations = Reservation.objects.filter(
+        trip=trip, 
+        status__in=ACTIVE_RESERVATION_STATUSES
+    )
+
+    for reservation in reservations:
+        if not reservation.student_id: 
+            continue
+
+        if reservation.check_in:
+            Punishment.objects.filter(
+                student=reservation.student, 
+                is_active=True
+            ).update(is_active=False)
+        else:
+            Punishment.objects.get_or_create(
+                reservation=reservation,
+                defaults={
+                    "student": reservation.student,
+                    "description": (
+                        f"Faltou ao check-in na viagem "
+                        f"{trip.route} em {trip.trip_date}"
+                        ),
+                    "is_active": True
+                }
+            )
+            
 
 def validate_trip_reservation_window(trip):
     if not is_reservation_open(trip):

@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 
 from ..trips.models import Bus, Route, Trip
 from ..users.models import (
@@ -14,7 +14,8 @@ from ..users.models import (
     DriverProfile,
     StudentProfile,
 )
-from .models import Reservation
+from .models import Punishment, Reservation
+from .services import get_priority_tuple, process_trip_punishments
 
 
 class BaseReservationTestCase(APITestCase):
@@ -75,12 +76,17 @@ class BaseReservationTestCase(APITestCase):
 
         return user, civil_servant
 
-    def create_student(self):
-        """Creates student user and profile."""
+    def create_student(self, email="student@teste.com", student_id="12345"):
+        """
+        Creates student user and profile.
+        """
         user = CustomUser.objects.create_user(
-            email="student@teste.com", password="12345678"
+            email=email, password="12345678"
         )
-        student_profile = StudentProfile.objects.create(user=user)
+        student_profile = StudentProfile.objects.create(
+            user=user,
+            student_id=student_id
+        )
 
         return user, student_profile
 
@@ -238,3 +244,174 @@ class AvailableTripsTest(BaseReservationTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["available_seats"], 38)
         self.assertEqual(response.data[0]["bus_brand"], "Mercedes-Benz")
+
+
+class PunishmentSystemTestCase(BaseReservationTestCase):
+    def setUp(self):
+        super().setUp()
+        
+        self.trip = self.create_trip(days_ahead=0, status="EM ANDAMENTO")
+        
+        self.absent_user, self.absent_profile = self.create_student(
+            email="absent_student@test.com", 
+            student_id="001"
+        )
+        
+        self.present_user, self.present_profile = self.create_student(
+            email="present_student@test.com", 
+            student_id="002"
+        )
+
+        self.absent_reservation = self.create_reservation(
+            trip=self.trip,
+            student=self.absent_profile
+        )
+        self.absent_reservation.check_in = False
+        self.absent_reservation.status = "CONFIRMADA"
+        self.absent_reservation.save()
+
+        self.present_reservation = self.create_reservation(
+            trip=self.trip,
+            student=self.present_profile
+        )
+        self.present_reservation.check_in = True
+        self.present_reservation.status = "CONFIRMADA"
+        self.present_reservation.save()
+
+    def test_apply_punishment_on_absence(self):
+        """
+        Ensures absent students receive an active 
+        punishment at the end of the trip.
+        """
+        process_trip_punishments(self.trip)
+
+        punishment_exists = Punishment.objects.filter(
+            student=self.absent_profile, 
+            reservation=self.absent_reservation,
+            is_active=True
+        ).exists()
+        
+        self.assertTrue(punishment_exists)
+
+    def test_forgive_punishment_on_presence(self):
+        """
+        Ensures that if a student already has an active punishment, 
+        it becomes inactive if they check in on a new trip.
+        """
+        old_reservation = self.create_reservation(
+            trip=self.trip, 
+            student=self.present_profile
+        )
+        old_reservation.status = "CONFIRMADA"
+        old_reservation.save()
+        
+        old_punishment = Punishment.objects.create(
+            student=self.present_profile,
+            reservation=old_reservation,
+            is_active=True,
+            description="Faltou na viagem"
+        )
+
+        process_trip_punishments(self.trip)
+        old_punishment.refresh_from_db()
+        
+        self.assertFalse(old_punishment.is_active)
+
+    def test_no_punishment_for_present_students(self):
+        """Ensures that a present student does not receive a new punishment."""
+        process_trip_punishments(self.trip)
+        
+        punishment_exists = Punishment.objects.filter(
+            student=self.present_profile, 
+            reservation=self.present_reservation
+        ).exists()
+        
+        self.assertFalse(punishment_exists)
+    
+    def test_priority_calculation_based_on_punishments(self):
+        """
+        Ensures get_priority_tuple calculates the correct priority 
+        based on the number of active punishments (1, 2, or 3).
+        """
+        clean_user, clean_profile = self.create_student(
+            email="clean@test.com", 
+            student_id="003"
+        )
+        
+        new_reservation = self.create_reservation(
+            trip=self.trip,
+            student=clean_profile
+        )
+
+        priority, _ = get_priority_tuple(new_reservation)
+        self.assertEqual(priority, 1)
+
+        old_trip_1 = self.create_trip(days_ahead=-1)
+        old_res_1 = self.create_reservation(trip=old_trip_1, student=clean_profile)
+        Punishment.objects.create(
+            student=clean_profile,
+            reservation=old_res_1,
+            is_active=True,
+            description="Primeira Falta"
+        )
+        
+        priority, _ = get_priority_tuple(new_reservation)
+        self.assertEqual(priority, 2)
+
+        old_trip_2 = self.create_trip(days_ahead=-2)
+        old_res_2 = self.create_reservation(trip=old_trip_2, student=clean_profile)
+        Punishment.objects.create(
+            student=clean_profile,
+            reservation=old_res_2,
+            is_active=True,
+            description="Segunda Falta"
+        )
+        
+        priority, _ = get_priority_tuple(new_reservation)
+        self.assertEqual(priority, 3)
+
+
+class PunishmentHistoryAPITestCase(BaseReservationTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = APIClient()
+        
+        self.user, self.profile = self.create_student(
+            email="api_student@test.com", 
+            student_id="999"
+        )
+        self.client.force_authenticate(user=self.user)
+        
+        self.trip = self.create_trip(days_ahead=-1)
+        self.reservation = self.create_reservation(trip=self.trip, student=self.profile)
+        self.punishment = Punishment.objects.create(
+            student=self.profile,
+            reservation=self.reservation,
+            is_active=True,
+            description="Faltou na viagem teste"
+        )
+
+    def test_get_punishment_history_authenticated(self):
+        """
+        It ensures that the student can list their own history of punishments.
+        """
+        url = reverse("reservation-punishments-history") 
+        
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["description"], "Faltou na viagem teste")
+        self.assertTrue(response.data[0]["is_active"])
+        
+        self.assertIn("created_at", response.data[0]) 
+
+    def test_get_punishment_history_unauthenticated(self):
+        """
+        Ensures that anonymous users receive a 401 error.
+        """
+        self.client.force_authenticate(user=None)
+        url = reverse("reservation-punishments-history")
+        
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 401)

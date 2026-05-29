@@ -14,23 +14,31 @@ import { Field, FieldLabel } from "@ui/field"
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@ui/input-otp"
 
 // Hooks
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useSteps } from "@ui/steps"
 
 
 type Props = {
   email: string | null
+  onSuccess?: (otp: string) => void
 }
 
-export const ConfirmPinForms = ({ email }: Props) => {
+export const ConfirmPinForms = ({ email, onSuccess }: Props) => {
   const { next, prev } = useSteps()
+  const [code, setCode] = useState("")
 
   useEffect(() => {
     if (!email?.trim()) { prev() }
   }, [email, prev])
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSuccess?.(code)
+    next()
+  }
+
   return (
-    <form onSubmit={next}>
+    <form onSubmit={handleSubmit}>
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Recuperar Acesso</CardTitle>
@@ -43,10 +51,10 @@ export const ConfirmPinForms = ({ email }: Props) => {
           </CardAction>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          <PinField />
+          <PinField code={code} setCode={setCode} />
         </CardContent>
         <CardFooter className="flex-col gap-2">
-          <SubmitPin />
+          <SubmitPin disabled={code.length !== 6} />
         </CardFooter>
       </Card>
     </form>
@@ -60,10 +68,10 @@ const GoBackButton = ({ onClick }: { onClick: () => void }) => (
   </Button>
 )
 
-const PinField = () => (
+const PinField = ({ code, setCode }: { code: string, setCode: (c: string) => void }) => (
   <Field>
     <PinLabel />
-    <PinInput />
+    <PinInput code={code} setCode={setCode} />
   </Field>
 )
 
@@ -72,14 +80,11 @@ const PinField = () => (
     <FieldLabel htmlFor="otp-verification">
       Código de Confirmação
     </FieldLabel>
-    <Button variant="outline" size="xs">
-      <ArrowsClockwiseIcon size={32} />
-      Re-enviar código
-    </Button>
+    {/* Optional: Add resend logic here later if needed */}
   </div>
 )
 
-const PinInput = () => {
+const PinInput = ({ code, setCode }: { code: string, setCode: (c: string) => void }) => {
   const groupClass = `
     *:data-[slot=input-otp-slot]:h-12 
     *:data-[slot=input-otp-slot]:w-11 
@@ -87,7 +92,7 @@ const PinInput = () => {
   `
 
   return (
-    <InputOTP maxLength={6} id="otp-verification" containerClassName="justify-center" required>
+    <InputOTP maxLength={6} id="otp-verification" containerClassName="justify-center" required value={code} onChange={setCode}>
       <InputOTPGroup className={groupClass}>
         <InputOTPSlot index={0} />
         <InputOTPSlot index={1} />
@@ -102,8 +107,8 @@ const PinInput = () => {
     </InputOTP>
   )
 }
-const SubmitPin = () => (
-  <Button type="submit" className="w-full cursor-pointer">
+const SubmitPin = ({ disabled }: { disabled: boolean }) => (
+  <Button type="submit" className="w-full cursor-pointer" disabled={disabled}>
     Confirmar
   </Button>
 )

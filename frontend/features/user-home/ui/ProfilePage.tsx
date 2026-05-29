@@ -2,6 +2,7 @@ import AppLayout from '@/lib/layout/app-layout'
 import ProfileHeader from '@/features/user-home/ui/ProfileHeader'
 import { ProfileStats } from '@/features/user-home/ui/ProfileStats'
 import { TripsHistoryCard } from '@/features/user-home/ui/ProfileTripsHistory'
+import { PunishmentsHistoryCard } from '@/features/user-home/ui/ProfilePunishment'
 
 import { useProfileUser } from '@/features/user-home/hooks/useProfileUser'
 
@@ -16,8 +17,9 @@ export function ProfilePage() {
       <ProfileHeader user={profileUser} />
       <ProfileStats user={profileUser} />
       
-      <div className="w-full sm:px-0 mt-6 ">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6">
         <TripsHistoryCard />
+        <PunishmentsHistoryCard />
       </div>
     </div>
   </AppLayout>
