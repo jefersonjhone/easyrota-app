@@ -35,3 +35,11 @@ export type CurrentTripDetail = {
   minutes_remaining: number | null
   status_route: string
 }
+
+export type TripPassengerCheckInResponse = {
+  status?: string
+  error?: string
+  reservation_id?: number
+  passenger_name?: string
+  checkin_date?: string
+}

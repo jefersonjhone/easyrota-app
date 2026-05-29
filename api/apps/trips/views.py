@@ -1,5 +1,7 @@
 from datetime import date, datetime, timedelta
+from uuid import UUID
 
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import generics, permissions, status, viewsets
@@ -8,6 +10,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..reservations.models import Reservation
+from ..reservations.services import ACTIVE_RESERVATION_STATUSES
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
@@ -21,6 +25,8 @@ from .serializers import (
     TripCurrentScreenSerializer,
     TripSerializer,
 )
+
+User = get_user_model()
 
 
 class BusViewSet(viewsets.ModelViewSet):
@@ -93,6 +99,91 @@ class TripViewSet(viewsets.ModelViewSet):
         Trip.objects.filter(id=pk).update(status="EM ANDAMENTO",
                                           departure_timestamp=timezone.now())
         return Response("trip iniciada com sucesso", status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="check-in")
+    def check_in(self, request, pk=None):
+        passenger_identifier = (
+            request.data.get("passenger_identifier")
+            or request.data.get("user_id")
+            or request.data.get("uuid")
+        )
+
+        if not passenger_identifier:
+            return Response(
+                {"error": "UUID do passageiro e obrigatorio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            passenger_uuid = UUID(str(passenger_identifier))
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "QR Code invalido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            trip = Trip.objects.select_related("driver").get(id=pk)
+        except Trip.DoesNotExist:
+            return Response(
+                {"error": "Viagem nao encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        driver = request.user.driver_profile
+        if trip.driver_id != driver.id:
+            return Response(
+                {"error": "Motorista nao autorizado para esta viagem."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            passenger = User.objects.get(id=passenger_uuid)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "QR Code invalido ou usuario inexistente."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reservation = (
+            Reservation.objects.select_related("student__user", "civil_servant__user")
+            .filter(
+                Q(student__user=passenger) | Q(civil_servant__user=passenger),
+                trip=trip,
+                status__in=ACTIVE_RESERVATION_STATUSES,
+            )
+            .first()
+        )
+
+        if reservation is None:
+            return Response(
+                {"error": "Passageiro sem reserva nesta viagem."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if reservation.check_in:
+            return Response(
+                {
+                    "error": "Passageiro ja fez check-in.",
+                    "reservation_id": reservation.id,
+                    "passenger_name": passenger.full_name,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        reservation.check_in = True
+        reservation.checkin_date = timezone.now()
+        reservation.save(update_fields=["check_in", "checkin_date"])
+
+        return Response(
+            {
+                "status": "Check-in realizado com sucesso.",
+                "reservation_id": reservation.id,
+                "passenger_name": passenger.full_name,
+                "checkin_date": reservation.checkin_date,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["post"])
     def assign_driver(self, request, pk=None):
@@ -179,6 +270,7 @@ class TripViewSet(viewsets.ModelViewSet):
         elif self.action in [
             "finish_trip",
             "start_trip",
+            "check_in",
             "assign_bus",
             "unassign_bus",
             "assign_driver",
