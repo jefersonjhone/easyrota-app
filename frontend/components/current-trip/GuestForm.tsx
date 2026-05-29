@@ -26,7 +26,7 @@ export function GuestForm() {
   // adcionando convidado:
   const addGuestMutation = useMutation({
     mutationFn: async (payload: GuestSchema) => {
-      return apiFetch("/guests/", {
+      return apiFetch("trips/guests/", {
         method: "POST",
         body: JSON.stringify(payload),
       });

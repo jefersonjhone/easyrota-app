@@ -1,8 +1,10 @@
 from django.db import models
 
-from apps.users.models.profiles import DriverProfile
+from apps.users.models.profiles import (DriverProfile, CivilServantProfile)
 
 from .querysets import TripQuerySet
+
+from django.contrib.auth.base_user import BaseUserManager
 
 
 class Bus(models.Model):
@@ -116,3 +118,45 @@ class TripPassenger(models.Model):
 
     def __str__(self):
         return f"{self.allowed_staff} on {self.trip}"
+
+
+class GuestPassengerManager(BaseUserManager):
+    """Custom manager that authenticates guests by cpf and trip."""
+
+    use_in_migrations = True
+
+    def _create_passenger(self, cpf, trip, **extra_fields):
+        """Create and persist a user with normalized email credentials."""
+        if not cpf:
+            raise ValueError("The cpf field must be set.")
+        if not trip:
+            raise ValueError("The trip field must be set.")
+
+        passenger = self.model(cpf=cpf, trip=trip, **extra_fields)
+        passenger.save(using=self._db)
+        return passenger
+
+    def create_passenger(self, cpf, trip, **extra_fields):
+        """Create a regular passenger account."""
+        extra_fields.setdefault("recorded_by", None)
+        extra_fields.setdefault("full_name", "")
+        return self._create_passenger(cpf, trip, **extra_fields)
+
+
+class GuestPassenger(models.Model):
+    cpf = models.CharField(max_length=11)
+    trip = models.ForeignKey(to=Trip, on_delete=models.CASCADE)
+    recorded_by = models.ForeignKey(to=CivilServantProfile, on_delete=models.SET_NULL, null=True)
+    full_name = models.CharField(max_length=255)
+
+    objects = GuestPassengerManager()
+
+    USERNAME_FIELD = "cpf"
+    REQUIRED_FIELDS = ("full_name",)
+
+    class Meta:
+        unique_together = (('cpf', 'trip'),)
+
+    def __str__(self):
+        return f"Nome: {self.full_name} \nCPF: {self.cpf}\nAdicionado por: \
+        {self.recorded_by}\n Adicionado na viagem: {self.trip}"

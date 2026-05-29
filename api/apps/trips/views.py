@@ -12,6 +12,9 @@ from rest_framework.views import APIView
 
 from apps.reservations.services import process_trip_punishments
 
+from apps.users.serializers.auth import CivilServantAllowedStaffSerializer
+from apps.users.models.auth import AllowedStaff
+
 from ..reservations.models import Reservation
 from ..reservations.services import ACTIVE_RESERVATION_STATUSES
 from ..users.permissions import (
@@ -20,7 +23,7 @@ from ..users.permissions import (
     IsDriverReadOnly,
 )
 from .filters import FilterTripViewSet
-from .models import Bus, Route, Trip
+from .models import Bus, Route, Trip, GuestPassenger
 from .serializers import (
     BusSerializer,
     RouteSerializer,
@@ -403,3 +406,33 @@ class MyNextTripView(APIView):
                 return Response(serializer.data)
 
         return Response({"detail": "Nenhuma viagem próxima."}, status=404)
+
+
+class TripPassengerView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        serializer = CivilServantAllowedStaffSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        trip_id = request.data.get("trip")
+        cpf = request.data.get("cpf")
+        if not trip_id:
+            return Response(
+                {"trip": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not cpf:
+            return Response(
+                {"cpf": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        passenger = GuestPassenger.objects.create(
+            cpf=cpf,
+            trip_id=trip_id,
+            recorded_by=request.user.id,
+            full_name=request.data.get("full_name"),
+        )
+        return Response({"id": passenger.id}, status=status.HTTP_201_CREATED)
