@@ -121,13 +121,13 @@ class TripViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        """try:
-            #passenger_uuid = UUID(str(passenger_identifier))
+        try:
+            passenger_uuid = UUID(str(passenger_identifier))
         except (TypeError, ValueError):
             return Response(
                 {"error": "QR Code invalido."},
                 status=status.HTTP_400_BAD_REQUEST,
-            )"""
+            )
 
         try:
             trip = Trip.objects.select_related("driver").get(id=pk)
@@ -145,7 +145,7 @@ class TripViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            passenger = User.objects.get(id=passenger_identifier) # trocar por uuid se for usar
+            passenger = User.objects.get(id=passenger_uuid) # trocar por uuid se for usar
         except User.DoesNotExist:
             return Response(
                 {"error": "QR Code invalido ou usuario inexistente."},
