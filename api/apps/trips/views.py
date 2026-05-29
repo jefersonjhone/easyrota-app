@@ -8,6 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.reservations.services import process_trip_punishments
+
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
@@ -84,8 +86,13 @@ class TripViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
+        trip = self.get_object()
+        
         Trip.objects.filter(id=pk).update(status="CONCLUÍDA",
                                           arrival_timestamp=timezone.now())
+        
+        process_trip_punishments(trip)
+        
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"])
