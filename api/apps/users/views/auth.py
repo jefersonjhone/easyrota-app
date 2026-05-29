@@ -29,6 +29,8 @@ from ..models.user import CustomUser
 from ..serializers.auth import (
     CivilServantRegistrationSerializer,
     LoginSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
     RegistrationResponseSerializer,
     ResendOTPSerializer,
     StudentRegistrationSerializer,
@@ -326,6 +328,106 @@ class ResendOTPView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class PasswordResetRequestView(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = PasswordResetRequestSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+
+        user = CustomUser.objects.filter(email=email).first()
+        if not user:
+            # Para evitar enumeração de contas, retornamos sucesso genérico
+            return Response({"status": "verification_required", "token": ""}, status=status.HTTP_200_OK)
+
+        # Revoga desafios anteriores de reset
+        MFAChallenge.objects.filter(
+            user=user, 
+            purpose=MFAChallenge.Purpose.PASSWORD_RESET, 
+            used=False
+        ).update(revoked=True)
+
+        token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.PASSWORD_RESET)
+        code = generate_otp()
+
+        MFAChallenge.objects.create(
+            user=user,
+            jti=jti,
+            purpose=MFAChallenge.Purpose.PASSWORD_RESET,
+            code_hash=make_password(code),
+            expires_at=timezone.now() + timedelta(minutes=10),
+        )
+        send_mail(
+            subject="Recuperação de Senha EasyRota",
+            message=f"Seu código de recuperação de senha é: {code}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        return Response(
+            {
+                "status": "verification_required",
+                "token": token,
+                "otp_destination": user.email,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        token = serializer.validated_data["token"]
+        code = serializer.validated_data["code"]
+        new_password = serializer.validated_data["password"]
+
+        if not token:
+            raise AuthenticationFailed("Token de verificação inválido.")
+
+        try:
+            payload = PartialTokenService.decode(token)
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed("O link de recuperação expirou. Solicite novamente.")
+        except jwt.InvalidTokenError:
+            raise AuthenticationFailed("Token de verificação inválido.")
+
+        if payload["type"] != "2fa_pending" or payload["purpose"] != MFAChallenge.Purpose.PASSWORD_RESET:
+            raise AuthenticationFailed("Invalid token type")
+
+        challenge = MFAChallenge.objects.filter(jti=payload["jti"]).select_related("user").first()
+
+        if not challenge or challenge.used or challenge.revoked or challenge.is_expired():
+            raise AuthenticationFailed("Desafio inválido ou expirado.")
+
+        if not challenge.can_attempt():
+            challenge.revoked = True
+            challenge.save(update_fields=["revoked"])
+            raise AuthenticationFailed("Muitas tentativas falhas. Solicite novamente.")
+
+        challenge.attempts += 1
+        challenge.save(update_fields=["attempts"])
+
+        if not check_password(code, challenge.code_hash):
+            raise AuthenticationFailed("Código de recuperação inválido.")
+
+        challenge.used = True
+        challenge.save(update_fields=["used"])
+
+        user = challenge.user
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        return Response({"status": "password_reset_success"}, status=status.HTTP_200_OK)
 
 
 class Verify2FAView(generics.GenericAPIView):

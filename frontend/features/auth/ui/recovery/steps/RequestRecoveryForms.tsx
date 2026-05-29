@@ -14,23 +14,44 @@ import { Field, FieldLabel } from "@ui/field"
 
 // Hooks
 import { useSteps } from "@ui/steps"
+import { useState } from "react"
+import { apiFetch } from "@/lib/api"
 
 // Routes
 import { Route as LoginRoute } from "@/pages/login"
 
 
 type Props = {
-  onSuccess?: (form: FormData) => void
+  onSuccess?: (email: string, token: string) => void
 }
 
 export function RequestRecoveryForms({ onSuccess }: Props) {
   const { next } = useSteps()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setLoading(true)
+    setError(null)
 
     const formData = new FormData(e.currentTarget)
-    onSuccess?.(formData)
-    next()
+    const email = formData.get("email") as string
+
+    try {
+      const response = await apiFetch("/auth/password-reset-request/", {
+        method: "POST",
+        body: JSON.stringify({ email })
+      })
+      const data = await (response as any).json?.() || response
+      onSuccess?.(email, data.token || "")
+      next()
+    } catch (err) {
+      console.error(err)
+      setError("Ocorreu um erro ao processar sua solicitação.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -45,9 +66,10 @@ export function RequestRecoveryForms({ onSuccess }: Props) {
         </CardHeader>
         <CardContent>
           <EmailField/>
+          {error && <p className="text-sm text-destructive text-center mt-2">{error}</p>}
         </CardContent>
         <CardFooter>
-          <SubmitRequest/>
+          <SubmitRequest loading={loading}/>
         </CardFooter>
       </Card>
     </form>
@@ -66,8 +88,8 @@ const EmailField = () => (
     <Input id="email" name="email" type="email" placeholder="joao@uefs.br" required />
   </Field>
 )
-const SubmitRequest = () => (
-  <Button type="submit" className="w-full cursor-pointer">
-    Receber email
+const SubmitRequest = ({ loading }: { loading: boolean }) => (
+  <Button type="submit" className="w-full cursor-pointer" disabled={loading}>
+    {loading ? "Enviando..." : "Receber email"}
   </Button>
 )

@@ -173,6 +173,22 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
         return attrs
 
 
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    code = serializers.CharField(max_length=6)
+    password = serializers.CharField(write_only=True, min_length=8)
+    password_confirmation = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password_confirmation"]:
+            raise serializers.ValidationError({
+                "password_confirmation": "Passwords do not match."
+            })
+        return attrs
+
 class VerifyRegistrationOTPSerializer(serializers.Serializer):
     token = serializers.CharField()
     code = serializers.CharField(max_length=6)
