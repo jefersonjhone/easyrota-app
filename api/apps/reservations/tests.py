@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 
 from ..trips.models import Bus, Route, Trip
 from ..users.models import (
@@ -369,3 +369,49 @@ class PunishmentSystemTestCase(BaseReservationTestCase):
         
         priority, _ = get_priority_tuple(new_reservation)
         self.assertEqual(priority, 3)
+
+
+class PunishmentHistoryAPITestCase(BaseReservationTestCase):
+    def setUp(self):
+        super().setUp()
+        self.client = APIClient()
+        
+        self.user, self.profile = self.create_student(
+            email="api_student@test.com", 
+            student_id="999"
+        )
+        self.client.force_authenticate(user=self.user)
+        
+        self.trip = self.create_trip(days_ahead=-1)
+        self.reservation = self.create_reservation(trip=self.trip, student=self.profile)
+        self.punishment = Punishment.objects.create(
+            student=self.profile,
+            reservation=self.reservation,
+            is_active=True,
+            description="Faltou na viagem teste"
+        )
+
+    def test_get_punishment_history_authenticated(self):
+        """
+        It ensures that the student can list their own history of punishments.
+        """
+        url = reverse("reservation-punishments-history") 
+        
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["description"], "Faltou na viagem teste")
+        self.assertTrue(response.data[0]["is_active"])
+        
+        self.assertIn("created_at", response.data[0]) 
+
+    def test_get_punishment_history_unauthenticated(self):
+        """
+        Ensures that anonymous users receive a 401 error.
+        """
+        self.client.force_authenticate(user=None)
+        url = reverse("reservation-punishments-history")
+        
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 401)
