@@ -100,23 +100,23 @@ class ReservationViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "cancel":
             return [IsAuthenticated()]
-        
+
         if self.action == "checkin":
             return [IsDriver() | IsSuperAdmin()]
 
         return super().get_permissions()
-    
+
     @action(detail=True, methods=["post"])
     def checkin(self, request, pk=None):
         """
         It records the passenger's presence on the bus.
         """
         reservation = self.get_object()
-        
+
         if reservation.status not in ["CONFIRMADA", "PENDENTE"]:
             return Response(
-                {"error": "Apenas reservas ativas podem fazer check-in."}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Apenas reservas ativas podem fazer check-in."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         reservation.check_in = True
@@ -159,17 +159,16 @@ class PunishmentHistoryView(generics.ListAPIView):
     """
     Returns the penalty history of the authenticated student.
     """
+
     serializer_class = PunishmentHistorySerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        
+
         if hasattr(user, "student_profile"):
-            return (
-                Punishment.objects
-                .filter(student=user.student_profile)
-                .order_by("-id")
+            return Punishment.objects.filter(student=user.student_profile).order_by(
+                "-id"
             )
-            
+
         return Punishment.objects.none()

@@ -103,7 +103,7 @@ class TripSerializer(serializers.ModelSerializer):
     checked_in_passengers = serializers.SerializerMethodField(read_only=True)
     departure_time = serializers.CharField(
         source="route.departure_time", read_only=True
-        )
+    )
     arrival_time = serializers.CharField(source="route.arrival_time", read_only=True)
 
     seating_capacity = serializers.IntegerField(
@@ -170,28 +170,27 @@ class TripSerializer(serializers.ModelSerializer):
         tz = timezone.get_current_timezone()
 
         if trip_date and trip_date < now.date():
-            raise serializers.ValidationError(
-                {"trip_date": "A data da viagem não pode estar no passado."}
-            )
+            raise serializers.ValidationError({
+                "trip_date": "A data da viagem não pode estar no passado."
+            })
 
         if status == "EM ANDAMENTO" and trip_date and trip_date < now.date():
-            raise serializers.ValidationError(
-                {"trip_date": "A data da viagem não pode estar no passado."}
-            )
+            raise serializers.ValidationError({
+                "trip_date": "A data da viagem não pode estar no passado."
+            })
 
         if trip_date and route:
             expected_dep = timezone.make_aware(
                 datetime.combine(trip_date, route.departure_time), tz
             )
-            
+
             is_new = self.instance is None
             date_changed = self.instance and self.instance.trip_date != trip_date
             route_changed = self.instance and self.instance.route != route
 
             if is_new or date_changed or route_changed:
-                
                 grace_limit = expected_dep + timedelta(hours=1)
-                
+
                 if now > grace_limit:
                     raise serializers.ValidationError({
                         "route": "Não é possível agendar uma viagem "
@@ -203,22 +202,23 @@ class TripSerializer(serializers.ModelSerializer):
                 expected_dep = timezone.make_aware(
                     datetime.combine(trip_date, route.departure_time), tz
                 )
-                
+
                 if now < expected_dep - timedelta(minutes=30):
                     raise serializers.ValidationError({
                         "status": "Muito cedo para iniciar a viagem. "
                         "O horário previsto é {route.departure_time.strftime('%H:%M')}."
                     })
-                    
+
             elif trip_date > now.date():
                 raise serializers.ValidationError({
                     "status": "Não é possível iniciar uma viagem "
                     "agendada para o futuro."
                 })
 
-            departure = data.get("departure_timestamp", 
-                                 self.instance.departure_timestamp 
-                                 if self.instance else None)
+            departure = data.get(
+                "departure_timestamp",
+                self.instance.departure_timestamp if self.instance else None,
+            )
             if not departure:
                 data["departure_timestamp"] = now
 
@@ -297,7 +297,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     percentage_complete = serializers.SerializerMethodField()
     minutes_remaining = serializers.SerializerMethodField()
     status_route = serializers.SerializerMethodField()
-    
+
     passenger_identifier = serializers.SerializerMethodField()
 
     class Meta:
@@ -315,7 +315,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             "percentage_complete",
             "minutes_remaining",
             "status_route",
-            "passenger_identifier"
+            "passenger_identifier",
         ]
 
     def get_status_trip(self, obj):
@@ -417,8 +417,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             return "Finalizando Trajeto"
 
     def get_passenger_identifier(self, obj):
-        request = self.context.get('request')
+        request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
             return str(request.user.id)
         return None
-

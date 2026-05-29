@@ -55,10 +55,10 @@ class TripAPITestCase(APITestCase):
             brand="Mercedes-Benz",
             administrator=self.admin_profile,
         )
-        
+
         now = timezone.now()
         time_zone = timezone.get_current_timezone()
-        
+
         self.past_time = (now - timedelta(hours=1)).astimezone(time_zone).time()
         self.future_time = (now + timedelta(hours=1)).astimezone(time_zone).time()
 
@@ -85,7 +85,7 @@ class TripAPITestCase(APITestCase):
             arrival_time=time(5, 0),
             administrator=self.admin_profile,
         )
-        
+
         self.route_active = Route.objects.create(
             origin="Feira de Santana",
             destiny="Salvador",
@@ -206,7 +206,7 @@ class TripAPITestCase(APITestCase):
             bus=self.bus,
             route=self.route_active,
             driver=self.driver_profile,
-            departure_timestamp=timezone.now() - timedelta(minutes=15)
+            departure_timestamp=timezone.now() - timedelta(minutes=15),
         )
 
         url = reverse("trip-current")
@@ -365,13 +365,11 @@ class CurrentTripPassengerAPITests(APITestCase):
             bus=self.bus,
             route=self.route_active,
             status="EM ANDAMENTO",
-            departure_timestamp=timezone.now() - timedelta(minutes=15)
+            departure_timestamp=timezone.now() - timedelta(minutes=15),
         )
-        
+
         Reservation.objects.create(
-            trip=trip, 
-            student=self.student_profile, 
-            status="CONFIRMADA"
+            trip=trip, student=self.student_profile, status="CONFIRMADA"
         )
 
         self.client.force_authenticate(user=self.passenger_user)
@@ -573,7 +571,9 @@ class TripCheckInAPITests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["error"], "Motorista nao autorizado para esta viagem.")
+        self.assertEqual(
+            response.data["error"], "Motorista nao autorizado para esta viagem."
+        )
         self.reservation.refresh_from_db()
         self.assertFalse(self.reservation.check_in)
 
@@ -1140,7 +1140,7 @@ class TripDriverBusIntegrationTestCase(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
 
     def test_full_workflow_assign_then_unassign(self):
-        """Test complete workflow: assign driver, 
+        """Test complete workflow: assign driver,
         assign bus, unassign bus, unassign driver"""
         self.authenticate_driver()
 
