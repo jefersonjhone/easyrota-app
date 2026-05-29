@@ -6,6 +6,7 @@ import MotoraLayout from '@layout/Motora-layout'
 
 import './DriverTripsPage.css'
 import { apiFetch } from '@/lib/api'
+import { normalizeTripTime } from '@/features/trips/utils/time'
 
 type TripModelStatus =
   | 'RISCO DE CANCELAMENTO'
@@ -23,7 +24,8 @@ type TripModel = {
   status: TripModelStatus
   origin?: string
   destiny?: string
-  departure_timestamp?: string
+  departure_time?: string | null
+  departure_timestamp?: string | null
   available_seats?: number
   is_full?: boolean
 }
@@ -75,11 +77,6 @@ function formatDateLabel(date: string) {
   return date
 }
 
-function normalizeTime(time?: string) {
-  console.log(time)
-  return time ? time.slice(14, 19) : '00:00'
-}
-
 function toStatusLabel(status: TripModelStatus) {
   const statusText = String(status)
   return statusLabels[statusText] ?? statusText.toLowerCase()
@@ -90,7 +87,9 @@ function normalizeTripFromModel(
 ): DriverTrip {
   const origin = trip.origin 
   const destiny = trip.destiny 
-  const departureTime = normalizeTime(trip.departure_timestamp )
+  const departureTime = normalizeTripTime(
+    trip.departure_time ?? trip.departure_timestamp,
+  )
 
   const availableSeats =
     typeof trip.available_seats === 'number' ? Math.max(trip.available_seats, 0) : null
@@ -111,7 +110,6 @@ async function getTripsFromApi() {
   
   try {
     const response = await apiFetch(`/trips/`)
-    console.log('response', response)
     const data = response as TripModel[]
     return data
       .map((trip) => normalizeTripFromModel(trip))

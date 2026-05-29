@@ -72,17 +72,16 @@ def get_priority_tuple(reservation):
 
     if reservation.student_id:
         active_punishments_count = Punishment.objects.filter(
-            student=reservation.student,
-            is_active=True
-            ).count()
-        
+            student=reservation.student, is_active=True
+        ).count()
+
         if active_punishments_count >= 2:
             priority = 3
         elif active_punishments_count == 1:
             priority = 2
         else:
             priority = 1
-        
+
         return (priority, reservation.created_at)
 
     return (4, reservation.created_at)
@@ -132,23 +131,21 @@ def sync_trip_status(trip):
 def process_trip_punishments(trip):
     """
     It processes absences and presences at the end of a trip.
-    It applies penalties to those who were absent and forgives 
+    It applies penalties to those who were absent and forgives
     those who traveled.
     """
-    
+
     reservations = Reservation.objects.filter(
-        trip=trip, 
-        status__in=ACTIVE_RESERVATION_STATUSES
+        trip=trip, status__in=ACTIVE_RESERVATION_STATUSES
     )
 
     for reservation in reservations:
-        if not reservation.student_id: 
+        if not reservation.student_id:
             continue
 
         if reservation.check_in:
             Punishment.objects.filter(
-                student=reservation.student, 
-                is_active=True
+                student=reservation.student, is_active=True
             ).update(is_active=False)
         else:
             Punishment.objects.get_or_create(
@@ -156,13 +153,12 @@ def process_trip_punishments(trip):
                 defaults={
                     "student": reservation.student,
                     "description": (
-                        f"Faltou ao check-in na viagem "
-                        f"{trip.route} em {trip.trip_date}"
-                        ),
-                    "is_active": True
-                }
+                        f"Faltou ao check-in na viagem {trip.route} em {trip.trip_date}"
+                    ),
+                    "is_active": True,
+                },
             )
-            
+
 
 def validate_trip_reservation_window(trip):
     if not is_reservation_open(trip):

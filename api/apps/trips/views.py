@@ -1,5 +1,7 @@
 from datetime import date, datetime, timedelta
+from uuid import UUID
 
+from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import generics, permissions, status, viewsets
@@ -10,6 +12,8 @@ from rest_framework.views import APIView
 
 from apps.reservations.services import process_trip_punishments
 
+from ..reservations.models import Reservation
+from ..reservations.services import ACTIVE_RESERVATION_STATUSES
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
@@ -23,6 +27,8 @@ from .serializers import (
     TripCurrentScreenSerializer,
     TripSerializer,
 )
+
+User = get_user_model()
 
 
 class BusViewSet(viewsets.ModelViewSet):
@@ -87,13 +93,111 @@ class TripViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
         trip = self.get_object()
-        
-        Trip.objects.filter(id=pk).update(status="CONCLUÍDA",
-                                          arrival_timestamp=timezone.now())
-        
+
+        Trip.objects.filter(id=pk).update(
+            status="CONCLUÍDA", arrival_timestamp=timezone.now()
+        )
+
         process_trip_punishments(trip)
-        
+
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"])
+    def start_trip(
+        self, request, pk=None
+    ):  # CONTRIBUIÇÃO ENORME DE MATHEUS PRO BACKEND
+        Trip.objects.filter(id=pk).update(
+            status="EM ANDAMENTO", departure_timestamp=timezone.now()
+        )
+        return Response("trip iniciada com sucesso", status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="check-in")
+    def check_in(self, request, pk=None):
+        passenger_identifier = (
+            request.data.get("passenger_identifier")
+            or request.data.get("user_id")
+            or request.data.get("uuid")
+        )
+
+        if not passenger_identifier:
+            return Response(
+                {"error": "UUID do passageiro e obrigatorio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            passenger_uuid = UUID(str(passenger_identifier))
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "QR Code invalido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            trip = Trip.objects.select_related("driver").get(id=pk)
+        except Trip.DoesNotExist:
+            return Response(
+                {"error": "Viagem nao encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        driver = request.user.driver_profile
+        if trip.driver_id != driver.id:
+            return Response(
+                {"error": "Motorista nao autorizado para esta viagem."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            passenger = User.objects.get(
+                id=passenger_uuid
+            )  # trocar por uuid se for usar
+        except User.DoesNotExist:
+            return Response(
+                {"error": "QR Code invalido ou usuario inexistente."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reservation = (
+            Reservation.objects
+            .select_related("student__user", "civil_servant__user")
+            .filter(
+                Q(student__user=passenger) | Q(civil_servant__user=passenger),
+                trip=trip,
+                status__in=ACTIVE_RESERVATION_STATUSES,
+            )
+            .first()
+        )
+
+        if reservation is None:
+            return Response(
+                {"error": "Passageiro sem reserva nesta viagem."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if reservation.check_in:
+            return Response(
+                {
+                    "error": "Passageiro ja fez check-in.",
+                    "reservation_id": reservation.id,
+                    "passenger_name": passenger.full_name,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        reservation.check_in = True
+        reservation.checkin_date = timezone.now()
+        reservation.save(update_fields=["check_in", "checkin_date"])
+
+        return Response(
+            {
+                "status": "Check-in realizado com sucesso.",
+                "reservation_id": reservation.id,
+                "passenger_name": passenger.full_name,
+                "checkin_date": reservation.checkin_date,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["post"])
     def assign_driver(self, request, pk=None):
@@ -135,7 +239,7 @@ class TripViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         # verify if bus already is in use
-        # create a custom queryset in bus model todo it and reuse
+        # create a custom queryset in bus model to do it and reuse
         bus = Bus.objects.get(id=bus)
         if not bus:
             return Response(
@@ -180,6 +284,7 @@ class TripViewSet(viewsets.ModelViewSet):
         elif self.action in [
             "finish_trip",
             "start_trip",
+            "check_in",
             "assign_bus",
             "unassign_bus",
             "assign_driver",
@@ -197,7 +302,7 @@ class MyNextTripView(APIView):
 
     def _update_trip_status(self, trip):
         """
-        Check schedules, reservations and driver actions 
+        Check schedules, reservations and driver actions
         to update the trip status in the database.
         """
         if trip.status in ["CONCLUÍDA", "CANCELADA"]:
@@ -211,8 +316,9 @@ class MyNextTripView(APIView):
             real_status = "EM ANDAMENTO"
         else:
             has_civil_servant = trip.reservation_set.filter(
-                civil_servant__isnull=False).exists()
-            
+                civil_servant__isnull=False
+            ).exists()
+
             time_zone = timezone.get_current_timezone()
             expected_dep = timezone.make_aware(
                 datetime.combine(trip.trip_date, trip.route.departure_time), time_zone
@@ -220,13 +326,13 @@ class MyNextTripView(APIView):
             expected_arr = timezone.make_aware(
                 datetime.combine(trip.trip_date, trip.route.arrival_time), time_zone
             )
-            
+
             if expected_arr <= expected_dep:
                 expected_arr += timedelta(days=1)
 
             if not has_civil_servant:
                 cancel_limit = expected_dep + timedelta(minutes=30)
-                
+
                 if now >= cancel_limit:
                     real_status = "CANCELADA"
                 else:
@@ -276,22 +382,24 @@ class MyNextTripView(APIView):
 
         running_trips = base_running_query.order_by(
             "trip_date", "route__departure_time"
-            )
-        
+        )
+
         for trip in running_trips:
             updated_trip = self._update_trip_status(trip)
             if updated_trip.status == "EM ANDAMENTO":
                 serializer = TripCurrentScreenSerializer(
-                    updated_trip, context={"request": request})
+                    updated_trip, context={"request": request}
+                )
                 return Response(serializer.data)
 
         next_trips = base_next_query.order_by("trip_date", "route__departure_time")
-        
+
         for trip in next_trips:
             updated_trip = self._update_trip_status(trip)
             if updated_trip.status not in ["CONCLUÍDA", "CANCELADA"]:
                 serializer = TripCurrentScreenSerializer(
-                    updated_trip, context={"request": request})
+                    updated_trip, context={"request": request}
+                )
                 return Response(serializer.data)
 
         return Response({"detail": "Nenhuma viagem próxima."}, status=404)

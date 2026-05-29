@@ -58,8 +58,9 @@ class Trip(models.Model):
     )
 
     trip_date = models.DateField()
-    status = models.CharField(max_length=25, choices=STATUS_TRIP, 
-                              default="RISCO DE CANCELAMENTO")
+    status = models.CharField(
+        max_length=25, choices=STATUS_TRIP, default="RISCO DE CANCELAMENTO"
+    )
     departure_timestamp = models.DateTimeField(null=True, blank=True)
     arrival_timestamp = models.DateTimeField(null=True, blank=True)
 
