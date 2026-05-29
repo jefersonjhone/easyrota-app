@@ -8,10 +8,11 @@ from rest_framework.response import Response
 
 from ..trips.models import Trip
 from ..users.permissions import IsDriver, IsSuperAdmin
-from .models import Reservation
+from .models import Punishment, Reservation
 from .serializers import (
     AvailableTripSerializer,
     ManageReservationSerializer,
+    PunishmentHistorySerializer,
     ReservationHistorySerializer,
     ReservationSerializer,
 )
@@ -152,3 +153,23 @@ class ReservationViewSet(viewsets.ModelViewSet):
             {"status": "Reserva cancelada com sucesso."},
             status=status.HTTP_200_OK,
         )
+
+
+class PunishmentHistoryView(generics.ListAPIView):
+    """
+    Returns the penalty history of the authenticated student.
+    """
+    serializer_class = PunishmentHistorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        
+        if hasattr(user, "student_profile"):
+            return (
+                Punishment.objects
+                .filter(student=user.student_profile)
+                .order_by("-id")
+            )
+            
+        return Punishment.objects.none()

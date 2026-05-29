@@ -48,4 +48,12 @@ export type ProfileUser = AuthUser & {
   checkins_count: number
   reservations_count: number
   active_reservations: number
+  active_punishments : number
+}
+
+export interface Punishment {
+  id: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
 }

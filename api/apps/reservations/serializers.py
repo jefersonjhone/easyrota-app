@@ -2,7 +2,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from ..trips.models import Trip
-from .models import Reservation
+from .models import Punishment, Reservation
 from .services import (
     get_reservation_status_for_user,
     is_reservation_open,
@@ -217,3 +217,11 @@ class ManageReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = "__all__"
+
+
+class PunishmentHistorySerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(format="%d/%m/%Y", read_only=True)
+
+    class Meta:
+        model = Punishment
+        fields = ["id", "description", "is_active", "created_at"]

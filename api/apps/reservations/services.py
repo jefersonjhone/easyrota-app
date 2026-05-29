@@ -71,13 +71,21 @@ def get_priority_tuple(reservation):
         return (0, reservation.created_at)
 
     if reservation.student_id:
-        has_punishment = Punishment.objects.filter(
+        active_punishments_count = Punishment.objects.filter(
             student=reservation.student,
             is_active=True
-            ).exists()
-        return (2 if has_punishment else 1, reservation.created_at)
+            ).count()
+        
+        if active_punishments_count >= 2:
+            priority = 3
+        elif active_punishments_count == 1:
+            priority = 2
+        else:
+            priority = 1
+        
+        return (priority, reservation.created_at)
 
-    return (3, reservation.created_at)
+    return (4, reservation.created_at)
 
 
 def promote_next_waitlisted_reservation(trip):
