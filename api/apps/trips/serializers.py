@@ -99,6 +99,8 @@ class TripSerializer(serializers.ModelSerializer):
     origin = serializers.CharField(source="route.origin", read_only=True)
     destiny = serializers.CharField(source="route.destiny", read_only=True)
     active_reservations = serializers.SerializerMethodField(read_only=True)
+    checked_in_count = serializers.SerializerMethodField(read_only=True)
+    checked_in_passengers = serializers.SerializerMethodField(read_only=True)
     departure_time = serializers.CharField(
         source="route.departure_time", read_only=True
         )
@@ -116,6 +118,37 @@ class TripSerializer(serializers.ModelSerializer):
         """filter reservations by especific trip"""
         reservations = Reservation.objects.filter(trip=obj).count()
         return reservations
+
+    def get_checked_in_count(self, obj) -> int:
+        """Count only passengers with confirmed check-in."""
+        return Reservation.objects.filter(trip=obj, check_in=True).count()
+
+    def get_checked_in_passengers(self, obj) -> list[dict]:
+        """Return the checked-in passengers used by the driver occupancy screen."""
+        reservations = (
+            Reservation.objects
+            .select_related("student__user", "civil_servant__user")
+            .filter(trip=obj, check_in=True)
+            .order_by("checkin_date", "id")
+        )
+
+        passengers = []
+        for reservation in reservations:
+            user = None
+
+            if reservation.student_id:
+                user = reservation.student.user
+            elif reservation.civil_servant_id:
+                user = reservation.civil_servant.user
+
+            passengers.append({
+                "reservation_id": reservation.id,
+                "passenger_name": getattr(user, "full_name", None) or "Passageiro",
+                "check_in": reservation.check_in,
+                "checkin_date": reservation.checkin_date,
+            })
+
+        return passengers
 
     def validate_trip_date(self, value):
         today = timezone.localtime().date()

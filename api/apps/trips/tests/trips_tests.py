@@ -222,6 +222,62 @@ class TripAPITestCase(APITestCase):
         self.assertIn("status_route", keys)
         self.assertEqual(response.data["bus_number_plate"], "ABC-1234")
 
+    def test_trip_detail_separates_reservations_from_check_ins(self):
+        """Driver occupancy data must count only confirmed check-ins."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        trip = Trip.objects.create(
+            trip_date=self.tomorrow,
+            bus=self.bus,
+            route=self.route_morning,
+            status="CONFIRMADA",
+        )
+        checked_in_user = CustomUser.objects.create_user(
+            email="checked-in@easyrota.com",
+            password="password123",
+            full_name="Passageiro Confirmado",
+            is_active=True,
+        )
+        reserved_user = CustomUser.objects.create_user(
+            email="reserved-only@easyrota.com",
+            password="password123",
+            full_name="Passageiro Reservado",
+            is_active=True,
+        )
+        checked_in_profile = StudentProfile.objects.create(
+            user=checked_in_user,
+            student_id="STU-CHECKED-IN",
+        )
+        reserved_profile = StudentProfile.objects.create(
+            user=reserved_user,
+            student_id="STU-RESERVED-ONLY",
+        )
+
+        Reservation.objects.create(
+            trip=trip,
+            student=checked_in_profile,
+            status="CONFIRMADA",
+            check_in=True,
+            checkin_date=timezone.now(),
+        )
+        Reservation.objects.create(
+            trip=trip,
+            student=reserved_profile,
+            status="CONFIRMADA",
+            check_in=False,
+        )
+
+        response = self.client.get(reverse("trip-detail", kwargs={"pk": trip.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["active_reservations"], 2)
+        self.assertEqual(response.data["checked_in_count"], 1)
+        self.assertEqual(len(response.data["checked_in_passengers"]), 1)
+        self.assertEqual(
+            response.data["checked_in_passengers"][0]["passenger_name"],
+            "Passageiro Confirmado",
+        )
+
 
 class CurrentTripPassengerAPITests(APITestCase):
     def setUp(self):

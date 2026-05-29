@@ -10,6 +10,7 @@ import {
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
 
 import { checkInTripPassenger } from '@features/trips/services/trips'
+import { normalizeTripTime } from '@features/trips/utils/time'
 import { apiFetch } from '@lib/api'
 import MotoraLayout from '@layout/Motora-layout'
 import { Button } from '@ui/button'
@@ -63,11 +64,21 @@ type TripModel = {
   departure_timestamp?: string | null
   departure_time?: string | null
   active_reservations?: number | null
+  checked_in_count?: number | null
+  checked_in_passengers?: TripCheckedInPassenger[] | null
   seating_capacity?: number | null
   bus?: number | null
   driver?: number | null
   bus_number_plate?: string | null
   status?: string | null
+}
+
+type TripCheckedInPassenger = {
+  reservation_id?: number | null
+  passenger_name?: string | null
+  check_in?: boolean | null
+  checkin?: boolean | null
+  checkin_date?: string | null
 }
 
 type BusModel = {
@@ -98,29 +109,6 @@ function toList<T>(payload: ApiList<T>): T[] {
   return Array.isArray(payload) ? payload : payload.results ?? []
 }
 
-function normalizeTime(time?: string | null) {
-  if (!time) {
-    return '00:00'
-  }
-
-  const timeMatch = time.match(/\d{2}:\d{2}/)
-
-  if (timeMatch) {
-    return timeMatch[0]
-  }
-
-  const date = new Date(time)
-
-  if (Number.isNaN(date.getTime())) {
-    return '00:00'
-  }
-
-  return date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 function normalizeTripStatus(status?: string | null) {
   return (status ?? '')
     .normalize('NFD')
@@ -148,6 +136,35 @@ function createPassengerPlaceholders(totalPassengers?: number | null): Passenger
   })
 }
 
+function normalizeCheckedInPassengers(trip: TripModel, capacity: number): PassengerBoardItem[] {
+  const checkedInPassengers = trip.checked_in_passengers
+
+  if (Array.isArray(checkedInPassengers)) {
+    return checkedInPassengers
+      .filter((passenger) => passenger.check_in === true || passenger.checkin === true)
+      .slice(0, capacity)
+      .map((passenger, index) => {
+        const fallbackId = index + 1
+        const reservationId =
+          typeof passenger.reservation_id === 'number' ? passenger.reservation_id : undefined
+
+        return {
+          id: reservationId ?? fallbackId,
+          reservationId,
+          name: passenger.passenger_name ?? `Passageiro ${String(fallbackId).padStart(3, '0')}`,
+          source: 'QR' as const,
+        }
+      })
+  }
+
+  const checkedInCount = Math.min(trip.checked_in_count ?? 0, capacity)
+
+  return createPassengerPlaceholders(checkedInCount).map((passenger) => ({
+    ...passenger,
+    source: 'QR' as const,
+  }))
+}
+
 function normalizeTripDetail(trip: TripModel) {
   const capacity = normalizeCapacity(trip.seating_capacity)
   const driverId = typeof trip.driver === 'number' ? trip.driver : null
@@ -156,7 +173,7 @@ function normalizeTripDetail(trip: TripModel) {
     id: String(trip.id),
     origin: trip.origin ?? 'Origem',
     destiny: trip.destiny ?? 'Destino',
-    departureTime: normalizeTime(
+    departureTime: normalizeTripTime(
       trip.departure_time ?? trip.departure_timestamp,
     ),
     busPlate: trip.bus_number_plate ?? '',
@@ -166,9 +183,7 @@ function normalizeTripDetail(trip: TripModel) {
     capacity,
     associatedBuses: trip.bus ? 1 : 0,
     status: trip.status ?? '',
-    passengers: createPassengerPlaceholders(
-      Math.min(trip.active_reservations ?? 0, capacity),
-    ),
+    passengers: normalizeCheckedInPassengers(trip, capacity),
   }
 }
 
@@ -803,7 +818,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                   />
                 </div>
                 <strong className="text-sm font-black text-foreground">
-                  {embarkedCount}/{activeCapacity}
+                  {embarkedCount}/{activeCapacity} check-ins confirmados
                 </strong>
               </div>
 

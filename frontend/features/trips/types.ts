@@ -12,6 +12,8 @@ export type Trip = {
   departure_time: string
   arrival_time: string
   active_reservations: number
+  checked_in_count: number
+  checked_in_passengers: TripCheckedInPassenger[]
   seating_capacity: number
   trip_date: string
   status: TripStatus
@@ -19,6 +21,13 @@ export type Trip = {
   arrival_timestamp: string | null
   bus: number | null
   route: number
+}
+
+export type TripCheckedInPassenger = {
+  reservation_id: number
+  passenger_name: string
+  check_in: boolean
+  checkin_date: string | null
 }
 
 export type CurrentTripDetail = {

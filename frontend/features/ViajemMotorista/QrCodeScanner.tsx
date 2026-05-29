@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import {
   Html5Qrcode,
+  type Html5QrcodeCameraScanConfig,
   Html5QrcodeScannerState,
   Html5QrcodeSupportedFormats,
 } from 'html5-qrcode'
@@ -14,10 +15,17 @@ type QrCodeScannerProps = {
 
 type CameraState = 'starting' | 'ready' | 'error'
 
-const scannerConfig = {
+const scannerConfig: Html5QrcodeCameraScanConfig = {
   fps: 10,
-  qrbox: { width: 240, height: 240 },
-  aspectRatio: 1.777778,
+  qrbox: (viewfinderWidth, viewfinderHeight) => {
+    const minEdge = Math.min(viewfinderWidth, viewfinderHeight)
+    const maxSize = Math.max(80, minEdge - 16)
+    const preferredSize = Math.min(280, Math.floor(minEdge * 0.72))
+    const qrboxSize = Math.min(maxSize, Math.max(120, preferredSize))
+
+    return { width: qrboxSize, height: qrboxSize }
+  },
+  aspectRatio: 1,
 }
 
 function isScannerActive(scanner: Html5Qrcode) {
@@ -47,8 +55,11 @@ async function stopScanner(scanner: Html5Qrcode) {
 
 async function startScanner(
   scanner: Html5Qrcode,
+  elementId: string,
   onSuccess: (decodedText: string) => void,
 ) {
+  document.getElementById(elementId)?.replaceChildren()
+
   try {
     await scanner.start(
       { facingMode: 'environment' },
@@ -58,6 +69,9 @@ async function startScanner(
     )
     return
   } catch {
+    await stopScanner(scanner)
+    document.getElementById(elementId)?.replaceChildren()
+
     const cameras = await Html5Qrcode.getCameras()
     const fallbackCamera = cameras[0]
 
@@ -83,6 +97,7 @@ export function QrCodeScanner({
   const reactId = useId()
   const scannerElementId = `driver-qr-reader-${reactId.replace(/:/g, '')}`
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const stopPromiseRef = useRef<Promise<void>>(Promise.resolve())
   const hasScannedRef = useRef(false)
   const [cameraState, setCameraState] = useState<CameraState>('starting')
 
@@ -102,18 +117,25 @@ export function QrCodeScanner({
 
     scannerRef.current = scanner
 
-    startScanner(
-      scanner,
-      (decodedText) => {
-          if (hasScannedRef.current) {
-            return
-          }
+    const handleScanSuccess = (decodedText: string) => {
+      if (hasScannedRef.current) {
+        return
+      }
 
-          hasScannedRef.current = true
-          scanner.pause(true)
-          void onScan(decodedText.trim())
-        },
-    )
+      hasScannedRef.current = true
+      scanner.pause(true)
+      void onScan(decodedText.trim())
+    }
+
+    const startTask = stopPromiseRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        if (isCancelled) {
+          return
+        }
+
+        await startScanner(scanner, scannerElementId, handleScanSuccess)
+      })
       .then(() => {
         if (!isCancelled) {
           setCameraState('ready')
@@ -129,7 +151,9 @@ export function QrCodeScanner({
     return () => {
       isCancelled = true
       scannerRef.current = null
-      void stopScanner(scanner)
+      stopPromiseRef.current = startTask
+        .catch(() => undefined)
+        .then(() => stopScanner(scanner))
     }
   }, [isOpen, onCameraError, onScan, scannerElementId])
 
@@ -153,7 +177,7 @@ export function QrCodeScanner({
     <div className="grid gap-3">
       <div
         id={scannerElementId}
-        className="min-h-72 overflow-hidden rounded-lg bg-slate-950 text-white [&_video]:min-h-72 [&_video]:w-full [&_video]:object-cover"
+        className="mx-auto aspect-square w-full max-w-md overflow-hidden rounded-lg bg-slate-950 text-white [&_video]:!h-full [&_video]:!w-full [&_video]:object-cover"
       />
       {cameraState === 'starting' ? (
         <p className="text-sm font-medium text-muted-foreground">
