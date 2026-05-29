@@ -409,13 +409,9 @@ class MyNextTripView(APIView):
 
 
 class GuestPassengerView(APIView):
-    print("checando se pode")
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = CivilServantAllowedStaffSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
         trip_id = request.data.get("trip")
         cpf = request.data.get("cpf")
         if not trip_id:
@@ -433,7 +429,7 @@ class GuestPassengerView(APIView):
         passenger = GuestPassenger.objects.create(
             cpf=cpf,
             trip_id=trip_id,
-            recorded_by=request.user.id,
+            recorded_by=request.user.civil_servant_profile,
             full_name=request.data.get("full_name"),
         )
         return Response({"id": passenger.id}, status=status.HTTP_201_CREATED)

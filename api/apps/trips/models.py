@@ -156,6 +156,7 @@ class GuestPassenger(models.Model):
 
     class Meta:
         unique_together = (('cpf', 'trip'),)
+        db_table = "trips_guest_passengers"
 
     def __str__(self):
         return f"Nome: {self.full_name} \nCPF: {self.cpf}\nAdicionado por: \
