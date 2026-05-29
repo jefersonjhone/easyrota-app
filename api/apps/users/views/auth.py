@@ -93,6 +93,8 @@ def handle_registration(request):
         token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REGISTER)
         code = generate_otp()
 
+        print("seu código é: ", code)
+
         MFAChallenge.objects.create(
             user=user,
             jti=jti,
@@ -310,6 +312,8 @@ class ResendOTPView(generics.GenericAPIView):
 
         token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REGISTER)
         code = generate_otp()
+
+        print("seu código é: ", code)
 
         MFAChallenge.objects.create(
             user=user,
