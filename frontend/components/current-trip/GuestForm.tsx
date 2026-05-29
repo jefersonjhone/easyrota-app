@@ -10,23 +10,31 @@ import z from "zod";
 
 const guestSchema = z.object({
   full_name: z.string().nonempty("Informe o nome completo"),
-  cpf: z.string().length(11, "CPF deve ter 11 números.")
+  cpf: z
+    .string()
+    .length(11, "CPF deve ter 11 números.")
     .regex(/^\d+$/, "CPF deve conter apenas números."),
+  trip: z.number(),
 });
 
 type GuestSchema = z.infer<typeof guestSchema>;
 
-export function GuestForm() {
+type Props = {
+  tripId: number;
+};
+
+export function GuestForm({ tripId }: Props) {
   const [isAdding, setIsAdding] = useState(false);
 
   const guestForm = useForm<GuestSchema>({
     resolver: zodResolver(guestSchema),
     mode: "onChange",
   });
+  guestForm.setValue("trip", tripId);
   // adcionando convidado:
   const addGuestMutation = useMutation({
     mutationFn: async (payload: GuestSchema) => {
-      return apiFetch("/guests/", {
+      return apiFetch("/trips/guest/", {
         method: "POST",
         body: JSON.stringify(payload),
       });

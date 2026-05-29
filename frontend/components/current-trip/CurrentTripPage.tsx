@@ -171,7 +171,7 @@ export function CurrentTripPage() {
                 </div>
               </CardContent>
             </Card>
-            <GuestForm
+            <GuestForm tripId={trip.id}
             />
           </div>
         ) : (
