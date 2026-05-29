@@ -14,14 +14,16 @@ import { AdminLayout } from '@/features/admin/ui/Layout'
 
 const createDriverSchema = z.object({
   full_name: z.string().min(1, "Nome é obrigatório."),
-  cnh: z.string().min(11, "CNH deve ter 11 números."),
+  cnh: z.string().length(11, "CNH deve ter 11 números.")
+    .regex(/^\d+$/, "CNH deve conter apenas números."),
   email: z.string().min(1, "Email é obrigatório."),
   password: z.string().min(1, "Senha é obrigatória.")
 })
 
 const updateDriverSchema = z.object({
   full_name: z.string().min(1, "Nome é obrigatório."),
-  cnh: z.string().min(11, "CNH deve ter 11 números."),
+  cnh: z.string().length(11, "CNH deve ter 11 números.")
+    .regex(/^\d+$/, "CNH deve conter apenas números."),
   email: z.string().min(1, "Email é obrigatório."),
 })
 
