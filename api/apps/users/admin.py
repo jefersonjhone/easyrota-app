@@ -33,7 +33,7 @@ class CustomUserList(admin.ModelAdmin):
                 )
             },
         ),
-        ("Important dates", {"fields": ("last_login", "date_joined")}),
+        ("Important dates", {"fields": ("last_login",)}),
     )
 
 
