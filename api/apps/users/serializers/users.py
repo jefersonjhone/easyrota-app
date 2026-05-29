@@ -196,6 +196,19 @@ class DriverSerializer(serializers.ModelSerializer):
         validate_cnh(value)
         return value
 
+    def validate_email(self, value):
+        queryset = CustomUser.objects.filter(email=value)
+
+        if self.instance:
+            queryset = queryset.exclude(id=self.instance.user.id)
+
+        if queryset.exists():
+            raise serializers.ValidationError(
+                "Já existe um usuário com este email."
+            )
+
+        return value
+
 
 class DeleteOwnAccountSerializer (serializers.Serializer):
     password = serializers.CharField(write_only=True)

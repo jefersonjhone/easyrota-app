@@ -1,25 +1,35 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 import { Button } from "@/lib/ui/button"
 import { Input } from "@/lib/ui/input"
 import { Label } from "@/lib/ui/label"
+import { ConfirmDeleteDialog } from '@/lib/ui/delete-alert'
 
 import { apiFetch } from '@/lib/api'
 import { AdminLayout } from '@/features/admin/ui/Layout'
 
-interface Driver {
-  id: string
-  full_name: string
-  cnh: string
-  email: string
-}
+const createDriverSchema = z.object({
+  full_name: z.string().min(1, "Nome é obrigatório."),
+  cnh: z.string().min(11, "CNH deve ter 11 números."),
+  email: z.string().min(1, "Email é obrigatório."),
+  password: z.string().min(1, "Senha é obrigatória.")
+})
 
-interface DriverPayload {
-  full_name: string
-  cnh: string
-  email: string
-  password: string
+const updateDriverSchema = z.object({
+  full_name: z.string().min(1, "Nome é obrigatório."),
+  cnh: z.string().min(11, "CNH deve ter 11 números."),
+  email: z.string().min(1, "Email é obrigatório."),
+})
+
+type CreateDriverData = z.infer<typeof createDriverSchema>
+type UpdateDriverData = z.infer<typeof updateDriverSchema>
+
+interface Driver extends UpdateDriverData {
+  id: string
 }
 
 export function ManageDriversPage() {
@@ -30,11 +40,14 @@ export function ManageDriversPage() {
 
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null)
 
-  const [formData, setFormData] = useState<DriverPayload>({
-    full_name: '',
-    cnh: '',
-    email: '',
-    password: '',
+  const createForm = useForm<CreateDriverData>({
+    resolver: zodResolver(createDriverSchema),
+    mode: "onChange",
+  })
+
+  const editForm = useForm<UpdateDriverData>({
+    resolver: zodResolver(updateDriverSchema),
+    mode: "onChange",
   })
 
   // LISTAR MOTORISTAS
@@ -51,7 +64,7 @@ export function ManageDriversPage() {
 
   // CRIAR MOTORISTA
   const createDriverMutation = useMutation({
-    mutationFn: async (payload: DriverPayload) => {
+    mutationFn: async (payload: CreateDriverData) => {
       return apiFetch('/drivers/', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -62,9 +75,29 @@ export function ManageDriversPage() {
         queryKey: ['drivers'],
       })
 
-      resetForm()
+      createForm.reset({
+        full_name: "",
+        cnh: "",
+        email: "",
+        password: "",
+      })
       setIsAddModalOpen(false)
     },
+
+    onError: (error: any) => {
+      if (error.data?.cnh){
+        createForm.setError("cnh", {
+          type: "server",
+          message: "Já existe um motorista com essa CNH.",
+        })
+      }
+      if (error.data?.email) {
+        createForm.setError("email", {
+          type: "server",
+          message: error.data.email[0],
+        })
+      }
+    }
   })
 
   // EDITAR MOTORISTA
@@ -74,7 +107,7 @@ export function ManageDriversPage() {
       payload,
     }: {
       id: string
-      payload: DriverPayload
+      payload: UpdateDriverData
     }) => {
       return apiFetch(`/drivers/${id}/`, {
         method: 'PUT',
@@ -86,10 +119,29 @@ export function ManageDriversPage() {
         queryKey: ['drivers'],
       })
 
-      resetForm()
+      editForm.reset({
+        full_name: "",
+        cnh: "",
+        email: "",
+      })
       setEditingDriver(null)
       setIsEditModalOpen(false)
     },
+
+    onError: (error: any) => {
+      if (error.data?.cnh){
+        editForm.setError("cnh", {
+          type: "server",
+          message: "Já existe um motorista com essa CNH.",
+        })
+      }
+      if (error.data?.email) {
+        editForm.setError("email", {
+          type: "server",
+          message: error.data.email[0],
+        })
+      }
+    }
   })
 
   // DELETAR MOTORISTA
@@ -106,74 +158,29 @@ export function ManageDriversPage() {
     },
   })
 
-  const resetForm = () => {
-    setFormData({
-      full_name: '',
-      cnh: '',
-      email: '',
-      password: '',
-    })
-  }
-
-  const validateForm = () => {
-    if (!formData.full_name || !formData.cnh || !formData.email || !formData.password) {
-      alert('Por favor preencha todos os campos')
-      return false
-    }
-
-    return true
-  }
-
-  const handleAddDriver = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm()) return
-
-    createDriverMutation.mutate(formData)
+  const onSubmit = (data: CreateDriverData) => {
+    createDriverMutation.mutate(data)
   }
 
   const handleEditDriver = (driver: Driver) => {
     setEditingDriver(driver)
 
-    setFormData({
+    editForm.reset({
       full_name: driver.full_name,
       cnh: driver.cnh,
       email: driver.email,
-      password: "",
     })
 
     setIsEditModalOpen(true)
   }
 
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm()) return
+  const handleSaveEdit = async (data: UpdateDriverData) => {
     if (!editingDriver) return
 
     updateDriverMutation.mutate({
       id: editingDriver.id,
-      payload: formData,
+      payload: data,
     })
-  }
-
-  const handleDeleteDriver = (id: string) => {
-    const confirmed = window.confirm(
-      'Tem certeza que deseja deletar este motorista?'
-    )
-
-    if (!confirmed) return
-
-    deleteDriverMutation.mutate(id)
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
   }
 
   return (
@@ -195,17 +202,20 @@ export function ManageDriversPage() {
                 Novo Motorista
               </h2>
 
-              <form onSubmit={handleAddDriver}>
+              <form onSubmit={createForm.handleSubmit(onSubmit)}>
                 <div className="mb-4">
                   <Label htmlFor="full_name">Nome</Label>
 
                   <Input
                     id="full_name"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleChange}
                     placeholder="Digite o nome"
+                    {...createForm.register("full_name")}
                   />
+                  {createForm.formState.errors.full_name && (
+                    <p className="text-sm text-red-500">
+                      {createForm.formState.errors.full_name.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -213,11 +223,14 @@ export function ManageDriversPage() {
 
                   <Input
                     id="cnh"
-                    name="cnh"
-                    value={formData.cnh}
-                    onChange={handleChange}
                     placeholder="Digite o número da CNH"
+                    {...createForm.register("cnh")}
                   />
+                  {createForm.formState.errors.cnh && (
+                    <p className="text-sm text-red-500">
+                      {createForm.formState.errors.cnh.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mb-6">
@@ -225,24 +238,30 @@ export function ManageDriversPage() {
 
                   <Input
                     id="email"
-                    name="email"
                     type="email"
-                    value={formData.email}
-                    onChange={handleChange}
                     placeholder="Digite o email"
+                    {...createForm.register("email")}
                   />
+                  {createForm.formState.errors.email && (
+                    <p className="text-sm text-red-500">
+                      {createForm.formState.errors.email.message}
+                    </p>
+                  )}
                 </div>
                 <div className="mb-6">
                   <Label htmlFor="password">Senha</Label>
                 
                   <Input
                     id="password"
-                    name="password"
                     type="password"
-                    value={formData.password}
-                    onChange={handleChange}
                     placeholder="Digite a senha"
+                    {...createForm.register("password")}
                   />
+                  {createForm.formState.errors.password && (
+                    <p className="text-sm text-red-500">
+                      {createForm.formState.errors.password.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -251,7 +270,6 @@ export function ManageDriversPage() {
                     variant="outline"
                     onClick={() => {
                       setIsAddModalOpen(false)
-                      resetForm()
                     }}
                   >
                     Cancelar
@@ -279,17 +297,20 @@ export function ManageDriversPage() {
                 Editar Motorista
               </h2>
 
-              <form onSubmit={handleSaveEdit}>
+              <form onSubmit={editForm.handleSubmit(handleSaveEdit)}>
                 <div className="mb-4">
                   <Label htmlFor="edit-name">Nome</Label>
 
                   <Input
                     id="edit-name"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleChange}
                     placeholder="Digite o nome"
+                    {...editForm.register("full_name")}
                   />
+                  {editForm.formState.errors.full_name && (
+                    <p className="text-sm text-red-500">
+                      {editForm.formState.errors.full_name.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -297,11 +318,14 @@ export function ManageDriversPage() {
 
                   <Input
                     id="edit-cnh"
-                    name="cnh"
-                    value={formData.cnh}
-                    onChange={handleChange}
                     placeholder="Digite o número da CNH"
+                    {...editForm.register("cnh")}
                   />
+                  {editForm.formState.errors.cnh && (
+                    <p className="text-sm text-red-500">
+                      {editForm.formState.errors.cnh.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mb-6">
@@ -309,12 +333,15 @@ export function ManageDriversPage() {
 
                   <Input
                     id="edit-email"
-                    name="email"
                     type="email"
-                    value={formData.email}
-                    onChange={handleChange}
                     placeholder="Digite o email"
+                    {...editForm.register("email")}
                   />
+                  {editForm.formState.errors.email && (
+                    <p className="text-sm text-red-500">
+                      {editForm.formState.errors.email.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -324,7 +351,6 @@ export function ManageDriversPage() {
                     onClick={() => {
                       setIsEditModalOpen(false)
                       setEditingDriver(null)
-                      resetForm()
                     }}
                   >
                     Cancelar
@@ -411,14 +437,9 @@ export function ManageDriversPage() {
                         Editar
                       </Button>
 
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteDriver(driver.id)}
-                        disabled={deleteDriverMutation.isPending}
-                      >
-                        Deletar
-                      </Button>
+                      <ConfirmDeleteDialog
+                        onConfirm={() => deleteDriverMutation.mutate(driver.id)}
+                      />
                     </td>
                   </tr>
                 ))}
