@@ -128,7 +128,8 @@ def consume_registration_challenge(token, code):
         payload = PartialTokenService.decode(token)
     except jwt.ExpiredSignatureError:
         raise AuthenticationFailed(
-            "O link de verificação expirou. Por favor, cadastre-se novamente.")
+            "O link de verificação expirou. Por favor, cadastre-se novamente."
+        )
     except jwt.InvalidTokenError:
         raise AuthenticationFailed("Token de verificação inválido.")
 
@@ -305,9 +306,7 @@ class ResendOTPView(generics.GenericAPIView):
 
         # Revoga desafios anteriores
         MFAChallenge.objects.filter(
-            user=user, 
-            purpose=MFAChallenge.Purpose.REGISTER, 
-            used=False
+            user=user, purpose=MFAChallenge.Purpose.REGISTER, used=False
         ).update(revoked=True)
 
         token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REGISTER)
@@ -346,16 +345,19 @@ class PasswordResetRequestView(generics.GenericAPIView):
         user = CustomUser.objects.filter(email=email).first()
         if not user:
             # Para evitar enumeração de contas, retornamos sucesso genérico
-            return Response({"status": "verification_required", "token": ""}, status=status.HTTP_200_OK)
+            return Response(
+                {"status": "verification_required", "token": ""},
+                status=status.HTTP_200_OK,
+            )
 
         # Revoga desafios anteriores de reset
         MFAChallenge.objects.filter(
-            user=user, 
-            purpose=MFAChallenge.Purpose.PASSWORD_RESET, 
-            used=False
+            user=user, purpose=MFAChallenge.Purpose.PASSWORD_RESET, used=False
         ).update(revoked=True)
 
-        token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.PASSWORD_RESET)
+        token, jti = PartialTokenService.create(
+            user, MFAChallenge.Purpose.PASSWORD_RESET
+        )
         code = generate_otp()
 
         MFAChallenge.objects.create(
@@ -390,7 +392,7 @@ class PasswordResetConfirmView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         token = serializer.validated_data["token"]
         code = serializer.validated_data["code"]
         new_password = serializer.validated_data["password"]
@@ -401,16 +403,31 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         try:
             payload = PartialTokenService.decode(token)
         except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed("O link de recuperação expirou. Solicite novamente.")
+            raise AuthenticationFailed(
+                "O link de recuperação expirou. Solicite novamente."
+            )
         except jwt.InvalidTokenError:
             raise AuthenticationFailed("Token de verificação inválido.")
 
-        if payload["type"] != "2fa_pending" or payload["purpose"] != MFAChallenge.Purpose.PASSWORD_RESET:
+        if (
+            payload["type"] != "2fa_pending"
+            or payload["purpose"] != MFAChallenge.Purpose.PASSWORD_RESET
+        ):
             raise AuthenticationFailed("Invalid token type")
 
-        challenge = MFAChallenge.objects.filter(jti=payload["jti"]).select_related("user").first()
+        challenge = (
+            MFAChallenge.objects
+            .filter(jti=payload["jti"])
+            .select_related("user")
+            .first()
+        )
 
-        if not challenge or challenge.used or challenge.revoked or challenge.is_expired():
+        if (
+            not challenge
+            or challenge.used
+            or challenge.revoked
+            or challenge.is_expired()
+        ):
             raise AuthenticationFailed("Desafio inválido ou expirado.")
 
         if not challenge.can_attempt():
@@ -570,17 +587,17 @@ class DeleteOwnAccountView(APIView):
 
     def delete(self, request):
         user = request.user
-        
-        allowed = (
-            hasattr(user, "student_profile")
-            or hasattr(user, "civil_servant_profile")
+
+        allowed = hasattr(user, "student_profile") or hasattr(
+            user, "civil_servant_profile"
         )
 
         if not allowed:
             return Response(status=403)
-        
+
         serializer = DeleteOwnAccountSerializer(
-            data=request.data, context={"request": request})
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
 
         user.delete()

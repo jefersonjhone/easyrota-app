@@ -28,7 +28,8 @@ class LoginSerializer(serializers.Serializer):
         user_check = CustomUser.objects.filter(email=email).first()
         if user_check and not user_check.is_active:
             raise serializers.ValidationError({
-                "detail": "Sua conta ainda não foi ativada. Por favor, verifique seu e-mail."
+                "detail": 
+                "Sua conta ainda não foi ativada. Por favor, verifique seu e-mail."
             })
 
         user = authenticate(email=email, password=password)
@@ -84,7 +85,7 @@ class StudentRegistrationSerializer(BaseUserRegistrationSerializer):
     student_id = serializers.CharField(
         allow_blank=False,
         allow_null=False,
-        validators=[UniqueValidator(queryset=StudentProfile.objects.all())]
+        validators=[UniqueValidator(queryset=StudentProfile.objects.all())],
     )
 
     @transaction.atomic
@@ -120,7 +121,7 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
     civil_servant_id = serializers.CharField(
         allow_blank=False,
         allow_null=False,
-        validators=[UniqueValidator(queryset=CivilServantProfile.objects.all())]
+        validators=[UniqueValidator(queryset=CivilServantProfile.objects.all())],
     )
 
     @transaction.atomic
@@ -164,9 +165,9 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
             name__iexact=full_name,
             registration_number=civil_servant_id,
         ).exists():
-            raise serializers.ValidationError(
-                {"detail": "Servidor não encontrado na base autorizada."}
-            )
+            raise serializers.ValidationError({
+                "detail": "Servidor não encontrado na base autorizada."
+            })
 
         attrs["full_name"] = full_name
         attrs["civil_servant_id"] = civil_servant_id
@@ -175,6 +176,7 @@ class CivilServantRegistrationSerializer(BaseUserRegistrationSerializer):
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField()
@@ -188,6 +190,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
                 "password_confirmation": "Passwords do not match."
             })
         return attrs
+
 
 class VerifyRegistrationOTPSerializer(serializers.Serializer):
     token = serializers.CharField()
@@ -210,9 +213,9 @@ class CivilServantAllowedStaffSerializer(serializers.Serializer):
             name__iexact=normalized_name,
             registration_number=normalized_registration,
         ).exists():
-            raise serializers.ValidationError(
-                {"detail": "Servidor não encontrado na base autorizada."}
-            )
+            raise serializers.ValidationError({
+                "detail": "Servidor não encontrado na base autorizada."
+            })
 
         attrs["name"] = normalized_name
         attrs["registration_number"] = normalized_registration

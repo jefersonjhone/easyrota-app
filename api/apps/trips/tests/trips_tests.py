@@ -55,10 +55,10 @@ class TripAPITestCase(APITestCase):
             brand="Mercedes-Benz",
             administrator=self.admin_profile,
         )
-        
+
         now = timezone.now()
         time_zone = timezone.get_current_timezone()
-        
+
         self.past_time = (now - timedelta(hours=1)).astimezone(time_zone).time()
         self.future_time = (now + timedelta(hours=1)).astimezone(time_zone).time()
 
@@ -85,7 +85,7 @@ class TripAPITestCase(APITestCase):
             arrival_time=time(5, 0),
             administrator=self.admin_profile,
         )
-        
+
         self.route_active = Route.objects.create(
             origin="Feira de Santana",
             destiny="Salvador",
@@ -206,7 +206,7 @@ class TripAPITestCase(APITestCase):
             bus=self.bus,
             route=self.route_active,
             driver=self.driver_profile,
-            departure_timestamp=timezone.now() - timedelta(minutes=15)
+            departure_timestamp=timezone.now() - timedelta(minutes=15),
         )
 
         url = reverse("trip-current")
@@ -221,6 +221,62 @@ class TripAPITestCase(APITestCase):
         self.assertIn("minutes_remaining", keys)
         self.assertIn("status_route", keys)
         self.assertEqual(response.data["bus_number_plate"], "ABC-1234")
+
+    def test_trip_detail_separates_reservations_from_check_ins(self):
+        """Driver occupancy data must count only confirmed check-ins."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        trip = Trip.objects.create(
+            trip_date=self.tomorrow,
+            bus=self.bus,
+            route=self.route_morning,
+            status="CONFIRMADA",
+        )
+        checked_in_user = CustomUser.objects.create_user(
+            email="checked-in@easyrota.com",
+            password="password123",
+            full_name="Passageiro Confirmado",
+            is_active=True,
+        )
+        reserved_user = CustomUser.objects.create_user(
+            email="reserved-only@easyrota.com",
+            password="password123",
+            full_name="Passageiro Reservado",
+            is_active=True,
+        )
+        checked_in_profile = StudentProfile.objects.create(
+            user=checked_in_user,
+            student_id="STU-CHECKED-IN",
+        )
+        reserved_profile = StudentProfile.objects.create(
+            user=reserved_user,
+            student_id="STU-RESERVED-ONLY",
+        )
+
+        Reservation.objects.create(
+            trip=trip,
+            student=checked_in_profile,
+            status="CONFIRMADA",
+            check_in=True,
+            checkin_date=timezone.now(),
+        )
+        Reservation.objects.create(
+            trip=trip,
+            student=reserved_profile,
+            status="CONFIRMADA",
+            check_in=False,
+        )
+
+        response = self.client.get(reverse("trip-detail", kwargs={"pk": trip.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["active_reservations"], 2)
+        self.assertEqual(response.data["checked_in_count"], 1)
+        self.assertEqual(len(response.data["checked_in_passengers"]), 1)
+        self.assertEqual(
+            response.data["checked_in_passengers"][0]["passenger_name"],
+            "Passageiro Confirmado",
+        )
 
 
 class CurrentTripPassengerAPITests(APITestCase):
@@ -309,13 +365,11 @@ class CurrentTripPassengerAPITests(APITestCase):
             bus=self.bus,
             route=self.route_active,
             status="EM ANDAMENTO",
-            departure_timestamp=timezone.now() - timedelta(minutes=15)
+            departure_timestamp=timezone.now() - timedelta(minutes=15),
         )
-        
+
         Reservation.objects.create(
-            trip=trip, 
-            student=self.student_profile, 
-            status="CONFIRMADA"
+            trip=trip, student=self.student_profile, status="CONFIRMADA"
         )
 
         self.client.force_authenticate(user=self.passenger_user)
@@ -384,6 +438,171 @@ class CurrentTripPassengerAPITests(APITestCase):
             59 <= minutes_left <= 61,
             f"Minutos restantes esperados ~60, recebido {minutes_left}",
         )
+
+
+class TripCheckInAPITests(APITestCase):
+    def setUp(self):
+        self.admin_user = CustomUser.objects.create_superuser(
+            email="admin-checkin@easyrota.com",
+            password="password123",
+            full_name="Admin Checkin",
+            is_active=True,
+        )
+        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
+
+        self.driver_user = CustomUser.objects.create_user(
+            email="driver-checkin@easyrota.com",
+            password="password123",
+            full_name="Motorista Checkin",
+            is_active=True,
+        )
+        self.driver_profile = DriverProfile.objects.create(
+            user=self.driver_user, cnh="12345678901"
+        )
+
+        self.other_driver_user = CustomUser.objects.create_user(
+            email="other-driver-checkin@easyrota.com",
+            password="password123",
+            full_name="Outro Motorista",
+            is_active=True,
+        )
+        self.other_driver_profile = DriverProfile.objects.create(
+            user=self.other_driver_user, cnh="12345678201"
+        )
+
+        self.passenger_user = CustomUser.objects.create_user(
+            email="passenger-checkin@easyrota.com",
+            password="password123",
+            full_name="Passageiro Checkin",
+            is_active=True,
+        )
+        self.student_profile = StudentProfile.objects.create(
+            user=self.passenger_user,
+            student_id="STU-CHECKIN-01",
+        )
+
+        self.passenger_without_reservation = CustomUser.objects.create_user(
+            email="no-reservation-checkin@easyrota.com",
+            password="password123",
+            full_name="Sem Reserva",
+            is_active=True,
+        )
+        StudentProfile.objects.create(
+            user=self.passenger_without_reservation,
+            student_id="STU-CHECKIN-02",
+        )
+
+        self.bus = Bus.objects.create(
+            number_plate="CHK-1234",
+            seating_capacity=40,
+            brand="Mercedes-Benz",
+            administrator=self.admin_profile,
+        )
+        self.route = Route.objects.create(
+            origin="Feira de Santana",
+            destiny="Salvador",
+            departure_time=time(8, 0),
+            arrival_time=time(10, 0),
+            administrator=self.admin_profile,
+        )
+        self.trip = Trip.objects.create(
+            trip_date=timezone.localdate(),
+            status="EM ANDAMENTO",
+            bus=self.bus,
+            route=self.route,
+            driver=self.driver_profile,
+        )
+        self.reservation = Reservation.objects.create(
+            trip=self.trip,
+            student=self.student_profile,
+            status="CONFIRMADA",
+        )
+        self.url = f"/api/trips/{self.trip.id}/check-in/"
+
+    def test_check_in_marks_passenger_reservation(self):
+        self.client.force_authenticate(user=self.driver_user)
+
+        response = self.client.post(
+            self.url,
+            {"passenger_identifier": str(self.passenger_user.id)},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["status"], "Check-in realizado com sucesso.")
+        self.reservation.refresh_from_db()
+        self.assertTrue(self.reservation.check_in)
+        self.assertIsNotNone(self.reservation.checkin_date)
+
+    def test_check_in_does_not_require_trip_in_progress(self):
+        self.trip.status = "CONFIRMADA"
+        self.trip.save(update_fields=["status"])
+        self.client.force_authenticate(user=self.driver_user)
+
+        response = self.client.post(
+            self.url,
+            {"passenger_identifier": str(self.passenger_user.id)},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.reservation.refresh_from_db()
+        self.assertTrue(self.reservation.check_in)
+
+    def test_check_in_rejects_passenger_without_trip_reservation(self):
+        self.client.force_authenticate(user=self.driver_user)
+
+        response = self.client.post(
+            self.url,
+            {"passenger_identifier": str(self.passenger_without_reservation.id)},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data["error"], "Passageiro sem reserva nesta viagem.")
+
+    def test_check_in_rejects_driver_not_associated_with_trip(self):
+        self.client.force_authenticate(user=self.other_driver_user)
+
+        response = self.client.post(
+            self.url,
+            {"passenger_identifier": str(self.passenger_user.id)},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            response.data["error"], "Motorista nao autorizado para esta viagem."
+        )
+        self.reservation.refresh_from_db()
+        self.assertFalse(self.reservation.check_in)
+
+    def test_check_in_rejects_invalid_qr_code(self):
+        self.client.force_authenticate(user=self.driver_user)
+
+        response = self.client.post(
+            self.url,
+            {"passenger_identifier": "qr-invalido"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "QR Code invalido.")
+
+    def test_check_in_rejects_duplicate_check_in(self):
+        self.reservation.check_in = True
+        self.reservation.checkin_date = timezone.now()
+        self.reservation.save(update_fields=["check_in", "checkin_date"])
+        self.client.force_authenticate(user=self.driver_user)
+
+        response = self.client.post(
+            self.url,
+            {"passenger_identifier": str(self.passenger_user.id)},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.data["error"], "Passageiro ja fez check-in.")
 
 
 class TripAssignDriverTestCase(TestCase):
@@ -921,7 +1140,7 @@ class TripDriverBusIntegrationTestCase(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
 
     def test_full_workflow_assign_then_unassign(self):
-        """Test complete workflow: assign driver, 
+        """Test complete workflow: assign driver,
         assign bus, unassign bus, unassign driver"""
         self.authenticate_driver()
 

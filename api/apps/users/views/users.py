@@ -38,24 +38,23 @@ class SelfProfileView(views.APIView):
         reservations = Reservation.objects.none()
         info_data = {}
         active_punishments_count = 0
-        
+
         if hasattr(user, "student_profile"):
             info_data = {
                 "student_id": user.student_profile.student_id,
             }
-            
+
             reservations = (
                 Reservation.objects
                 .filter(student=user.student_profile)
                 .select_related("trip", "trip__route")
                 .order_by("-created_at")
             )
-            
+
             active_punishments_count = Punishment.objects.filter(
-                student=user.student_profile, 
-                is_active=True
+                student=user.student_profile, is_active=True
             ).count()
-            
+
         elif hasattr(user, "civil_servant_profile"):
             info_data = {
                 "civil_servant_id": user.civil_servant_profile.civil_servant_id,
@@ -66,9 +65,9 @@ class SelfProfileView(views.APIView):
                 .select_related("trip", "trip__route")
                 .order_by("-created_at")
             )
-        
+
         reservations_list = list(reservations)
-        
+
         data = {
             **serializer.data,
             **info_data,
@@ -76,14 +75,13 @@ class SelfProfileView(views.APIView):
             "checkins_count": sum(1 for r in reservations_list if r.check_in),
             "reservations_count": len(reservations_list),
             "active_reservations": sum(
-                1 for r in reservations_list
-                if r.trip.status in [
-                    "CONFIRMADA", "RISCO DE CANCELAMENTO"
-                ]
+                1
+                for r in reservations_list
+                if r.trip.status in ["CONFIRMADA", "RISCO DE CANCELAMENTO"]
             ),
             "active_punishments": active_punishments_count,
         }
-        
+
         return Response(data)
 
 

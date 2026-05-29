@@ -25,6 +25,10 @@ type Props = {
   onSuccess?: (email: string, token: string) => void
 }
 
+type PasswordResetRequestResponse = {
+  token?: string
+} | null
+
 export function RequestRecoveryForms({ onSuccess }: Props) {
   const { next } = useSteps()
   const [loading, setLoading] = useState(false)
@@ -39,12 +43,11 @@ export function RequestRecoveryForms({ onSuccess }: Props) {
     const email = formData.get("email") as string
 
     try {
-      const response = await apiFetch("/auth/password-reset-request/", {
+      const data = await apiFetch<PasswordResetRequestResponse>("/auth/password-reset-request/", {
         method: "POST",
         body: JSON.stringify({ email })
       })
-      const data = await (response as any).json?.() || response
-      onSuccess?.(email, data.token || "")
+      onSuccess?.(email, data?.token || "")
       next()
     } catch (err) {
       console.error(err)

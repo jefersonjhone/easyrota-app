@@ -59,8 +59,7 @@ class CreateSubAdminSerializer(serializers.Serializer):
     def validate_email(self, value):
         email = value.strip().lower()
         if CustomUser.objects.filter(email=email).exists():
-            raise serializers.ValidationError(
-                "A user with this email already exists.")
+            raise serializers.ValidationError("A user with this email already exists.")
         return email
 
     def validate_level(self, value):
@@ -74,8 +73,7 @@ class CreateSubAdminSerializer(serializers.Serializer):
     def create(self, validated_data):
         creator_profile = self.context["request"].user.admin_profile
         password = validated_data.pop("password")
-        level = validated_data.pop(
-            "level", AdministratorProfile.Level.SUBADMIN)
+        level = validated_data.pop("level", AdministratorProfile.Level.SUBADMIN)
         role = validated_data.pop("role")
 
         user = CustomUser.objects.create_user(
@@ -155,16 +153,15 @@ class DriverSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         print(validated_data)
-        user_data = validated_data.pop('user')
-        password = validated_data.pop('password')
+        user_data = validated_data.pop("user")
+        password = validated_data.pop("password")
 
         user = CustomUser.objects.create_user(
             full_name=user_data["full_name"],
             email=user_data["email"],
             password=password,
         )
-        driver_profile = DriverProfile.objects.create(
-            user=user, **validated_data)
+        driver_profile = DriverProfile.objects.create(user=user, **validated_data)
         return driver_profile
 
     def update(self, instance, validated_data):
@@ -203,14 +200,12 @@ class DriverSerializer(serializers.ModelSerializer):
             queryset = queryset.exclude(id=self.instance.user.id)
 
         if queryset.exists():
-            raise serializers.ValidationError(
-                "Já existe um usuário com este email."
-            )
+            raise serializers.ValidationError("Já existe um usuário com este email.")
 
         return value
 
 
-class DeleteOwnAccountSerializer (serializers.Serializer):
+class DeleteOwnAccountSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate_password(self, value):
@@ -218,5 +213,5 @@ class DeleteOwnAccountSerializer (serializers.Serializer):
 
         if not user.check_password(value):
             raise serializers.ValidationError("Invalid password.")
-        
+
         return value

@@ -1,7 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
+
+type ResendOtpResponse = {
+  token?: string
+} | null
 
 export function VerifyCodePage() {
   const [code, setCode] = useState('')
@@ -20,7 +24,7 @@ export function VerifyCodePage() {
     return params.get('token')
   })
 
-  const handleResend = async () => {
+  const handleResend = useCallback(async () => {
     const params = new URLSearchParams(window.location.search)
     const email = params.get('email')
 
@@ -34,14 +38,12 @@ export function VerifyCodePage() {
     setResendSuccess(false)
 
     try {
-      const response = await apiFetch('/auth/resend-otp/', {
+      const data = await apiFetch<ResendOtpResponse>('/auth/resend-otp/', {
         method: 'POST',
         body: JSON.stringify({ email })
       })
-      
-      const data = await (response as any).json?.() || response
-      
-      if (data.token) {
+
+      if (data?.token) {
         setToken(data.token)
         const newUrl = new URL(window.location.href)
         newUrl.searchParams.set('token', data.token)
@@ -56,7 +58,7 @@ export function VerifyCodePage() {
     } finally {
       setResendLoading(false)
     }
-  }
+  }, [])
 
   // Efeito para reenvio automático caso chegue na página sem token (vindo da tela de erro)
   useEffect(() => {
@@ -67,7 +69,7 @@ export function VerifyCodePage() {
       hasAutoResent.current = true
       handleResend()
     }
-  }, [])
+  }, [handleResend, token])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

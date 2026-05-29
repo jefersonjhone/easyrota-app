@@ -45,14 +45,20 @@ class ReservationSerializer(serializers.ModelSerializer):
                     "Servidor só pode reservar durante a semana vigente."
                 )
 
-        if hasattr(user, "student_profile") and Reservation.objects.filter(
-            trip=trip, student=user.student_profile
-        ).exists():
+        if (
+            hasattr(user, "student_profile")
+            and Reservation.objects.filter(
+                trip=trip, student=user.student_profile
+            ).exists()
+        ):
             raise serializers.ValidationError("Você já possui reserva nesta viagem.")
 
-        if hasattr(user, "civil_servant_profile") and Reservation.objects.filter(
-            trip=trip, civil_servant=user.civil_servant_profile
-        ).exists():
+        if (
+            hasattr(user, "civil_servant_profile")
+            and Reservation.objects.filter(
+                trip=trip, civil_servant=user.civil_servant_profile
+            ).exists()
+        ):
             raise serializers.ValidationError("Você já possui reserva nesta viagem.")
 
         return trip
@@ -88,7 +94,7 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
         source="trip.departure_timestamp",
         format="%H:%M:%S",
     )
-    
+
     trip_history_status = serializers.SerializerMethodField()
     reservation_status = serializers.CharField(source="status")
     can_cancel = serializers.SerializerMethodField()

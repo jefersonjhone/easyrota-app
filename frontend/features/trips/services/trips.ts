@@ -1,5 +1,5 @@
 import { apiFetch } from '@lib/api'
-import type { CurrentTripDetail, Trip } from '../types'
+import type { CurrentTripDetail, Trip, TripPassengerCheckInResponse } from '../types'
 
 export function fetchTrips() {
   return apiFetch<Trip[]>('/trips/')
@@ -29,4 +29,11 @@ export function updateTrip(id: number, data: Partial<Trip>) {
 
 export function deleteTrip(id: number) {
   return apiFetch<void>(`/trips/${id}/`, { method: 'DELETE' })
+}
+
+export function checkInTripPassenger(tripId: number | string, passengerIdentifier: string) {
+  return apiFetch<TripPassengerCheckInResponse>(`/trips/${tripId}/check-in/`, {
+    method: 'POST',
+    body: JSON.stringify({ passenger_identifier: passengerIdentifier }),
+  })
 }
