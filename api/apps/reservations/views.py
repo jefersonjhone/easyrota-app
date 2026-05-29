@@ -102,7 +102,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
 
         if self.action == "checkin":
-            return [IsDriver() | IsSuperAdmin()]
+            return [IsDriver(), IsSuperAdmin()]
 
         return super().get_permissions()
 
@@ -170,5 +170,4 @@ class PunishmentHistoryView(generics.ListAPIView):
             return Punishment.objects.filter(student=user.student_profile).order_by(
                 "-id"
             )
-
         return Punishment.objects.none()
