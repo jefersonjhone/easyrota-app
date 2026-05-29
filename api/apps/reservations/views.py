@@ -102,7 +102,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         
         if self.action == "checkin":
-            return [IsDriver() | IsSuperAdmin()]
+            return [IsDriver(), IsSuperAdmin()]
 
         return super().get_permissions()
     
