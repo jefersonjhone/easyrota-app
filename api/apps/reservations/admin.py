@@ -32,8 +32,8 @@ class GuestList(admin.ModelAdmin):
 
 
 class PunishmentList(admin.ModelAdmin):
-    list_display = ("id", "student", "is_active", "reservation", "description")
-    list_filter = ("student", "is_active")
+    list_display = ("student", "value", "reservation", "description")
+    list_filter = ("value", "student")
     search_fields = ("student__user__full_name", "description")
     list_per_page = 10
 
