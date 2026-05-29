@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
@@ -11,6 +11,9 @@ export function VerifyCodePage() {
   const [resendLoading, setResendLoading] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
   
+  // Ref para evitar execução duplicada do reenvio automático (comum no Strict Mode)
+  const hasAutoResent = useRef(false)
+
   // Usar estado para o token para garantir re-renderização e uso do valor atualizado
   const [token, setToken] = useState(() => {
     const params = new URLSearchParams(window.location.search)
@@ -60,7 +63,8 @@ export function VerifyCodePage() {
     const params = new URLSearchParams(window.location.search)
     const email = params.get('email')
     
-    if (email && !token) {
+    if (email && !token && !hasAutoResent.current) {
+      hasAutoResent.current = true
       handleResend()
     }
   }, [])
