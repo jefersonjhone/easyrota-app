@@ -14,7 +14,8 @@ from ..users.models import (
     DriverProfile,
     StudentProfile,
 )
-from .models import Reservation
+from .models import Punishment, Reservation
+from .services import process_trip_punishments
 
 
 class BaseReservationTestCase(APITestCase):
@@ -75,12 +76,17 @@ class BaseReservationTestCase(APITestCase):
 
         return user, civil_servant
 
-    def create_student(self):
-        """Creates student user and profile."""
+    def create_student(self, email="student@teste.com", student_id="12345"):
+        """
+        Creates student user and profile.
+        """
         user = CustomUser.objects.create_user(
-            email="student@teste.com", password="12345678"
+            email=email, password="12345678"
         )
-        student_profile = StudentProfile.objects.create(user=user)
+        student_profile = StudentProfile.objects.create(
+            user=user,
+            student_id=student_id
+        )
 
         return user, student_profile
 
@@ -238,3 +244,86 @@ class AvailableTripsTest(BaseReservationTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["available_seats"], 38)
         self.assertEqual(response.data[0]["bus_brand"], "Mercedes-Benz")
+
+
+class PunishmentSystemTestCase(BaseReservationTestCase):
+    def setUp(self):
+        super().setUp()
+        
+        self.trip = self.create_trip(days_ahead=0, status="EM ANDAMENTO")
+        
+        self.absent_user, self.absent_profile = self.create_student(
+            email="absent_student@test.com", 
+            student_id="001"
+        )
+        
+        self.present_user, self.present_profile = self.create_student(
+            email="present_student@test.com", 
+            student_id="002"
+        )
+
+        self.absent_reservation = self.create_reservation(
+            trip=self.trip,
+            student=self.absent_profile
+        )
+        self.absent_reservation.check_in = False
+        self.absent_reservation.status = "CONFIRMADA"
+        self.absent_reservation.save()
+
+        self.present_reservation = self.create_reservation(
+            trip=self.trip,
+            student=self.present_profile
+        )
+        self.present_reservation.check_in = True
+        self.present_reservation.status = "CONFIRMADA"
+        self.present_reservation.save()
+
+    def test_apply_punishment_on_absence(self):
+        """
+        Ensures absent students receive an active 
+        punishment at the end of the trip.
+        """
+        process_trip_punishments(self.trip)
+
+        punishment_exists = Punishment.objects.filter(
+            student=self.absent_profile, 
+            reservation=self.absent_reservation,
+            is_active=True
+        ).exists()
+        
+        self.assertTrue(punishment_exists)
+
+    def test_forgive_punishment_on_presence(self):
+        """
+        Ensures that if a student already has an active punishment, 
+        it becomes inactive if they check in on a new trip.
+        """
+        old_reservation = self.create_reservation(
+            trip=self.trip, 
+            student=self.present_profile
+        )
+        old_reservation.status = "CONFIRMADA"
+        old_reservation.save()
+        
+        old_punishment = Punishment.objects.create(
+            student=self.present_profile,
+            reservation=old_reservation,
+            is_active=True,
+            description="Faltou na viagem"
+        )
+
+        process_trip_punishments(self.trip)
+        old_punishment.refresh_from_db()
+        
+        self.assertFalse(old_punishment.is_active)
+
+    def test_no_punishment_for_present_students(self):
+        """Ensures that a present student does not receive a new punishment."""
+        process_trip_punishments(self.trip)
+        
+        punishment_exists = Punishment.objects.filter(
+            student=self.present_profile, 
+            reservation=self.present_reservation
+        ).exists()
+        
+        self.assertFalse(punishment_exists)
