@@ -10,7 +10,8 @@ import z from "zod";
 
 const guestSchema = z.object({
   full_name: z.string().nonempty("Informe o nome completo"),
-  cpf: z.string().length(11, "CPF deve ter 11 números."),
+  cpf: z.string().length(11, "CPF deve ter 11 números.")
+    .regex(/^\d+$/, "CPF deve conter apenas números."),
 });
 
 type GuestSchema = z.infer<typeof guestSchema>;
