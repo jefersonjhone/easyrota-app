@@ -86,17 +86,23 @@ export function ManageDriversPage() {
       setIsAddModalOpen(false)
     },
 
-    onError: (error: any) => {
-      if (error.data?.cnh){
+    onError: (error) => {
+        const errorData = error as {
+          data?: {
+            cnh?: string[]
+            email?: string[]
+          }
+        }
+      if (errorData.data?.cnh){
         createForm.setError("cnh", {
           type: "server",
           message: "Já existe um motorista com essa CNH.",
         })
       }
-      if (error.data?.email) {
+      if (errorData.data?.email) {
         createForm.setError("email", {
           type: "server",
-          message: error.data.email[0],
+          message: errorData.data.email[0],
         })
       }
     }
@@ -130,17 +136,23 @@ export function ManageDriversPage() {
       setIsEditModalOpen(false)
     },
 
-    onError: (error: any) => {
-      if (error.data?.cnh){
+    onError: (error) => {
+      const errorData = error as {
+        data?: {
+          cnh?: string[]
+          email?: string[]
+        }
+      }
+      if (errorData.data?.cnh){
         editForm.setError("cnh", {
           type: "server",
           message: "Já existe um motorista com essa CNH.",
         })
       }
-      if (error.data?.email) {
+      if (errorData.data?.email) {
         editForm.setError("email", {
           type: "server",
-          message: error.data.email[0],
+          message: errorData.data.email[0],
         })
       }
     }
