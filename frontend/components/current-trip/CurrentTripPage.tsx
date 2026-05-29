@@ -13,7 +13,7 @@ import { Separator } from "@/lib/ui/separator";
 import { apiFetch } from "@/lib/api";
 import { formatTripDate } from "@/features/user-home/config";
 import PassengerQRCode from "@/lib/ui/qr-code";
-import { Button } from "@/lib/ui/button";
+import { GuestForm } from "./GuestForm";
 
 type CurrentTripData = {
   id: number;
@@ -36,7 +36,6 @@ export function CurrentTripPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const showMinutesCard = trip !== null && trip.minutes_remaining !== null;
-  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     const loadCurrentTrip = async () => {
@@ -172,14 +171,14 @@ export function CurrentTripPage() {
                 </div>
               </CardContent>
             </Card>
+            <GuestForm
+            />
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-600">
             Nenhuma viagem para exibir no momento.
           </div>
         )}
-
-        {!isAdding && <Button className="w-full">Adicionar Convidado</Button>}
       </div>
     </AppLayout>
   );
