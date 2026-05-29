@@ -108,7 +108,6 @@ export function QrCodeScanner({
 
     let isCancelled = false
     hasScannedRef.current = false
-    setCameraState('starting')
 
     const scanner = new Html5Qrcode(scannerElementId, {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
@@ -134,6 +133,7 @@ export function QrCodeScanner({
           return
         }
 
+        setCameraState('starting')
         await startScanner(scanner, scannerElementId, handleScanSuccess)
       })
       .then(() => {
@@ -170,7 +170,6 @@ export function QrCodeScanner({
 
     hasScannedRef.current = false
     scanner.resume()
-    setCameraState('ready')
   }, [isOpen, restartSignal])
 
   return (
