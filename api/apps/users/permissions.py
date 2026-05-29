@@ -3,6 +3,18 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission
 from apps.users.models import AdministratorProfile
 
 
+class IsCivilServant(BasePermission):
+    """Allows access to civil servants"""
+
+    def has_permission(self, request, view):
+        print("request: ", request)
+        return (
+            request.user
+            and request.user.is_authenticated
+            and hasattr(request.user, "civil_servant_profile")
+        )
+
+
 class IsDriverReadOnly(BasePermission):
     """Allows read-only access to drivers."""
 

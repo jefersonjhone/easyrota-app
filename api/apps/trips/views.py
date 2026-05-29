@@ -13,7 +13,6 @@ from rest_framework.views import APIView
 from apps.reservations.services import process_trip_punishments
 
 from apps.users.serializers.auth import CivilServantAllowedStaffSerializer
-from apps.users.models.auth import AllowedStaff
 
 from ..reservations.models import Reservation
 from ..reservations.services import ACTIVE_RESERVATION_STATUSES
@@ -21,6 +20,7 @@ from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
     IsDriverReadOnly,
+    IsCivilServant,
 )
 from .filters import FilterTripViewSet
 from .models import Bus, Route, Trip, GuestPassenger
@@ -408,8 +408,9 @@ class MyNextTripView(APIView):
         return Response({"detail": "Nenhuma viagem próxima."}, status=404)
 
 
-class TripPassengerView(APIView):
-    permission_classes = (permissions.IsAuthenticated,)
+class GuestPassengerView(APIView):
+    print("checando se pode")
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = CivilServantAllowedStaffSerializer(data=request.data)
