@@ -29,6 +29,7 @@ from .serializers import (
     RouteSerializer,
     TripCurrentScreenSerializer,
     TripSerializer,
+    GuestPassengerSerializer,
 )
 
 User = get_user_model()
@@ -44,7 +45,8 @@ class BusViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         """Allows full access for administrators and only GET requests for drivers."""
         if self.action in ["list", "retrieve"]:
-            self.permission_classes = [permissions.IsAdminUser | IsDriverReadOnly]
+            self.permission_classes = [
+                permissions.IsAdminUser | IsDriverReadOnly]
         else:
             self.permission_classes = [permissions.IsAdminUser]
 
@@ -87,7 +89,8 @@ class TripViewSet(viewsets.ModelViewSet):
 
             if parsed_trip_date and parsed_trip_date < timezone.localtime().date():
                 return Response(
-                    {"trip_date": ["A data da viagem não pode estar no passado."]},
+                    {"trip_date": [
+                        "A data da viagem não pode estar no passado."]},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -324,10 +327,12 @@ class MyNextTripView(APIView):
 
             time_zone = timezone.get_current_timezone()
             expected_dep = timezone.make_aware(
-                datetime.combine(trip.trip_date, trip.route.departure_time), time_zone
+                datetime.combine(
+                    trip.trip_date, trip.route.departure_time), time_zone
             )
             expected_arr = timezone.make_aware(
-                datetime.combine(trip.trip_date, trip.route.arrival_time), time_zone
+                datetime.combine(
+                    trip.trip_date, trip.route.arrival_time), time_zone
             )
 
             if expected_arr <= expected_dep:
@@ -357,7 +362,8 @@ class MyNextTripView(APIView):
         today = now.date()
         yesterday = today - timedelta(days=1)
 
-        is_admin = hasattr(request.user, "admin_profile") or request.user.is_staff
+        is_admin = hasattr(
+            request.user, "admin_profile") or request.user.is_staff
 
         if is_admin:
             base_running_query = Trip.objects.filter(
@@ -395,7 +401,8 @@ class MyNextTripView(APIView):
                 )
                 return Response(serializer.data)
 
-        next_trips = base_next_query.order_by("trip_date", "route__departure_time")
+        next_trips = base_next_query.order_by(
+            "trip_date", "route__departure_time")
 
         for trip in next_trips:
             updated_trip = self._update_trip_status(trip)
@@ -410,6 +417,7 @@ class MyNextTripView(APIView):
 
 class GuestPassengerView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = GuestPassengerSerializer
 
     def post(self, request):
         trip_id = request.data.get("trip")
@@ -432,4 +440,5 @@ class GuestPassengerView(APIView):
             recorded_by=request.user.civil_servant_profile,
             full_name=request.data.get("full_name"),
         )
-        return Response({"id": passenger.id}, status=status.HTTP_201_CREATED)
+        serializer = GuestPassengerSerializer(passenger)
+        return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)

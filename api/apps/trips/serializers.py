@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from ..reservations.models import Reservation
-from .models import Bus, Route, Trip
+from .models import Bus, Route, Trip, GuestPassenger
 
 
 class BusSerializer(serializers.ModelSerializer):
@@ -421,3 +421,12 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         if request and request.user and request.user.is_authenticated:
             return str(request.user.id)
         return None
+
+
+
+class GuestPassengerSerializer(serializers.ModelSerializer):
+    """Compact public representation of a guest passenger."""
+
+    class Meta:
+        model = GuestPassenger
+        fields = ("id", "cpf", "full_name", "recorded_by", "trip")

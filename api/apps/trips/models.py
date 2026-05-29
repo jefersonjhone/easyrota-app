@@ -6,6 +6,8 @@ from .querysets import TripQuerySet
 
 from django.contrib.auth.base_user import BaseUserManager
 
+import uuid
+
 
 class Bus(models.Model):
     """Represents a bus in the fleet available for trips.
@@ -144,6 +146,7 @@ class GuestPassengerManager(BaseUserManager):
 
 
 class GuestPassenger(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cpf = models.CharField(max_length=11)
     trip = models.ForeignKey(to=Trip, on_delete=models.CASCADE)
     recorded_by = models.ForeignKey(to=CivilServantProfile, on_delete=models.SET_NULL, null=True)
