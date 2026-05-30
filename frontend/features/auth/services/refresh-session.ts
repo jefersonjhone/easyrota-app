@@ -1,7 +1,10 @@
-export async function refreshSession() {
+import { API_URL } from "@lib/config";
 
+
+export async function refreshSession() {
+  
   const response = await fetch(
-    `/api/auth/refresh`,
+    `${API_URL}/auth/refresh`,
     {
       method: "POST",
       credentials: "include",
