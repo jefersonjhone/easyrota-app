@@ -1,12 +1,11 @@
-from django.db import models
-
-from apps.users.models.profiles import (DriverProfile, CivilServantProfile)
-
-from .querysets import TripQuerySet
+import uuid
 
 from django.contrib.auth.base_user import BaseUserManager
+from django.db import models
 
-import uuid
+from apps.users.models.profiles import CivilServantProfile, DriverProfile
+
+from .querysets import TripQuerySet
 
 
 class Bus(models.Model):
@@ -146,10 +145,21 @@ class GuestPassengerManager(BaseUserManager):
 
 
 class GuestPassenger(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(
+        primary_key=True, 
+        default=uuid.uuid4, 
+        editable=False
+        )
     cpf = models.CharField(max_length=11)
-    trip = models.ForeignKey(to=Trip, on_delete=models.CASCADE)
-    recorded_by = models.ForeignKey(to=CivilServantProfile, on_delete=models.SET_NULL, null=True)
+    trip = models.ForeignKey(
+        to=Trip, 
+        on_delete=models.CASCADE
+        )
+    recorded_by = models.ForeignKey(
+        to=CivilServantProfile, 
+        on_delete=models.SET_NULL, 
+        null=True
+        )
     full_name = models.CharField(max_length=255)
 
     objects = GuestPassengerManager()

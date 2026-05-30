@@ -29,6 +29,7 @@ type CurrentTripData = {
   minutes_remaining: number | null;
   status_route: string;
   passenger_identifier: string;
+  has_checked_in : boolean;
 };
 
 export function CurrentTripPage() {
@@ -93,7 +94,21 @@ export function CurrentTripPage() {
           </div>
         ) : trip ? (
           <div className="space-y-6">
-            <PassengerQRCode identifier={trip.passenger_identifier} />
+            <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
+                <PassengerQRCode identifier={trip.passenger_identifier} />
+                
+                {trip.has_checked_in ? (
+                  <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-semibold border border-green-200 flex items-center gap-2">
+                    Check-in Realizado
+                  </span>
+                ) : (
+                  <span className="px-4 py-1.5 rounded-full bg-amber-100 text-amber-800 text-sm font-semibold border border-amber-200 flex items-center gap-2">
+                    Check-in Pendente
+                  </span>
+                )}
+              </CardContent>
+            </Card>
 
             <Card className="rounded-xl border">
               <CardHeader>

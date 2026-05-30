@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from ..reservations.models import Reservation
-from .models import Bus, Route, Trip, GuestPassenger
+from .models import Bus, GuestPassenger, Route, Trip
 
 
 class BusSerializer(serializers.ModelSerializer):
@@ -299,6 +299,8 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     status_route = serializers.SerializerMethodField()
 
     passenger_identifier = serializers.SerializerMethodField()
+    
+    has_checked_in = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -316,10 +318,33 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             "minutes_remaining",
             "status_route",
             "passenger_identifier",
+            "has_checked_in",
         ]
 
     def get_status_trip(self, obj):
         return obj.get_status_display()
+
+    def get_has_checked_in(self, obj):
+        """
+        It retrieves the reservation of the authenticated user 
+        and returns whether they have already checked in.
+        """
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+            
+        user = request.user
+        if hasattr(user, "student_profile"):
+            res = obj.reservation_set.filter(student=user.student_profile).first()
+            return res.check_in if res else False
+            
+        if hasattr(user, "civil_servant_profile"):
+            res = obj.reservation_set.filter(
+                civil_servant=user.civil_servant_profile
+                ).first()
+            return res.check_in if res else False
+            
+        return False
 
     def _get_trip_metrics(self, obj):
         """
@@ -346,14 +371,11 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
         total_duration = (expected_arr - expected_dep).total_seconds()
 
-        start_time = (
-            obj.departure_timestamp if obj.departure_timestamp else expected_dep
-        )
-
-        return start_time, total_duration
+        return obj.departure_timestamp, total_duration
 
     def get_percentage_complete(self, obj):
-        if obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO", "CONFIRMADA"]:
+        if (obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO", "CONFIRMADA"] 
+            or not obj.departure_timestamp):
             return 0
 
         if obj.status == "CONCLUÍDA":
@@ -362,7 +384,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         now = timezone.now()
         start_time, total_duration = self._get_trip_metrics(obj)
 
-        if total_duration <= 0:
+        if total_duration <= 0 or not start_time:
             return 0
 
         elapsed = (now - start_time).total_seconds()
@@ -381,11 +403,14 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         return int(pct)
 
     def get_minutes_remaining(self, obj):
-        if obj.status != "EM ANDAMENTO":
+        if obj.status != "EM ANDAMENTO" or not obj.departure_timestamp:
             return None
 
         now = timezone.now()
         start_time, total_duration = self._get_trip_metrics(obj)
+        
+        if not start_time:
+            return None
 
         real_expected_arr = start_time + timedelta(seconds=total_duration)
 
@@ -421,7 +446,6 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         if request and request.user and request.user.is_authenticated:
             return str(request.user.id)
         return None
-
 
 
 class GuestPassengerSerializer(serializers.ModelSerializer):
