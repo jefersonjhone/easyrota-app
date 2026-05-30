@@ -12,24 +12,21 @@ from rest_framework.views import APIView
 
 from apps.reservations.services import process_trip_punishments
 
-from apps.users.serializers.auth import CivilServantAllowedStaffSerializer
-
 from ..reservations.models import Reservation
 from ..reservations.services import ACTIVE_RESERVATION_STATUSES
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
     IsDriverReadOnly,
-    IsCivilServant,
 )
 from .filters import FilterTripViewSet
-from .models import Bus, Route, Trip, GuestPassenger
+from .models import Bus, GuestPassenger, Route, Trip
 from .serializers import (
     BusSerializer,
+    GuestPassengerSerializer,
     RouteSerializer,
     TripCurrentScreenSerializer,
     TripSerializer,
-    GuestPassengerSerializer,
 )
 
 User = get_user_model()
