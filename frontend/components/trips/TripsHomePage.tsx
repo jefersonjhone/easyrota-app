@@ -78,7 +78,7 @@ export function TripsHomePage() {
             Selecione sua viagem
           </h1>
           <p className="text-muted-foreground">
-            Viagens liberadas pelo backend para reserva do usuário autenticado.
+            Viagens disponíveis para reserva no momento.
           </p>
         </header>
 
@@ -153,7 +153,7 @@ export function TripsHomePage() {
         )}
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          As viagens exibidas respeitam o prazo de reserva e a lotação disponível no backend.
+          As viagens exibidas respeitam o prazo de reserva e a disponibilidade de vagas no ônibus.
         </p>
       </section>
     </AppLayout>
