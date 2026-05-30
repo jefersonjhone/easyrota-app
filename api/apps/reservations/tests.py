@@ -356,6 +356,41 @@ class PunishmentSystemTestCase(BaseReservationTestCase):
 
         priority, _ = get_priority_tuple(new_reservation)
         self.assertEqual(priority, 3)
+    
+    def test_forgive_only_one_punishment_on_presence(self):
+        """
+        Ensures that if a student has multiple active punishments,
+        only the oldest one is forgiven per check-in.
+        """
+        old_res_1 = self.create_reservation(
+            trip=self.trip, 
+            student=self.present_profile
+            )
+        punishment_1 = Punishment.objects.create(
+            student=self.present_profile,
+            reservation=old_res_1,
+            is_active=True,
+            description="Falta antiga 1"
+        )
+        
+        old_res_2 = self.create_reservation(
+            trip=self.trip, 
+            student=self.present_profile
+            )
+        punishment_2 = Punishment.objects.create(
+            student=self.present_profile,
+            reservation=old_res_2,
+            is_active=True,
+            description="Falta recente 2"
+        )
+
+        process_trip_punishments(self.trip)
+        
+        punishment_1.refresh_from_db()
+        punishment_2.refresh_from_db()
+        
+        self.assertFalse(punishment_1.is_active)
+        self.assertTrue(punishment_2.is_active)
 
 
 class PunishmentHistoryAPITestCase(BaseReservationTestCase):
@@ -401,38 +436,3 @@ class PunishmentHistoryAPITestCase(BaseReservationTestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 401)
-    
-    def test_forgive_only_one_punishment_on_presence(self):
-        """
-        Ensures that if a student has multiple active punishments,
-        only the oldest one is forgiven per check-in.
-        """
-        old_res_1 = self.create_reservation(
-            trip=self.trip, 
-            student=self.present_profile
-            )
-        punishment_1 = Punishment.objects.create(
-            student=self.present_profile,
-            reservation=old_res_1,
-            is_active=True,
-            description="Falta antiga 1"
-        )
-        
-        old_res_2 = self.create_reservation(
-            trip=self.trip, 
-            student=self.present_profile
-            )
-        punishment_2 = Punishment.objects.create(
-            student=self.present_profile,
-            reservation=old_res_2,
-            is_active=True,
-            description="Falta recente 2"
-        )
-
-        process_trip_punishments(self.trip)
-        
-        punishment_1.refresh_from_db()
-        punishment_2.refresh_from_db()
-        
-        self.assertFalse(punishment_1.is_active)
-        self.assertTrue(punishment_2.is_active)
