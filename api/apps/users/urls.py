@@ -13,6 +13,8 @@ from .views.auth import (
     ResendOTPView,
     Verify2FAView,
     VerifyRegistrationOTPView,
+    RequestReactivationView,
+    ResendReactivationOTPView,
 )
 from .views.users import (
     AdminDelegationView,
@@ -68,6 +70,16 @@ urlpatterns = [
         "staff/passengers/",
         DriverTripPassengerView.as_view(),
         name="trip-passenger-create",
+    ),
+    path(
+        "auth/account-reactivate/",
+        RequestReactivationView.as_view(),
+        name="account-reactivate",
+    ),
+    path(
+        "auth/resend-reactivation-otp/",
+        ResendReactivationOTPView.as_view(),
+        name="resend-reactivation-otp",
     ),
     path("", include(router.urls)),
 ]

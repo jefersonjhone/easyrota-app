@@ -210,7 +210,13 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
                   </h3>
       
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Essa ação é permanente e não poderá ser desfeita.
+                    Essa ação desativará sua conta imediatamente.
+                  </p>
+                  
+                  <p className="text-sm text-muted-foreground">
+                    Alguns dados poderão ser mantidos temporariamente
+                    para cumprimento de obrigações legais e auditoria,
+                    conforme a LGPD.
                   </p>
       
                   <p className="text-sm text-muted-foreground">

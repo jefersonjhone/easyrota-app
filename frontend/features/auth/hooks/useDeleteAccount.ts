@@ -29,3 +29,20 @@ export function useDeleteAccountMutation() {
         }
     })
 }
+
+async function reactivateAccountRequest(email: string){
+    return await apiFetch("/auth/account-reactivate/", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+    })
+}
+
+export function useReactivateAccountMutation(){
+    return useMutation({
+        mutationFn: reactivateAccountRequest,
+
+        onError: (error) => {
+            console.log(error)
+        },
+    })
+}
