@@ -95,13 +95,9 @@ class TripViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
-        trip = self.get_object()
-
         Trip.objects.filter(id=pk).update(
             status="CONCLUÍDA", arrival_timestamp=timezone.now()
         )
-
-        process_trip_punishments(trip)
 
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
 
@@ -109,9 +105,15 @@ class TripViewSet(viewsets.ModelViewSet):
     def start_trip(
         self, request, pk=None
     ):  # CONTRIBUIÇÃO ENORME DE MATHEUS PRO BACKEND
+        
+        trip = self.get_object()
+        
         Trip.objects.filter(id=pk).update(
             status="EM ANDAMENTO", departure_timestamp=timezone.now()
         )
+        
+        process_trip_punishments(trip)
+        
         return Response("trip iniciada com sucesso", status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="check-in")
@@ -372,19 +374,23 @@ class MyNextTripView(APIView):
             )
 
         else:
+            valid_statuses = ["CONFIRMADA", "LISTA SECUNDÁRIA", "PENDENTE"]
+            
             user_trip_filter = (
-                Q(reservation__student__user=request.user)
-                | Q(reservation__civil_servant__user=request.user)
+                Q(reservation__student__user=request.user, 
+                  reservation__status__in=valid_statuses)
+                | Q(reservation__civil_servant__user=request.user, 
+                    reservation__status__in=valid_statuses)
                 | Q(driver__user=request.user)
             )
 
             base_running_query = Trip.objects.filter(
                 user_trip_filter, status="EM ANDAMENTO", trip_date__gte=yesterday
-            )
+            ).distinct()
 
             base_next_query = Trip.objects.filter(
                 user_trip_filter, trip_date__gte=today
-            ).exclude(status__in=["CONCLUÍDA", "CANCELADA"])
+            ).exclude(status__in=["CONCLUÍDA", "CANCELADA"]).distinct()
 
         running_trips = base_running_query.order_by(
             "trip_date", "route__departure_time"

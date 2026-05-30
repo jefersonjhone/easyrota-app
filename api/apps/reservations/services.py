@@ -131,22 +131,32 @@ def sync_trip_status(trip):
 def process_trip_punishments(trip):
     """
     It processes absences and presences at the end of a trip.
-    It applies penalties to those who were absent and forgives
-    those who traveled.
+    It applies penalties to those who were absent and forgives 
+    one active penalty (the oldest) for those who traveled.
     """
-
+    
     reservations = Reservation.objects.filter(
-        trip=trip, status__in=ACTIVE_RESERVATION_STATUSES
+        trip=trip, 
+        status__in=ACTIVE_RESERVATION_STATUSES
     )
 
     for reservation in reservations:
-        if not reservation.student_id:
+        if not reservation.student_id: 
             continue
 
         if reservation.check_in:
-            Punishment.objects.filter(
-                student=reservation.student, is_active=True
-            ).update(is_active=False)
+            punishment = (
+                Punishment.objects.filter(
+                    student=reservation.student,
+                    is_active=True,
+                )
+                .order_by("created_at")
+                .first()
+            )
+
+            if punishment:
+                punishment.is_active = False
+                punishment.save(update_fields=["is_active"])
         else:
             Punishment.objects.get_or_create(
                 reservation=reservation,
