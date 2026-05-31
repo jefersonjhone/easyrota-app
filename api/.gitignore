@@ -3,6 +3,7 @@ __pycache__/
 .env
 db.sqlite3
 .venv
+*.pem
 
 # Sphinx documentation
 docs/_build/

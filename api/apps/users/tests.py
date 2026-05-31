@@ -442,6 +442,55 @@ class DriverProfileTests(APITestCase):
 
         assert "cnh" in exc.value.message_dict
 
+
+class WebPushSubscriptionTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            email="push@teste.com",
+            full_name="Push Teste",
+            password="12345678",
+            is_active=True,
+        )
+        self.client.force_authenticate(user=self.user)
+        self.url = "/api/webpush/save_information/"
+
+    def _payload(self, status_type="subscribe"):
+        return {
+            "status_type": status_type,
+            "subscription": {
+                "endpoint": "https://example.com/push/1",
+                "keys": {
+                    "auth": "auth-key",
+                    "p256dh": "p256dh-key",
+                },
+            },
+            "browser": "pytest",
+        }
+
+    def test_subscribe_creates_subscription_and_push_info(self):
+        response = self.client.post(self.url, self._payload(), format="json")
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["status"] == "success"
+
+    def test_unsubscribe_returns_accepted(self):
+        response = self.client.post(
+            self.url,
+            self._payload(status_type="unsubscribe"),
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert response.data["status"] == "success"
+
+    def test_subscription_requires_authenticated_user(self):
+        self.client.logout()
+
+        response = self.client.post(self.url, self._payload(), format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
     def test_driver_profile_unique_cnh(self):
         user1 = CustomUser.objects.create_user(
             email="driver1@example.com",
