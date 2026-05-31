@@ -36,8 +36,10 @@ class TripAPITestCase(APITestCase):
             password="password123",
             full_name="Admin Supremo",
             is_active=True,
+            is_staff=True,
+            role="admin",
         )
-        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin_user)
 
         self.driver_user = CustomUser.objects.create_user(
             email="motorista@easyrota.com",
@@ -287,9 +289,9 @@ class CurrentTripPassengerAPITests(APITestCase):
         self.url = reverse("trip-current")
 
         self.admin_user = CustomUser.objects.create_superuser(
-            email="admin@easyrota.com", password="123", is_active=True
+            email="admin@easyrota.com", password="123", is_active=True, role="admin"
         )
-        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin_user)
 
         self.passenger_user = CustomUser.objects.create_user(
             email="estudante@teste.com", password="123", is_active=True
@@ -447,8 +449,9 @@ class TripCheckInAPITests(APITestCase):
             password="password123",
             full_name="Admin Checkin",
             is_active=True,
+            role="admin",
         )
-        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin_user)
 
         self.driver_user = CustomUser.objects.create_user(
             email="driver-checkin@easyrota.com",
