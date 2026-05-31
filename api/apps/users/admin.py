@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
 from .models import (
     AdministratorProfile,
@@ -12,7 +14,22 @@ from .models import (
 # Register your models here.
 
 
-class CustomUserList(admin.ModelAdmin):
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = CustomUser
+        fields = ("email",)
+
+
+class CustomUserChangeForm(UserChangeForm):
+    class Meta(UserChangeForm.Meta):
+        model = CustomUser
+        fields = ("email",)
+
+
+class CustomUserList(UserAdmin):
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
+
     list_display = ("email", "full_name", "is_staff", "is_active", "date_joined")
     list_filter = ("is_staff", "is_active")
     search_fields = ("email", "full_name")
@@ -34,6 +51,15 @@ class CustomUserList(admin.ModelAdmin):
             },
         ),
         ("Important dates", {"fields": ("last_login",)}),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "password", "password2", "full_name"),
+            },
+        ),
     )
 
 
