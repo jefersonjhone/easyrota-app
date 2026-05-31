@@ -161,10 +161,15 @@ class TripViewSet(viewsets.ModelViewSet):
                 id=passenger_uuid
             )  # trocar por uuid se for usar
         except User.DoesNotExist:
-            return Response(
-                {"error": "QR Code invalido ou usuario inexistente."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            try:
+                passenger = GuestPassenger.objects.get(
+                    id=passenger_uuid
+                )  # trocar por uuid se for usar
+            except GuestPassenger.DoesNotExist:
+                return Response(
+                    {"error": "QR Code invalido ou usuario inexistente."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                    )
 
         reservation = (
             Reservation.objects
