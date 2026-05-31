@@ -254,6 +254,7 @@ class TripViewSet(viewsets.ModelViewSet):
 
         if trip.driver and trip.driver == request.user.driver_profile:
             trip.bus = bus
+            trip.capacity = bus.seating_capacity
             trip.save()
             return Response(
                 {"status": "Onibus associado com sucesso."}, status=status.HTTP_200_OK
