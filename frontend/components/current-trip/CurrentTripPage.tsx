@@ -14,6 +14,7 @@ import { apiFetch } from "@/lib/api";
 import { formatTripDate } from "@/features/user-home/config";
 import PassengerQRCode from "@/lib/ui/qr-code";
 import { GuestForm } from "./GuestForm";
+import { useAuthStore } from "@/features/auth/store/auth-store";
 
 type CurrentTripData = {
   id: number;
@@ -29,7 +30,7 @@ type CurrentTripData = {
   minutes_remaining: number | null;
   status_route: string;
   passenger_identifier: string;
-  has_checked_in : boolean;
+  has_checked_in: boolean;
 };
 
 export function CurrentTripPage() {
@@ -37,6 +38,7 @@ export function CurrentTripPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const showMinutesCard = trip !== null && trip.minutes_remaining !== null;
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     const loadCurrentTrip = async () => {
@@ -97,7 +99,7 @@ export function CurrentTripPage() {
             <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
               <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
                 <PassengerQRCode identifier={trip.passenger_identifier} />
-                
+
                 {trip.has_checked_in ? (
                   <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-semibold border border-green-200 flex items-center gap-2">
                     Check-in Realizado
@@ -186,8 +188,11 @@ export function CurrentTripPage() {
                 </div>
               </CardContent>
             </Card>
-            <GuestForm tripId={trip.id}
-            />
+            {user?.profile_type == "CIVIL-SERVANT" ? (
+              <GuestForm tripId={trip.id} />
+            ) : (
+              <></>
+            )}
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-600">
