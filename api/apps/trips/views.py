@@ -14,9 +14,7 @@ from apps.reservations.services import process_trip_punishments
 
 from ..reservations.models import Reservation
 from ..reservations.serializers import ReservationSerializer
-from ..reservations.services import (
-    ACTIVE_RESERVATION_STATUSES, sync_trip_status
-)
+from ..reservations.services import ACTIVE_RESERVATION_STATUSES, sync_trip_status
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,

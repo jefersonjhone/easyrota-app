@@ -108,7 +108,15 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ("id", "email", "full_name", "profile_type", "admin_profile", "student_profile", "civil_servant_profile")
+        fields = (
+            "id", 
+            "email", 
+            "full_name",
+            "profile_type", 
+            "admin_profile", 
+            "student_profile",
+            "civil_servant_profile",
+        )
 
     def get_profile_type(self, obj):
         admin_profile = getattr(obj, "admin_profile", None)

@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from ..trips.models import Trip, GuestPassenger
+from ..trips.models import GuestPassenger, Trip
 from .models import Punishment, Reservation
 from .services import (
     get_reservation_status_for_user,

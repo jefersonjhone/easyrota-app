@@ -45,7 +45,7 @@ def get_trip_occupancy(trip):
     total = active_reservations.count()
     servers = active_reservations.filter(civil_servant__isnull=False).count()
     guests = active_reservations.filter(guest_passenger__isnull=False).count()
-    return total, servers+guests
+    return total, servers + guests
 
 
 def trip_has_quorum(trip):

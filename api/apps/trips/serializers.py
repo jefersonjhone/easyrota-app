@@ -328,7 +328,10 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         user = request.user
         if user.civil_servant_profile is None:
             return []
-        guests = GuestPassenger.objects.filter(recorded_by=user.civil_servant_profile, trip=obj.id)
+        guests = GuestPassenger.objects.filter(
+            recorded_by=user.civil_servant_profile, 
+            trip=obj.id,
+        )
 
         return GuestPassengerSerializer(guests, many=True).data
 
