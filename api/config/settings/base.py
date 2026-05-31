@@ -46,7 +46,15 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.trips",
     "apps.reservations",
+    "webpush",
+    "django_apscheduler",
 ]
+
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": os.getenv("VAPID_PUBLIC_KEY", "dummy"),
+    "VAPID_PRIVATE_KEY": os.getenv("VAPID_PRIVATE_KEY", "dummy"),
+    "VAPID_ADMIN_EMAIL": "admin@easyrota.com",
+}
 
 AUTH_USER_MODEL = "users.CustomUser"
 
@@ -87,6 +95,9 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+        "OPTIONS": {
+            "timeout": 20,
+        },
     }
 }
 

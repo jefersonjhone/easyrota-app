@@ -76,6 +76,22 @@ class Trip(models.Model):
     # for custom queryset methods
     objects = TripQuerySet.as_manager()
 
+    @property
+    def has_server(self):
+        """Checks if there is at least 1 civil servant confirmed on the bus. [RF08]"""
+        return self.reservation_set.filter(
+            status="CONFIRMADA", civil_servant__isnull=False
+        ).exists()
+
+    @property
+    def has_minimum_quorum(self):
+        """
+        Checks if the minimum passenger quorum is met (min 5 people, at least 1 server).
+        [RF06]
+        """
+        confirmed_count = self.reservation_set.filter(status="CONFIRMADA").count()
+        return confirmed_count >= 5 and self.has_server
+
     def __str__(self):
         return f"Trip on {self.trip_date} - ({self.route})"
 

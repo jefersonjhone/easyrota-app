@@ -2,6 +2,7 @@
 import * as React from 'react'
 import { Outlet, createRootRoute } from '@tanstack/react-router'
 import { requireAuth } from '@/features/auth/services/require-auth'
+import { subscribeUserToPush } from '@/lib/push-notifications'
 
 export const Route = createRootRoute({
   beforeLoad: requireAuth,
@@ -9,6 +10,10 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
+  React.useEffect(() => {
+    subscribeUserToPush().catch(console.error)
+  }, [])
+
   return (
     <React.Fragment>
       <Outlet />
