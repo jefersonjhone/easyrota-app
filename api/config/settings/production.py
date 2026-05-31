@@ -1,18 +1,13 @@
-from .base import *
 import dj_database_url
+
+from .base import *
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
-DATABASES = {
-    "default": dj_database_url.parse(
-        os.environ["DATABASE_URL"]
-    )
-}
+DATABASES = {"default": dj_database_url.parse(os.environ["DATABASE_URL"])}
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-SECURE_PROXY_SSL_HEADER = (
-    ("HTTP_X_FORWARDED_PROTO", "https")
-)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
