@@ -30,14 +30,18 @@ class Command(BaseCommand):
         bus = Bus.objects.create(number_plate="TESTE01", seating_capacity=20, brand="BusCo", administrator=admin_profile)
         route = Route.objects.create(origin="UEFS", destiny="Centro", departure_time="12:00:00", arrival_time="13:00:00", administrator=admin_profile)
         
-        # Define horário: 31 minutos a partir de agora
-        future_time = timezone.now() + timedelta(minutes=31)
+        # Define horário: exatamente 31 minutos a partir de AGORA
+        now = timezone.now()
+        future_time = now + timedelta(minutes=31)
         
-        Trip.objects.create(
+        trip = Trip.objects.create(
             trip_date=future_time.date(),
             status="CONFIRMADA",
             departure_timestamp=future_time,
             bus=bus,
             route=route
         )
-        self.stdout.write(self.style.SUCCESS(f"Viagem de teste criada para {future_time}!"))
+        self.stdout.write(self.style.SUCCESS(f"VIAGEM CRIADA COM SUCESSO!"))
+        self.stdout.write(self.style.SUCCESS(f"Horário de Saída: {future_time.strftime('%H:%M:%S')}"))
+        self.stdout.write(self.style.SUCCESS(f"A notificação deve disparar às: {(future_time - timedelta(minutes=30)).strftime('%H:%M:%S')}"))
+        self.stdout.write(self.style.WARNING("Certifique-se de que o comando 'run_scheduler' esteja rodando em outro terminal."))
