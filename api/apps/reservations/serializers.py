@@ -73,6 +73,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         if hasattr(user, "student_profile"):
             reservation.student = user.student_profile
         elif hasattr(user, "civil_servant_profile"):
+            print("[debug] hasattr civil servant profile")
             reservation.civil_servant = user.civil_servant_profile
 
         if trip_has_capacity(trip):

@@ -53,10 +53,7 @@ def trip_has_quorum(trip):
 
 
 def trip_has_capacity(trip):
-    if not trip.bus:
-        return False
-
-    return get_active_reservations_queryset(trip).count() < trip.bus.seating_capacity
+    return get_active_reservations_queryset(trip).count() < trip.seating_capacity
 
 
 def get_reservation_status_for_user(user, trip):
