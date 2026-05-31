@@ -34,6 +34,10 @@ class Command(BaseCommand):
         now = timezone.now()
         future_time = now + timedelta(minutes=31)
         
+        # Para exibição no terminal (Horário Local)
+        local_future = timezone.localtime(future_time)
+        local_notify = timezone.localtime(future_time - timedelta(minutes=30))
+
         trip = Trip.objects.create(
             trip_date=future_time.date(),
             status="CONFIRMADA",
@@ -42,6 +46,7 @@ class Command(BaseCommand):
             route=route
         )
         self.stdout.write(self.style.SUCCESS(f"VIAGEM CRIADA COM SUCESSO!"))
-        self.stdout.write(self.style.SUCCESS(f"Horário de Saída: {future_time.strftime('%H:%M:%S')}"))
-        self.stdout.write(self.style.SUCCESS(f"A notificação deve disparar às: {(future_time - timedelta(minutes=30)).strftime('%H:%M:%S')}"))
+        self.stdout.write(self.style.SUCCESS(f"Horário de Saída (Local): {local_future.strftime('%H:%M:%S')}"))
+        self.stdout.write(self.style.SUCCESS(f"A notificação deve disparar às: {local_notify.strftime('%H:%M:%S')}"))
+        self.stdout.write(self.style.WARNING(f"Hora atual no sistema (Local): {timezone.localtime().strftime('%H:%M:%S')}"))
         self.stdout.write(self.style.WARNING("Certifique-se de que o comando 'run_scheduler' esteja rodando em outro terminal."))
