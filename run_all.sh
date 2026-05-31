@@ -1,28 +1,57 @@
 #!/bin/bash
-# run_all.sh - Setup e execução completa para testes de notificação
+set -euo pipefail
 
-echo "--- Limpando banco de dados antigo ---"
-rm -f api/db.sqlite3
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+API_DIR="$ROOT_DIR/api"
 
-echo "--- Preparando banco de dados e dados de teste ---"
-cd api
-# Cria as migrações se houver mudanças pendentes
+export PATH="$HOME/.local/share/mise/bin:$HOME/.bun/bin:$HOME/.local/bin:$PATH"
+
+echo "--- Verificando ferramentas ---"
+if ! command -v mise >/dev/null 2>&1; then
+  echo "mise não encontrado"
+  exit 1
+fi
+if ! command -v bun >/dev/null 2>&1; then
+  echo "bun não encontrado"
+  exit 1
+fi
+if ! command -v poetry >/dev/null 2>&1; then
+  echo "poetry não encontrado"
+  exit 1
+fi
+
+echo "--- Garantindo variáveis de ambiente ---"
+if [ ! -f "$API_DIR/.env" ]; then
+  if [ -f "$API_DIR/.env.development" ]; then
+    cp "$API_DIR/.env.development" "$API_DIR/.env"
+  else
+    cat > "$API_DIR/.env" <<'EOF'
+SECRET_KEY='django-insecure-test-key'
+DEBUG=True
+EOF
+  fi
+fi
+
+echo "--- Instalando dependências ---"
+mise install
+bun install --silent
+poetry install --no-interaction
+
+echo "--- Preparando banco de dados ---"
+rm -f "$API_DIR/db.sqlite3"
+cd "$API_DIR"
 poetry run python manage.py makemigrations
-# Aplica as migrações
 poetry run python manage.py migrate
-# Carrega os dados permitidos
 poetry run python manage.py loaddata apps/users/fixtures/allowed_staff.json
-# Cria a viagem de teste e o admin
 poetry run python manage.py seed_test_trip
-cd ..
 
-echo "--- Iniciando processos em paralelo ---"
-# Backend
-(cd api && poetry run python manage.py runserver) & 
-# Scheduler (Crucial para as notificações)
-(cd api && poetry run python manage.py run_scheduler) & 
-# Frontend
-bun dev &
+echo "--- Iniciando aplicação completa ---"
+echo "Backend:  http://127.0.0.1:8000"
+echo "Frontend: http://localhost:5173"
+echo "Scheduler: ativo junto com o backend"
 
-trap "kill 0" EXIT
-wait
+trap 'kill 0' EXIT
+(poetry run python manage.py runserver) &
+(poetry run python manage.py run_scheduler) &
+cd "$ROOT_DIR"
+bun dev

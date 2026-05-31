@@ -7,41 +7,107 @@ function urlBase64ToUint8Array(base64String: string) {
     return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
 
+function isPushSupported() {
+    return (
+        'serviceWorker' in navigator &&
+        'Notification' in window &&
+        'PushManager' in window
+    );
+}
+
+async function getPushRegistration() {
+    if (!isPushSupported()) return null;
+
+    const existingRegistration = await navigator.serviceWorker.getRegistration('/');
+    if (existingRegistration) {
+        return existingRegistration;
+    }
+
+    await navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+    });
+    return navigator.serviceWorker.ready;
+}
+
+async function syncSubscription(
+    subscription: PushSubscription,
+    statusType: 'subscribe' | 'unsubscribe',
+) {
+    await apiFetch('/webpush/save_information/', {
+        method: 'POST',
+        body: JSON.stringify({
+            status_type: statusType,
+            subscription: subscription.toJSON(),
+            browser: navigator.userAgent,
+        }),
+    });
+}
+
+export async function getCurrentPushSubscription() {
+    const registration = await navigator.serviceWorker.getRegistration('/');
+    if (!registration) return null;
+
+    return registration.pushManager.getSubscription();
+}
+
 export async function subscribeUserToPush() {
-    const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-    
-    if (!VAPID_PUBLIC_KEY) return;
+    const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
-    if ('serviceWorker' in navigator) {
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            
-            // Verifica se já existe uma inscrição para evitar erros de serviço
-            const existingSubscription = await registration.pushManager.getSubscription();
-            if (existingSubscription) {
-                return; 
-            }
+    if (!vapidPublicKey || !isPushSupported()) return false;
 
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') return;
-
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-            });
-
-            await apiFetch('/webpush/save_information/', {
-                method: 'POST',
-                body: JSON.stringify({
-                    status_type: 'subscribe',
-                    subscription: subscription.toJSON(),
-                    browser: navigator.userAgent
-                })
-            });
-            console.log("Push notification subscription successful.");
-        } catch (error) {
-            // Se o erro for AbortError, geralmente é rede ou bloqueio do browser
-            console.error("Push registration failed:", error);
+    try {
+        if (Notification.permission === 'denied') {
+            return false;
         }
+
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return false;
+
+        const registration = await getPushRegistration();
+        if (!registration) return false;
+
+        const existingSubscription = await registration.pushManager.getSubscription();
+        let subscription = existingSubscription;
+
+        if (!subscription) {
+            const applicationServerKey = urlBase64ToUint8Array(
+                vapidPublicKey.trim().replace(/^['"]|['"]$/g, ''),
+            );
+
+            try {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey,
+                });
+            } catch (error) {
+                console.error('Push subscribe failed:', error);
+                return false;
+            }
+        }
+
+        await syncSubscription(subscription, 'subscribe');
+        return true;
+    } catch (error) {
+        console.error('Push registration failed:', error);
+        return false;
+    }
+}
+
+export async function unsubscribeUserFromPush() {
+    if (!isPushSupported()) return false;
+
+    try {
+        const registration = await getPushRegistration();
+        if (!registration) return false;
+
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) return true;
+
+        await subscription.unsubscribe();
+        await syncSubscription(subscription, 'unsubscribe');
+        return true;
+    } catch (error) {
+        console.error('Push unregistration failed:', error);
+        return false;
     }
 }

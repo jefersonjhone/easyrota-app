@@ -1,6 +1,6 @@
 import { useLogoutMutation } from '@/features/auth/hooks/useLogout'
 import { useDeleteAccountMutation } from '@/features/auth/hooks/useDeleteAccount'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Input } from '@/lib/ui/input'
 
 import {
@@ -13,12 +13,13 @@ import {
   IdentificationBadgeIcon,
   UserSquareIcon,
 } from "@phosphor-icons/react"
-import { Dialog, DialogContent } from '@/lib/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/lib/ui/dialog'
 import { Switch } from '@/lib/ui/switch'
 import { Separator } from '@/lib/ui/separator'
 
 import { Button } from '@/lib/ui/button'
 import { Field, FieldGroup, FieldLabel } from "@/lib/ui/field"
+import { getCurrentPushSubscription, subscribeUserToPush, unsubscribeUserFromPush } from '@/lib/push-notifications'
 
 
 import type { ProfileUser } from "@/features/user-home/types"
@@ -40,9 +41,50 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
   const [openSettings, setOpenSettings] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
   const canDeleteAccount =
     user.profile_type === "STUDENT" ||
     user.profile_type === "CIVIL-SERVANT"
+
+  useEffect(() => {
+    let cancelled = false
+
+    getCurrentPushSubscription()
+      .then((subscription) => {
+        if (!cancelled) {
+          setPushEnabled(Boolean(subscription))
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPushEnabled(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handlePushToggle = async (enabled: boolean) => {
+    setPushLoading(true)
+    setPushEnabled(enabled)
+
+    try {
+      const success = enabled
+        ? await subscribeUserToPush()
+        : await unsubscribeUserFromPush()
+
+      if (!success) {
+        setPushEnabled(!enabled)
+      }
+    } catch {
+      setPushEnabled(!enabled)
+    } finally {
+      setPushLoading(false)
+    }
+  }
 
   
   return (
@@ -97,7 +139,11 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
       </div>
       <Dialog open={openSettings} onOpenChange={setOpenSettings}>
         <DialogContent className="w-full max-w-lg space-y-2  md:space-y-6">
-      
+          <DialogTitle>Configurações</DialogTitle>
+          <DialogDescription>
+            Gerencie preferências de notificações, aparência e conta.
+          </DialogDescription>
+
           <section className="space-y-3">
             <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
               Notificações
@@ -118,6 +164,9 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
                 <Switch
                   id="push-notifications"
                   name="push-notifications"
+                  checked={pushEnabled}
+                  disabled={pushLoading}
+                  onCheckedChange={handlePushToggle}
                 />
                 <FieldLabel htmlFor="push-notifications">
                   Receber notificações push

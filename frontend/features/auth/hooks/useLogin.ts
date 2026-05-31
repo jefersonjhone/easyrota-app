@@ -3,7 +3,6 @@ import {
   useAuthStore 
 } from "@features/auth/store/auth-store"
 import type { AuthUser } from "../types/auth"
-import { subscribeUserToPush } from "@lib/push-notifications"
 
 
 export type LoginValues = {
