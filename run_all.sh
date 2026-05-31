@@ -38,7 +38,10 @@ bun install --silent
 poetry install --no-interaction
 
 echo "--- Preparando banco de dados ---"
-rm -f "$API_DIR/db.sqlite3"
+if [ "${RESET_DB:-0}" = "1" ]; then
+  rm -f "$API_DIR/db.sqlite3"
+  echo "Banco removido porque RESET_DB=1"
+fi
 cd "$API_DIR"
 poetry run python manage.py makemigrations
 poetry run python manage.py migrate
@@ -46,12 +49,12 @@ poetry run python manage.py loaddata apps/users/fixtures/allowed_staff.json
 poetry run python manage.py seed_test_trip
 
 echo "--- Iniciando aplicação completa ---"
-echo "Backend:  http://127.0.0.1:8000"
-echo "Frontend: http://localhost:5173"
-echo "Scheduler: ativo junto com o backend"
+echo "Backend:   http://127.0.0.1:8000"
+echo "Frontend:  http://localhost:5173"
+echo "Scheduler: Iniciando em 3 segundos..."
 
 trap 'kill 0' EXIT
 (poetry run python manage.py runserver) &
-(poetry run python manage.py run_scheduler) &
+(sleep 3 && echo "--- Agendador Ativo ---" && poetry run python manage.py run_scheduler) &
 cd "$ROOT_DIR"
 bun dev

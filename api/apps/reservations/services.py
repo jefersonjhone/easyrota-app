@@ -42,21 +42,22 @@ def get_waitlist_queryset(trip):
 
 def get_trip_occupancy(trip):
     active_reservations = get_active_reservations_queryset(trip)
-    total = active_reservations.count()
-    servers = active_reservations.filter(civil_servant__isnull=False).count()
+    total = active_reservations.count() + trip.trip_passengers.count()
+    servers = active_reservations.filter(civil_servant__isnull=False).count() + trip.trip_passengers.count()
     return total, servers
 
 
 def trip_has_quorum(trip):
     passengers, servers = get_trip_occupancy(trip)
-    return passengers >= QUORUM_MIN_PASSENGERS and servers >= QUORUM_MIN_SERVERS
+    return servers >= QUORUM_MIN_SERVERS
 
 
 def trip_has_capacity(trip):
     if not trip.bus:
         return False
 
-    return get_active_reservations_queryset(trip).count() < trip.bus.seating_capacity
+    occupied = get_active_reservations_queryset(trip).count() + trip.trip_passengers.count()
+    return occupied < trip.bus.seating_capacity
 
 
 def get_reservation_status_for_user(user, trip):
@@ -87,6 +88,19 @@ def get_priority_tuple(reservation):
     return (4, reservation.created_at)
 
 
+def evict_lowest_priority_active_reservation(trip):
+    active_reservations = list(get_active_reservations_queryset(trip))
+    if not active_reservations:
+        return None
+
+    lowest_priority = sorted(active_reservations, key=get_priority_tuple, reverse=True)[0]
+    if lowest_priority.civil_servant_id:
+        return None
+
+    lowest_priority.delete()
+    return lowest_priority
+
+
 def promote_next_waitlisted_reservation(trip):
     if trip_has_capacity(trip):
         waitlisted = list(get_waitlist_queryset(trip))
@@ -114,7 +128,7 @@ def sync_trip_status(trip):
 
     if passengers == 0:
         desired_status = "RISCO DE CANCELAMENTO"
-    elif passengers >= QUORUM_MIN_PASSENGERS and servers >= QUORUM_MIN_SERVERS:
+    elif servers >= QUORUM_MIN_SERVERS:
         desired_status = "CONFIRMADA"
     elif not is_reservation_open(trip):
         desired_status = "RISCO DE CANCELAMENTO"

@@ -3,8 +3,13 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.reservations.models import Punishment, Reservation
+from apps.reservations.services import (
+    evict_lowest_priority_active_reservation,
+    trip_has_capacity,
+    sync_trip_status,
+)
 
-from ...trips.models import TripPassenger
+from ...trips.models import Trip, TripPassenger
 from ..models.auth import AllowedStaff
 from ..models.profiles import DriverProfile
 from ..permissions import IsDriver, IsSuperAdmin
@@ -141,9 +146,42 @@ class DriverTripPassengerView(views.APIView):
             registration_number=serializer.validated_data["registration_number"],
         )
 
-        passenger = TripPassenger.objects.create(
+        trip = Trip.objects.select_related("bus", "route").get(id=trip_id)
+
+        existing_reservation = Reservation.objects.filter(
             trip_id=trip_id,
+            civil_servant__civil_servant_id=allowed_staff.registration_number,
+        ).first()
+
+        if existing_reservation:
+            if trip.bus and not trip_has_capacity(trip):
+                return Response(
+                    {"detail": "Não há vaga disponível para priorizar o servidor."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            existing_reservation.status = "CONFIRMADA"
+            existing_reservation.save(update_fields=["status"])
+            sync_trip_status(existing_reservation.trip)
+
+            return Response(
+                {"reservation_id": existing_reservation.id},
+                status=status.HTTP_200_OK,
+            )
+
+        if trip.bus and not trip_has_capacity(trip):
+            evicted = evict_lowest_priority_active_reservation(trip)
+            if evicted is None:
+                return Response(
+                    {"detail": "Não há vaga disponível para priorizar o servidor."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+        passenger = TripPassenger.objects.create(
+            trip=trip,
             allowed_staff=allowed_staff,
             recorded_by=request.user.driver_profile,
         )
+        sync_trip_status(trip)
+
         return Response({"id": passenger.id}, status=status.HTTP_201_CREATED)

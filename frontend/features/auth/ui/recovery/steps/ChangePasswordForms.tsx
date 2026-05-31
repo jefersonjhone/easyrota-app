@@ -51,6 +51,7 @@ export function ChangePasswordForms({ token, otp }: Props) {
     try {
       await apiFetch("/auth/password-reset-confirm/", {
         method: "POST",
+        auth: false,
         body: JSON.stringify({
           token,
           code: otp,

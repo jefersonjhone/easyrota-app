@@ -78,16 +78,19 @@ class Trip(models.Model):
 
     @property
     def has_server(self):
-        """Checks if there is at least 1 civil servant confirmed on the bus. [RF08]"""
-        return self.reservation_set.filter(
+        """Checks if there is at least 1 server passenger registered for the trip."""
+        if self.reservation_set.filter(
             status="CONFIRMADA", civil_servant__isnull=False
-        ).exists()
+        ).exists():
+            return True
+
+        return self.trip_passengers.exists()
 
     @property
     def has_minimum_quorum(self):
         """
         Checks if the minimum passenger quorum is met.
-        A trip happens if there is at least one civil servant confirmed.
+        For this project, one registered server already satisfies quorum.
         """
         return self.has_server
 
@@ -120,7 +123,7 @@ class Occurrence(models.Model):
 class TripPassenger(models.Model):
     """Stores a non-account passenger record for a trip."""
 
-    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_passengers")
     allowed_staff = models.ForeignKey(
         "users.AllowedStaff", on_delete=models.CASCADE, related_name="trip_passengers"
     )

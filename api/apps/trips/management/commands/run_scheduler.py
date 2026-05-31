@@ -14,7 +14,7 @@ from webpush import send_user_notification
 logger = logging.getLogger(__name__)
 
 def check_upcoming_trips_quorum():
-    # Verifica viagens que vão sair em exatamente 30 a 31 minutos
+    # Verifica viagens que vão sair em 30 a 31 minutos
     now = timezone.now()
     target_time_start = now + timedelta(minutes=30)
     target_time_end = now + timedelta(minutes=31)
@@ -27,6 +27,7 @@ def check_upcoming_trips_quorum():
 
     for trip in trips:
         if not trip.has_minimum_quorum:
+            logger.info("Trip %s sem quórum mínimo. Disparando notificações.", trip.id)
             trip.status = "RISCO DE CANCELAMENTO"
             trip.save()
 
@@ -37,12 +38,14 @@ def check_upcoming_trips_quorum():
                 payload = {
                     "head": "Aviso de Quórum Mínimo",
                     "body": f"A viagem {trip} não atingiu o quórum mínimo. Há risco de cancelamento.",
-                    "url": "/app/"
+                    "url": "/app/",
                 }
                 try:
                     send_user_notification(user=user, payload=payload, ttl=1000)
                 except Exception as e:
                     logger.error(f"Failed to send webpush notification to {user}: {e}")
+        else:
+            logger.info("Trip %s com quórum mínimo atendido.", trip.id)
 
 @util.close_old_connections
 def delete_old_job_executions(max_age=604_800):
@@ -52,6 +55,7 @@ class Command(BaseCommand):
     help = "Runs APScheduler."
 
     def handle(self, *args, **options):
+        self.stdout.write(self.style.WARNING("Scheduler iniciado. Verificando notificações a cada 1 minuto."))
         scheduler = BlockingScheduler(timezone=timezone.get_current_timezone())
         scheduler.add_jobstore(DjangoJobStore(), "default")
 

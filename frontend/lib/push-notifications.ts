@@ -50,6 +50,24 @@ export async function getCurrentPushSubscription() {
     return registration.pushManager.getSubscription();
 }
 
+export async function syncBrowserPushSubscription() {
+    if (!isPushSupported()) return false;
+
+    try {
+        const registration = await getPushRegistration();
+        if (!registration) return false;
+
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) return false;
+
+        await syncSubscription(subscription, 'subscribe');
+        return true;
+    } catch (error) {
+        console.error('Push sync failed:', error);
+        return false;
+    }
+}
+
 export async function subscribeUserToPush() {
     const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 

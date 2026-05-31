@@ -96,17 +96,17 @@ class NotificationFlowTests(TestCase):
             route=self.route,
         )
 
-        civ_user = CustomUser.objects.create_user(
-            email="servidor2@test.com",
-            full_name="Servidor 2",
+        student_user = CustomUser.objects.create_user(
+            email="aluno-sem-servidor@test.com",
+            full_name="Aluno Sem Servidor",
             password="12345678",
             is_active=True,
         )
-        civ = CivilServantProfile.objects.create(
-            user=civ_user,
-            civil_servant_id="22223333",
+        student = StudentProfile.objects.create(
+            user=student_user,
+            student_id="20240009",
         )
-        Reservation.objects.create(trip=trip, civil_servant=civ, status="CONFIRMADA")
+        Reservation.objects.create(trip=trip, student=student, status="CONFIRMADA")
 
         with patch("apps.trips.management.commands.run_scheduler.send_user_notification") as mocked_send:
             check_upcoming_trips_quorum()

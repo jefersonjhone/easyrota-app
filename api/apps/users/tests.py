@@ -10,7 +10,8 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from apps.trips.models import Bus, Route, Trip
+from apps.trips.models import Bus, Route, Trip, TripPassenger
+from apps.reservations.models import Reservation
 
 from .models.auth import AllowedStaff, MFAChallenge
 from .models.profiles import (
@@ -483,6 +484,77 @@ class WebPushSubscriptionTests(APITestCase):
 
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert response.data["status"] == "success"
+
+    def test_driver_can_register_allowed_staff_as_reservation(self):
+        admin_user = CustomUser.objects.create_superuser(
+            email="admin.reg@test.com",
+            password="SenhaSegura123",
+            full_name="Admin Reg",
+        )
+        admin_profile = AdministratorProfile.objects.create(user=admin_user)
+
+        driver_user = CustomUser.objects.create_user(
+            email="driver.registrar@teste.com",
+            full_name="Motorista Registrar",
+            password="SenhaSegura123",
+            is_active=True,
+        )
+        DriverProfile.objects.create(user=driver_user, cnh="12345678001")
+
+        trip = Trip.objects.create(
+            trip_date=timezone.now().date() + timedelta(days=1),
+            status="CONFIRMADA",
+            bus=Bus.objects.create(
+                number_plate="REG-1234",
+                seating_capacity=1,
+                brand="Marcopolo",
+                administrator=admin_profile,
+            ),
+            route=Route.objects.create(
+                origin="Feira",
+                destiny="Salvador",
+                departure_time="08:00:00",
+                arrival_time="10:00:00",
+                administrator=admin_profile,
+            ),
+        )
+
+        allowed = AllowedStaff.objects.create(
+            name="SERVIDOR PRIORITARIO",
+            registration_number="99990000",
+        )
+        civil_user = CustomUser.objects.create_user(
+            email="servidor.prior@teste.com",
+            full_name="Servidor Prioritario",
+            password="SenhaSegura123",
+            is_active=True,
+        )
+        civil_profile = CivilServantProfile.objects.create(
+            user=civil_user,
+            civil_servant_id=allowed.registration_number,
+        )
+
+        reservation = Reservation.objects.create(
+            trip=trip,
+            civil_servant=civil_profile,
+            status="PENDENTE",
+        )
+
+        client = APIClient()
+        client.force_authenticate(user=driver_user)
+        response = client.post(
+            "/api/staff/passengers/",
+            {
+                "trip": trip.id,
+                "name": allowed.name,
+                "registration_number": allowed.registration_number,
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        reservation.refresh_from_db()
+        assert reservation.status == "PENDENTE"
 
     def test_subscription_requires_authenticated_user(self):
         self.client.logout()

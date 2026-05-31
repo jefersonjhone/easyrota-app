@@ -82,7 +82,8 @@ class AvailableTripListView(generics.ListAPIView):
                 reserved_seats=Count(
                     "reservation",
                     filter=Q(reservation__status__in=reserved_statuses),
-                )
+                ),
+                passenger_seats=Count("trip_passengers"),
             )
             .order_by("trip_date", "route__departure_time")
         )
