@@ -30,10 +30,7 @@ urlpatterns = [
     path("api/dashboard/", include("apps.dashboard.urls")),
 ]
 
-settings_module = os.getenv(
-    "DJANGO_SETTINGS_MODULE", 
-    "config.settings.production"
-)
+settings_module = os.getenv("DJANGO_SETTINGS_MODULE", "config.settings.production")
 
 if settings.DEBUG and settings_module == "config.settings.development":
     from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
