@@ -106,10 +106,6 @@ class TripSerializer(serializers.ModelSerializer):
     )
     arrival_time = serializers.CharField(source="route.arrival_time", read_only=True)
 
-    seating_capacity = serializers.IntegerField(
-        source="bus.seating_capacity", read_only=True
-    )
-
     class Meta:
         model = Trip
         fields = "__all__"
@@ -299,8 +295,10 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     status_route = serializers.SerializerMethodField()
 
     passenger_identifier = serializers.SerializerMethodField()
-    
+
     has_checked_in = serializers.SerializerMethodField()
+
+    passenger_guests = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -319,7 +317,20 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             "status_route",
             "passenger_identifier",
             "has_checked_in",
+            "passenger_guests",
         ]
+
+    def get_passenger_guests(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return []
+
+        user = request.user
+        if user.civil_servant_profile is None:
+            return []
+        guests = GuestPassenger.objects.filter(recorded_by=user.civil_servant_profile, trip=obj.id)
+
+        return GuestPassengerSerializer(guests, many=True).data
 
     def get_status_trip(self, obj):
         return obj.get_status_display()
@@ -453,4 +464,4 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GuestPassenger
-        fields = ("id", "cpf", "full_name", "recorded_by", "trip")
+        fields = ("id", "cpf", "full_name")

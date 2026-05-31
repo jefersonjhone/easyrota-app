@@ -103,10 +103,12 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
 
     profile_type = serializers.SerializerMethodField()
     admin_profile = serializers.SerializerMethodField()
+    student_profile = serializers.SerializerMethodField()
+    civil_servant_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ("id", "email", "full_name", "profile_type", "admin_profile")
+        fields = ("id", "email", "full_name", "profile_type", "admin_profile", "student_profile", "civil_servant_profile")
 
     def get_profile_type(self, obj):
         admin_profile = getattr(obj, "admin_profile", None)
@@ -131,6 +133,18 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
         admin_profile = getattr(obj, "admin_profile", None)
         if admin_profile is not None:
             return AdministratorProfileSerializer(admin_profile).data
+        return None
+
+    def get_student_profile(self, obj):
+        student_profile = getattr(obj, "student_profile", None)
+        if student_profile is not None:
+            return StudentProfileSerializer(student_profile).data
+        return None
+
+    def get_civil_servant_profile(self, obj):
+        civil_servant_profile = getattr(obj, "civil_servant_profile", None)
+        if civil_servant_profile is not None:
+            return CivilServantProfileSerializer(civil_servant_profile).data
         return None
 
 

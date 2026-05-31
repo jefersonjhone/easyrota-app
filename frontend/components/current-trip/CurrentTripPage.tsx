@@ -8,12 +8,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/lib/ui/card";
-import { FieldDescription } from "@/lib/ui/field";
+import { FieldDescription, FieldLabel } from "@/lib/ui/field";
 import { Separator } from "@/lib/ui/separator";
 import { apiFetch } from "@/lib/api";
 import { formatTripDate } from "@/features/user-home/config";
 import PassengerQRCode from "@/lib/ui/qr-code";
 import { GuestForm } from "./GuestForm";
+import { useAuthStore } from "@/features/auth/store/auth-store";
+
+type PassengerGuest = {
+  id: string;
+  cpf: string;
+  full_name: string;
+};
 
 type CurrentTripData = {
   id: number;
@@ -29,7 +36,8 @@ type CurrentTripData = {
   minutes_remaining: number | null;
   status_route: string;
   passenger_identifier: string;
-  has_checked_in : boolean;
+  has_checked_in: boolean;
+  passenger_guests: PassengerGuest[];
 };
 
 export function CurrentTripPage() {
@@ -37,6 +45,7 @@ export function CurrentTripPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const showMinutesCard = trip !== null && trip.minutes_remaining !== null;
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     const loadCurrentTrip = async () => {
@@ -97,7 +106,7 @@ export function CurrentTripPage() {
             <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
               <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
                 <PassengerQRCode identifier={trip.passenger_identifier} />
-                
+
                 {trip.has_checked_in ? (
                   <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-semibold border border-green-200 flex items-center gap-2">
                     Check-in Realizado
@@ -109,6 +118,24 @@ export function CurrentTripPage() {
                 )}
               </CardContent>
             </Card>
+
+            {trip.passenger_guests.length > 0 ? (
+              <Card className="rounded-xl border overflow-hidden bg-white shadow-sm grid grid-cols-2">
+                {trip.passenger_guests.map(
+                  (passenger_guest: PassengerGuest) => (
+                    <>
+                      <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-2">
+                        <PassengerQRCode identifier={passenger_guest.id} />
+                        <FieldLabel>{passenger_guest.full_name}</FieldLabel>
+                        <FieldLabel>{passenger_guest.cpf}</FieldLabel>
+                      </CardContent>
+                    </>
+                  ),
+                )}
+              </Card>
+            ) : (
+              <></>
+            )}
 
             <Card className="rounded-xl border">
               <CardHeader>
@@ -186,8 +213,11 @@ export function CurrentTripPage() {
                 </div>
               </CardContent>
             </Card>
-            <GuestForm tripId={trip.id}
-            />
+            {user?.profile_type == "CIVIL-SERVANT" ? (
+              <GuestForm tripId={trip.id} />
+            ) : (
+              <></>
+            )}
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-600">
