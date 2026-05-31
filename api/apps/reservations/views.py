@@ -78,12 +78,6 @@ class AvailableTripListView(generics.ListAPIView):
             Trip.objects
             .filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
             .select_related("route", "bus")
-            .annotate(
-                reserved_seats=Count(
-                    "reservation",
-                    filter=Q(reservation__status__in=reserved_statuses),
-                )
-            )
             .order_by("trip_date", "route__departure_time")
         )
 

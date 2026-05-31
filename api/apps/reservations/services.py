@@ -111,6 +111,9 @@ def sync_trip_status(trip):
         return trip
 
     passengers, servers = get_trip_occupancy(trip)
+    print("passengers: ", passengers, " servers: ", servers)
+    trip.reserved_seats = servers
+    trip.save(update_fields=["reserved_seats"])
 
     if passengers == 0:
         desired_status = "RISCO DE CANCELAMENTO"

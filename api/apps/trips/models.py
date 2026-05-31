@@ -67,6 +67,7 @@ class Trip(models.Model):
     departure_timestamp = models.DateTimeField(null=True, blank=True)
     arrival_timestamp = models.DateTimeField(null=True, blank=True)
     seating_capacity = models.IntegerField(default=46)
+    reserved_seats = models.IntegerField(default=0)
 
     bus = models.ForeignKey(Bus, on_delete=models.SET_NULL, null=True, blank=True)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
