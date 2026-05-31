@@ -21,11 +21,9 @@ class RouteAPITests(APITestCase):
         )
 
         self.admin = CustomUser.objects.create_superuser(
-            email="admin@teste.com", password="12345678", is_active=True
+            email="admin@teste.com", password="12345678", is_active=True, role="admin"
         )
-        self.admin_profile = AdministratorProfile.objects.create(
-            user=self.admin, role="Administrator"
-        )
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin)
         self.url = reverse("route-list-create")
 
     def test_create_route_successfully(self):
