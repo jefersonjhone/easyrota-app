@@ -106,10 +106,6 @@ class TripSerializer(serializers.ModelSerializer):
     )
     arrival_time = serializers.CharField(source="route.arrival_time", read_only=True)
 
-    seating_capacity = serializers.IntegerField(
-        source="bus.seating_capacity", read_only=True
-    )
-
     class Meta:
         model = Trip
         fields = "__all__"

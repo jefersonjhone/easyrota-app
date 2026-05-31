@@ -270,6 +270,7 @@ class TripViewSet(viewsets.ModelViewSet):
 
         if trip.driver and trip.driver == request.user.driver_profile:
             trip.bus = None
+            trip.capacity = 46
             trip.save()
             return Response(
                 {"status": "Onibus desassociado com sucesso."},
