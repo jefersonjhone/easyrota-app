@@ -86,11 +86,10 @@ class Trip(models.Model):
     @property
     def has_minimum_quorum(self):
         """
-        Checks if the minimum passenger quorum is met (min 5 people, at least 1 server).
-        [RF06]
+        Checks if the minimum passenger quorum is met.
+        A trip happens if there is at least one civil servant confirmed.
         """
-        confirmed_count = self.reservation_set.filter(status="CONFIRMADA").count()
-        return confirmed_count >= 5 and self.has_server
+        return self.has_server
 
     def __str__(self):
         return f"Trip on {self.trip_date} - ({self.route})"
