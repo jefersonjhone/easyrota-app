@@ -1,7 +1,9 @@
 import { isTokenExpired } from "@/features/auth/services/decode-token"
 import { refreshSession } from "@/features/auth/services/refresh-session"
 import { useAuthStore } from "@/features/auth/store/auth-store"
+import { API_URL } from "@lib/config";
 
+  
 type ApiFetchOptions = RequestInit & {
   auth?: boolean,
   _retry?: boolean
@@ -56,7 +58,7 @@ export async function apiFetch<T>(
 
   const makeRequest = async () => {
     const accessToken = useAuthStore.getState().accessToken;
-    return fetch(`/api${input}`, {
+    return fetch(`${API_URL}${input}`, {
     ...rest,
     credentials: "include",
     headers: {
