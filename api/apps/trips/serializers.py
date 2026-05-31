@@ -464,4 +464,4 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GuestPassenger
-        fields = ("id", "cpf", "full_name", "recorded_by", "trip")
+        fields = ("id", "cpf", "full_name")

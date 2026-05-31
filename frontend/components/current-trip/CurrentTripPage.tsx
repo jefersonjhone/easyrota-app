@@ -8,13 +8,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/lib/ui/card";
-import { FieldDescription } from "@/lib/ui/field";
+import { FieldDescription, FieldLabel } from "@/lib/ui/field";
 import { Separator } from "@/lib/ui/separator";
 import { apiFetch } from "@/lib/api";
 import { formatTripDate } from "@/features/user-home/config";
 import PassengerQRCode from "@/lib/ui/qr-code";
 import { GuestForm } from "./GuestForm";
 import { useAuthStore } from "@/features/auth/store/auth-store";
+
+type PassengerGuest = {
+  id: string;
+  cpf: string;
+  full_name: string;
+};
 
 type CurrentTripData = {
   id: number;
@@ -31,6 +37,7 @@ type CurrentTripData = {
   status_route: string;
   passenger_identifier: string;
   has_checked_in: boolean;
+  passenger_guests: PassengerGuest[];
 };
 
 export function CurrentTripPage() {
@@ -111,6 +118,24 @@ export function CurrentTripPage() {
                 )}
               </CardContent>
             </Card>
+
+            {trip.passenger_guests.length > 0 ? (
+              <Card className="rounded-xl border overflow-hidden bg-white shadow-sm grid grid-cols-2">
+                {trip.passenger_guests.map(
+                  (passenger_guest: PassengerGuest) => (
+                    <>
+                      <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-2">
+                        <PassengerQRCode identifier={passenger_guest.id} />
+                        <FieldLabel>{passenger_guest.full_name}</FieldLabel>
+                        <FieldLabel>{passenger_guest.cpf}</FieldLabel>
+                      </CardContent>
+                    </>
+                  ),
+                )}
+              </Card>
+            ) : (
+              <></>
+            )}
 
             <Card className="rounded-xl border">
               <CardHeader>
