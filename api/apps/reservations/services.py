@@ -44,7 +44,8 @@ def get_trip_occupancy(trip):
     active_reservations = get_active_reservations_queryset(trip)
     total = active_reservations.count()
     servers = active_reservations.filter(civil_servant__isnull=False).count()
-    return total, servers
+    guests = active_reservations.filter(guest_passenger__isnull=False).count()
+    return total, servers+guests
 
 
 def trip_has_quorum(trip):
@@ -108,7 +109,6 @@ def sync_trip_status(trip):
         return trip
 
     passengers, servers = get_trip_occupancy(trip)
-    print("passengers: ", passengers, " servers: ", servers)
     trip.reserved_seats = servers
     trip.save(update_fields=["reserved_seats"])
 

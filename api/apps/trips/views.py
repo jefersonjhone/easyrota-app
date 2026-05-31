@@ -13,7 +13,10 @@ from rest_framework.views import APIView
 from apps.reservations.services import process_trip_punishments
 
 from ..reservations.models import Reservation
-from ..reservations.services import ACTIVE_RESERVATION_STATUSES
+from ..reservations.serializers import ReservationSerializer
+from ..reservations.services import (
+    ACTIVE_RESERVATION_STATUSES, sync_trip_status
+)
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
@@ -105,15 +108,15 @@ class TripViewSet(viewsets.ModelViewSet):
     def start_trip(
         self, request, pk=None
     ):  # CONTRIBUIÇÃO ENORME DE MATHEUS PRO BACKEND
-        
+
         trip = self.get_object()
-        
+
         Trip.objects.filter(id=pk).update(
             status="EM ANDAMENTO", departure_timestamp=timezone.now()
         )
-        
+
         process_trip_punishments(trip)
-        
+
         return Response("trip iniciada com sucesso", status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="check-in")
@@ -377,11 +380,11 @@ class MyNextTripView(APIView):
 
         else:
             valid_statuses = ["CONFIRMADA", "LISTA SECUNDÁRIA", "PENDENTE"]
-            
+
             user_trip_filter = (
-                Q(reservation__student__user=request.user, 
+                Q(reservation__student__user=request.user,
                   reservation__status__in=valid_statuses)
-                | Q(reservation__civil_servant__user=request.user, 
+                | Q(reservation__civil_servant__user=request.user,
                     reservation__status__in=valid_statuses)
                 | Q(driver__user=request.user)
             )
@@ -445,5 +448,10 @@ class GuestPassengerView(APIView):
             recorded_by=request.user.civil_servant_profile,
             full_name=request.data.get("full_name"),
         )
+
+        trip = Trip.objects.get(id=trip_id)
         serializer = GuestPassengerSerializer(passenger)
+        reservetionSerializer = ReservationSerializer()
+        reservetionSerializer.reserveToGuest(passenger, trip)
+        sync_trip_status(trip)
         return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)
