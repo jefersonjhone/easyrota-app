@@ -36,7 +36,7 @@ class CustomUserList(UserAdmin):
     ordering = ("email",)
 
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        ("Credentials", {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("full_name",)}),
         (
             "Permissions",
@@ -44,23 +44,21 @@ class CustomUserList(UserAdmin):
                 "fields": (
                     "is_active",
                     "is_staff",
-                    "is_superuser",
-                    "groups",
-                    "user_permissions",
                 )
             },
         ),
-        ("Important dates", {"fields": ("last_login",)}),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
         (
             None,
             {
                 "classes": ("wide",),
-                "fields": ("email", "password", "password2", "full_name"),
+                "fields": ("email", "password1", "password2", "full_name"),
             },
         ),
     )
+    readonly_fields = ("date_joined", "last_login")
 
 
 class StudentProfileList(admin.ModelAdmin):
