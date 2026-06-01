@@ -219,9 +219,11 @@ export default function SignupForm(props: Props) {
 								<Button
 									onClick={() => {
                     const email = form.getValues("email")
-                    type === "register"
-                    ? navigate({ to: `/verificar?email=${email}&mode=register` as never, replace: true })
-                    : navigate({ to: `/verificar?email=${email}&mode=reactivate` as never, replace: true })
+                    if (type === "register"){
+                      navigate({ to: `/verificar?email=${email}&mode=register` as never, replace: true })
+                    } else {
+                      navigate({ to: `/verificar?email=${email}&mode=reactivate` as never, replace: true })
+                    }
                   }}>
 										{type === "register" ? "Sim" : "Reativar Conta"}
 								</Button>

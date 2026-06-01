@@ -10,11 +10,11 @@ from .views.auth import (
     PasswordResetRequestView,
     RefreshTokenView,
     RegisterView,
+    RequestReactivationView,
     ResendOTPView,
+    ResendReactivationOTPView,
     Verify2FAView,
     VerifyRegistrationOTPView,
-    RequestReactivationView,
-    ResendReactivationOTPView,
 )
 from .views.users import (
     AdminDelegationView,

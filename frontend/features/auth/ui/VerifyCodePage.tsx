@@ -65,7 +65,7 @@ export function VerifyCodePage() {
     } finally {
       setResendLoading(false)
     }
-  }, [])
+  }, [isReactivation])
 
   // Efeito para reenvio automático caso chegue na página sem token (vindo da tela de erro)
   useEffect(() => {

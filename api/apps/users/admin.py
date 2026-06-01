@@ -13,6 +13,7 @@ from .models import (
 
 # Register your models here.
 
+
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = CustomUser
@@ -29,7 +30,8 @@ class CustomUserList(UserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
 
-    list_display = ("email", "full_name", "is_staff", "is_active", "is_deleted", "date_joined", "deleted_at")
+    list_display = ("email", "full_name", "is_staff", "is_active", 
+                    "is_deleted", "date_joined", "deleted_at")
     list_filter = ("is_staff", "is_active")
     search_fields = ("email", "full_name")
     ordering = ("email",)

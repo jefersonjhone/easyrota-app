@@ -32,7 +32,8 @@ class LoginSerializer(serializers.Serializer):
         if user_check and user_check.is_deleted:
             if user_check.can_reactivate_account():
                 raise serializers.ValidationError({
-                    "detail": "Esta conta foi desativada após uma solicitação de exclusão."
+                    "detail": "Esta conta foi desativada após "
+                    "uma solicitação de exclusão."
                     "Você pode solicitar a reativação da conta.",
                     "can_reactivate": True
                 })
@@ -78,7 +79,8 @@ class BaseUserRegistrationSerializer(serializers.Serializer):
         if user:
             if not user.is_active and not user.is_deleted:
                 raise serializers.ValidationError(
-                    "Este e-mail já está cadastrado, mas a conta ainda não foi ativada. "
+                    "Este e-mail já está cadastrado, " 
+                    "mas a conta ainda não foi ativada. "
                     "Por favor, verifique seu e-mail ou peça um novo código."
                 )
             raise serializers.ValidationError("Este e-mail já está em uso.")
@@ -250,6 +252,7 @@ class RegistrationResponseSerializer(serializers.Serializer):
             return StudentProfileSerializer(instance.get("profile")).data
 
         return CivilServantProfileSerializer(instance.get("profile")).data
+
 
 class RequestReactivationSerializer(serializers.Serializer):
     email = serializers.EmailField()

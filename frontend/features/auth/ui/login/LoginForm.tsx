@@ -91,7 +91,6 @@ export function LoginForm() {
 	}
 
 	const handleReactivateAccount = async () => {
-		console.log("entrou")
 		const email = form.getValues("email")
 		const response = await reactivateAccountMutation.mutateAsync(email)
 		const token = (response as { token?: string }).token
@@ -166,9 +165,11 @@ export function LoginForm() {
 									disabled={reactivateAccountMutation.isPending}
 									onClick={() => {
 										const email = form.getValues("email")
-										type === "register"
-										? navigate({ to: `/verificar?email=${email}&mode=register` as never, replace: true })
-										: handleReactivateAccount()
+										if (type === "register"){
+											navigate({ to: `/verificar?email=${email}&mode=register` as never, replace: true })
+										} else {
+											handleReactivateAccount()
+										}
 									}}>
 										{type === "register" ? "Sim" : "Reativar Conta"}
 								</Button>

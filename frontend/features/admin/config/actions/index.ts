@@ -1,7 +1,7 @@
 // Assets
 import { 
-  AdminImage, 
-  AnalyticsImage, 
+  // AdminImage, 
+  // AnalyticsImage, 
   BusDriverImage, 
   BusFleetImage, 
   BusInRouteImage, 
@@ -9,10 +9,8 @@ import {
 } from '@/features/admin/config/actions/images'
 
 import { 
-  AdminsRoute,
   BusesRoute,
   DriversRoute,
-  ReportRoute,
   RoutesRoute,
   TravelRoute
 } from '@/features/admin/config/actions/routes'
@@ -22,8 +20,8 @@ import {
   BusFleetIcon,
   BusDriverIcon,
   MapIcon,
-  AdminIcon,
-  ReportIcon,
+  // AdminIcon,
+  // ReportIcon,
 } from '@/features/admin/config/actions/icons'
 
 import type { AnyRoute } from '@tanstack/react-router'
@@ -66,18 +64,18 @@ export const actions: Action[] = [
     background: MapImage,
     route: RoutesRoute,
   },
-  {
-    title: "Administradores",
-    description: "Conceda privilégios de gestão a novos usuários.",
-    icon: AdminIcon,
-    background: AdminImage,
-    route: AdminsRoute,
-  },
-  {
-    title: "Relatórios Gerais",
-    description: "Estatísticas de uso e eficiência da frota.",
-    icon: ReportIcon,
-    background: AnalyticsImage,
-    route: ReportRoute,
-  },
+  // {
+  //   title: "Administradores",
+  //   description: "Conceda privilégios de gestão a novos usuários.",
+  //   icon: AdminIcon,
+  //   background: AdminImage,
+  //   route: "",
+  // },
+  // {
+  //   title: "Relatórios Gerais",
+  //   description: "Estatísticas de uso e eficiência da frota.",
+  //   icon: ReportIcon,
+  //   background: AnalyticsImage,
+  //   route: "",
+  // },
 ]

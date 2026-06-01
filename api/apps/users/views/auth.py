@@ -32,11 +32,11 @@ from ..serializers.auth import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     RegistrationResponseSerializer,
+    RequestReactivationSerializer,
     ResendOTPSerializer,
     StudentRegistrationSerializer,
     Verify2FASerializer,
     VerifyRegistrationOTPSerializer,
-    RequestReactivationSerializer,
 )
 from ..serializers.users import (
     AuthenticatedUserWithProfileSerializer,
@@ -348,6 +348,7 @@ class ResendOTPView(generics.GenericAPIView):
             status=status.HTTP_200_OK,
         )
     
+
 class ResendReactivationOTPView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ResendOTPSerializer
