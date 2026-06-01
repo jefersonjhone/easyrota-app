@@ -32,6 +32,7 @@ from ..serializers.auth import (
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     RegistrationResponseSerializer,
+    RequestReactivationSerializer,
     ResendOTPSerializer,
     StudentRegistrationSerializer,
     Verify2FASerializer,
@@ -282,8 +283,23 @@ class VerifyRegistrationOTPView(generics.GenericAPIView):
         challenge = consume_registration_challenge(
             serializer.validated_data["token"], serializer.validated_data["code"]
         )
-        challenge.user.is_active = True
-        challenge.user.save(update_fields=["is_active"])
+
+        if challenge.purpose == MFAChallenge.Purpose.REGISTER:
+            challenge.user.is_active = True
+            challenge.user.save(update_fields=["is_active"])
+
+        elif challenge.purpose == MFAChallenge.Purpose.REACTIVATE:
+            challenge.user.is_deleted = False
+            challenge.user.deleted_at = None
+            challenge.user.is_active = True
+
+            challenge.user.save(
+                update_fields=[
+                    "is_deleted",
+                    "deleted_at",
+                    "is_active",
+                ]
+            )
 
         return Response({"status": "verified"}, status=status.HTTP_200_OK)
 
@@ -318,6 +334,51 @@ class ResendOTPView(generics.GenericAPIView):
             user=user,
             jti=jti,
             purpose=MFAChallenge.Purpose.REGISTER,
+            code_hash=make_password(code),
+            expires_at=timezone.now() + timedelta(minutes=10),
+        )
+        send_registration_otp(user.email, code)
+
+        return Response(
+            {
+                "status": "verification_required",
+                "token": token,
+                "otp_destination": user.email,
+            },
+            status=status.HTTP_200_OK,
+        )
+    
+
+class ResendReactivationOTPView(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ResendOTPSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+
+        user = CustomUser.objects.filter(email=email, is_deleted=True).first()
+        if not user:
+            return Response(
+                {"detail": "Conta não encontrada ou não está desativada."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Revoga desafios anteriores
+        MFAChallenge.objects.filter(
+            user=user, purpose=MFAChallenge.Purpose.REACTIVATE, used=False
+        ).update(revoked=True)
+
+        token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REACTIVATE)
+        code = generate_otp()
+
+        print("seu código é: ", code)
+
+        MFAChallenge.objects.create(
+            user=user,
+            jti=jti,
+            purpose=MFAChallenge.Purpose.REACTIVATE,
             code_hash=make_password(code),
             expires_at=timezone.now() + timedelta(minutes=10),
         )
@@ -600,7 +661,14 @@ class DeleteOwnAccountView(APIView):
         )
         serializer.is_valid(raise_exception=True)
 
-        user.delete()
+        user.is_deleted = True
+        user.deleted_at = timezone.now()
+        user.is_active = False
+        user.save(update_fields=[
+            "is_deleted",
+            "deleted_at",
+            "is_active",
+        ])
 
         response = Response(status=204)
 
@@ -610,3 +678,53 @@ class DeleteOwnAccountView(APIView):
         )
 
         return response
+
+
+class RequestReactivationView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = RequestReactivationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+
+        user = CustomUser.objects.filter(
+            email=email,
+            is_deleted=True
+        ).first()
+
+        if not user:
+            return Response(
+                {"detail": "A conta não foi encontrada."},
+                status=404
+            )
+        
+        MFAChallenge.objects.filter(
+            user=user,
+            purpose=MFAChallenge.Purpose.REACTIVATE,
+            used=False,
+        ).update(revoked=True)
+
+        token, jti = PartialTokenService.create(
+            user,
+            MFAChallenge.Purpose.REACTIVATE
+        )
+
+        code = generate_otp()
+        print("Código reativação:", code)
+
+        MFAChallenge.objects.create(
+            user=user,
+            jti=jti,
+            purpose=MFAChallenge.Purpose.REACTIVATE,
+            code_hash=make_password(code),
+            expires_at=timezone.now() + timedelta(minutes=10),
+        )
+
+        send_registration_otp(user.email, code)
+
+        return Response({
+            "status": "verification_required",
+            "token": token,
+            "otp_destination": user.email,
+        })

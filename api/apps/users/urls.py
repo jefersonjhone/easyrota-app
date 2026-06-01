@@ -10,7 +10,9 @@ from .views.auth import (
     PasswordResetRequestView,
     RefreshTokenView,
     RegisterView,
+    RequestReactivationView,
     ResendOTPView,
+    ResendReactivationOTPView,
     Verify2FAView,
     VerifyRegistrationOTPView,
 )
@@ -68,6 +70,16 @@ urlpatterns = [
         "staff/passengers/",
         DriverTripPassengerView.as_view(),
         name="trip-passenger-create",
+    ),
+    path(
+        "auth/account-reactivate/",
+        RequestReactivationView.as_view(),
+        name="account-reactivate",
+    ),
+    path(
+        "auth/resend-reactivation-otp/",
+        ResendReactivationOTPView.as_view(),
+        name="resend-reactivation-otp",
     ),
     path("", include(router.urls)),
 ]

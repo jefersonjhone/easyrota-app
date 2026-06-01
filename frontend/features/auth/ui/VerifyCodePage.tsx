@@ -14,13 +14,16 @@ export function VerifyCodePage() {
   const [success, setSuccess] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
+
+  const params = new URLSearchParams(window.location.search)
+  const mode = params.get("mode")
+  const isReactivation = mode === "reactivate"
   
   // Ref para evitar execução duplicada do reenvio automático (comum no Strict Mode)
   const hasAutoResent = useRef(false)
 
   // Usar estado para o token para garantir re-renderização e uso do valor atualizado
   const [token, setToken] = useState(() => {
-    const params = new URLSearchParams(window.location.search)
     return params.get('token')
   })
 
@@ -33,12 +36,16 @@ export function VerifyCodePage() {
       return
     }
 
+    // Utiliza o endpoint correto dependendo se for OTP para reativar uma conta em 
+    // processo de exclusão ou para registro.
+    const url = isReactivation ? '/auth/resend-reactivation-otp/' : '/auth/resend-otp/'
+
     setResendLoading(true)
     setError(null)
     setResendSuccess(false)
 
     try {
-      const data = await apiFetch<ResendOtpResponse>('/auth/resend-otp/', {
+      const data = await apiFetch<ResendOtpResponse>(url, {
         method: 'POST',
         body: JSON.stringify({ email })
       })
@@ -58,7 +65,7 @@ export function VerifyCodePage() {
     } finally {
       setResendLoading(false)
     }
-  }, [])
+  }, [isReactivation])
 
   // Efeito para reenvio automático caso chegue na página sem token (vindo da tela de erro)
   useEffect(() => {

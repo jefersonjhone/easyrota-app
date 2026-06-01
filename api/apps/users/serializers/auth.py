@@ -24,8 +24,21 @@ class LoginSerializer(serializers.Serializer):
         email = data["email"]
         password = data["password"]
 
-        # Verifica se a conta existe mas está inativa antes de autenticar
-        user_check = CustomUser.objects.filter(email=email).first()
+        # Verifica se a conta existe e a senha está correta, mas está inativa
+        user_check = CustomUser.objects.filter(email=email).first() 
+        if not user_check or not user_check.check_password(password):
+            raise serializers.ValidationError({"detail": "Credenciais inválidas"})
+
+        if user_check and user_check.is_deleted:
+            if user_check.can_reactivate_account():
+                raise serializers.ValidationError({
+                    "detail": "Esta conta foi desativada após "
+                    "uma solicitação de exclusão."
+                    "Você pode solicitar a reativação da conta.",
+                    "can_reactivate": True
+                })
+            raise serializers.ValidationError({"detail": "Credenciais inválidas"})
+        
         if user_check and not user_check.is_active:
             raise serializers.ValidationError({
                 "detail": 
@@ -64,9 +77,10 @@ class BaseUserRegistrationSerializer(serializers.Serializer):
         email = value.strip().lower()
         user = CustomUser.objects.filter(email=email).first()
         if user:
-            if not user.is_active:
+            if not user.is_active and not user.is_deleted:
                 raise serializers.ValidationError(
-                    "Este e-mail já está cadastrado, mas a conta ainda não foi ativada."
+                    "Este e-mail já está cadastrado, " 
+                    "mas a conta ainda não foi ativada. "
                     "Por favor, verifique seu e-mail ou peça um novo código."
                 )
             raise serializers.ValidationError("Este e-mail já está em uso.")
@@ -238,3 +252,7 @@ class RegistrationResponseSerializer(serializers.Serializer):
             return StudentProfileSerializer(instance.get("profile")).data
 
         return CivilServantProfileSerializer(instance.get("profile")).data
+
+
+class RequestReactivationSerializer(serializers.Serializer):
+    email = serializers.EmailField()

@@ -3,9 +3,11 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { useState } from "react"
 
 // Hooks
 import { useLoginMutation } from "@features/auth/hooks/useLogin"
+import { useReactivateAccountMutation } from "@features/auth/hooks/useDeleteAccount"
 
 // Routes
 import { Route as RecoveryRoute } from "@/pages/recuperar"
@@ -36,6 +38,7 @@ type Schema = z.infer<typeof schema>
 export function LoginForm() {
 	const navigate = useNavigate()
 	const loginMutation = useLoginMutation()
+	const reactivateAccountMutation = useReactivateAccountMutation()
 	const form = useForm<Schema>({
     mode: 'onChange',
 		resolver: zodResolver(schema),
@@ -47,6 +50,9 @@ export function LoginForm() {
 
   const { register, handleSubmit, formState: state } = form
   const isSubmitting = state.isSubmitting || loginMutation.isPending
+
+  const [verificationModal, setVerificationModal] = useState(false)
+  const [type, setType] = useState<"reactivation" | "register">();
 
   const error = loginMutation.error as {
 	detail?: string | string[]
@@ -64,12 +70,15 @@ export function LoginForm() {
 		} catch (err: unknown) {
 			const errorData = err as { detail?: string | string[] }
 			const message = Array.isArray(errorData.detail) ? errorData.detail[0] : errorData.detail
+			console.log(errorData)
 			
 			if (message?.includes("ainda não foi ativada")) {
-				const email = form.getValues("email")
-				if (window.confirm(message + "\n\nDeseja ir para a tela de verificação agora?")) {
-					navigate({ to: `/verificar?email=${email}` as never, replace: true })
-				}
+				setType("register")
+				setVerificationModal(true)
+			}
+			else if (message?.includes("desativada após uma solicitação de exclusão")){
+				setType("reactivation")
+				setVerificationModal(true)
 			}
 		}
 	}
@@ -79,6 +88,13 @@ export function LoginForm() {
 			e.preventDefault()
 			handleSubmit(onSubmit)()
 		}
+	}
+
+	const handleReactivateAccount = async () => {
+		const email = form.getValues("email")
+		const response = await reactivateAccountMutation.mutateAsync(email)
+		const token = (response as { token?: string }).token
+		navigate({ to: `/verificar?token=${token}&email=${email}&mode=reactivate` as never, replace: true })
 	}
 
 	return (
@@ -128,6 +144,39 @@ export function LoginForm() {
           {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </CardFooter>
+
+				{verificationModal && (
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+						<div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl">
+							<CardTitle> Conta desativada </CardTitle>
+
+							<CardDescription>
+								{type === "register" ? 
+								"Este e-mail já está cadastrado, mas a conta ainda não foi ativada. Deseja ir para tela de verificação agora?"
+								: "Esta conta foi desativada após uma solicitação de exclusão. Caso deseje continuar utilizando a plataforma, você pode reativar sua conta."}
+							</CardDescription>
+
+							<div className="mt-6 flex justify-end gap-2">
+								<Button variant="outline"
+									onClick={() => setVerificationModal(false)}>
+										{type === "register" ? "Não" : "Cancelar"}
+								</Button>
+								<Button
+									disabled={reactivateAccountMutation.isPending}
+									onClick={() => {
+										const email = form.getValues("email")
+										if (type === "register"){
+											navigate({ to: `/verificar?email=${email}&mode=register` as never, replace: true })
+										} else {
+											handleReactivateAccount()
+										}
+									}}>
+										{type === "register" ? "Sim" : "Reativar Conta"}
+								</Button>
+							</div>
+						</div>
+					</div>
+				)}
 		</Card>
 	)
 }

@@ -15,6 +15,8 @@ class MFAChallenge(models.Model):
 
         PASSWORD_RESET = "password_reset"
 
+        REACTIVATE = "reactivate"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     user = models.ForeignKey(

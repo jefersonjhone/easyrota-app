@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 
 // Hooks
 import { useForm } from "react-hook-form"
+import { useState } from "react"
 import { useSignupMutation } from "@features/auth/hooks/useSignup"
 
 // Types
@@ -87,6 +88,9 @@ export default function SignupForm(props: Props) {
   const { register, handleSubmit, formState: state, setError } = form
   const isSubmitting = state.isSubmitting || signupMutation.isPending
 
+  const [verificationModal, setVerificationModal] = useState(false)
+  const [type, setType] = useState<"reactivation" | "register">();
+
   const onSubmit = async (data: SignupSchema) => {
     try {
       const response = await signupMutation.mutateAsync(data)
@@ -104,10 +108,12 @@ export default function SignupForm(props: Props) {
         const errorMessage: string = Array.isArray(messages) ? String(messages) : String(messages)
         
         if (errorMessage.includes("ainda não foi ativada")) {
-            const email = form.getValues("email")
-            if (window.confirm(errorMessage + "\n\nDeseja ir para a tela de verificação agora?")) {
-                navigate({ to: `/verificar?email=${email}` as never, replace: true })
-            }
+          setType("register")
+          setVerificationModal(true)
+        }
+        if (errorMessage?.includes("desativada após uma solicitação de exclusão")){
+          setType("reactivation")
+          setVerificationModal(true)
         }
 
         if (field === "non_field_errors" || field === "root") {
@@ -193,6 +199,38 @@ export default function SignupForm(props: Props) {
           </Field>
         </FieldGroup>
       </FieldGroup>
+
+      {verificationModal && (
+					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+						<div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl">
+							<FieldLabel> Conta desativada </FieldLabel>
+
+							<FieldLabel>
+								{type === "register" ? 
+                "Este e-mail já está cadastrado, mas a conta ainda não foi ativada. Deseja ir para tela de verificação agora?"
+                : "Esta conta foi desativada após uma solicitação de exclusão. Caso deseje continuar utilizando a plataforma, você pode reativar sua conta."}
+							</FieldLabel>
+
+							<div className="mt-6 flex justify-end gap-2">
+								<Button variant="outline"
+									onClick={() => setVerificationModal(false)}>
+										{type === "register" ? "Não" : "Cancelar"}
+								</Button>
+								<Button
+									onClick={() => {
+                    const email = form.getValues("email")
+                    if (type === "register"){
+                      navigate({ to: `/verificar?email=${email}&mode=register` as never, replace: true })
+                    } else {
+                      navigate({ to: `/verificar?email=${email}&mode=reactivate` as never, replace: true })
+                    }
+                  }}>
+										{type === "register" ? "Sim" : "Reativar Conta"}
+								</Button>
+							</div>
+						</div>
+					</div>
+				)}
     </form>
   )
 }
