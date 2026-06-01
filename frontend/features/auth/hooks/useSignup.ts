@@ -1,3 +1,4 @@
+import { API_URL } from "@lib/config";
 import { useMutation } from "@tanstack/react-query"
 
 export type SignupVariant = "civil-servant" | "student"
@@ -34,7 +35,7 @@ async function signupRequest(variant: SignupVariant, values: SignupValues): Prom
 		payload.student_id = values.id
 	}
 
-	const response = await fetch("/api/register/", {
+	const response = await fetch(`${API_URL}/register/`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

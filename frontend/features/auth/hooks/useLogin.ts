@@ -1,3 +1,4 @@
+import { API_URL } from "@lib/config";
 import { useMutation } from "@tanstack/react-query"
 import {
   useAuthStore 
@@ -23,7 +24,7 @@ export type LoginResponse = {
 }
 
 async function loginRequest(values: LoginValues): Promise<LoginResponse> {
-	const response = await fetch("/api/login/", {
+	const response = await fetch(`${API_URL}/login/`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

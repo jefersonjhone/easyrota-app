@@ -37,8 +37,9 @@ class BaseReservationTestCase(APITestCase):
             email="admin@easyrota.com",
             password="password123",
             full_name="Admin Supremo",
+            role="admin",
         )
-        self.admin_profile = AdministratorProfile.objects.create(user=self.admin_user)
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin_user)
 
         self.driver_user = CustomUser.objects.create_user(
             email="motorista@easyrota.com",

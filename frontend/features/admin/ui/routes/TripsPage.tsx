@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  useBuses,
   useCreateTrip,
   useDeleteTrip,
   useRoutes,
@@ -32,14 +31,14 @@ const STATUS_CONFIG: Record<TripStatus, { label: string; className: string }> = 
 type FormData = {
   trip_date: string
   status: TripStatus
-  bus: string
+//  bus: string
   route: string
 }
 
 const EMPTY_FORM: FormData = {
   trip_date: '',
   status: 'RISCO DE CANCELAMENTO',
-  bus: '',
+//  bus: '',
   route: '',
 }
 
@@ -83,7 +82,6 @@ export function TripsPage() {
   const [formError, setFormError] = useState<string | null>(null)
 
   const { data: trips, isLoading, error } = useTrips()
-  const { data: buses } = useBuses()
   const { data: routes } = useRoutes()
 
   const createMutation = useCreateTrip()
@@ -103,7 +101,7 @@ export function TripsPage() {
     setForm({
       trip_date: trip.trip_date,
       status: trip.status,
-      bus: String(trip.bus),
+//      bus: String(trip.bus),
       route: String(trip.route),
     })
     setEditingTrip(trip)
@@ -133,7 +131,7 @@ export function TripsPage() {
     const data = {
       trip_date: form.trip_date,
       status: form.status,
-      bus: form.bus ? Number(form.bus) : null,
+ //     bus: form.bus ? Number(form.bus) : null,
       route: Number(form.route),
     }
 
@@ -225,22 +223,6 @@ export function TripsPage() {
                   ))}
                 </select>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Ônibus</label>
-                <select
-                  className={selectClass()}
-                  value={form.bus}
-                  onChange={(e) => handleChange('bus', e.target.value)}
-                >
-                  <option value="">Selecione um ônibus</option>
-                  {buses?.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.number_plate} — {b.brand} ({b.seating_capacity} lugares)
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             {formError && (
@@ -286,12 +268,7 @@ export function TripsPage() {
                     </h2>
                     <p className="text-sm text-muted-foreground">{formatDate(trip.trip_date)}</p>
                     <p className="text-sm text-muted-foreground">{trip.departure_time} → {trip.arrival_time}</p>
-                    {trip.bus ? 
-                      (<OccupancyBar active={trip.active_reservations} capacity={trip.seating_capacity}/>) : (
-                        <p className="text-sm text-muted-foreground">
-                          Sem ônibus cadastrado
-                        </p>)
-                    }
+                    <OccupancyBar active={trip.active_reservations} capacity={trip.seating_capacity}/>
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-auto">

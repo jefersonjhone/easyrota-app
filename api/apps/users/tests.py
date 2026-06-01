@@ -191,17 +191,17 @@ class LoginViewTests(APITestCase):
             password="12345678",
             is_active=True,
         )
-        cls.admin_user = User.objects.create_user(
+        cls.admin_user = User.objects.create_superuser(
             email="superadmin@email.com",
             full_name="Super Admin",
             password="12345678",
             is_staff=True,
             is_active=True,
-        )
-        cls.admin_profile = AdministratorProfile.objects.create(
-            user=cls.admin_user,
-            role="Superadmin",
             level=AdministratorProfile.Level.SUPERADMIN,
+            role="Superadmin",
+        )
+        cls.admin_profile = AdministratorProfile.objects.get(
+            user=cls.admin_user,
         )
 
     def test_login_success(self):
@@ -366,8 +366,9 @@ class AllowedStaffValidationTests(APITestCase):
             email="admin@teste.com",
             full_name="Admin Teste",
             password="12345678",
+            role="admin",
         )
-        admin_profile = AdministratorProfile.objects.create(user=admin_user)
+        admin_profile = AdministratorProfile.objects.get(user=admin_user)
         bus = Bus.objects.create(
             number_plate="TRIP-1234",
             seating_capacity=40,

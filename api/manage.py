@@ -4,6 +4,10 @@
 import os
 import sys
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 def main():
     """Run administrative tasks."""
@@ -12,7 +16,7 @@ def main():
         sys.path.insert(0, base_dir)
     os.environ.setdefault(
         "DJANGO_SETTINGS_MODULE",
-        os.getenv("DJANGO_SETTINGS_MODULE", "config.settings.development"),
+        os.getenv("DJANGO_SETTINGS_MODULE", "config.settings.production"),
     )
     try:
         from django.core.management import execute_from_command_line
