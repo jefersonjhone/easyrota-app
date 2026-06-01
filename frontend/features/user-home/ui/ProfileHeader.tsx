@@ -206,7 +206,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
       
                 <div>
                   <h3 className="text-lg font-semibold">
-                    Confirmar exclusão da conta
+                    Solicitação de exclusão da conta
                   </h3>
       
                   <p className="mt-2 text-sm text-muted-foreground">
@@ -218,8 +218,12 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
                     para cumprimento de obrigações legais e auditoria,
                     conforme a LGPD.
                   </p>
-      
+
                   <p className="text-sm text-muted-foreground">
+                    OBS: Você pode cancelar a solicitação de exclusão em até 30 dias, basta logar novamente em sua conta.
+                  </p>
+      
+                  <p className="text-sm text-muted-foreground py-3">
                     Para confirmar, digite sua senha.
                   </p>
                 </div>

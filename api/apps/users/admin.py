@@ -13,8 +13,8 @@ from .models import (
 
 
 class CustomUserList(admin.ModelAdmin):
-    list_display = ("email", "full_name", "is_staff", "is_active", "date_joined")
-    list_filter = ("is_staff", "is_active")
+    list_display = ("email", "full_name", "is_staff", "is_active","is_deleted", "date_joined", "deleted_at")
+    list_filter = ("is_staff", "is_active", "is_deleted")
     search_fields = ("email", "full_name")
     ordering = ("email",)
 

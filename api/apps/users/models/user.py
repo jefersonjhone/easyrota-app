@@ -3,6 +3,8 @@ import uuid
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
 
 
 class CustomUserManager(BaseUserManager):
@@ -61,3 +63,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def can_reactivate_account(self):
+        """User can reactivate account for up to 30 days after deletion request."""
+
+        # TODO:
+        # After 30 days the account can no longer be reactivated.
+        # Future implementation should anonymize and purge personal data
+        # according to the retention policy.
+
+        if not self.deleted_at:
+            return False
+
+        return (
+            timezone.now() <= self.deleted_at + timedelta(days=30)
+        )

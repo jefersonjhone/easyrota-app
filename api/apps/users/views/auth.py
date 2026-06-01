@@ -683,7 +683,6 @@ class RequestReactivationView(APIView):
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        print("REQUEST REACTIVATION CHAMOU")
         serializer = RequestReactivationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]

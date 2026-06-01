@@ -24,17 +24,19 @@ class LoginSerializer(serializers.Serializer):
         email = data["email"]
         password = data["password"]
 
-        # TODO: Do jeito que esse serializer está, mesmo com a senha errada, sabendo o email qualquer um
-        # poderia entrar na tela de ativação de conta. Tem que checar se a senha está correta primeiro.
+        # Verifica se a conta existe e a senha está correta, mas está inativa
+        user_check = CustomUser.objects.filter(email=email).first() 
+        if not user_check or not user_check.check_password(password):
+            raise serializers.ValidationError({"detail": "Credenciais inválidas"})
 
-        # Verifica se a conta existe mas está inativa antes de autenticar
-        user_check = CustomUser.objects.filter(email=email).first()
         if user_check and user_check.is_deleted:
-            raise serializers.ValidationError({
-                "detail": "Esta conta foi desativada após uma solicitação de exclusão."
-                "Você pode solicitar a reativação da conta.",
-                "can_reactivate": True
-            })
+            if user_check.can_reactivate_account():
+                raise serializers.ValidationError({
+                    "detail": "Esta conta foi desativada após uma solicitação de exclusão."
+                    "Você pode solicitar a reativação da conta.",
+                    "can_reactivate": True
+                })
+            raise serializers.ValidationError({"detail": "Credenciais inválidas"})
         
         if user_check and not user_check.is_active:
             raise serializers.ValidationError({
