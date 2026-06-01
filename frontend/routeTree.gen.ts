@@ -27,7 +27,6 @@ import { Route as AdminRotasRouteImport } from './pages/admin/rotas'
 import { Route as AdminRelatoriosRouteImport } from './pages/admin/relatorios'
 import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
 import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
-import { Route as AdminAdminsRouteImport } from './pages/admin/admins'
 import { Route as AppViagensIndexRouteImport } from './pages/app/viagens/index'
 import { Route as AppViagensHistoricoRouteImport } from './pages/app/viagens/historico'
 import { Route as AppViagensAtualRouteImport } from './pages/app/viagens/atual'
@@ -121,11 +120,6 @@ const AdminMotoristasRoute = AdminMotoristasRouteImport.update({
   path: '/admin/motoristas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminAdminsRoute = AdminAdminsRouteImport.update({
-  id: '/admin/admins',
-  path: '/admin/admins',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppViagensIndexRoute = AppViagensIndexRouteImport.update({
   id: '/app/viagens/',
   path: '/app/viagens/',
@@ -161,7 +155,6 @@ export interface FileRoutesByFullPath {
   '/sobre-projeto': typeof SobreProjetoRoute
   '/verificar': typeof VerificarRoute
   '/admin': typeof Admin_rootRoute
-  '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
@@ -187,7 +180,6 @@ export interface FileRoutesByTo {
   '/sobre-projeto': typeof SobreProjetoRoute
   '/verificar': typeof VerificarRoute
   '/admin': typeof AdminIndexRoute
-  '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
@@ -211,7 +203,6 @@ export interface FileRoutesById {
   '/sobre-projeto': typeof SobreProjetoRoute
   '/verificar': typeof VerificarRoute
   '/admin/__root': typeof Admin_rootRoute
-  '/admin/admins': typeof AdminAdminsRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/relatorios': typeof AdminRelatoriosRoute
@@ -239,7 +230,6 @@ export interface FileRouteTypes {
     | '/sobre-projeto'
     | '/verificar'
     | '/admin'
-    | '/admin/admins'
     | '/admin/motoristas'
     | '/admin/onibus'
     | '/admin/relatorios'
@@ -265,7 +255,6 @@ export interface FileRouteTypes {
     | '/sobre-projeto'
     | '/verificar'
     | '/admin'
-    | '/admin/admins'
     | '/admin/motoristas'
     | '/admin/onibus'
     | '/admin/relatorios'
@@ -288,7 +277,6 @@ export interface FileRouteTypes {
     | '/sobre-projeto'
     | '/verificar'
     | '/admin/__root'
-    | '/admin/admins'
     | '/admin/motoristas'
     | '/admin/onibus'
     | '/admin/relatorios'
@@ -315,7 +303,6 @@ export interface RootRouteChildren {
   SobreProjetoRoute: typeof SobreProjetoRoute
   VerificarRoute: typeof VerificarRoute
   Admin_rootRoute: typeof Admin_rootRoute
-  AdminAdminsRoute: typeof AdminAdminsRoute
   AdminMotoristasRoute: typeof AdminMotoristasRoute
   AdminOnibusRoute: typeof AdminOnibusRoute
   AdminRelatoriosRoute: typeof AdminRelatoriosRoute
@@ -461,13 +448,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMotoristasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/admins': {
-      id: '/admin/admins'
-      path: '/admin/admins'
-      fullPath: '/admin/admins'
-      preLoaderRoute: typeof AdminAdminsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/app/viagens/': {
       id: '/app/viagens/'
       path: '/app/viagens'
@@ -515,7 +495,6 @@ const rootRouteChildren: RootRouteChildren = {
   SobreProjetoRoute: SobreProjetoRoute,
   VerificarRoute: VerificarRoute,
   Admin_rootRoute: Admin_rootRoute,
-  AdminAdminsRoute: AdminAdminsRoute,
   AdminMotoristasRoute: AdminMotoristasRoute,
   AdminOnibusRoute: AdminOnibusRoute,
   AdminRelatoriosRoute: AdminRelatoriosRoute,
