@@ -15,6 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+import os
+
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
@@ -28,7 +30,9 @@ urlpatterns = [
     path("api/dashboard/", include("apps.dashboard.urls")),
 ]
 
-if settings.DEBUG:
+settings_module = os.getenv("DJANGO_SETTINGS_MODULE", "config.settings.production")
+
+if settings.DEBUG and settings_module == "config.settings.development":
     from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
     urlpatterns += [

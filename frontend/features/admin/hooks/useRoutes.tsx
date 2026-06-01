@@ -1,6 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { CreateRouteRequest } from "@features/admin/services/RoutesRequests";
+import { API_URL } from "@lib/config";
+
 
 export type RouteValues = {
   id: number;
@@ -19,7 +21,7 @@ export function useShowRoutes() {
   const [data, setData] = useState<RoutesResponse>([]);
   async function getResponse() {
     try {
-      const response = await fetch("/api/routes/", {
+      const response = await fetch(`${API_URL}/routes/`, {
         method: "GET",
       });
       if (!response.ok) {

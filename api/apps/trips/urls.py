@@ -3,11 +3,11 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     BusViewSet,
+    GuestPassengerView,
     MyNextTripView,
     RouteDetailView,
     RouteListCreateView,
     TripViewSet,
-    GuestPassengerView,
 )
 
 router = DefaultRouter()

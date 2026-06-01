@@ -10,9 +10,7 @@ import {
   SidebarGroupLabel,
   SidebarTrigger,
 } from "@/lib/ui/sidebar"
-import { CalendarCheckIcon, FileTextIcon,  UserCircleCheckIcon, UsersIcon } from "@phosphor-icons/react"
 import { BusIcon } from "@phosphor-icons/react"
-import { UserGear } from "@phosphor-icons/react"
 import { SteeringWheel } from "@phosphor-icons/react"
 import {MapTrifold} from "@phosphor-icons/react"
 import {  Path} from "@phosphor-icons/react"
@@ -28,18 +26,11 @@ export function AppSidebar() {
 
   const frotaItems = [
     {title:"Gerenciar Ônibus", icon:BusIcon, url:"/admin/onibus"},
-    {title:"Gerenciar Administradores", icon:UserGear, url:"/admin/administradores"},
     {title:"Gerenciar Motoristas", icon:SteeringWheel, url:"/admin/motoristas"},
   ]
   const ViagensItems = [
     {title:"Gerenciar Viagens", icon:MapTrifold, url:"/admin/viagens"},
     {title:"Gerenciar Rotas", icon:Path, url:"/admin/rotas"},
-    {title:"Gerenciar Ocorrências", icon:FileTextIcon, url:"/admin/ocorrencias"},
-  ]
-  const UsersItems = [
-    {title:"Gerenciar Usuários", icon:UsersIcon, url:"/admin/usuarios"},
-    {title:"Gerenciar Reservas", icon:CalendarCheckIcon, url:"/admin/reservas"},
-    {title:"Gerenciar Servidores", icon:UserCircleCheckIcon, url:"/admin/servidores"},
   ]
 
   return (
@@ -87,51 +78,26 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
         <SidebarGroup>
-                <SidebarGroupLabel>
-                  <span>Viagens e Rotas</span>
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {ViagensItems.map((item) => (
-                      <SidebarMenuItem key={item.title} >
-                        <SidebarMenuButton asChild tooltip={item.title} size="default" isActive={pathname === item.url ||
-                                    pathname.startsWith(item.url)}>
-                          <Link to={item.url}>
-                            <item.icon />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
-              
-                      <SidebarGroup>
-                              <SidebarGroupLabel>
-                                <span>Usuários e Reservas</span>
-                              </SidebarGroupLabel>
-                              <SidebarGroupContent>
-                                <SidebarMenu>
-                                  {UsersItems.map((item) => (
-                                    <SidebarMenuItem key={item.title} >
-                                      <SidebarMenuButton asChild tooltip={item.title} size="default" isActive={pathname === item.url ||
-                                        pathname.startsWith(item.url)}>
-                                        <Link to={item.url}>
-                                          <item.icon />
-                                          <span>{item.title}</span>
-                                        </Link>
-                                      </SidebarMenuButton>
-                                    </SidebarMenuItem>
-                                  ))}
-                                </SidebarMenu>
-                              </SidebarGroupContent>
-                            </SidebarGroup>
-
-        
+          <SidebarGroupLabel>
+            <span>Viagens e Rotas</span>
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {ViagensItems.map((item) => (
+                <SidebarMenuItem key={item.title} >
+                  <SidebarMenuButton asChild tooltip={item.title} size="default" isActive={pathname === item.url ||
+                              pathname.startsWith(item.url)}>
+                    <Link to={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   )

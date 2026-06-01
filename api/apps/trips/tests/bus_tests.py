@@ -20,11 +20,9 @@ class BusViewTests(APITestCase):
         self.url = reverse("bus-list")
 
         self.admin = CustomUser.objects.create_superuser(
-            email="admin@teste.com", password="12345678"
+            email="admin@teste.com", password="12345678", role="admin"
         )
-        self.admin_profile = AdministratorProfile.objects.create(
-            user=self.admin, role="Administrator"
-        )
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin)
 
         self.user_driver = CustomUser.objects.create_user(
             email="driver@teste.com", password="123"

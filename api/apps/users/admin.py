@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
 from .models import (
     AdministratorProfile,
@@ -11,15 +13,29 @@ from .models import (
 
 # Register your models here.
 
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = CustomUser
+        fields = ("email",)
 
-class CustomUserList(admin.ModelAdmin):
-    list_display = ("email", "full_name", "is_staff", "is_active","is_deleted", "date_joined", "deleted_at")
-    list_filter = ("is_staff", "is_active", "is_deleted")
+
+class CustomUserChangeForm(UserChangeForm):
+    class Meta(UserChangeForm.Meta):
+        model = CustomUser
+        fields = ("email",)
+
+
+class CustomUserList(UserAdmin):
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
+
+    list_display = ("email", "full_name", "is_staff", "is_active", "is_deleted", "date_joined", "deleted_at")
+    list_filter = ("is_staff", "is_active")
     search_fields = ("email", "full_name")
     ordering = ("email",)
 
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        ("Credentials", {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("full_name",)}),
         (
             "Permissions",
@@ -27,14 +43,21 @@ class CustomUserList(admin.ModelAdmin):
                 "fields": (
                     "is_active",
                     "is_staff",
-                    "is_superuser",
-                    "groups",
-                    "user_permissions",
                 )
             },
         ),
-        ("Important dates", {"fields": ("last_login",)}),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "password1", "password2", "full_name"),
+            },
+        ),
+    )
+    readonly_fields = ("date_joined", "last_login")
 
 
 class StudentProfileList(admin.ModelAdmin):

@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from ..trips.models import Trip
+from ..trips.models import GuestPassenger, Trip
 from .models import Punishment, Reservation
 from .services import (
     get_reservation_status_for_user,
@@ -27,7 +27,8 @@ class ReservationSerializer(serializers.ModelSerializer):
         if not hasattr(user, "student_profile") and not hasattr(
             user, "civil_servant_profile"
         ):
-            raise serializers.ValidationError("Perfil sem permissão para reservar.")
+            raise serializers.ValidationError(
+                "Perfil sem permissão para reservar.")
 
         if trip.status == "CANCELADA":
             raise serializers.ValidationError("Esta viagem foi cancelada.")
@@ -51,7 +52,8 @@ class ReservationSerializer(serializers.ModelSerializer):
                 trip=trip, student=user.student_profile
             ).exists()
         ):
-            raise serializers.ValidationError("Você já possui reserva nesta viagem.")
+            raise serializers.ValidationError(
+                "Você já possui reserva nesta viagem.")
 
         if (
             hasattr(user, "civil_servant_profile")
@@ -59,7 +61,8 @@ class ReservationSerializer(serializers.ModelSerializer):
                 trip=trip, civil_servant=user.civil_servant_profile
             ).exists()
         ):
-            raise serializers.ValidationError("Você já possui reserva nesta viagem.")
+            raise serializers.ValidationError(
+                "Você já possui reserva nesta viagem.")
 
         return trip
 
@@ -73,12 +76,24 @@ class ReservationSerializer(serializers.ModelSerializer):
         if hasattr(user, "student_profile"):
             reservation.student = user.student_profile
         elif hasattr(user, "civil_servant_profile"):
+            print("[debug] hasattr civil servant profile")
             reservation.civil_servant = user.civil_servant_profile
 
         if trip_has_capacity(trip):
             reservation.status = get_reservation_status_for_user(user, trip)
         else:
             reservation.status = "LISTA SECUNDÁRIA"
+        reservation.save()
+        return reservation
+
+    def reserveToGuest(self, guest: GuestPassenger, trip: Trip):
+        reservation = Reservation(trip=trip, guest_passenger=guest)
+        if trip_has_capacity(trip):
+            # reserva sempre confirmada para convidados e servidores publicos
+            reservation.status = "CONFIRMADA"
+        else:
+            reservation.status = "LISTA SECUNDÁRIA"
+
         reservation.save()
         return reservation
 
@@ -199,7 +214,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
 
     def get_available_seats(self, obj):
         reserved_seats = getattr(obj, "reserved_seats", 0)
-        seating_capacity = obj.bus.seating_capacity if obj.bus else 0
+        seating_capacity = getattr(obj, "seating_capacity", 0)
         return max(seating_capacity - reserved_seats, 0)
 
     def get_is_full(self, obj):

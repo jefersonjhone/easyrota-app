@@ -31,16 +31,22 @@ class CustomUserManager(BaseUserManager):
 
     def create_superuser(self, email, password=None, **extra_fields):
         """Create a superuser account with administrative access."""
+        from apps.users.models.profiles import AdministratorProfile
+
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
+        role = extra_fields.pop("role", None)
+        level = extra_fields.pop("level", AdministratorProfile.Level.SUBADMIN)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
+        user = self._create_user(email, password, **extra_fields)
+        AdministratorProfile.objects.create(user=user, role=role, level=level)
 
-        return self._create_user(email, password, **extra_fields)
+        return user
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):

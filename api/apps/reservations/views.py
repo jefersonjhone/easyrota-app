@@ -1,4 +1,3 @@
-from django.db.models import Count, Q
 from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
@@ -72,18 +71,12 @@ class AvailableTripListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        reserved_statuses = ["CONFIRMADA", "PENDENTE"]
+        # reserved_statuses = ["CONFIRMADA", "PENDENTE"]
 
         available_trips = (
             Trip.objects
             .filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
             .select_related("route", "bus")
-            .annotate(
-                reserved_seats=Count(
-                    "reservation",
-                    filter=Q(reservation__status__in=reserved_statuses),
-                )
-            )
             .order_by("trip_date", "route__departure_time")
         )
 

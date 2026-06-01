@@ -1,10 +1,7 @@
 import {
-  GearIcon,
   CaretUpDownIcon,
   SignOutIcon,
-  UserCircleIcon,
-  LifebuoyIcon,
-  WarningIcon
+  UserCircleIcon
 } from "@phosphor-icons/react"
 
 import {
@@ -80,58 +77,13 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            
             <DropdownMenuGroup>
-              <DropdownMenuLabel>
-                ACCOUNT
-              </DropdownMenuLabel>
               <Link to="/app/perfil">
                 <DropdownMenuItem>
                     <UserCircleIcon />
                     Profile
                 </DropdownMenuItem>
               </Link>
-              <DropdownMenuItem>
-                <GearIcon />
-                Settings
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            {
-              /* DESATIVANDO PQ NÃO TEMOS NENHUMA
-              FEATURE RELACIONADA AINDA              
-              MAS CASO TENHAMOS, JÁ ESTÁ PRONTO
-              
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-              <DropdownMenuLabel>
-              SYSTEM
-              </DropdownMenuLabel>
-              <DropdownMenuItem>
-                <KeyIcon />
-                Permissions
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem>
-                <ClockCheckIcon />
-                Activity
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              */
-              }
-              <DropdownMenuGroup>
-              <DropdownMenuLabel>
-                SUPPORT
-                </DropdownMenuLabel>
-              <DropdownMenuItem>
-                <LifebuoyIcon />
-                Help
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem>
-                <WarningIcon />
-                Report issue
-                </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
