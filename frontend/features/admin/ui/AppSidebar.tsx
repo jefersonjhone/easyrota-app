@@ -12,7 +12,6 @@ import {
 } from "@/lib/ui/sidebar"
 import { CalendarCheckIcon, FileTextIcon,  UserCircleCheckIcon, UsersIcon } from "@phosphor-icons/react"
 import { BusIcon } from "@phosphor-icons/react"
-import { UserGear } from "@phosphor-icons/react"
 import { SteeringWheel } from "@phosphor-icons/react"
 import {MapTrifold} from "@phosphor-icons/react"
 import {  Path} from "@phosphor-icons/react"
@@ -28,7 +27,6 @@ export function AppSidebar() {
 
   const frotaItems = [
     {title:"Gerenciar Ônibus", icon:BusIcon, url:"/admin/onibus"},
-    {title:"Gerenciar Administradores", icon:UserGear, url:"/admin/administradores"},
     {title:"Gerenciar Motoristas", icon:SteeringWheel, url:"/admin/motoristas"},
   ]
   const ViagensItems = [
