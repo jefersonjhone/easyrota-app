@@ -32,6 +32,21 @@ const get_initials = (name: string) => {
   return initials.map(n => n[0]).join('').toUpperCase()
 }
 
+const role_Label = (role_name : string) => {
+  switch (role_name) {
+    case "STUDENT":
+      return "Estudante"
+    case "DRIVER":
+      return "Motorista"
+    case "ADMIN":
+      return "Administrador"
+    case "CIVIL-SERVANT":
+      return "Funcionário Público"
+    default:
+      return "Passageiro"
+  }
+}
+
 export default function ProfileHeader({ user }: { user: ProfileUser }) {
   
   const logoutMutation = useLogoutMutation()
@@ -65,7 +80,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
                 <p className='text-gray-600 mt-1 md:mt-2'>
                   <UserSquareIcon className='inline-block mr-1' />
                   <span>
-                    Perfil: {user.profile_type}
+                    Perfil: {role_Label(user.profile_type)}
                   </span>
                 </p>
                 
@@ -96,7 +111,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
         </div>
       </div>
       <Dialog open={openSettings} onOpenChange={setOpenSettings}>
-        <DialogContent className="w-full max-w-lg space-y-2  md:space-y-6">
+        <DialogContent className="max-h-[80vh] w-full max-w-lg space-y-2  md:space-y-6">
       
           <section className="space-y-3">
             <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
@@ -126,9 +141,9 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
             </FieldGroup>
           </section>
       
-          <Separator />
+          {/*<Separator />
       
-          <section className="space-y-3">
+          <section className="space-y-2">
             <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
               Aparência
             </h2>
@@ -140,9 +155,10 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
             </div>
           </section>
       
-          <Separator />
+          <Separator />*/}
       
-          <section className="space-y-3">
+          
+          {/*<section className="space-y-3">
             <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
               Acessibilidade
             </h2>
@@ -158,7 +174,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
             </div>
           </section>
       
-          <Separator />
+          <Separator />*/}
       
           <section className="space-y-3">
             <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
