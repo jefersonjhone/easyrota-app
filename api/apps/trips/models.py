@@ -125,9 +125,31 @@ class Occurrence(models.Model):
 class TripPassenger(models.Model):
     """Stores a non-account passenger record for a trip."""
 
+    class PassengerType(models.TextChoices):
+        LOCAL_SERVER = "LOCAL_SERVER", "Servidor local"
+        LOCAL_GUEST = "LOCAL_GUEST", "Convidado local"
+
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_passengers")
     allowed_staff = models.ForeignKey(
-        "users.AllowedStaff", on_delete=models.CASCADE, related_name="trip_passengers"
+        "users.AllowedStaff",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="trip_passengers",
+    )
+    passenger_type = models.CharField(
+        max_length=20,
+        choices=PassengerType.choices,
+        default=PassengerType.LOCAL_SERVER,
+    )
+    full_name = models.CharField(max_length=255, blank=True)
+    cpf = models.CharField(max_length=11, blank=True)
+    associated_staff = models.ForeignKey(
+        "users.AllowedStaff",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="associated_local_guests",
     )
     recorded_by = models.ForeignKey(
         DriverProfile, on_delete=models.SET_NULL, null=True, blank=True
@@ -138,6 +160,9 @@ class TripPassenger(models.Model):
         db_table = "trips_trip_passengers"
 
     def __str__(self):
+        if self.passenger_type == self.PassengerType.LOCAL_GUEST:
+            return f"{self.full_name} on {self.trip}"
+
         return f"{self.allowed_staff} on {self.trip}"
 
 

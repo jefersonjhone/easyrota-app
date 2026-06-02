@@ -36,7 +36,7 @@ def get_active_reservations_queryset(trip):
 
 def get_waitlist_queryset(trip):
     return Reservation.objects.filter(trip=trip, status=WAITLIST_STATUS).select_related(
-        "student", "civil_servant"
+        "student__user", "civil_servant__user", "guest_passenger"
     )
 
 
@@ -71,6 +71,9 @@ def get_priority_tuple(reservation):
     if reservation.civil_servant_id:
         return (0, reservation.created_at)
 
+    if reservation.guest_passenger_id:
+        return (0, reservation.created_at)
+
     if reservation.student_id:
         active_punishments_count = Punishment.objects.filter(
             student=reservation.student, is_active=True
@@ -88,15 +91,31 @@ def get_priority_tuple(reservation):
     return (4, reservation.created_at)
 
 
+def get_reservation_passenger_name(reservation):
+    if reservation.student_id:
+        return reservation.student.user.full_name
+
+    if reservation.civil_servant_id:
+        return reservation.civil_servant.user.full_name
+
+    if reservation.guest_passenger_id:
+        return reservation.guest_passenger.full_name
+
+    return "Passageiro"
+
+
 def evict_lowest_priority_active_reservation(trip):
-    active_reservations = list(get_active_reservations_queryset(trip))
-    if not active_reservations:
+    removable_reservations = list(
+        get_active_reservations_queryset(trip)
+        .filter(student__isnull=False)
+        .select_related("student__user")
+    )
+    if not removable_reservations:
         return None
 
-    lowest_priority = sorted(active_reservations, key=get_priority_tuple, reverse=True)[0]
-    if lowest_priority.civil_servant_id:
-        return None
-
+    lowest_priority = sorted(
+        removable_reservations, key=get_priority_tuple, reverse=True
+    )[0]
     lowest_priority.delete()
     return lowest_priority
 
@@ -108,12 +127,15 @@ def promote_next_waitlisted_reservation(trip):
             return None
 
         next_reservation = sorted(waitlisted, key=get_priority_tuple)[0]
-        next_reservation.status = get_reservation_status_for_user(
-            next_reservation.civil_servant.user
-            if next_reservation.civil_servant_id
-            else next_reservation.student.user,
-            trip,
-        )
+        if next_reservation.guest_passenger_id:
+            next_reservation.status = "CONFIRMADA"
+        else:
+            next_reservation.status = get_reservation_status_for_user(
+                next_reservation.civil_servant.user
+                if next_reservation.civil_servant_id
+                else next_reservation.student.user,
+                trip,
+            )
         next_reservation.save(update_fields=["status"])
         return next_reservation
 

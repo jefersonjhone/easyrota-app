@@ -213,7 +213,11 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         return obj.get_status_display()
 
     def get_available_seats(self, obj):
-        reserved_seats = getattr(obj, "reserved_seats", 0)
+        reserved_seats = getattr(
+            obj,
+            "active_reservation_seats",
+            getattr(obj, "reserved_seats", 0),
+        )
         passenger_seats = getattr(obj, "passenger_seats", 0)
         seating_capacity = obj.bus.seating_capacity if obj.bus else 0
         return max(seating_capacity - reserved_seats - passenger_seats, 0)

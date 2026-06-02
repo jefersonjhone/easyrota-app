@@ -1,5 +1,12 @@
 import { apiFetch } from '@lib/api'
-import type { CurrentTripDetail, Trip, TripPassengerCheckInResponse } from '../types'
+import type {
+  AllowedStaffOption,
+  CurrentTripDetail,
+  LocalTripPassengerPayload,
+  LocalTripPassengerResponse,
+  Trip,
+  TripPassengerCheckInResponse,
+} from '../types'
 
 export function fetchTrips() {
   return apiFetch<Trip[]>('/trips/')
@@ -35,5 +42,18 @@ export function checkInTripPassenger(tripId: number | string, passengerIdentifie
   return apiFetch<TripPassengerCheckInResponse>(`/trips/${tripId}/check-in/`, {
     method: 'POST',
     body: JSON.stringify({ passenger_identifier: passengerIdentifier }),
+  })
+}
+
+export function searchAllowedStaff(query: string) {
+  return apiFetch<AllowedStaffOption[]>(
+    `/staff/search/?q=${encodeURIComponent(query)}`,
+  )
+}
+
+export function registerLocalTripPassenger(payload: LocalTripPassengerPayload) {
+  return apiFetch<LocalTripPassengerResponse>('/staff/passengers/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
   })
 }

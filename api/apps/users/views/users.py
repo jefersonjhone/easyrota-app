@@ -1,10 +1,16 @@
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
 from rest_framework import generics, status, views, viewsets
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.reservations.models import Punishment, Reservation
 from apps.reservations.services import (
+    ACTIVE_RESERVATION_STATUSES,
+    WAITLIST_STATUS,
     evict_lowest_priority_active_reservation,
+    get_reservation_passenger_name,
     trip_has_capacity,
     sync_trip_status,
 )
@@ -16,6 +22,7 @@ from ..permissions import IsDriver, IsSuperAdmin
 from ..serializers.auth import (
     AllowedStaffSearchSerializer,
     CivilServantAllowedStaffSerializer,
+    LocalTripPassengerSerializer,
 )
 from ..serializers.users import (
     AuthenticatedUserWithProfileSerializer,
@@ -119,7 +126,9 @@ class AllowedStaffSearchView(views.APIView):
         q = request.query_params.get("q", "").strip()
         queryset = AllowedStaff.objects.all()
         if q:
-            queryset = queryset.filter(name__icontains=q)
+            queryset = queryset.filter(
+                Q(name__icontains=q) | Q(registration_number__icontains=q)
+            )
         serializer = AllowedStaffSearchSerializer(
             queryset.order_by("name")[:20],
             many=True,
@@ -185,3 +194,237 @@ class DriverTripPassengerView(views.APIView):
         sync_trip_status(trip)
 
         return Response({"id": passenger.id}, status=status.HTTP_201_CREATED)
+
+
+class LocalDriverTripPassengerView(views.APIView):
+    permission_classes = (IsAuthenticated, IsDriver)
+
+    def _serialize_evicted_reservation(self, reservation):
+        return {
+            "name": get_reservation_passenger_name(reservation),
+            "reservation_id": reservation.id,
+        }
+
+    def _serialize_local_passenger(self, passenger):
+        if passenger.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER:
+            passenger_name = (
+                passenger.allowed_staff.name
+                if passenger.allowed_staff_id
+                else "Servidor local"
+            )
+        else:
+            passenger_name = passenger.full_name or "Convidado local"
+
+        return {
+            "id": passenger.id,
+            "passenger_type": passenger.passenger_type,
+            "name": passenger_name,
+            "cpf": passenger.cpf,
+            "allowed_staff_id": passenger.allowed_staff_id,
+            "associated_staff_id": passenger.associated_staff_id,
+        }
+
+    def _serialize_reservation_passenger(self, reservation):
+        return {
+            "reservation_id": reservation.id,
+            "passenger_type": "RESERVATION",
+            "name": get_reservation_passenger_name(reservation),
+        }
+
+    def _checked_in_count(self, trip):
+        return (
+            Reservation.objects.filter(trip=trip, check_in=True).count()
+            + trip.trip_passengers.count()
+        )
+
+    def _ensure_capacity_or_evict(self, trip, evicted_passengers):
+        if trip.bus and not trip_has_capacity(trip):
+            evicted = evict_lowest_priority_active_reservation(trip)
+            if evicted is None:
+                return Response(
+                    {"detail": "Nao ha vaga disponivel para cadastrar o passageiro."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            evicted_passengers.append(self._serialize_evicted_reservation(evicted))
+
+        return None
+
+    def _check_in_existing_server_reservation(
+        self, trip, allowed_staff, evicted_passengers
+    ):
+        reservation = (
+            Reservation.objects
+            .filter(
+                trip=trip,
+                civil_servant__civil_servant_id=allowed_staff.registration_number,
+                status__in=(*ACTIVE_RESERVATION_STATUSES, WAITLIST_STATUS),
+            )
+            .select_related("civil_servant__user")
+            .first()
+        )
+
+        if not reservation:
+            return None
+
+        if reservation.status == WAITLIST_STATUS:
+            capacity_response = self._ensure_capacity_or_evict(
+                trip, evicted_passengers
+            )
+            if capacity_response is not None:
+                return capacity_response
+
+        reservation.status = "CONFIRMADA"
+        reservation.check_in = True
+        reservation.checkin_date = timezone.now()
+        reservation.save(update_fields=["status", "check_in", "checkin_date"])
+        return reservation
+
+    def _ensure_local_server(self, trip, allowed_staff, driver, evicted_passengers):
+        existing_passenger = (
+            TripPassenger.objects
+            .filter(
+                trip=trip,
+                passenger_type=TripPassenger.PassengerType.LOCAL_SERVER,
+                allowed_staff=allowed_staff,
+            )
+            .select_related("allowed_staff")
+            .first()
+        )
+        if existing_passenger:
+            return existing_passenger, False, None
+
+        reservation = self._check_in_existing_server_reservation(
+            trip, allowed_staff, evicted_passengers
+        )
+        if isinstance(reservation, Response):
+            return None, False, reservation
+        if reservation:
+            return None, False, reservation
+
+        capacity_response = self._ensure_capacity_or_evict(trip, evicted_passengers)
+        if capacity_response is not None:
+            return None, False, capacity_response
+
+        passenger = TripPassenger.objects.create(
+            trip=trip,
+            passenger_type=TripPassenger.PassengerType.LOCAL_SERVER,
+            allowed_staff=allowed_staff,
+            recorded_by=driver,
+        )
+        return passenger, True, None
+
+    def _build_response(self, payload, evicted_passengers, trip, response_status):
+        response_payload = {
+            **payload,
+            "evicted_passengers": evicted_passengers,
+            "checked_in_count": self._checked_in_count(trip),
+        }
+        if evicted_passengers:
+            response_payload["evicted_passenger"] = evicted_passengers[0]
+
+        return Response(response_payload, status=response_status)
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = LocalTripPassengerSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        trip = Trip.objects.select_related("bus", "route").get(
+            id=serializer.validated_data["trip"]
+        )
+        driver = request.user.driver_profile
+        evicted_passengers = []
+
+        passenger_type = serializer.validated_data["passenger_type"]
+        if passenger_type == TripPassenger.PassengerType.LOCAL_SERVER:
+            allowed_staff = serializer.validated_data["allowed_staff"]
+            passenger, created, fallback = self._ensure_local_server(
+                trip,
+                allowed_staff,
+                driver,
+                evicted_passengers,
+            )
+            if isinstance(fallback, Response):
+                transaction.set_rollback(True)
+                return fallback
+
+            sync_trip_status(trip)
+            if fallback is not None:
+                return self._build_response(
+                    {"passenger": self._serialize_reservation_passenger(fallback)},
+                    evicted_passengers,
+                    trip,
+                    status.HTTP_200_OK,
+                )
+
+            return self._build_response(
+                {"passenger": self._serialize_local_passenger(passenger)},
+                evicted_passengers,
+                trip,
+                status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+            )
+
+        associated_staff = serializer.validated_data["associated_staff"]
+        server_passenger, _, fallback = self._ensure_local_server(
+            trip,
+            associated_staff,
+            driver,
+            evicted_passengers,
+        )
+        if isinstance(fallback, Response):
+            transaction.set_rollback(True)
+            return fallback
+
+        existing_guest = (
+            TripPassenger.objects
+            .filter(
+                trip=trip,
+                passenger_type=TripPassenger.PassengerType.LOCAL_GUEST,
+                cpf=serializer.validated_data["cpf"],
+            )
+            .select_related("associated_staff")
+            .first()
+        )
+        if existing_guest:
+            sync_trip_status(trip)
+            return self._build_response(
+                {"passenger": self._serialize_local_passenger(existing_guest)},
+                evicted_passengers,
+                trip,
+                status.HTTP_200_OK,
+            )
+
+        capacity_response = self._ensure_capacity_or_evict(trip, evicted_passengers)
+        if capacity_response is not None:
+            transaction.set_rollback(True)
+            return capacity_response
+
+        passenger = TripPassenger.objects.create(
+            trip=trip,
+            passenger_type=TripPassenger.PassengerType.LOCAL_GUEST,
+            full_name=serializer.validated_data["full_name"],
+            cpf=serializer.validated_data["cpf"],
+            associated_staff=associated_staff,
+            recorded_by=driver,
+        )
+        sync_trip_status(trip)
+
+        payload = {
+            "passenger": self._serialize_local_passenger(passenger),
+        }
+        if server_passenger is not None:
+            payload["associated_server"] = self._serialize_local_passenger(
+                server_passenger
+            )
+        elif fallback is not None:
+            payload["associated_server"] = self._serialize_reservation_passenger(
+                fallback
+            )
+
+        return self._build_response(
+            payload,
+            evicted_passengers,
+            trip,
+            status.HTTP_201_CREATED,
+        )

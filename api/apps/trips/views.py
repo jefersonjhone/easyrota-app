@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 from uuid import UUID
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import generics, permissions, status, viewsets
@@ -14,7 +15,14 @@ from apps.reservations.services import process_trip_punishments
 
 from ..reservations.models import Reservation
 from ..reservations.serializers import ReservationSerializer
-from ..reservations.services import ACTIVE_RESERVATION_STATUSES, sync_trip_status
+from ..reservations.services import (
+    ACTIVE_RESERVATION_STATUSES,
+    WAITLIST_STATUS,
+    evict_lowest_priority_active_reservation,
+    get_reservation_passenger_name,
+    sync_trip_status,
+    trip_has_capacity,
+)
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
@@ -118,6 +126,7 @@ class TripViewSet(viewsets.ModelViewSet):
         return Response("trip iniciada com sucesso", status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="check-in")
+    @transaction.atomic
     def check_in(self, request, pk=None):
         passenger_identifier = (
             request.data.get("passenger_identifier")
@@ -169,13 +178,21 @@ class TripViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                     )
 
+        if isinstance(passenger, GuestPassenger):
+            passenger_filter = Q(guest_passenger=passenger)
+        else:
+            passenger_filter = (
+                Q(student__user=passenger)
+                | Q(civil_servant__user=passenger)
+            )
+
         reservation = (
             Reservation.objects
-            .select_related("student__user", "civil_servant__user")
+            .select_related("student__user", "civil_servant__user", "guest_passenger")
             .filter(
-                Q(student__user=passenger) | Q(civil_servant__user=passenger),
+                passenger_filter,
                 trip=trip,
-                status__in=ACTIVE_RESERVATION_STATUSES,
+                status__in=(*ACTIVE_RESERVATION_STATUSES, WAITLIST_STATUS),
             )
             .first()
         )
@@ -185,6 +202,34 @@ class TripViewSet(viewsets.ModelViewSet):
                 {"error": "Passageiro sem reserva nesta viagem."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+        evicted_passenger = None
+        priority_check_in = bool(
+            reservation.civil_servant_id or reservation.guest_passenger_id
+        )
+
+        if reservation.status == WAITLIST_STATUS:
+            if not priority_check_in:
+                return Response(
+                    {"error": "Passageiro sem reserva ativa nesta viagem."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            if not trip_has_capacity(trip):
+                evicted = evict_lowest_priority_active_reservation(trip)
+                if evicted is None:
+                    transaction.set_rollback(True)
+                    return Response(
+                        {"error": "Nao ha vaga disponivel para priorizar o passageiro."},
+                        status=status.HTTP_409_CONFLICT,
+                    )
+
+                evicted_passenger = {
+                    "name": get_reservation_passenger_name(evicted),
+                    "reservation_id": evicted.id,
+                }
+
+            reservation.status = "CONFIRMADA"
 
         if reservation.check_in:
             return Response(
@@ -198,15 +243,21 @@ class TripViewSet(viewsets.ModelViewSet):
 
         reservation.check_in = True
         reservation.checkin_date = timezone.now()
-        reservation.save(update_fields=["check_in", "checkin_date"])
+        reservation.save(update_fields=["status", "check_in", "checkin_date"])
+        sync_trip_status(trip)
+
+        response_payload = {
+            "status": "Check-in realizado com sucesso.",
+            "reservation_id": reservation.id,
+            "passenger_name": passenger.full_name,
+            "checkin_date": reservation.checkin_date,
+        }
+        if evicted_passenger is not None:
+            response_payload["evicted_passenger"] = evicted_passenger
+            response_payload["evicted_passengers"] = [evicted_passenger]
 
         return Response(
-            {
-                "status": "Check-in realizado com sucesso.",
-                "reservation_id": reservation.id,
-                "passenger_name": passenger.full_name,
-                "checkin_date": reservation.checkin_date,
-            },
+            response_payload,
             status=status.HTTP_200_OK,
         )
 

@@ -24,10 +24,13 @@ export type Trip = {
 }
 
 export type TripCheckedInPassenger = {
-  reservation_id: number
+  reservation_id?: number
+  local_passenger_id?: number
   passenger_name: string
   check_in: boolean
   checkin_date: string | null
+  source?: 'QR' | 'Manual'
+  kind?: 'Servidor' | 'Convidado'
 }
 
 export type CurrentTripDetail = {
@@ -51,4 +54,51 @@ export type TripPassengerCheckInResponse = {
   reservation_id?: number
   passenger_name?: string
   checkin_date?: string
+  evicted_passenger?: {
+    name: string
+    reservation_id: number
+  }
+  evicted_passengers?: Array<{
+    name: string
+    reservation_id: number
+  }>
+}
+
+export type AllowedStaffOption = {
+  id: number
+  name: string
+  registration_number: string
+}
+
+export type LocalTripPassengerPayload = {
+  trip: number | string
+  passenger_type: 'LOCAL_SERVER' | 'LOCAL_GUEST'
+  allowed_staff_id?: number
+  associated_staff_id?: number
+  full_name?: string
+  cpf?: string
+}
+
+export type LocalTripPassengerResponse = {
+  passenger?: {
+    id?: number
+    reservation_id?: number
+    passenger_type?: string
+    name?: string
+  }
+  associated_server?: {
+    id?: number
+    reservation_id?: number
+    passenger_type?: string
+    name?: string
+  }
+  evicted_passenger?: {
+    name: string
+    reservation_id: number
+  }
+  evicted_passengers?: Array<{
+    name: string
+    reservation_id: number
+  }>
+  checked_in_count?: number
 }
