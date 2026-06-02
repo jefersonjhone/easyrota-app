@@ -1,8 +1,15 @@
+import logging
 from datetime import datetime, timedelta
 
 from django.utils import timezone
+from webpush import send_user_notification
 
 from .models import Punishment, Reservation
+from apps.trips.models import TripPassenger
+
+
+logger = logging.getLogger(__name__)
+
 
 ACTIVE_RESERVATION_STATUSES = ("CONFIRMADA", "PENDENTE")
 WAITLIST_STATUS = "LISTA SECUNDÁRIA"
@@ -43,13 +50,83 @@ def get_waitlist_queryset(trip):
 def get_trip_occupancy(trip):
     active_reservations = get_active_reservations_queryset(trip)
     total = active_reservations.count() + trip.trip_passengers.count()
-    servers = active_reservations.filter(civil_servant__isnull=False).count() + trip.trip_passengers.count()
+    servers = (
+        active_reservations.filter(civil_servant__isnull=False).count()
+        + trip.trip_passengers.filter(passenger_type=TripPassenger.PassengerType.LOCAL_SERVER).count()
+    )
     return total, servers
 
 
 def trip_has_quorum(trip):
     passengers, servers = get_trip_occupancy(trip)
     return servers >= QUORUM_MIN_SERVERS
+
+
+def _trip_notification_users(trip):
+    users = []
+    seen_user_ids = set()
+
+    reservations = (
+        Reservation.objects.filter(trip=trip, status="CONFIRMADA")
+        .select_related("student__user", "civil_servant__user")
+    )
+
+    for reservation in reservations:
+        user = None
+        if reservation.student_id:
+            user = reservation.student.user
+        elif reservation.civil_servant_id:
+            user = reservation.civil_servant.user
+
+        if user and user.id not in seen_user_ids:
+            users.append(user)
+            seen_user_ids.add(user.id)
+
+    return users
+
+
+def _send_trip_push_notification(trip, payload):
+    recipients = _trip_notification_users(trip)
+
+    for user in recipients:
+        try:
+            send_user_notification(user=user, payload=payload, ttl=1000)
+        except Exception as exc:
+            logger.error("Failed to send webpush notification to %s: %s", user, exc)
+
+    return bool(recipients)
+
+
+def send_trip_quorum_met_notification(trip):
+    if trip.quorum_met_notified_at:
+        return False
+
+    payload = {
+        "head": "Quórum atingido",
+        "body": "O quórum mínimo foi atingido e há pelo menos 1 servidor confirmado na viagem.",
+        "url": "/app/",
+    }
+
+    sent = _send_trip_push_notification(trip, payload)
+    trip.quorum_met_notified_at = timezone.now()
+    trip.save(update_fields=["quorum_met_notified_at"])
+    return sent
+
+
+def send_trip_quorum_warning_notification(trip):
+    if trip.quorum_warning_notified_at:
+        return False
+
+    payload = {
+        "head": "Risco de cancelamento",
+        "body": "A viagem não atingiu o quórum mínimo até o fechamento das reservas.",
+        "url": "/app/",
+    }
+
+    sent = _send_trip_push_notification(trip, payload)
+    trip.quorum_warning_notified_at = timezone.now()
+    trip.save(update_fields=["quorum_warning_notified_at"])
+    return sent
 
 
 def trip_has_capacity(trip):
@@ -162,6 +239,17 @@ def sync_trip_status(trip):
     if trip.status != desired_status:
         trip.status = desired_status
         trip.save(update_fields=["status"])
+
+    if desired_status == "CONFIRMADA":
+        if trip.quorum_warning_notified_at is not None:
+            trip.quorum_warning_notified_at = None
+            trip.save(update_fields=["quorum_warning_notified_at"])
+
+        if trip.quorum_met_notified_at is None:
+            send_trip_quorum_met_notification(trip)
+    elif trip.quorum_met_notified_at is not None:
+        trip.quorum_met_notified_at = None
+        trip.save(update_fields=["quorum_met_notified_at"])
 
     return trip
 

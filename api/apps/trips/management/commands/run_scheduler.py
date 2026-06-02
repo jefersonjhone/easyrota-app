@@ -9,41 +9,33 @@ from django_apscheduler.models import DjangoJobExecution
 from django_apscheduler import util
 
 from apps.trips.models import Trip
-from webpush import send_user_notification
+from apps.reservations.services import (
+    send_trip_quorum_warning_notification,
+    sync_trip_status,
+)
 
 logger = logging.getLogger(__name__)
 
 def check_upcoming_trips_quorum():
-    # Verifica viagens que vão sair em 30 a 31 minutos
     now = timezone.now()
-    target_time_start = now + timedelta(minutes=30)
-    target_time_end = now + timedelta(minutes=31)
+    target_time_start = now + timedelta(minutes=29, seconds=30)
+    target_time_end = now + timedelta(minutes=30, seconds=30)
 
     trips = Trip.objects.filter(
         departure_timestamp__gte=target_time_start,
         departure_timestamp__lt=target_time_end,
-        status="CONFIRMADA"  # Ou outro status apropriado
+        status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"]
     )
 
     for trip in trips:
+        sync_trip_status(trip)
+
         if not trip.has_minimum_quorum:
             logger.info("Trip %s sem quórum mínimo. Disparando notificações.", trip.id)
             trip.status = "RISCO DE CANCELAMENTO"
             trip.save()
 
-            # Notifica os passageiros confirmados
-            reservations = trip.reservation_set.filter(status="CONFIRMADA")
-            for reservation in reservations:
-                user = reservation.student.user if reservation.student else reservation.civil_servant.user
-                payload = {
-                    "head": "Aviso de Quórum Mínimo",
-                    "body": f"A viagem {trip} não atingiu o quórum mínimo. Há risco de cancelamento.",
-                    "url": "/app/",
-                }
-                try:
-                    send_user_notification(user=user, payload=payload, ttl=1000)
-                except Exception as e:
-                    logger.error(f"Failed to send webpush notification to {user}: {e}")
+            send_trip_quorum_warning_notification(trip)
         else:
             logger.info("Trip %s com quórum mínimo atendido.", trip.id)
 

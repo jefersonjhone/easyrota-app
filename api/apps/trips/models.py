@@ -68,6 +68,8 @@ class Trip(models.Model):
     arrival_timestamp = models.DateTimeField(null=True, blank=True)
     seating_capacity = models.IntegerField(default=46)
     reserved_seats = models.IntegerField(default=0)
+    quorum_met_notified_at = models.DateTimeField(null=True, blank=True)
+    quorum_warning_notified_at = models.DateTimeField(null=True, blank=True)
 
     bus = models.ForeignKey(Bus, on_delete=models.SET_NULL, null=True, blank=True)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
@@ -86,7 +88,9 @@ class Trip(models.Model):
         ).exists():
             return True
 
-        return self.trip_passengers.exists()
+        return self.trip_passengers.filter(
+            passenger_type=TripPassenger.PassengerType.LOCAL_SERVER
+        ).exists()
 
     @property
     def has_minimum_quorum(self):
