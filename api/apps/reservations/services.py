@@ -7,7 +7,6 @@ from .models import Punishment, Reservation
 ACTIVE_RESERVATION_STATUSES = ("CONFIRMADA", "PENDENTE")
 WAITLIST_STATUS = "LISTA SECUNDÁRIA"
 RESERVATION_LIMIT_MINUTES = 30
-QUORUM_MIN_PASSENGERS = 5
 QUORUM_MIN_SERVERS = 1
 
 
@@ -50,7 +49,7 @@ def get_trip_occupancy(trip):
 
 def trip_has_quorum(trip):
     passengers, servers = get_trip_occupancy(trip)
-    return passengers >= QUORUM_MIN_PASSENGERS and servers >= QUORUM_MIN_SERVERS
+    return servers >= QUORUM_MIN_SERVERS
 
 
 def trip_has_capacity(trip):
@@ -114,7 +113,7 @@ def sync_trip_status(trip):
 
     if passengers == 0:
         desired_status = "RISCO DE CANCELAMENTO"
-    elif passengers >= QUORUM_MIN_PASSENGERS and servers >= QUORUM_MIN_SERVERS:
+    elif servers >= QUORUM_MIN_SERVERS:
         desired_status = "CONFIRMADA"
     elif not is_reservation_open(trip):
         desired_status = "RISCO DE CANCELAMENTO"
