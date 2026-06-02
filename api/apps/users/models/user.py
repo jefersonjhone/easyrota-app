@@ -36,7 +36,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
-        role = extra_fields.pop("role", None)
+        role = extra_fields.pop("role", "subadmin")
         level = extra_fields.pop("level", AdministratorProfile.Level.SUBADMIN)
 
         if extra_fields.get("is_staff") is not True:
