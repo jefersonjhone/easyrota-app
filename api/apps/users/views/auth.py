@@ -588,6 +588,16 @@ class RefreshTokenView(generics.GenericAPIView):
 
         try:
             serializer.is_valid(raise_exception=True)
+        except CustomUser.DoesNotExist:
+            response = Response(
+                {"detail": "Refresh token user not found."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            response.delete_cookie(
+                "refresh_token",
+                path="/",
+            )
+            return response
 
         except ExpiredTokenError:
             response = Response(

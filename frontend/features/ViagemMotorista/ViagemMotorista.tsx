@@ -4,12 +4,18 @@ import {
   PlayCircleIcon,
   QrCodeIcon,
   SignOutIcon,
+  UserMinusIcon,
   UserPlusIcon,
   WarningCircleIcon,
 } from '@phosphor-icons/react'
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
 
-import { checkInTripPassenger } from '@features/trips/services/trips'
+import {
+  checkInTripPassenger,
+  registerLocalTripPassenger,
+  searchAllowedStaff,
+} from '@features/trips/services/trips'
+import type { AllowedStaffOption } from '@features/trips/types'
 import { normalizeTripTime } from '@features/trips/utils/time'
 import { apiFetch } from '@lib/api'
 import MotoraLayout from '@layout/Motora-layout'
@@ -75,10 +81,13 @@ type TripModel = {
 
 type TripCheckedInPassenger = {
   reservation_id?: number | null
+  local_passenger_id?: number | null
   passenger_name?: string | null
   check_in?: boolean | null
   checkin?: boolean | null
   checkin_date?: string | null
+  source?: 'QR' | 'Manual' | null
+  kind?: PassengerKind | null
 }
 
 type BusModel = {
@@ -96,7 +105,7 @@ type DriverBusOption = {
   capacity: number | null
 }
 
-type ViajemMotoristaProps = {
+type ViagemMotoristaProps = {
   tripId?: string
 }
 
@@ -147,12 +156,19 @@ function normalizeCheckedInPassengers(trip: TripModel, capacity: number): Passen
         const fallbackId = index + 1
         const reservationId =
           typeof passenger.reservation_id === 'number' ? passenger.reservation_id : undefined
+        const localPassengerId =
+          typeof passenger.local_passenger_id === 'number'
+            ? passenger.local_passenger_id
+            : undefined
+        const source = passenger.source === 'Manual' ? 'Manual' : 'QR'
 
         return {
-          id: reservationId ?? fallbackId,
+          id: reservationId ?? localPassengerId ?? fallbackId,
           reservationId,
+          identifier: localPassengerId ? `local-${localPassengerId}` : undefined,
           name: passenger.passenger_name ?? `Passageiro ${String(fallbackId).padStart(3, '0')}`,
-          source: 'QR' as const,
+          source,
+          kind: passenger.kind ?? undefined,
         }
       })
   }
@@ -275,7 +291,7 @@ function FeedbackBanner({ feedback }: { feedback: QrFeedback | null }) {
   )
 }
 
-export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
+export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const [trip, setTrip] = useState<DriverTripDetail | null>(null)
   const [isTripLoading, setIsTripLoading] = useState(true)
   const [tripError, setTripError] = useState<string | null>(null)
@@ -288,7 +304,14 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   const [actionError, setActionError] = useState<string | null>(null)
   const [isPassengerMenuOpen, setIsPassengerMenuOpen] = useState(false)
   const [passengerName, setPassengerName] = useState('')
+  const [passengerCpf, setPassengerCpf] = useState('')
   const [passengerKind, setPassengerKind] = useState<PassengerKind>('Servidor')
+  const [passengerStaffQuery, setPassengerStaffQuery] = useState('')
+  const [staffOptions, setStaffOptions] = useState<AllowedStaffOption[]>([])
+  const [selectedStaff, setSelectedStaff] = useState<AllowedStaffOption | null>(null)
+  const [isStaffSearchLoading, setIsStaffSearchLoading] = useState(false)
+  const [staffSearchError, setStaffSearchError] = useState<string | null>(null)
+  const [isPassengerSaving, setIsPassengerSaving] = useState(false)
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
   const [isQrCheckInLoading, setIsQrCheckInLoading] = useState(false)
   const [qrFeedback, setQrFeedback] = useState<QrFeedback | null>(null)
@@ -302,7 +325,6 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   const manualCount = boardedPassengers.filter((passenger) => passenger.source === 'Manual').length
   const occupancyPercent = Math.min((embarkedCount / activeCapacity) * 100, 100)
   const shouldWarnBeforeRequestingBus = (trip?.associatedBuses ?? 0) >= 2
-  const hasReachedCapacity = embarkedCount >= activeCapacity
   const selectedBusPlate = selectedBus?.plate ?? trip?.busPlate ?? 'Sem onibus'
   const normalizedTripStatus = normalizeTripStatus(trip?.status)
   const isTripInProgress = normalizedTripStatus === 'EM ANDAMENTO'
@@ -310,14 +332,18 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   const isStartTripDisabled = isConfirmationLoading || isTripInProgress || isTripFinished
   const isFinishTripDisabled = isConfirmationLoading || isTripFinished
   const canReadQr = Boolean(trip?.isDriverAssociated)
+  const isGuestPassenger = passengerKind === 'Convidado'
+  const canSubmitLocalPassenger = Boolean(selectedStaff)
+    && (!isGuestPassenger || (passengerName.trim().length > 0 && passengerCpf.trim().length === 11))
+    && !isPassengerSaving
   const qrAccessMessage = !trip?.isDriverAssociated
     ? 'Associe-se a esta viagem antes de ler QR Code.'
     : null
   const whatsappAlertUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Estou com problema no onibus ${selectedBusPlate} na viajem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
+    `Estou com problema no onibus ${selectedBusPlate} na viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
   )}`
   const whatsappRequestUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Solicito novo onibus para a viajem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
+    `Solicito novo onibus para a viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
   )}`
 
   useEffect(() => {
@@ -389,6 +415,55 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   }, [trip])
 
   useEffect(() => {
+    if (!isPassengerMenuOpen) {
+      return
+    }
+
+    const query = passengerStaffQuery.trim()
+    if (query.length < 2) {
+      setStaffOptions([])
+      setStaffSearchError(null)
+      setIsStaffSearchLoading(false)
+      return
+    }
+
+    let isMounted = true
+    setIsStaffSearchLoading(true)
+    setStaffSearchError(null)
+
+    const timeoutId = window.setTimeout(() => {
+      searchAllowedStaff(query)
+        .then((staff) => {
+          if (!isMounted) {
+            return
+          }
+
+          setStaffOptions(staff)
+          if (selectedStaff && !staff.some((option) => option.id === selectedStaff.id)) {
+            setSelectedStaff(null)
+          }
+        })
+        .catch((error) => {
+          console.warn('Nao foi possivel buscar servidores:', error)
+          if (isMounted) {
+            setStaffOptions([])
+            setStaffSearchError('Nao foi possivel buscar servidores.')
+          }
+        })
+        .finally(() => {
+          if (isMounted) {
+            setIsStaffSearchLoading(false)
+          }
+        })
+    }, 250)
+
+    return () => {
+      isMounted = false
+      window.clearTimeout(timeoutId)
+    }
+  }, [isPassengerMenuOpen, passengerStaffQuery, selectedStaff])
+
+  useEffect(() => {
     let isMounted = true
 
     const loadBuses = async () => {
@@ -436,37 +511,64 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
   }, [busOptions, tripBusId, tripBusPlate])
 
   const handleAddPassenger = () => {
-    if (hasReachedCapacity) {
-      return
-    }
-
     setPassengerName('')
+    setPassengerCpf('')
     setPassengerKind('Servidor')
+    setPassengerStaffQuery('')
+    setStaffOptions([])
+    setSelectedStaff(null)
+    setStaffSearchError(null)
     setIsPassengerMenuOpen(true)
   }
 
-  const handleRegisterPassenger = () => {
-    setBoardedPassengers((currentPassengers) => {
-      if (currentPassengers.length >= activeCapacity) {
-        return currentPassengers
-      }
+  const handleRegisterPassenger = async () => {
+    if (!trip || !selectedStaff || !canSubmitLocalPassenger) {
+      return
+    }
 
-      const nextId = currentPassengers.length + 1
-      const nextName = passengerName.trim() || `Passageiro ${String(nextId).padStart(3, '0')}`
+    setIsPassengerSaving(true)
+    setActionError(null)
 
-      return [
-        ...currentPassengers,
-        {
-          id: nextId,
-          name: nextName,
-          source: 'Manual',
-          kind: passengerKind,
-        },
-      ]
-    })
-    setPassengerName('')
-    setPassengerKind('Servidor')
-    setIsPassengerMenuOpen(false)
+    try {
+      const response = await registerLocalTripPassenger({
+        trip: trip.id,
+        passenger_type: isGuestPassenger ? 'LOCAL_GUEST' : 'LOCAL_SERVER',
+        allowed_staff_id: !isGuestPassenger ? selectedStaff.id : undefined,
+        associated_staff_id: isGuestPassenger ? selectedStaff.id : undefined,
+        full_name: isGuestPassenger ? passengerName.trim() : undefined,
+        cpf: isGuestPassenger ? passengerCpf.trim() : undefined,
+      })
+      const refreshedTrip = await getTripFromApi(trip.id)
+      const evictedNames =
+        response.evicted_passengers?.map((passenger) => passenger.name).join(', ')
+      const registeredName =
+        response.passenger?.name
+        ?? (isGuestPassenger ? passengerName.trim() : selectedStaff.name)
+
+      setTrip({
+        ...refreshedTrip,
+        isDriverAssociated: trip.isDriverAssociated,
+      })
+      setPassengerName('')
+      setPassengerCpf('')
+      setPassengerKind('Servidor')
+      setPassengerStaffQuery('')
+      setStaffOptions([])
+      setSelectedStaff(null)
+      setStaffSearchError(null)
+      setIsPassengerMenuOpen(false)
+      setQrFeedback({
+        kind: evictedNames ? 'info' : 'success',
+        message: evictedNames
+          ? `${registeredName} cadastrado. Retire do onibus: ${evictedNames}.`
+          : `${registeredName} cadastrado no embarque.`,
+      })
+    } catch (error) {
+      console.warn('Nao foi possivel cadastrar passageiro local:', error)
+      setActionError(getApiErrorMessage(error, 'Nao foi possivel cadastrar passageiro.'))
+    } finally {
+      setIsPassengerSaving(false)
+    }
   }
 
   const handleBusSelection = async (nextBusId: number | null) => {
@@ -609,45 +711,57 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
         const response = await checkInTripPassenger(trip.id, decodedText)
         const passengerName = response.passenger_name ?? 'Passageiro'
         const reservationId = response.reservation_id
+        const evictedNames =
+          response.evicted_passengers?.map((passenger) => passenger.name).join(', ')
 
-        setBoardedPassengers((currentPassengers) => {
-          const alreadyRegistered = currentPassengers.some(
-            (passenger) =>
-              passenger.identifier === decodedText
-              || (reservationId !== undefined && passenger.reservationId === reservationId),
-          )
+        if (evictedNames) {
+          const refreshedTrip = await getTripFromApi(trip.id)
+          setTrip({
+            ...refreshedTrip,
+            isDriverAssociated: trip.isDriverAssociated,
+          })
+        } else {
+          setBoardedPassengers((currentPassengers) => {
+            const alreadyRegistered = currentPassengers.some(
+              (passenger) =>
+                passenger.identifier === decodedText
+                || (reservationId !== undefined && passenger.reservationId === reservationId),
+            )
 
-          if (alreadyRegistered) {
-            return currentPassengers
-          }
+            if (alreadyRegistered) {
+              return currentPassengers
+            }
 
-          const passengerFromQr = {
-            id: reservationId ?? currentPassengers.length + 1,
-            reservationId,
-            identifier: decodedText,
-            name: passengerName,
-            source: 'QR' as const,
-          }
-          const placeholderIndex = currentPassengers.findIndex(
-            (passenger) =>
-              passenger.source === 'Manual'
-              && passenger.identifier === undefined
-              && passenger.name.startsWith('Passageiro '),
-          )
+            const passengerFromQr = {
+              id: reservationId ?? currentPassengers.length + 1,
+              reservationId,
+              identifier: decodedText,
+              name: passengerName,
+              source: 'QR' as const,
+            }
+            const placeholderIndex = currentPassengers.findIndex(
+              (passenger) =>
+                passenger.source === 'Manual'
+                && passenger.identifier === undefined
+                && passenger.name.startsWith('Passageiro '),
+            )
 
-          if (placeholderIndex === -1) {
-            return [...currentPassengers, passengerFromQr]
-          }
+            if (placeholderIndex === -1) {
+              return [...currentPassengers, passengerFromQr]
+            }
 
-          return currentPassengers.map((passenger, index) =>
-            index === placeholderIndex
-              ? { ...passengerFromQr, id: reservationId ?? passenger.id }
-              : passenger,
-          )
-        })
+            return currentPassengers.map((passenger, index) =>
+              index === placeholderIndex
+                ? { ...passengerFromQr, id: reservationId ?? passenger.id }
+                : passenger,
+            )
+          })
+        }
         setQrFeedback({
-          kind: 'success',
-          message: response.status ?? `Check-in realizado para ${passengerName}.`,
+          kind: evictedNames ? 'info' : 'success',
+          message: evictedNames
+            ? `Check-in realizado para ${passengerName}. Retire do onibus: ${evictedNames}.`
+            : response.status ?? `Check-in realizado para ${passengerName}.`,
         })
         setIsQrScannerOpen(false)
       } catch (error) {
@@ -672,7 +786,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
 
   const handlePassengerSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    handleRegisterPassenger()
+    void handleRegisterPassenger()
   }
 
   const confirmationTitle =
@@ -690,7 +804,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
         ? 'Deseja iniciar esta viagem? Esta acao marcara a viagem como em andamento.'
         : confirmation === 'finish'
           ? 'Deseja finalizar esta viagem? Esta acao marcara a viagem como concluida.'
-          : 'Ja existem 2 onibus associados a essa viajem, deseja solicitar mais?'
+          : 'Ja existem 2 onibus associados a essa viagem, deseja solicitar mais?'
 
   if (isTripLoading) {
     return (
@@ -761,6 +875,20 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                 Finalizar viagem
               </Button>
             </div>
+            <Button
+              asChild
+              className="rounded-lg border-red-600 bg-red-600 font-bold text-white hover:bg-red-700"
+            >
+              <a
+                href={whatsappAlertUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Reportar problema pelo WhatsApp"
+              >
+                <WarningCircleIcon aria-hidden="true" weight="bold" />
+                Reportar Problema
+              </a>
+            </Button>
           </header>
 
           {actionError ? (
@@ -827,10 +955,18 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                   type="button"
                   className="min-h-12 rounded-lg font-bold"
                   onClick={handleAddPassenger}
-                  disabled={hasReachedCapacity}
                 >
                   <UserPlusIcon aria-hidden="true" weight="bold" />
                   Add passageiro
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-12 rounded-lg font-bold"
+                  disabled
+                >
+                  <UserMinusIcon aria-hidden="true" weight="bold" />
+                  Remover passageiro
                 </Button>
                 <Button
                   type="button"
@@ -883,7 +1019,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                 <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Resumo dos embarques">
                   <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs font-bold text-muted-foreground">
                     <strong className="block text-2xl font-black text-primary">{embarkedCount}</strong>
-                    embarcados
+                    embarques
                   </span>
                   <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs font-bold text-muted-foreground">
                     <strong className="block text-2xl font-black text-primary">{qrCount}</strong>
@@ -898,15 +1034,6 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
             </aside>
           </div>
 
-          <a
-            className="absolute right-5 bottom-5 inline-flex size-10 items-center justify-center rounded-full border border-primary/50 bg-background text-primary shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
-            href={whatsappAlertUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Enviar alerta pelo WhatsApp"
-          >
-            <WarningCircleIcon aria-hidden="true" weight="bold" className="size-6" />
-          </a>
         </div>
 
         <Dialog open={isQrScannerOpen} onOpenChange={setIsQrScannerOpen}>
@@ -954,43 +1081,158 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                 <UserPlusIcon aria-hidden="true" weight="fill" className="size-8 text-primary" />
                 <DialogTitle>Cadastrar passageiro</DialogTitle>
                 <DialogDescription>
-                  Adicione um embarque manual para atualizar a lotacao.
+                  Busque o servidor autorizado e registre o embarque local.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid gap-2">
-                <Label htmlFor="driver-passenger-name">Nome</Label>
-                <Input
-                  id="driver-passenger-name"
-                  type="text"
-                  value={passengerName}
-                  onChange={(event) => setPassengerName(event.target.value)}
-                  autoFocus
-                  required
-                />
-              </div>
               <div className="grid gap-2">
                 <Label htmlFor="driver-passenger-kind">Tipo</Label>
                 <NativeSelect
                   id="driver-passenger-kind"
                   value={passengerKind}
-                  onChange={(event) => setPassengerKind(event.target.value as PassengerKind)}
+                  onChange={(event) => {
+                    setPassengerKind(event.target.value as PassengerKind)
+                    setPassengerName('')
+                    setPassengerCpf('')
+                  }}
                   className="w-full"
                 >
                   <NativeSelectOption value="Servidor">Servidor</NativeSelectOption>
                   <NativeSelectOption value="Convidado">Convidado</NativeSelectOption>
                 </NativeSelect>
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="driver-passenger-staff-search">
+                  {isGuestPassenger ? 'Servidor associado' : 'Servidor'}
+                </Label>
+                <Input
+                  id="driver-passenger-staff-search"
+                  type="text"
+                  value={passengerStaffQuery}
+                  onChange={(event) => {
+                    setPassengerStaffQuery(event.target.value)
+                    setSelectedStaff(null)
+                  }}
+                  placeholder="Digite nome ou matricula"
+                  autoFocus
+                  required
+                />
+                {isStaffSearchLoading ? (
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    Buscando servidores...
+                  </p>
+                ) : null}
+                {staffSearchError ? (
+                  <p className="text-xs font-semibold text-red-700">
+                    {staffSearchError}
+                  </p>
+                ) : null}
+                {staffOptions.length > 0 ? (
+                  <div
+                    role="listbox"
+                    aria-label="Servidores encontrados"
+                    className="max-h-44 overflow-y-auto rounded-lg border border-border bg-background p-1"
+                  >
+                    {staffOptions.map((staff) => {
+                      const isSelected = selectedStaff?.id === staff.id
+
+                      return (
+                        <button
+                          key={staff.id}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          className={cn(
+                            'flex w-full min-w-0 flex-col items-start gap-0.5 rounded-md px-3 py-2 text-left transition-colors',
+                            isSelected
+                              ? 'bg-primary text-primary-foreground'
+                              : 'hover:bg-muted focus-visible:bg-muted focus-visible:outline-none',
+                          )}
+                          onClick={() => setSelectedStaff(staff)}
+                        >
+                          <span className="w-full truncate text-sm font-bold">
+                            {staff.name}
+                          </span>
+                          <span
+                            className={cn(
+                              'text-xs font-semibold',
+                              isSelected
+                                ? 'text-primary-foreground/80'
+                                : 'text-muted-foreground',
+                            )}
+                          >
+                            Matricula {staff.registration_number}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : null}
+                {!isStaffSearchLoading
+                  && passengerStaffQuery.trim().length >= 2
+                  && staffOptions.length === 0
+                  && !staffSearchError ? (
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      Nenhum servidor encontrado.
+                    </p>
+                  ) : null}
+                {selectedStaff ? (
+                  <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                    {selectedStaff.name} - matricula {selectedStaff.registration_number}
+                  </p>
+                ) : null}
+              </div>
+              {isGuestPassenger ? (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="driver-passenger-name">Nome do convidado</Label>
+                    <Input
+                      id="driver-passenger-name"
+                      type="text"
+                      value={passengerName}
+                      onChange={(event) => setPassengerName(event.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="driver-passenger-cpf">CPF do convidado</Label>
+                    <Input
+                      id="driver-passenger-cpf"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={11}
+                      value={passengerCpf}
+                      onChange={(event) => {
+                        setPassengerCpf(event.target.value.replace(/\D/g, ''))
+                      }}
+                      required
+                    />
+                  </div>
+                </>
+              ) : null}
+              {actionError ? (
+                <p role="alert" className="text-sm font-bold text-red-700">
+                  {actionError}
+                </p>
+              ) : null}
               <DialogFooter>
                 <Button
                   type="button"
                   variant="outline"
                   className="rounded-lg"
-                  onClick={() => setIsPassengerMenuOpen(false)}
+                  onClick={() => {
+                    setIsPassengerMenuOpen(false)
+                    setActionError(null)
+                  }}
+                  disabled={isPassengerSaving}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" className="rounded-lg" disabled={!passengerName.trim()}>
-                  Cadastrar
+                <Button
+                  type="submit"
+                  className="rounded-lg"
+                  disabled={!canSubmitLocalPassenger}
+                >
+                  {isPassengerSaving ? 'Cadastrando...' : 'Cadastrar'}
                 </Button>
               </DialogFooter>
             </form>

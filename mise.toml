@@ -52,6 +52,11 @@ description = "Apply pending database migrations"
 dir = "api"
 run = "poetry run python manage.py migrate"
 
+[tasks."api.import_allowed_staff"]
+description = "Import allowed staff from servidores.ods"
+dir = "api"
+run = "poetry run python manage.py import_allowed_staff servidores.ods"
+
 [tasks."api.makemigrations"]
 description = "Create new migration files based on model changes"
 dir = "api"

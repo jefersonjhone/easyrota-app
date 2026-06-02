@@ -1,9 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from '@tanstack/react-router'
 import { requireProfile } from '@/features/auth/services/require-profile'
-import { ViajemMotorista } from '@/features/ViajemMotorista/ViajemMotorista'
+import { ViagemMotorista } from '@/features/ViagemMotorista/ViagemMotorista'
 
-export const Route = createFileRoute('/app/driver/viajem/$tripId')({
+export const Route = createFileRoute('/app/driver/viagem/$tripId')({
   beforeLoad: () => requireProfile(['DRIVER', 'ADMIN']),
   component: DriverTripDetailRoute,
 })
@@ -11,5 +11,5 @@ export const Route = createFileRoute('/app/driver/viajem/$tripId')({
 function DriverTripDetailRoute() {
   const { tripId } = Route.useParams()
 
-  return <ViajemMotorista tripId={tripId} />
+  return <ViagemMotorista tripId={tripId} />
 }

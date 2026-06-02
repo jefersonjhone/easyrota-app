@@ -27,6 +27,8 @@ export function VerifyCodePage() {
     return params.get('token')
   })
 
+  const currentToken = token?.trim() || new URLSearchParams(window.location.search).get('token')?.trim() || null
+
   const handleResend = useCallback(async () => {
     const params = new URLSearchParams(window.location.search)
     const email = params.get('email')
@@ -47,13 +49,14 @@ export function VerifyCodePage() {
     try {
       const data = await apiFetch<ResendOtpResponse>(url, {
         method: 'POST',
+        auth: false,
         body: JSON.stringify({ email })
       })
 
       if (data?.token) {
-        setToken(data.token)
+        setToken(data.token.trim())
         const newUrl = new URL(window.location.href)
-        newUrl.searchParams.set('token', data.token)
+        newUrl.searchParams.set('token', data.token.trim())
         window.history.replaceState({}, '', newUrl.toString())
       }
 
@@ -83,12 +86,19 @@ export function VerifyCodePage() {
     setLoading(true)
     setError(null)
 
+    if (!currentToken) {
+      setError('Token de verificação ainda não está pronto. Aguarde o novo código chegar ou reenviar novamente.')
+      setLoading(false)
+      return
+    }
+
     try {
       await apiFetch('/auth/verify-registration-otp/', {
         method: 'POST',
+        auth: false,
         body: JSON.stringify({ 
           code: code.trim(),
-          token: token // Usa o token do estado (atualizado pelo reenvio)
+          token: currentToken
         })
       })
       
@@ -145,10 +155,10 @@ export function VerifyCodePage() {
                 </p>
               )}
 
-              <Button 
+                <Button 
                 type="submit" 
                 className="w-full bg-[#b84d05] hover:bg-[#963e04] text-white font-medium transition-colors" 
-                disabled={loading || code.length !== 6}
+                disabled={loading || resendLoading || code.length !== 6 || !currentToken}
               >
                 {loading ? 'Validando...' : 'Ativar Minha Conta'}
               </Button>

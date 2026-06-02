@@ -68,6 +68,8 @@ class Trip(models.Model):
     arrival_timestamp = models.DateTimeField(null=True, blank=True)
     seating_capacity = models.IntegerField(default=46)
     reserved_seats = models.IntegerField(default=0)
+    quorum_met_notified_at = models.DateTimeField(null=True, blank=True)
+    quorum_warning_notified_at = models.DateTimeField(null=True, blank=True)
 
     bus = models.ForeignKey(Bus, on_delete=models.SET_NULL, null=True, blank=True)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
@@ -77,6 +79,26 @@ class Trip(models.Model):
 
     # for custom queryset methods
     objects = TripQuerySet.as_manager()
+
+    @property
+    def has_server(self):
+        """Checks if there is at least 1 server passenger registered for the trip."""
+        if self.reservation_set.filter(
+            status="CONFIRMADA", civil_servant__isnull=False
+        ).exists():
+            return True
+
+        return self.trip_passengers.filter(
+            passenger_type=TripPassenger.PassengerType.LOCAL_SERVER
+        ).exists()
+
+    @property
+    def has_minimum_quorum(self):
+        """
+        Checks if the minimum passenger quorum is met.
+        For this project, one registered server already satisfies quorum.
+        """
+        return self.has_server
 
     def __str__(self):
         return f"Trip on {self.trip_date} - ({self.route})"
@@ -107,9 +129,31 @@ class Occurrence(models.Model):
 class TripPassenger(models.Model):
     """Stores a non-account passenger record for a trip."""
 
-    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+    class PassengerType(models.TextChoices):
+        LOCAL_SERVER = "LOCAL_SERVER", "Servidor local"
+        LOCAL_GUEST = "LOCAL_GUEST", "Convidado local"
+
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_passengers")
     allowed_staff = models.ForeignKey(
-        "users.AllowedStaff", on_delete=models.CASCADE, related_name="trip_passengers"
+        "users.AllowedStaff",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="trip_passengers",
+    )
+    passenger_type = models.CharField(
+        max_length=20,
+        choices=PassengerType.choices,
+        default=PassengerType.LOCAL_SERVER,
+    )
+    full_name = models.CharField(max_length=255, blank=True)
+    cpf = models.CharField(max_length=11, blank=True)
+    associated_staff = models.ForeignKey(
+        "users.AllowedStaff",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="associated_local_guests",
     )
     recorded_by = models.ForeignKey(
         DriverProfile, on_delete=models.SET_NULL, null=True, blank=True
@@ -120,6 +164,9 @@ class TripPassenger(models.Model):
         db_table = "trips_trip_passengers"
 
     def __str__(self):
+        if self.passenger_type == self.PassengerType.LOCAL_GUEST:
+            return f"{self.full_name} on {self.trip}"
+
         return f"{self.allowed_staff} on {self.trip}"
 
 

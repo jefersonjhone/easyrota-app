@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from ..reservations.models import Reservation
-from .models import Bus, GuestPassenger, Route, Trip
+from .models import Bus, GuestPassenger, Route, Trip, TripPassenger
 
 
 class BusSerializer(serializers.ModelSerializer):
@@ -116,14 +116,17 @@ class TripSerializer(serializers.ModelSerializer):
         return reservations
 
     def get_checked_in_count(self, obj) -> int:
-        """Count only passengers with confirmed check-in."""
-        return Reservation.objects.filter(trip=obj, check_in=True).count()
+        """Count QR check-ins and passengers registered locally by the driver."""
+        return (
+            Reservation.objects.filter(trip=obj, check_in=True).count()
+            + obj.trip_passengers.count()
+        )
 
     def get_checked_in_passengers(self, obj) -> list[dict]:
         """Return the checked-in passengers used by the driver occupancy screen."""
         reservations = (
             Reservation.objects
-            .select_related("student__user", "civil_servant__user")
+            .select_related("student__user", "civil_servant__user", "guest_passenger")
             .filter(trip=obj, check_in=True)
             .order_by("checkin_date", "id")
         )
@@ -136,12 +139,44 @@ class TripSerializer(serializers.ModelSerializer):
                 user = reservation.student.user
             elif reservation.civil_servant_id:
                 user = reservation.civil_servant.user
+            elif reservation.guest_passenger_id:
+                user = reservation.guest_passenger
 
             passengers.append({
                 "reservation_id": reservation.id,
                 "passenger_name": getattr(user, "full_name", None) or "Passageiro",
                 "check_in": reservation.check_in,
                 "checkin_date": reservation.checkin_date,
+                "source": "QR",
+            })
+
+        local_passengers = (
+            TripPassenger.objects
+            .filter(trip=obj)
+            .select_related("allowed_staff", "associated_staff")
+            .order_by("created_at", "id")
+        )
+        for passenger in local_passengers:
+            if passenger.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER:
+                passenger_name = (
+                    passenger.allowed_staff.name
+                    if passenger.allowed_staff_id
+                    else "Servidor local"
+                )
+            else:
+                passenger_name = passenger.full_name or "Convidado local"
+
+            passengers.append({
+                "local_passenger_id": passenger.id,
+                "passenger_name": passenger_name,
+                "check_in": True,
+                "checkin_date": passenger.created_at,
+                "source": "Manual",
+                "kind": (
+                    "Servidor"
+                    if passenger.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER
+                    else "Convidado"
+                ),
             })
 
         return passengers
@@ -326,10 +361,11 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             return []
 
         user = request.user
-        if user.civil_servant_profile is None:
+        civil_servant_profile = getattr(user, "civil_servant_profile", None)
+        if civil_servant_profile is None:
             return []
         guests = GuestPassenger.objects.filter(
-            recorded_by=user.civil_servant_profile, 
+            recorded_by=civil_servant_profile,
             trip=obj.id,
         )
 

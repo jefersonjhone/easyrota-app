@@ -19,9 +19,9 @@ from .views.auth import (
 from .views.users import (
     AdminDelegationView,
     AllowedStaffSearchView,
-    DriverTripPassengerView,
     DriverViewSet,
     HealthCheckView,
+    LocalDriverTripPassengerView,
     SelfProfileView,
 )
 
@@ -68,7 +68,7 @@ urlpatterns = [
     ),
     path(
         "staff/passengers/",
-        DriverTripPassengerView.as_view(),
+        LocalDriverTripPassengerView.as_view(),
         name="trip-passenger-create",
     ),
     path(

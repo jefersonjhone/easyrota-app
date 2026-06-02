@@ -261,7 +261,7 @@ export function DriverTripsPage() {
                 <Link
                   key={trip.id}
                   className="driver-trip-card driver-trip-card--link"
-                  to="/app/driver/viajem/$tripId"
+                  to="/app/driver/viagem/$tripId"
                   params={{ tripId: String(trip.id) }}
                   aria-label={`Abrir detalhes da viagem ${trip.origin} para ${trip.destiny}`}
                 >
