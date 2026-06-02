@@ -254,7 +254,7 @@ class LoginView(generics.GenericAPIView):
             value=refresh_token,
             httponly=True,
             secure=not settings.DEBUG,
-            samesite="Lax",
+            samesite="None",
             max_age=SIMPLE_JWT_REFRESH_TOKEN_LIFETIME,
             path=reverse("refresh-token"),
         )
@@ -557,7 +557,7 @@ class Verify2FAView(generics.GenericAPIView):
             value=refresh_token,
             httponly=True,
             secure=not settings.DEBUG,
-            samesite="Lax",
+            samesite="None",
             max_age=SIMPLE_JWT_REFRESH_TOKEN_LIFETIME,
             path=reverse("refresh-token"),
         )
@@ -613,7 +613,7 @@ class RefreshTokenView(generics.GenericAPIView):
                 value=data["refresh"],
                 httponly=True,
                 secure=not settings.DEBUG,
-                samesite="Lax",
+                samesite="None",
                 max_age=SIMPLE_JWT_REFRESH_TOKEN_LIFETIME,
                 path=reverse("refresh-token"),
             )
