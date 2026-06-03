@@ -16,8 +16,8 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --only main --no-interaction --no-root
 
 COPY api/ .
-COPY start.sh .
-RUN chmod +x start.sh
+COPY start_server.sh .
+RUN chmod +x start_server.sh
 
-ENTRYPOINT ["sh", "start.sh"]
+ENTRYPOINT ["sh", "start_server.sh"]
 EXPOSE 8000
