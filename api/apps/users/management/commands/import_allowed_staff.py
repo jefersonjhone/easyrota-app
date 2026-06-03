@@ -67,6 +67,7 @@ class Command(BaseCommand):
             raise CommandError("Cabeçalho esperado: Servidor, Matrícula.") from exc
 
         imported = 0
+        users = []
         for row in rows[1:]:
             if len(row) <= max(name_idx, reg_idx):
                 continue
@@ -75,11 +76,13 @@ class Command(BaseCommand):
             registration_number = row[reg_idx].strip()
             if not name or not registration_number:
                 continue
-
-            AllowedStaff.objects.update_or_create(
-                registration_number=registration_number,
-                defaults={"name": name},
+            
+            users.append(
+                AllowedStaff(
+                    registration_number=registration_number,
+                    name=name
+                )
             )
             imported += 1
-
+        AllowedStaff.objects.bulk_create(users, batch_size=500, ignore_conflicts=True)
         self.stdout.write(self.style.SUCCESS(f"{imported} servidores importados."))
