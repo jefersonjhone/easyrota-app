@@ -50,7 +50,7 @@ export function TripsHistoryCard() {
   }
 
   const handleTripClick = (tripId: string) => {
-    alert(`/app/trips/${tripId}`)
+    console.log("Apertou numa viagem: ", tripId)
   }
 
   return (
