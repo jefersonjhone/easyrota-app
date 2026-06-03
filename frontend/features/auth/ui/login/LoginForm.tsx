@@ -61,12 +61,12 @@ export function LoginForm() {
     const onSubmit = async (data: Schema) => {
         try {
             const response = await loginMutation.mutateAsync(data)
-            const isAdmin = response.user?.admin_profile
-            const userAccount = response.user as { kind?: string } | undefined
+            const user = response.user
+            const isAdmin = user?.admin_profile || user?.profile_type === 'ADMIN'
 
             if (isAdmin) {
                 navigate({ to: AdminRoute.to, replace: true })
-            } else if (userAccount?.kind === 'driver') {
+            } else if (user?.profile_type === 'DRIVER') {
                 navigate({ to: '/app/driver/viagens' as never, replace: true })
             } else {
                 navigate({ to: AppRoute.to, replace: true })

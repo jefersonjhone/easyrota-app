@@ -149,6 +149,12 @@
   color: var(--primary);
 }
 
+.driver-trip-card__side--in-progress {
+  border-color: color-mix(in oklch, var(--primary) 36%, var(--border));
+  background: color-mix(in oklch, var(--primary) 18%, white);
+  color: var(--primary);
+}
+
 .driver-trip-card__side--canceled {
   border-color: color-mix(in oklch, var(--destructive) 30%, var(--border));
   background: color-mix(in oklch, var(--destructive) 10%, white);
