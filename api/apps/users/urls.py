@@ -15,13 +15,14 @@ from .views.auth import (
     ResendReactivationOTPView,
     Verify2FAView,
     VerifyRegistrationOTPView,
+    VerifyPasswordResetOTPView,
 )
 from .views.users import (
     AdminDelegationView,
     AllowedStaffSearchView,
-    DriverTripPassengerView,
     DriverViewSet,
     HealthCheckView,
+    LocalDriverTripPassengerView,
     SelfProfileView,
 )
 
@@ -54,6 +55,11 @@ urlpatterns = [
         name="password-reset-request",
     ),
     path(
+        "auth/verify-password-reset-otp/",
+        VerifyPasswordResetOTPView.as_view(),
+        name="verify-password-reset-otp",
+    ),
+    path(
         "auth/password-reset-confirm/",
         PasswordResetConfirmView.as_view(),
         name="password-reset-confirm",
@@ -68,7 +74,7 @@ urlpatterns = [
     ),
     path(
         "staff/passengers/",
-        DriverTripPassengerView.as_view(),
+        LocalDriverTripPassengerView.as_view(),
         name="trip-passenger-create",
     ),
     path(

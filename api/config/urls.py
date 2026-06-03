@@ -21,6 +21,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.users.views.webpush import WebPushSubscriptionView
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("apps.users.urls")),
@@ -28,6 +30,8 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("api/", include("apps.reservations.urls")),
     path("api/dashboard/", include("apps.dashboard.urls")),
+    path("api/webpush/save_information/", WebPushSubscriptionView.as_view(), name="save_webpush_info"),
+    path("api/webpush/", include("webpush.urls")),
 ]
 
 settings_module = os.getenv("DJANGO_SETTINGS_MODULE", "config.settings.production")

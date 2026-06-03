@@ -45,6 +45,7 @@ export function RequestRecoveryForms({ onSuccess }: Props) {
     try {
       const data = await apiFetch<PasswordResetRequestResponse>("/auth/password-reset-request/", {
         method: "POST",
+        auth: false,
         body: JSON.stringify({ email })
       })
       onSuccess?.(email, data?.token || "")

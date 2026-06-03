@@ -11,7 +11,9 @@ load_dotenv()
 
 def main():
     """Run administrative tasks."""
-
+    base_dir = os.path.dirname(__file__)
+    if base_dir not in sys.path:
+        sys.path.insert(0, base_dir)
     os.environ.setdefault(
         "DJANGO_SETTINGS_MODULE",
         os.getenv("DJANGO_SETTINGS_MODULE", "config.settings.production"),

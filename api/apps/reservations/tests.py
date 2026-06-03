@@ -15,7 +15,12 @@ from ..users.models import (
     StudentProfile,
 )
 from .models import Punishment, Reservation
-from .services import get_priority_tuple, process_trip_punishments
+from .services import (
+    get_priority_tuple,
+    process_trip_punishments,
+    trip_has_quorum,
+    trip_has_capacity,
+)
 
 
 class BaseReservationTestCase(APITestCase):
@@ -244,6 +249,14 @@ class AvailableTripsTest(BaseReservationTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["available_seats"], 43)
         self.assertEqual(response.data[0]["bus_brand"], "Mercedes-Benz")
+
+    def test_trip_has_quorum_counts_driver_registered_server(self):
+        trip = self.create_trip(days_ahead=1)
+        self.assertFalse(trip_has_quorum(trip))
+
+    def test_trip_capacity_counts_trip_passengers(self):
+        trip = self.create_trip(days_ahead=1)
+        self.assertTrue(trip_has_capacity(trip))
 
 
 class PunishmentSystemTestCase(BaseReservationTestCase):

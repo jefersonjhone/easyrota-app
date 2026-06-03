@@ -98,8 +98,8 @@ export default function SignupForm(props: Props) {
       // O backend retorna um token no registro para vincular ao desafio OTP
       const token = (response as { token?: string }).token
       const email = data.email
-      const targetPath = `/verificar?token=${token}&email=${email}`
-      
+      const targetPath = `/verificar?token=${encodeURIComponent(String(token ?? ""))}&email=${encodeURIComponent(email)}`
+
       await navigate({ to: targetPath as never, replace: true })
     } catch (error: unknown) {
       const errors = error as Record<string, string | string[]>

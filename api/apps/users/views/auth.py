@@ -37,6 +37,7 @@ from ..serializers.auth import (
     StudentRegistrationSerializer,
     Verify2FASerializer,
     VerifyRegistrationOTPSerializer,
+    VerifyPasswordResetOTPSerializer,
 )
 from ..serializers.users import (
     AuthenticatedUserWithProfileSerializer,
@@ -403,13 +404,9 @@ class PasswordResetRequestView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
 
-        user = CustomUser.objects.filter(email=email).first()
+        user = CustomUser.objects.filter(email=email, is_active=True).first()
         if not user:
-            # Para evitar enumeração de contas, retornamos sucesso genérico
-            return Response(
-                {"status": "verification_required", "token": ""},
-                status=status.HTTP_200_OK,
-            )
+            raise serializers.ValidationError({"email": "Usuário não encontrado ou inativo."})
 
         # Revoga desafios anteriores de reset
         MFAChallenge.objects.filter(
@@ -444,6 +441,64 @@ class PasswordResetRequestView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+def check_challenge_code(token, code, purpose=None):
+    try:
+        payload = PartialTokenService.decode(token)
+    except jwt.ExpiredSignatureError:
+        raise AuthenticationFailed("O link expirou. Solicite novamente.")
+    except jwt.InvalidTokenError:
+        raise AuthenticationFailed("Token de verificação inválido.")
+
+    if payload.get("type") != "2fa_pending":
+        raise AuthenticationFailed("Tipo de token inválido.")
+        
+    if purpose and payload.get("purpose") != purpose:
+        raise AuthenticationFailed("Propósito de token inválido.")
+
+    challenge = (
+        MFAChallenge.objects.filter(jti=payload["jti"]).select_related("user").first()
+    )
+
+    if not challenge:
+        raise AuthenticationFailed("Desafio não encontrado")
+    if challenge.used:
+        raise AuthenticationFailed("Desafio já utilizado")
+    if challenge.revoked:
+        raise AuthenticationFailed("Desafio revogado")
+    if challenge.is_expired():
+        raise AuthenticationFailed("Desafio expirado")
+
+    if not challenge.can_attempt():
+        challenge.revoked = True
+        challenge.save(update_fields=["revoked"])
+        raise AuthenticationFailed("Muitas tentativas falhas. Solicite novamente.")
+
+    challenge.attempts += 1
+    challenge.save(update_fields=["attempts"])
+
+    if not check_password(code, challenge.code_hash):
+        raise AuthenticationFailed("Código inválido")
+
+    return challenge
+
+
+class VerifyPasswordResetOTPView(generics.GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = VerifyPasswordResetOTPSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        check_challenge_code(
+            serializer.validated_data["token"], 
+            serializer.validated_data["code"],
+            purpose=MFAChallenge.Purpose.PASSWORD_RESET
+        )
+        
+        return Response({"status": "code_valid"}, status=status.HTTP_200_OK)
 
 
 class PasswordResetConfirmView(generics.GenericAPIView):
@@ -588,6 +643,16 @@ class RefreshTokenView(generics.GenericAPIView):
 
         try:
             serializer.is_valid(raise_exception=True)
+        except CustomUser.DoesNotExist:
+            response = Response(
+                {"detail": "Refresh token user not found."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            response.delete_cookie(
+                "refresh_token",
+                path="/",
+            )
+            return response
 
         except ExpiredTokenError:
             response = Response(

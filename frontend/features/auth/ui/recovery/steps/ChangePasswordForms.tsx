@@ -51,6 +51,7 @@ export function ChangePasswordForms({ token, otp }: Props) {
     try {
       await apiFetch("/auth/password-reset-confirm/", {
         method: "POST",
+        auth: false,
         body: JSON.stringify({
           token,
           code: otp,
@@ -61,7 +62,7 @@ export function ChangePasswordForms({ token, otp }: Props) {
       
       setSuccess(true)
       setTimeout(() => {
-        navigate({ to: LoginRoute.to, replace: true })
+        window.location.href = "/login"
       }, 2000)
     } catch (err: unknown) {
       console.error(err)

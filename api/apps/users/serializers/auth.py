@@ -192,6 +192,11 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
+class VerifyPasswordResetOTPSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    code = serializers.CharField(max_length=6)
+
+
 class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField()
     code = serializers.CharField(max_length=6)
@@ -233,6 +238,100 @@ class CivilServantAllowedStaffSerializer(serializers.Serializer):
 
         attrs["name"] = normalized_name
         attrs["registration_number"] = normalized_registration
+        return attrs
+
+
+class LocalTripPassengerSerializer(serializers.Serializer):
+    trip = serializers.IntegerField()
+    passenger_type = serializers.CharField(required=False, allow_blank=True)
+    kind = serializers.CharField(required=False, allow_blank=True)
+    allowed_staff_id = serializers.IntegerField(required=False)
+    associated_staff_id = serializers.IntegerField(required=False)
+    name = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    registration_number = serializers.CharField(
+        required=False, allow_blank=True, max_length=32
+    )
+    full_name = serializers.CharField(required=False, allow_blank=True, max_length=255)
+    cpf = serializers.CharField(required=False, allow_blank=True, max_length=11)
+
+    def _normalize_passenger_type(self, attrs):
+        raw_type = (
+            attrs.get("passenger_type")
+            or attrs.get("kind")
+            or "LOCAL_SERVER"
+        )
+        normalized_type = raw_type.strip().upper()
+        aliases = {
+            "SERVIDOR": "LOCAL_SERVER",
+            "SERVER": "LOCAL_SERVER",
+            "LOCAL_SERVER": "LOCAL_SERVER",
+            "CONVIDADO": "LOCAL_GUEST",
+            "GUEST": "LOCAL_GUEST",
+            "LOCAL_GUEST": "LOCAL_GUEST",
+        }
+
+        try:
+            return aliases[normalized_type]
+        except KeyError as exc:
+            raise serializers.ValidationError({
+                "passenger_type": "Tipo de passageiro local invalido."
+            }) from exc
+
+    def _get_allowed_staff(self, attrs, id_field):
+        staff_id = attrs.get(id_field)
+        if staff_id:
+            try:
+                return AllowedStaff.objects.get(id=staff_id)
+            except AllowedStaff.DoesNotExist as exc:
+                raise serializers.ValidationError({
+                    id_field: "Servidor nao encontrado na base autorizada."
+                }) from exc
+
+        normalized_name = attrs.get("name", "").strip().upper()
+        normalized_registration = attrs.get("registration_number", "").strip()
+        if normalized_name and normalized_registration:
+            try:
+                return AllowedStaff.objects.get(
+                    name__iexact=normalized_name,
+                    registration_number=normalized_registration,
+                )
+            except AllowedStaff.DoesNotExist as exc:
+                raise serializers.ValidationError({
+                    "detail": "Servidor nao encontrado na base autorizada."
+                }) from exc
+
+        raise serializers.ValidationError({
+            id_field: "Informe o servidor da base autorizada."
+        })
+
+    def validate(self, attrs):
+        passenger_type = self._normalize_passenger_type(attrs)
+        attrs["passenger_type"] = passenger_type
+
+        if passenger_type == "LOCAL_SERVER":
+            attrs["allowed_staff"] = self._get_allowed_staff(
+                attrs, "allowed_staff_id"
+            )
+            return attrs
+
+        attrs["associated_staff"] = self._get_allowed_staff(
+            attrs, "associated_staff_id"
+        )
+        full_name = attrs.get("full_name", "").strip()
+        cpf = attrs.get("cpf", "").strip()
+
+        if not full_name:
+            raise serializers.ValidationError({
+                "full_name": "Informe o nome do convidado."
+            })
+
+        if not cpf or len(cpf) != 11 or not cpf.isdigit():
+            raise serializers.ValidationError({
+                "cpf": "CPF deve conter 11 numeros."
+            })
+
+        attrs["full_name"] = full_name
+        attrs["cpf"] = cpf
         return attrs
 
 

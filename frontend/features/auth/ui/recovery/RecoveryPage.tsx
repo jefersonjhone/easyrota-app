@@ -35,7 +35,9 @@ export const RecoveryPage = () => {
         <Step value="confirm">
           <ConfirmPinForms 
             email={email} 
+            token={token}
             onSuccess={(otpValue: string) => setOtp(otpValue)} 
+            onTokenUpdate={(newToken: string) => setToken(newToken)}
           />
         </Step>
         <Step value="reset">
