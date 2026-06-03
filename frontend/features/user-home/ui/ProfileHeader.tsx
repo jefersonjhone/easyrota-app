@@ -152,7 +152,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
         </div>
       </div>
       <Dialog open={openSettings} onOpenChange={setOpenSettings}>
-        <DialogContent className="max-h-[80vh] w-full max-w-lg space-y-2 md:space-y-6">
+        <DialogContent className="max-h-[80vh] overflow-y-auto w-full max-w-lg space-y-2 md:space-y-6">
           <DialogTitle>Configurações</DialogTitle>
           <DialogDescription>
             Gerencie preferências de notificações, aparência e conta.
