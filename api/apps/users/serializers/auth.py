@@ -41,9 +41,8 @@ class LoginSerializer(serializers.Serializer):
 
         if user_check and not user_check.is_active:
             raise serializers.ValidationError({
-                "detail": (
-                    "Sua conta ainda não foi ativada. Por favor, verifique seu e-mail."
-                )
+                "detail": "Sua conta ainda não foi ativada. "
+                "Por favor, verifique seu e-mail."
             })
 
         user = authenticate(email=email, password=password)

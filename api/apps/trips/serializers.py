@@ -187,8 +187,10 @@ class TripSerializer(serializers.ModelSerializer):
                 "source": "Manual",
                 "kind": (
                     "Servidor"
-                    if passenger.passenger_type
-                    == TripPassenger.PassengerType.LOCAL_SERVER
+                    if (
+                        passenger.passenger_type
+                        == TripPassenger.PassengerType.LOCAL_SERVER
+                    )
                     else "Convidado"
                 ),
             })

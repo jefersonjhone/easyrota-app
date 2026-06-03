@@ -218,9 +218,8 @@ class TripViewSet(viewsets.ModelViewSet):
                     transaction.set_rollback(True)
                     return Response(
                         {
-                            "error": (
-                                "Nao ha vaga disponivel para priorizar o passageiro."
-                            )
+                            "error": "Nao ha vaga disponivel "
+                            "para priorizar o passageiro."
                         },
                         status=status.HTTP_409_CONFLICT,
                     )

@@ -117,22 +117,23 @@ class Command(BaseCommand):
             if push_count == 0:
                 self.stdout.write(
                     self.style.WARNING(
-                        "O usuário aluno-teste@test.com não tem inscrição push "
-                        "vinculada. Ative as notificações no mesmo navegador "
+                        "O usuário aluno-teste@test.com não tem "
+                        "inscrição push vinculada."
+                        "Ative as notificações no mesmo navegador "
                         "e com esse login antes de disparar o trigger."
                     )
                 )
             else:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        "Inscrição push encontrada para aluno-teste@test.com "
+                        f"Inscrição push encontrada para aluno-teste@test.com "
                         f"({push_count} registro(s))."
                     )
                 )
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    "GATILHO EXECUTADO! Se você se inscreveu no push, a "
-                    "notificação deve chegar agora."
+                    "GATILHO EXECUTADO! Se você se inscreveu no push, "
+                    "a notificação deve chegar agora."
                 )
             )

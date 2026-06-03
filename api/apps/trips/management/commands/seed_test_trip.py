@@ -99,14 +99,14 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.SUCCESS(
-                "A NOTIFICAÇÃO DISPARARÁ EM 2 MINUTOS, ÀS: "
-                f"{local_notify.strftime('%H:%M:%S')}"
+                f"A NOTIFICAÇÃO DISPARARÁ EM 2 MINUTOS, ÀS: {
+                    local_notify.strftime('%H:%M:%S')}"
             )
         )
         self.stdout.write(
             self.style.WARNING(
-                "Hora atual no sistema (Local): "
-                f"{timezone.localtime().strftime('%H:%M:%S')}"
+                f"Hora atual no sistema (Local): {
+                    timezone.localtime().strftime('%H:%M:%S')}"
             )
         )
         self.stdout.write(
@@ -114,7 +114,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.WARNING(
-                "Certifique-se de que o comando 'run_scheduler' esteja "
-                "rodando em outro terminal."
+                "Certifique-se de que o comando 'run_scheduler' "
+                "esteja rodando em outro terminal."
             )
         )

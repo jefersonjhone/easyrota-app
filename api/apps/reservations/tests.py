@@ -240,6 +240,8 @@ class AvailableTripsTest(BaseReservationTestCase):
             status="LISTA SECUNDÁRIA",
         )
 
+        print(Reservation.objects.count())
+
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url, format="json")
 

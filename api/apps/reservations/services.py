@@ -41,11 +41,8 @@ def get_active_reservations_queryset(trip):
 
 
 def get_waitlist_queryset(trip):
-    queryset = Reservation.objects.filter(trip=trip, status=WAITLIST_STATUS)
-    return queryset.select_related(
-        "student__user",
-        "civil_servant__user",
-        "guest_passenger",
+    return Reservation.objects.filter(trip=trip, status=WAITLIST_STATUS).select_related(
+        "student__user", "civil_servant__user", "guest_passenger"
     )
 
 
@@ -106,10 +103,8 @@ def send_trip_quorum_met_notification(trip):
 
     payload = {
         "head": "Quórum atingido",
-        "body": (
-            "O quórum mínimo foi atingido e há pelo menos 1 servidor "
-            "confirmado na viagem."
-        ),
+        "body": "O quórum mínimo foi atingido e há pelo menos "
+        "1 servidor confirmado na viagem.",
         "url": "/app/",
     }
 

@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.urls.base import reverse
 from django.utils import timezone
-from rest_framework import generics, serializers, status
+from rest_framework import generics, status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -406,7 +406,7 @@ class PasswordResetRequestView(generics.GenericAPIView):
 
         user = CustomUser.objects.filter(email=email, is_active=True).first()
         if not user:
-            raise serializers.ValidationError({
+            raise serializer.ValidationError({
                 "email": "Usuário não encontrado ou inativo."
             })
 
