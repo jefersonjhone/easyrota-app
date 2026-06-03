@@ -72,7 +72,7 @@ export function TripsHomePage() {
 
   return (
     <AppLayout>
-      <section className="mx-auto w-full max-w-5xl px-4">
+      <section className="mt-8 mx-auto w-full max-w-5xl px-4">
         <header className="mb-8 space-y-2">
           <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
             Viagens disponíveis
