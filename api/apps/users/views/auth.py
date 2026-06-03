@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 
 import jwt
+import resend
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password, make_password
@@ -44,6 +45,8 @@ from ..serializers.users import (
     DeleteOwnAccountSerializer,
 )
 
+resend.api_key = settings.RESEND_API_KEY
+
 logger = logging.getLogger("api")
 
 SIMPLE_JWT_REFRESH_TOKEN_LIFETIME = SIMPLE_JWT.get(
@@ -63,6 +66,16 @@ def unauthorized(message):
 
 
 def send_registration_otp(email, code):
+    resend.Emails.send({
+        "from": "onboarding@resend.dev",
+        "to": [email],
+        "subject": "Código de verificação EasyRota",
+        "html": f"<h2>Seu código é {code}</h2>",
+    })
+
+
+"""
+def send_registration_otp(email, code):
     send_mail(
         subject="Código de confirmação EasyRota",
         message=f"Seu código de confirmação é: {code}",
@@ -70,6 +83,7 @@ def send_registration_otp(email, code):
         recipient_list=[email],
         fail_silently=False,
     )
+"""
 
 
 def handle_registration(request):
