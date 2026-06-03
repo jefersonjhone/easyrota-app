@@ -1,6 +1,10 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from webpush import send_user_notification
+
+logger = logging.getLogger("api")
 
 
 class Command(BaseCommand):
@@ -17,10 +21,12 @@ class Command(BaseCommand):
         for user in users:
             self.stdout.write(f"Tentando enviar para: {user.email}")
             try:
+                
                 send_user_notification(user=user, payload=payload, ttl=1000)
-            except Exception as e:
-                self.stdout.write(
-                    self.style.WARNING(f"Erro ao enviar para {user.email}: {e}")
+            except Exception:
+                logger.exception(
+                    "Erro ao enviar push para %s",
+                    user.email,
                 )
-
-        self.stdout.write(self.style.SUCCESS("Comando de teste finalizado."))
+            else:
+                logger.info(f"email enviado com sucesso para {user.email}")
