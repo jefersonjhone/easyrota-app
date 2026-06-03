@@ -5,12 +5,10 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
 import { Input } from "@ui/input"
 
 // Hooks
-import { useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import { apiFetch } from "@/lib/api"
 
 // Routes
-import { Route as LoginRoute } from "@/pages/login"
 
 type Props = {
   token: string | null
@@ -18,7 +16,6 @@ type Props = {
 }
 
 export function ChangePasswordForms({ token, otp }: Props) {
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
