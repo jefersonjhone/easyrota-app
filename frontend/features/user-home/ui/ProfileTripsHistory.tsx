@@ -59,7 +59,7 @@ export function TripsHistoryCard() {
         <CardTitle className="font-medium font-heading text-xl">Últimas Reservas</CardTitle>
       </CardHeader>
       <CardContent className="px-2">
-        <div className="space-y-2 md:space-y-6">
+        <div className="space-y-2 md:space-y-6 w-full">
           {trips.map((trip: Trip) => {
             return (
               <div
@@ -88,14 +88,18 @@ export function TripsHistoryCard() {
               </div>
             )
           })}
+
+        <div className="w-full flex items center">
+          <a href="/app/viagens/historico" 
+          className="mx-auto py-2 text-center text-chart-3 hover:text-chart-4 font-medium md:font-semibold underline">
+        
+        
+          Ver histórico completo
+          </a>
         </div>
 
-        <button
-          onClick={() => alert(`/app/trips-history`)}
-          className="w-full mt-4 py-2 text-center text-chart-3 hover:text-chart-4 font-medium md:font-semibold"
-        >
-          Ver histórico completo
-        </button>
+        </div>
+        
       </CardContent>
     </Card>
   )
