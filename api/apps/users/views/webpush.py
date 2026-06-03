@@ -1,8 +1,8 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from webpush.forms import WebPushForm, SubscriptionForm
-import json
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from webpush.forms import SubscriptionForm, WebPushForm
+
 
 def process_subscription_data(post_data):
     """Process the subscription data according to our model.
@@ -15,8 +15,9 @@ def process_subscription_data(post_data):
     subscription_data.update(keys)
     # Insert the browser name and user agent
     subscription_data["browser"] = post_data.get("browser", None)
-    subscription_data["user_agent"] = post_data.get("user_agent", '')
+    subscription_data["user_agent"] = post_data.get("user_agent", "")
     return subscription_data
+
 
 class WebPushSubscriptionView(APIView):
     permission_classes = [IsAuthenticated]
@@ -24,11 +25,11 @@ class WebPushSubscriptionView(APIView):
     def post(self, request):
         try:
             post_data = request.data
-            
+
             # Process the subscription data to match with the model
             subscription_data = process_subscription_data(dict(post_data))
             subscription_form = SubscriptionForm(subscription_data)
-            
+
             # pass the data through WebPushForm for validation purpose
             web_push_form = WebPushForm(post_data)
 
@@ -40,17 +41,20 @@ class WebPushSubscriptionView(APIView):
                 # Save the subscription info
                 subscription = subscription_form.get_or_save()
                 web_push_form.save_or_delete(
-                    subscription=subscription, 
+                    subscription=subscription,
                     user=request.user,
-                    status_type=status_type, 
-                    group_name=group_name
+                    status_type=status_type,
+                    group_name=group_name,
                 )
 
-                return Response({"status": "success"}, status=201 if status_type == 'subscribe' else 202)
-            
+                return Response(
+                    {"status": "success"},
+                    status=201 if status_type == "subscribe" else 202,
+                )
+
             errors = {
                 "subscription_errors": subscription_form.errors,
-                "web_push_errors": web_push_form.errors
+                "web_push_errors": web_push_form.errors,
             }
             return Response(errors, status=400)
 

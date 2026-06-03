@@ -27,8 +27,7 @@ class ReservationSerializer(serializers.ModelSerializer):
         if not hasattr(user, "student_profile") and not hasattr(
             user, "civil_servant_profile"
         ):
-            raise serializers.ValidationError(
-                "Perfil sem permissão para reservar.")
+            raise serializers.ValidationError("Perfil sem permissão para reservar.")
 
         if trip.status == "CANCELADA":
             raise serializers.ValidationError("Esta viagem foi cancelada.")
@@ -52,8 +51,7 @@ class ReservationSerializer(serializers.ModelSerializer):
                 trip=trip, student=user.student_profile
             ).exists()
         ):
-            raise serializers.ValidationError(
-                "Você já possui reserva nesta viagem.")
+            raise serializers.ValidationError("Você já possui reserva nesta viagem.")
 
         if (
             hasattr(user, "civil_servant_profile")
@@ -61,8 +59,7 @@ class ReservationSerializer(serializers.ModelSerializer):
                 trip=trip, civil_servant=user.civil_servant_profile
             ).exists()
         ):
-            raise serializers.ValidationError(
-                "Você já possui reserva nesta viagem.")
+            raise serializers.ValidationError("Você já possui reserva nesta viagem.")
 
         return trip
 
@@ -212,7 +209,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
 
     def get_status_trip(self, obj):
         return obj.get_status_display()
-    
+
     def get_reserved_seats(self, obj):
         return Reservation.objects.filter(trip=obj).count()
 

@@ -26,16 +26,16 @@ class BusSerializer(serializers.ModelSerializer):
         if value > 120:
             raise serializers.ValidationError("Capacidade muito alta para um ônibus.")
         return value
-    
+
     def validate_number_plate(self, value):
-        pattern = r'^([a-zA-Z]{3}-?\d{4}|[a-zA-Z]{3}\d[a-zA-Z]\d{2})$'
-    
+        pattern = r"^([a-zA-Z]{3}-?\d{4}|[a-zA-Z]{3}\d[a-zA-Z]\d{2})$"
+
         if not re.match(pattern, value):
             raise ValidationError(
-                '%(value)s não é uma placa válida. Use AAA-1234 ou AAA1A23.',
-                params={'value': value},
+                "%(value)s não é uma placa válida. Use AAA-1234 ou AAA1A23.",
+                params={"value": value},
             )
-        
+
         return value
 
 
@@ -187,7 +187,8 @@ class TripSerializer(serializers.ModelSerializer):
                 "source": "Manual",
                 "kind": (
                     "Servidor"
-                    if passenger.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER
+                    if passenger.passenger_type
+                    == TripPassenger.PassengerType.LOCAL_SERVER
                     else "Convidado"
                 ),
             })
@@ -377,7 +378,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         civil_servant_profile = getattr(user, "civil_servant_profile", None)
         if civil_servant_profile is None:
             return []
-        
+
         guests = GuestPassenger.objects.filter(
             recorded_by=civil_servant_profile,
             trip=obj.id,
@@ -390,24 +391,24 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
     def get_has_checked_in(self, obj):
         """
-        It retrieves the reservation of the authenticated user 
+        It retrieves the reservation of the authenticated user
         and returns whether they have already checked in.
         """
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return False
-            
+
         user = request.user
         if hasattr(user, "student_profile"):
             res = obj.reservation_set.filter(student=user.student_profile).first()
             return res.check_in if res else False
-            
+
         if hasattr(user, "civil_servant_profile"):
             res = obj.reservation_set.filter(
                 civil_servant=user.civil_servant_profile
-                ).first()
+            ).first()
             return res.check_in if res else False
-            
+
         return False
 
     def _get_trip_metrics(self, obj):
@@ -438,8 +439,10 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
         return obj.departure_timestamp, total_duration
 
     def get_percentage_complete(self, obj):
-        if (obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO", "CONFIRMADA"] 
-            or not obj.departure_timestamp):
+        if (
+            obj.status in ["CANCELADA", "RISCO DE CANCELAMENTO", "CONFIRMADA"]
+            or not obj.departure_timestamp
+        ):
             return 0
 
         if obj.status == "CONCLUÍDA":
@@ -472,7 +475,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
         now = timezone.now()
         start_time, total_duration = self._get_trip_metrics(obj)
-        
+
         if not start_time:
             return None
 

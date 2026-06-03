@@ -10,8 +10,8 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from apps.trips.models import Bus, Route, Trip, TripPassenger
 from apps.reservations.models import Reservation
+from apps.trips.models import Bus, Route, Trip
 
 from .models.auth import AllowedStaff, MFAChallenge
 from .models.profiles import (
@@ -410,7 +410,7 @@ class AllowedStaffValidationTests(APITestCase):
         )
 
         assert create_response.status_code == status.HTTP_201_CREATED
-        assert create_response.data["id"]
+        assert create_response.data["passenger"]["id"]
 
 
 class DriverProfileTests(APITestCase):
@@ -492,7 +492,7 @@ class WebPushSubscriptionTests(APITestCase):
             password="SenhaSegura123",
             full_name="Admin Reg",
         )
-        admin_profile = AdministratorProfile.objects.create(user=admin_user)
+        admin_profile = AdministratorProfile.objects.get(user=admin_user)
 
         driver_user = CustomUser.objects.create_user(
             email="driver.registrar@teste.com",
@@ -553,9 +553,11 @@ class WebPushSubscriptionTests(APITestCase):
             format="json",
         )
 
-        assert response.status_code == status.HTTP_409_CONFLICT
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["passenger"]["reservation_id"] == reservation.id
         reservation.refresh_from_db()
-        assert reservation.status == "PENDENTE"
+        assert reservation.status == "CONFIRMADA"
+        assert reservation.check_in is True
 
     def test_subscription_requires_authenticated_user(self):
         self.client.logout()

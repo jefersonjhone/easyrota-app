@@ -1,20 +1,22 @@
 import logging
 from datetime import timedelta
-from django.utils import timezone
-from django.core.management.base import BaseCommand
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+from django_apscheduler import util
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
-from django_apscheduler import util
 
-from apps.trips.models import Trip
 from apps.reservations.services import (
     send_trip_quorum_warning_notification,
     sync_trip_status,
 )
+from apps.trips.models import Trip
 
 logger = logging.getLogger(__name__)
+
 
 def check_upcoming_trips_quorum():
     now = timezone.now()
@@ -24,7 +26,7 @@ def check_upcoming_trips_quorum():
     trips = Trip.objects.filter(
         departure_timestamp__gte=target_time_start,
         departure_timestamp__lt=target_time_end,
-        status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"]
+        status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"],
     )
 
     for trip in trips:
@@ -39,15 +41,21 @@ def check_upcoming_trips_quorum():
         else:
             logger.info("Trip %s com quórum mínimo atendido.", trip.id)
 
+
 @util.close_old_connections
 def delete_old_job_executions(max_age=604_800):
     DjangoJobExecution.objects.delete_old_job_executions(max_age)
+
 
 class Command(BaseCommand):
     help = "Runs APScheduler."
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.WARNING("Scheduler iniciado. Verificando notificações a cada 1 minuto."))
+        self.stdout.write(
+            self.style.WARNING(
+                "Scheduler iniciado. Verificando notificações a cada 1 minuto."
+            )
+        )
         scheduler = BlockingScheduler(timezone=timezone.get_current_timezone())
         scheduler.add_jobstore(DjangoJobStore(), "default")
 

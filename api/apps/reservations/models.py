@@ -55,17 +55,15 @@ class Guest(models.Model):
 
 class Punishment(models.Model):
     """
-Records a penalty applied to a student regarding a specific reservation
-(For missing a trip without cancellation).
-"""
+    Records a penalty applied to a student regarding a specific reservation
+    (For missing a trip without cancellation).
+    """
 
     is_active = models.BooleanField(default=True)
     description = models.CharField(max_length=255)
-    student = models.ForeignKey(
-        "users.StudentProfile", on_delete=models.CASCADE)
+    student = models.ForeignKey("users.StudentProfile", on_delete=models.CASCADE)
 
-    reservation = models.OneToOneField(
-        Reservation, on_delete=models.CASCADE)
+    reservation = models.OneToOneField(Reservation, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

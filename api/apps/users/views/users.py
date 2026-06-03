@@ -11,8 +11,8 @@ from apps.reservations.services import (
     WAITLIST_STATUS,
     evict_lowest_priority_active_reservation,
     get_reservation_passenger_name,
-    trip_has_capacity,
     sync_trip_status,
+    trip_has_capacity,
 )
 
 from ...trips.models import Trip, TripPassenger
@@ -268,9 +268,7 @@ class LocalDriverTripPassengerView(views.APIView):
             return None
 
         if reservation.status == WAITLIST_STATUS:
-            capacity_response = self._ensure_capacity_or_evict(
-                trip, evicted_passengers
-            )
+            capacity_response = self._ensure_capacity_or_evict(trip, evicted_passengers)
             if capacity_response is not None:
                 return capacity_response
 

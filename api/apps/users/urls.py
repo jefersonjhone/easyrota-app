@@ -14,8 +14,8 @@ from .views.auth import (
     ResendOTPView,
     ResendReactivationOTPView,
     Verify2FAView,
-    VerifyRegistrationOTPView,
     VerifyPasswordResetOTPView,
+    VerifyRegistrationOTPView,
 )
 from .views.users import (
     AdminDelegationView,

@@ -10,7 +10,11 @@ from apps.reservations.services import sync_trip_status, trip_has_quorum
 from apps.trips.management.commands.run_scheduler import check_upcoming_trips_quorum
 from apps.trips.models import Bus, Route, Trip, TripPassenger
 from apps.users.models import CustomUser
-from apps.users.models.profiles import AdministratorProfile, CivilServantProfile, StudentProfile
+from apps.users.models.profiles import (
+    AdministratorProfile,
+    CivilServantProfile,
+    StudentProfile,
+)
 
 
 class NotificationFlowTests(TestCase):
@@ -20,10 +24,7 @@ class NotificationFlowTests(TestCase):
             full_name="Admin Teste",
             password="12345678",
         )
-        self.admin_profile = AdministratorProfile.objects.create(
-            user=self.admin,
-            role="Admin",
-        )
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin)
 
         self.bus = Bus.objects.create(
             number_plate="TEST123",
@@ -100,7 +101,9 @@ class NotificationFlowTests(TestCase):
             is_active=True,
         )
 
-        with patch("apps.trips.management.commands.send_test_push.send_user_notification") as mocked_send:
+        with patch(
+            "apps.trips.management.commands.send_test_push.send_user_notification"
+        ) as mocked_send:
             call_command("send_test_push")
 
         assert mocked_send.call_count >= 2
@@ -195,7 +198,9 @@ class NotificationFlowTests(TestCase):
     def test_scheduler_does_not_send_warning_when_quorum_is_met(self):
         trip = self._create_trip_with_minimum_quorum()
 
-        with patch("apps.trips.management.commands.run_scheduler.send_trip_quorum_warning_notification") as mocked_warning:
+        with patch(
+            "apps.trips.management.commands.run_scheduler.send_trip_quorum_warning_notification"
+        ) as mocked_warning:
             check_upcoming_trips_quorum()
 
         trip.refresh_from_db()

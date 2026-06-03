@@ -35,7 +35,7 @@ class BusViewTests(APITestCase):
         )
 
         self.payload = {
-            "number_plate": "ABC123",
+            "number_plate": "ABC-1234",
             "seating_capacity": 40,
             "brand": "Mercedes-Benz",
         }
@@ -80,5 +80,5 @@ class BusViewTests(APITestCase):
         response = self.client.post(self.url, self.payload, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["number_plate"] == "ABC123"
+        assert response.data["number_plate"] == "ABC-1234"
         assert response.data["administrator"] == self.admin.admin_profile.id
