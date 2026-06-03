@@ -51,8 +51,7 @@ class BusViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         """Allows full access for administrators and only GET requests for drivers."""
         if self.action in ["list", "retrieve"]:
-            self.permission_classes = [
-                permissions.IsAdminUser | IsDriverReadOnly]
+            self.permission_classes = [permissions.IsAdminUser | IsDriverReadOnly]
         else:
             self.permission_classes = [permissions.IsAdminUser]
 
@@ -95,8 +94,7 @@ class TripViewSet(viewsets.ModelViewSet):
 
             if parsed_trip_date and parsed_trip_date < timezone.localtime().date():
                 return Response(
-                    {"trip_date": [
-                        "A data da viagem não pode estar no passado."]},
+                    {"trip_date": ["A data da viagem não pode estar no passado."]},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -176,14 +174,13 @@ class TripViewSet(viewsets.ModelViewSet):
                 return Response(
                     {"error": "QR Code invalido ou usuario inexistente."},
                     status=status.HTTP_400_BAD_REQUEST,
-                    )
+                )
 
         if isinstance(passenger, GuestPassenger):
             passenger_filter = Q(guest_passenger=passenger)
         else:
-            passenger_filter = (
-                Q(student__user=passenger)
-                | Q(civil_servant__user=passenger)
+            passenger_filter = Q(student__user=passenger) | Q(
+                civil_servant__user=passenger
             )
 
         reservation = (
@@ -220,7 +217,10 @@ class TripViewSet(viewsets.ModelViewSet):
                 if evicted is None:
                     transaction.set_rollback(True)
                     return Response(
-                        {"error": "Nao ha vaga disponivel para priorizar o passageiro."},
+                        {
+                            "error": "Nao ha vaga disponivel "
+                            "para priorizar o passageiro."
+                        },
                         status=status.HTTP_409_CONFLICT,
                     )
 
@@ -385,12 +385,10 @@ class MyNextTripView(APIView):
 
             time_zone = timezone.get_current_timezone()
             expected_dep = timezone.make_aware(
-                datetime.combine(
-                    trip.trip_date, trip.route.departure_time), time_zone
+                datetime.combine(trip.trip_date, trip.route.departure_time), time_zone
             )
             expected_arr = timezone.make_aware(
-                datetime.combine(
-                    trip.trip_date, trip.route.arrival_time), time_zone
+                datetime.combine(trip.trip_date, trip.route.arrival_time), time_zone
             )
 
             if expected_arr <= expected_dep:
@@ -420,8 +418,7 @@ class MyNextTripView(APIView):
         today = now.date()
         yesterday = today - timedelta(days=1)
 
-        is_admin = hasattr(
-            request.user, "admin_profile") or request.user.is_staff
+        is_admin = hasattr(request.user, "admin_profile") or request.user.is_staff
 
         if is_admin:
             base_running_query = Trip.objects.filter(
@@ -436,10 +433,14 @@ class MyNextTripView(APIView):
             valid_statuses = ["CONFIRMADA", "LISTA SECUNDÁRIA", "PENDENTE"]
 
             user_trip_filter = (
-                Q(reservation__student__user=request.user,
-                  reservation__status__in=valid_statuses)
-                | Q(reservation__civil_servant__user=request.user,
-                    reservation__status__in=valid_statuses)
+                Q(
+                    reservation__student__user=request.user,
+                    reservation__status__in=valid_statuses,
+                )
+                | Q(
+                    reservation__civil_servant__user=request.user,
+                    reservation__status__in=valid_statuses,
+                )
                 | Q(driver__user=request.user)
             )
 
@@ -447,9 +448,12 @@ class MyNextTripView(APIView):
                 user_trip_filter, status="EM ANDAMENTO", trip_date__gte=yesterday
             ).distinct()
 
-            base_next_query = Trip.objects.filter(
-                user_trip_filter, trip_date__gte=today
-            ).exclude(status__in=["CONCLUÍDA", "CANCELADA"]).distinct()
+            base_next_query = (
+                Trip.objects
+                .filter(user_trip_filter, trip_date__gte=today)
+                .exclude(status__in=["CONCLUÍDA", "CANCELADA"])
+                .distinct()
+            )
 
         running_trips = base_running_query.order_by(
             "trip_date", "route__departure_time"
@@ -463,8 +467,7 @@ class MyNextTripView(APIView):
                 )
                 return Response(serializer.data)
 
-        next_trips = base_next_query.order_by(
-            "trip_date", "route__departure_time")
+        next_trips = base_next_query.order_by("trip_date", "route__departure_time")
 
         for trip in next_trips:
             updated_trip = self._update_trip_status(trip)

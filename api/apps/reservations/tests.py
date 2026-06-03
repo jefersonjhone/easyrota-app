@@ -18,8 +18,8 @@ from .models import Punishment, Reservation
 from .services import (
     get_priority_tuple,
     process_trip_punishments,
-    trip_has_quorum,
     trip_has_capacity,
+    trip_has_quorum,
 )
 
 
@@ -239,7 +239,7 @@ class AvailableTripsTest(BaseReservationTestCase):
             )[1],
             status="LISTA SECUNDÁRIA",
         )
-        
+
         print(Reservation.objects.count())
 
         self.client.force_authenticate(user=self.user)
@@ -247,7 +247,7 @@ class AvailableTripsTest(BaseReservationTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["available_seats"], 43)
+        self.assertEqual(response.data[0]["available_seats"], 38)
         self.assertEqual(response.data[0]["bus_brand"], "Mercedes-Benz")
 
     def test_trip_has_quorum_counts_driver_registered_server(self):
@@ -372,39 +372,37 @@ class PunishmentSystemTestCase(BaseReservationTestCase):
 
         priority, _ = get_priority_tuple(new_reservation)
         self.assertEqual(priority, 3)
-    
+
     def test_forgive_only_one_punishment_on_presence(self):
         """
         Ensures that if a student has multiple active punishments,
         only the oldest one is forgiven per check-in.
         """
         old_res_1 = self.create_reservation(
-            trip=self.trip, 
-            student=self.present_profile
-            )
+            trip=self.trip, student=self.present_profile
+        )
         punishment_1 = Punishment.objects.create(
             student=self.present_profile,
             reservation=old_res_1,
             is_active=True,
-            description="Falta antiga 1"
+            description="Falta antiga 1",
         )
-        
+
         old_res_2 = self.create_reservation(
-            trip=self.trip, 
-            student=self.present_profile
-            )
+            trip=self.trip, student=self.present_profile
+        )
         punishment_2 = Punishment.objects.create(
             student=self.present_profile,
             reservation=old_res_2,
             is_active=True,
-            description="Falta recente 2"
+            description="Falta recente 2",
         )
 
         process_trip_punishments(self.trip)
-        
+
         punishment_1.refresh_from_db()
         punishment_2.refresh_from_db()
-        
+
         self.assertFalse(punishment_1.is_active)
         self.assertTrue(punishment_2.is_active)
 

@@ -69,7 +69,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-    
+
     def can_reactivate_account(self):
         """User can reactivate account for up to 30 days after deletion request."""
 
@@ -81,6 +81,4 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         if not self.deleted_at:
             return False
 
-        return (
-            timezone.now() <= self.deleted_at + timedelta(days=30)
-        )
+        return timezone.now() <= self.deleted_at + timedelta(days=30)

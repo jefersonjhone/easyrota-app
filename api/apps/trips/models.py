@@ -133,7 +133,9 @@ class TripPassenger(models.Model):
         LOCAL_SERVER = "LOCAL_SERVER", "Servidor local"
         LOCAL_GUEST = "LOCAL_GUEST", "Convidado local"
 
-    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_passengers")
+    trip = models.ForeignKey(
+        Trip, on_delete=models.CASCADE, related_name="trip_passengers"
+    )
     allowed_staff = models.ForeignKey(
         "users.AllowedStaff",
         on_delete=models.CASCADE,
@@ -194,21 +196,12 @@ class GuestPassengerManager(BaseUserManager):
 
 
 class GuestPassenger(models.Model):
-    id = models.UUIDField(
-        primary_key=True, 
-        default=uuid.uuid4, 
-        editable=False
-        )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cpf = models.CharField(max_length=11)
-    trip = models.ForeignKey(
-        to=Trip, 
-        on_delete=models.CASCADE
-        )
+    trip = models.ForeignKey(to=Trip, on_delete=models.CASCADE)
     recorded_by = models.ForeignKey(
-        to=CivilServantProfile, 
-        on_delete=models.SET_NULL, 
-        null=True
-        )
+        to=CivilServantProfile, on_delete=models.SET_NULL, null=True
+    )
     full_name = models.CharField(max_length=255)
 
     objects = GuestPassengerManager()
@@ -217,7 +210,7 @@ class GuestPassenger(models.Model):
     REQUIRED_FIELDS = ("full_name",)
 
     class Meta:
-        unique_together = (('cpf', 'trip'),)
+        unique_together = (("cpf", "trip"),)
         db_table = "trips_guest_passengers"
 
     def __str__(self):

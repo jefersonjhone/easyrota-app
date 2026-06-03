@@ -30,7 +30,11 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("api/", include("apps.reservations.urls")),
     path("api/dashboard/", include("apps.dashboard.urls")),
-    path("api/webpush/save_information/", WebPushSubscriptionView.as_view(), name="save_webpush_info"),
+    path(
+        "api/webpush/save_information/",
+        WebPushSubscriptionView.as_view(),
+        name="save_webpush_info",
+    ),
     path("api/webpush/", include("webpush.urls")),
 ]
 

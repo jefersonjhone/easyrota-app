@@ -36,8 +36,8 @@ from ..serializers.auth import (
     ResendOTPSerializer,
     StudentRegistrationSerializer,
     Verify2FASerializer,
-    VerifyRegistrationOTPSerializer,
     VerifyPasswordResetOTPSerializer,
+    VerifyRegistrationOTPSerializer,
 )
 from ..serializers.users import (
     AuthenticatedUserWithProfileSerializer,
@@ -348,7 +348,7 @@ class ResendOTPView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK,
         )
-    
+
 
 class ResendReactivationOTPView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
@@ -406,7 +406,9 @@ class PasswordResetRequestView(generics.GenericAPIView):
 
         user = CustomUser.objects.filter(email=email, is_active=True).first()
         if not user:
-            raise serializers.ValidationError({"email": "Usuário não encontrado ou inativo."})
+            raise serializer.ValidationError({
+                "email": "Usuário não encontrado ou inativo."
+            })
 
         # Revoga desafios anteriores de reset
         MFAChallenge.objects.filter(
@@ -453,7 +455,7 @@ def check_challenge_code(token, code, purpose=None):
 
     if payload.get("type") != "2fa_pending":
         raise AuthenticationFailed("Tipo de token inválido.")
-        
+
     if purpose and payload.get("purpose") != purpose:
         raise AuthenticationFailed("Propósito de token inválido.")
 
@@ -491,13 +493,13 @@ class VerifyPasswordResetOTPView(generics.GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         check_challenge_code(
-            serializer.validated_data["token"], 
+            serializer.validated_data["token"],
             serializer.validated_data["code"],
-            purpose=MFAChallenge.Purpose.PASSWORD_RESET
+            purpose=MFAChallenge.Purpose.PASSWORD_RESET,
         )
-        
+
         return Response({"status": "code_valid"}, status=status.HTTP_200_OK)
 
 
@@ -729,11 +731,13 @@ class DeleteOwnAccountView(APIView):
         user.is_deleted = True
         user.deleted_at = timezone.now()
         user.is_active = False
-        user.save(update_fields=[
-            "is_deleted",
-            "deleted_at",
-            "is_active",
-        ])
+        user.save(
+            update_fields=[
+                "is_deleted",
+                "deleted_at",
+                "is_active",
+            ]
+        )
 
         response = Response(status=204)
 
@@ -753,27 +757,18 @@ class RequestReactivationView(APIView):
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data["email"]
 
-        user = CustomUser.objects.filter(
-            email=email,
-            is_deleted=True
-        ).first()
+        user = CustomUser.objects.filter(email=email, is_deleted=True).first()
 
         if not user:
-            return Response(
-                {"detail": "A conta não foi encontrada."},
-                status=404
-            )
-        
+            return Response({"detail": "A conta não foi encontrada."}, status=404)
+
         MFAChallenge.objects.filter(
             user=user,
             purpose=MFAChallenge.Purpose.REACTIVATE,
             used=False,
         ).update(revoked=True)
 
-        token, jti = PartialTokenService.create(
-            user,
-            MFAChallenge.Purpose.REACTIVATE
-        )
+        token, jti = PartialTokenService.create(user, MFAChallenge.Purpose.REACTIVATE)
 
         code = generate_otp()
         print("Código reativação:", code)

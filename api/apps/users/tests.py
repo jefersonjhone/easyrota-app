@@ -10,8 +10,8 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from apps.trips.models import Bus, Route, Trip, TripPassenger
 from apps.reservations.models import Reservation
+from apps.trips.models import Bus, Route, Trip
 
 from .models.auth import AllowedStaff, MFAChallenge
 from .models.profiles import (

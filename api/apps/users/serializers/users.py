@@ -109,11 +109,11 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = (
-            "id", 
-            "email", 
+            "id",
+            "email",
             "full_name",
-            "profile_type", 
-            "admin_profile", 
+            "profile_type",
+            "admin_profile",
             "student_profile",
             "civil_servant_profile",
         )

@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from webpush import send_user_notification
 
-from .models import Punishment, Reservation
 from apps.trips.models import TripPassenger
 
+from .models import Punishment, Reservation
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,9 @@ def get_trip_occupancy(trip):
     total = active_reservations.count() + trip.trip_passengers.count()
     servers = (
         active_reservations.filter(civil_servant__isnull=False).count()
-        + trip.trip_passengers.filter(passenger_type=TripPassenger.PassengerType.LOCAL_SERVER).count()
+        + trip.trip_passengers.filter(
+            passenger_type=TripPassenger.PassengerType.LOCAL_SERVER
+        ).count()
     )
     return total, servers
 
@@ -65,10 +67,9 @@ def _trip_notification_users(trip):
     users = []
     seen_user_ids = set()
 
-    reservations = (
-        Reservation.objects.filter(trip=trip, status__in=ACTIVE_RESERVATION_STATUSES)
-        .select_related("student__user", "civil_servant__user")
-    )
+    reservations = Reservation.objects.filter(
+        trip=trip, status__in=ACTIVE_RESERVATION_STATUSES
+    ).select_related("student__user", "civil_servant__user")
 
     for reservation in reservations:
         user = None
@@ -102,7 +103,8 @@ def send_trip_quorum_met_notification(trip):
 
     payload = {
         "head": "Quórum atingido",
-        "body": "O quórum mínimo foi atingido e há pelo menos 1 servidor confirmado na viagem.",
+        "body": "O quórum mínimo foi atingido e há pelo menos "
+        "1 servidor confirmado na viagem.",
         "url": "/app/",
     }
 
@@ -132,7 +134,9 @@ def trip_has_capacity(trip):
     if not trip.bus:
         return False
 
-    occupied = get_active_reservations_queryset(trip).count() + trip.trip_passengers.count()
+    occupied = (
+        get_active_reservations_queryset(trip).count() + trip.trip_passengers.count()
+    )
     return occupied < trip.bus.seating_capacity
 
 
@@ -256,22 +260,22 @@ def sync_trip_status(trip):
 def process_trip_punishments(trip):
     """
     It processes absences and presences at the end of a trip.
-    It applies penalties to those who were absent and forgives 
+    It applies penalties to those who were absent and forgives
     one active penalty (the oldest) for those who traveled.
     """
-    
+
     reservations = Reservation.objects.filter(
-        trip=trip, 
-        status__in=ACTIVE_RESERVATION_STATUSES
+        trip=trip, status__in=ACTIVE_RESERVATION_STATUSES
     )
 
     for reservation in reservations:
-        if not reservation.student_id: 
+        if not reservation.student_id:
             continue
 
         if reservation.check_in:
             punishment = (
-                Punishment.objects.filter(
+                Punishment.objects
+                .filter(
                     student=reservation.student,
                     is_active=True,
                 )

@@ -25,7 +25,7 @@ class LoginSerializer(serializers.Serializer):
         password = data["password"]
 
         # Verifica se a conta existe e a senha está correta, mas está inativa
-        user_check = CustomUser.objects.filter(email=email).first() 
+        user_check = CustomUser.objects.filter(email=email).first()
         if not user_check or not user_check.check_password(password):
             raise serializers.ValidationError({"detail": "Credenciais inválidas"})
 
@@ -35,14 +35,14 @@ class LoginSerializer(serializers.Serializer):
                     "detail": "Esta conta foi desativada após "
                     "uma solicitação de exclusão."
                     "Você pode solicitar a reativação da conta.",
-                    "can_reactivate": True
+                    "can_reactivate": True,
                 })
             raise serializers.ValidationError({"detail": "Credenciais inválidas"})
-        
+
         if user_check and not user_check.is_active:
             raise serializers.ValidationError({
-                "detail": 
-                    "Sua conta ainda não foi ativada. Por favor, verifique seu e-mail."
+                "detail": "Sua conta ainda não foi ativada. "
+                "Por favor, verifique seu e-mail."
             })
 
         user = authenticate(email=email, password=password)
@@ -79,7 +79,7 @@ class BaseUserRegistrationSerializer(serializers.Serializer):
         if user:
             if not user.is_active and not user.is_deleted:
                 raise serializers.ValidationError(
-                    "Este e-mail já está cadastrado, " 
+                    "Este e-mail já está cadastrado, "
                     "mas a conta ainda não foi ativada. "
                     "Por favor, verifique seu e-mail ou peça um novo código."
                 )
@@ -255,11 +255,7 @@ class LocalTripPassengerSerializer(serializers.Serializer):
     cpf = serializers.CharField(required=False, allow_blank=True, max_length=11)
 
     def _normalize_passenger_type(self, attrs):
-        raw_type = (
-            attrs.get("passenger_type")
-            or attrs.get("kind")
-            or "LOCAL_SERVER"
-        )
+        raw_type = attrs.get("passenger_type") or attrs.get("kind") or "LOCAL_SERVER"
         normalized_type = raw_type.strip().upper()
         aliases = {
             "SERVIDOR": "LOCAL_SERVER",
@@ -309,9 +305,7 @@ class LocalTripPassengerSerializer(serializers.Serializer):
         attrs["passenger_type"] = passenger_type
 
         if passenger_type == "LOCAL_SERVER":
-            attrs["allowed_staff"] = self._get_allowed_staff(
-                attrs, "allowed_staff_id"
-            )
+            attrs["allowed_staff"] = self._get_allowed_staff(attrs, "allowed_staff_id")
             return attrs
 
         attrs["associated_staff"] = self._get_allowed_staff(
@@ -326,9 +320,7 @@ class LocalTripPassengerSerializer(serializers.Serializer):
             })
 
         if not cpf or len(cpf) != 11 or not cpf.isdigit():
-            raise serializers.ValidationError({
-                "cpf": "CPF deve conter 11 numeros."
-            })
+            raise serializers.ValidationError({"cpf": "CPF deve conter 11 numeros."})
 
         attrs["full_name"] = full_name
         attrs["cpf"] = cpf
