@@ -82,4 +82,4 @@ class BusViewTests(APITestCase):
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["number_plate"] == "ABC123"
-        assert response.data["administrator"] == self.admin.id
+        assert response.data["administrator"] == self.admin.admin_profile.id

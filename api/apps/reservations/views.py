@@ -26,7 +26,6 @@ class ReservationCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        print("Criou Reserva")
         user = self.request.user
         reservation = serializer.save(
             student=getattr(user, "student_profile", None),
