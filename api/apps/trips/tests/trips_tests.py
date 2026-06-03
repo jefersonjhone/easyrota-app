@@ -202,7 +202,9 @@ class TripAPITestCase(APITestCase):
         )
 
     def test_cannot_create_trip_for_past_time_today(self):
-        """It ensures that the system blocks trips for times that already passed today."""
+        """It ensures that the system blocks trips for times 
+        that already passed today.
+        """
 
         self.client.force_authenticate(user=self.admin_user)
         
