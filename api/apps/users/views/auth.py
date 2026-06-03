@@ -65,14 +65,15 @@ def unauthorized(message):
 
 
 def send_registration_otp(email, code):
-    send_mail(
-        subject="Código de verificação EasyRota",
-        message=f"Seu código de verificação é: {code}",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[email],
-        fail_silently=False,
-    )
-
+    try:
+        resend.Emails.send({
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [email],
+            "subject": "Código de verificação EasyRota",
+            "html": f"<h2>Seu código é {code}</h2>",
+        })
+    except Exception as exc:
+        logger.exception("Erro ao enviar codigo otp", exc)
 
 
 def handle_registration(request):

@@ -1,6 +1,5 @@
 import resend
 from django.conf import settings
-from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 
 
@@ -19,18 +18,12 @@ class Command(BaseCommand):
         email = options["to"]
 
         try:
-            send_mail(
-                subject="Teste EasyRota",
-                message="Se você recebeu este email, o Resend via Django está funcionando 🚀",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                html_message="""
-                <h1>EasyRota</h1>
-                <p>Se você recebeu este email, o Resend via Django está funcionando 🚀</p>
-                """,
-                fail_silently=False,
-            )
-
+            resend.Emails.send({
+            "from": settings.DEFAULT_FROM_EMAIL,
+            "to": [email],
+            "subject": "Teste EasyRota",
+            "html": "<h1>EasyRota</h1><p>Resend funcionando 🚀</p>",
+        })
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Email enviado com sucesso para: {email}"
