@@ -1,7 +1,9 @@
+import re
 import unicodedata
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -23,6 +25,17 @@ class BusSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Capacidade deve ser maior que 0.")
         if value > 120:
             raise serializers.ValidationError("Capacidade muito alta para um ônibus.")
+        return value
+    
+    def validate_number_plate(self, value):
+        pattern = r'^([a-zA-Z]{3}-?\d{4}|[a-zA-Z]{3}\d[a-zA-Z]\d{2})$'
+    
+        if not re.match(pattern, value):
+            raise ValidationError(
+                '%(value)s não é uma placa válida. Use AAA-1234 ou AAA1A23.',
+                params={'value': value},
+            )
+        
         return value
 
 

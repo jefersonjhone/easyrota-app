@@ -54,7 +54,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
       console.log(errorData)
 
       if (plateError){
-        setError("number_plate", {message: "A placa inserida já está cadastrada."})
+        setError("number_plate", {message: `${errorData?.data?.number_plate}`})
       }
 
       if (detail) {
