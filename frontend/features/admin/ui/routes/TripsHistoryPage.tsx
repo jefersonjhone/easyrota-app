@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@ui/button'
 import { Card, CardContent } from '@ui/card'
 import { apiFetch } from '@/lib/api'
+import { formatTripDate } from "@/features/user-home/config";
 
 interface TripReservation {
   id: number
@@ -99,7 +100,7 @@ export function TripsHistoryPage() {
                       Data e Rota
                     </span>
                     <div className="flex items-center gap-2 text-sm md:text-base font-medium text-foreground">
-                      <span>{new Date(trip.trip_date).toLocaleDateString('pt-BR')}</span>
+                      <span>{formatTripDate(trip.trip_date)}</span>
                       <span className="text-muted-foreground">•</span>
                       <span>{trip.origin}</span>
                       <span className="text-muted-foreground">↔</span>
@@ -119,7 +120,7 @@ export function TripsHistoryPage() {
                   </div>
 
                   <div className="flex items-center justify-end gap-3 pt-2 md:pt-0 border-t border-border md:border-none">
-                    <Button variant="outline" size="sm" className="font-bold text-xs h-9 px-4">
+                    <Button variant="outline" size="sm" className="font-bold text-xs h-9 px-4 hidden">
                       Detalhes
                     </Button>
                     {trip.can_cancel && (
