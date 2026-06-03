@@ -3,6 +3,7 @@ import { useDeleteAccountMutation } from '@/features/auth/hooks/useDeleteAccount
 import { useEffect, useState } from 'react'
 import { Input } from '@/lib/ui/input'
 
+import { formatTripDate } from '../config'
 import {
   Avatar,
   AvatarFallback,
@@ -134,7 +135,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
                 </p>
                 <p className='text-gray-600'>
                   <CalendarBlankIcon className='inline-block mr-1' />
-                  <span>Ingressou em {user.joined_at}</span>
+                  <span>Ingressou em {formatTripDate(user.joined_at)}</span>
                 </p>
               </div>
             </div>
