@@ -147,7 +147,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "easyrota0@gmail.com")
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
-    "django.core.mail.backends.smtp.EmailBackend",
+    "config.email_backend.ResendEmailBackend",
 )
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = os.getenv("EMAIL_PORT", 587)

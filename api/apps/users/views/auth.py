@@ -45,7 +45,6 @@ from ..serializers.users import (
     DeleteOwnAccountSerializer,
 )
 
-resend.api_key = settings.RESEND_API_KEY
 
 logger = logging.getLogger("api")
 
@@ -66,24 +65,14 @@ def unauthorized(message):
 
 
 def send_registration_otp(email, code):
-    resend.Emails.send({
-        "from": "onboarding@resend.dev",
-        "to": [email],
-        "subject": "Código de verificação EasyRota",
-        "html": f"<h2>Seu código é {code}</h2>",
-    })
-
-
-"""
-def send_registration_otp(email, code):
     send_mail(
-        subject="Código de confirmação EasyRota",
-        message=f"Seu código de confirmação é: {code}",
+        subject="Código de verificação EasyRota",
+        message=f"Seu código de verificação é: {code}",
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email],
         fail_silently=False,
     )
-"""
+
 
 
 def handle_registration(request):
