@@ -17,7 +17,9 @@ RUN poetry install --only main --no-interaction --no-root
 
 COPY api/ .
 COPY start_server.sh .
+COPY start_scheduler.sh .
 RUN chmod +x start_server.sh
+RUN chmod +x start_scheduler.sh
 
 ENTRYPOINT ["sh", "start_server.sh"]
 EXPOSE 8000
