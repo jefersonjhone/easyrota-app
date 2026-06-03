@@ -8,7 +8,7 @@ from apps.trips.models import TripPassenger
 
 from .models import Punishment, Reservation
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("api")
 
 
 ACTIVE_RESERVATION_STATUSES = ("CONFIRMADA", "PENDENTE")
@@ -90,9 +90,11 @@ def _send_trip_push_notification(trip, payload):
 
     for user in recipients:
         try:
+            logger.info(f"Sending webpush notification to {user.email}")
             send_user_notification(user=user, payload=payload, ttl=1000)
         except Exception as exc:
-            logger.error("Failed to send webpush notification to %s: %s", user, exc)
+            logger.exception(
+                "Failed to send webpush notification to %s: %s", user.email, exc)
 
     return bool(recipients)
 
