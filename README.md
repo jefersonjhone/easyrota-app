@@ -44,7 +44,7 @@ Install:
 Clone the repository and create your environment file:
 
 ```bash
-cp api/.env.development api/.env
+cp api/env.development api/.env
 ```
 
 Install tools and dependencies:
