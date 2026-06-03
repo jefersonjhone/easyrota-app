@@ -128,6 +128,14 @@ function getStatusCard(trip: DriverTrip) {
     }
   }
 
+  if (trip.status === 'EM ANDAMENTO') {
+    return {
+      modifier: 'in-progress',
+      label: 'Em andamento',
+      description: 'retomar viagem',
+    }
+  }
+
 
   if (trip.availableSeats !== null) {
     const seatLabel = trip.availableSeats === 1 ? '1 vaga' : `${trip.availableSeats} vagas`
@@ -208,6 +216,7 @@ export function DriverTripsPage() {
             {trips.map((trip) => {
               const statusCard = getStatusCard(trip)
               const isCanceled = trip.status === 'CANCELADA'
+              const isInProgress = trip.status === 'EM ANDAMENTO'
               const cardContent = (
                 <>
                   <div className="driver-trip-card__details">
@@ -243,10 +252,14 @@ export function DriverTripsPage() {
                     className={`driver-trip-card__action${isCanceled ? ' driver-trip-card__action--disabled' : ''}`}
                   >
                     <span className="driver-trip-card__action-label">
-                      {isCanceled ? 'Indisponível' : 'Selecionar'}
+                      {isCanceled ? 'Indisponível' : isInProgress ? 'Retomar' : 'Selecionar'}
                     </span>
                     <span className="driver-trip-card__action-description">
-                      {isCanceled ? 'Viagem cancelada' : 'Abrir viagem'}
+                      {isCanceled
+                        ? 'Viagem cancelada'
+                        : isInProgress
+                          ? 'Voltar para viagem'
+                          : 'Abrir viagem'}
                       {isCanceled ? null : <ArrowRightIcon aria-hidden="true" weight="bold" />}
                     </span>
                   </span>

@@ -518,6 +518,11 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
     setActionError(null)
 
     try {
+      if (isTripInProgress) {
+        window.location.href = '/app/driver/viagens'
+        return
+      }
+
       await unassignDriverFromTrip(trip.id)
       window.location.href = '/app/driver/viagens'
     } catch (error) {
@@ -685,7 +690,9 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
           : 'Solicitar novo onibus'
   const confirmationDescription =
     confirmation === 'back'
-      ? 'Se o motorista voltar, ele sera desassociado da viagem.'
+      ? isTripInProgress
+        ? 'A viagem em andamento continuara vinculada a voce para retomada pela lista.'
+        : 'Se o motorista voltar, ele sera desassociado da viagem.'
       : confirmation === 'start'
         ? 'Deseja iniciar esta viagem? Esta acao marcara a viagem como em andamento.'
         : confirmation === 'finish'
@@ -883,7 +890,7 @@ export function ViajemMotorista({ tripId }: ViajemMotoristaProps) {
                 <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Resumo dos embarques">
                   <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs font-bold text-muted-foreground">
                     <strong className="block text-2xl font-black text-primary">{embarkedCount}</strong>
-                    embarcados
+                    embarques
                   </span>
                   <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs font-bold text-muted-foreground">
                     <strong className="block text-2xl font-black text-primary">{qrCount}</strong>

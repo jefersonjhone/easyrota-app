@@ -127,6 +127,60 @@ class TripAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Trip.objects.count(), 0)
 
+    def test_driver_can_list_and_retrieve_own_in_progress_trip(self):
+        """Drivers can return to trips in progress that are still assigned to them."""
+        self.client.force_authenticate(user=self.driver_user)
+
+        trip = Trip.objects.create(
+            trip_date=self.today,
+            bus=self.bus,
+            route=self.route_active,
+            status="EM ANDAMENTO",
+            driver=self.driver_profile,
+            departure_timestamp=timezone.now(),
+        )
+
+        list_response = self.client.get(self.trip_list_url)
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertIn(trip.id, [item["id"] for item in list_response.data])
+
+        detail_response = self.client.get(
+            reverse("trip-detail", kwargs={"pk": trip.id})
+        )
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(detail_response.data["id"], trip.id)
+
+    def test_driver_cannot_list_or_retrieve_another_in_progress_trip(self):
+        """Trips in progress remain hidden from drivers that are not assigned."""
+        other_driver_user = CustomUser.objects.create_user(
+            email="outro-motorista@easyrota.com",
+            password="password123",
+            full_name="Outro Motorista",
+            is_active=True,
+        )
+        other_driver_profile = DriverProfile.objects.create(
+            user=other_driver_user, cnh="12345678201"
+        )
+        trip = Trip.objects.create(
+            trip_date=self.today,
+            bus=self.bus,
+            route=self.route_active,
+            status="EM ANDAMENTO",
+            driver=other_driver_profile,
+            departure_timestamp=timezone.now(),
+        )
+
+        self.client.force_authenticate(user=self.driver_user)
+
+        list_response = self.client.get(self.trip_list_url)
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(trip.id, [item["id"] for item in list_response.data])
+
+        detail_response = self.client.get(
+            reverse("trip-detail", kwargs={"pk": trip.id})
+        )
+        self.assertEqual(detail_response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_cannot_create_trip_in_the_past(self):
         """It ensures that the system blocks trips scheduled for previous days."""
 
