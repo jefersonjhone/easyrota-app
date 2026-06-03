@@ -326,8 +326,10 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             return []
 
         user = request.user
-        if user.civil_servant_profile is None:
+        
+        if not hasattr(user, "civil_servant_profile"):
             return []
+        
         guests = GuestPassenger.objects.filter(
             recorded_by=user.civil_servant_profile, 
             trip=obj.id,

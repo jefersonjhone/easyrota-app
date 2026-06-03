@@ -75,7 +75,6 @@ class BusViewTests(APITestCase):
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @pytest.mark.skip(reason="Skiped until is fixed ")
     def test_create_bus_as_admin(self):
         """Administrators should be able to create a bus successfully."""
         self.client.force_authenticate(user=self.admin)

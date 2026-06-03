@@ -234,13 +234,15 @@ class AvailableTripsTest(BaseReservationTestCase):
             )[1],
             status="LISTA SECUNDÁRIA",
         )
+        
+        print(Reservation.objects.count())
 
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["available_seats"], 38)
+        self.assertEqual(response.data[0]["available_seats"], 43)
         self.assertEqual(response.data[0]["bus_brand"], "Mercedes-Benz")
 
 

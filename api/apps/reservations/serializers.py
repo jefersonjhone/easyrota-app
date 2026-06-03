@@ -185,6 +185,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
     destiny = serializers.CharField(source="route.destiny", read_only=True)
     bus_brand = serializers.CharField(source="bus.brand", read_only=True)
     status_trip = serializers.SerializerMethodField()
+    reserved_seats = serializers.SerializerMethodField()
     available_seats = serializers.SerializerMethodField()
     is_full = serializers.SerializerMethodField()
     is_reservable = serializers.SerializerMethodField()
@@ -202,6 +203,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
             "bus_brand",
             "status_trip",
             "available_seats",
+            "reserved_seats",
             "is_full",
             "is_reservable",
             "quorum_met",
@@ -210,10 +212,14 @@ class AvailableTripSerializer(serializers.ModelSerializer):
 
     def get_status_trip(self, obj):
         return obj.get_status_display()
+    
+    def get_reserved_seats(self, obj):
+        return Reservation.objects.filter(trip=obj).count()
 
     def get_available_seats(self, obj):
-        reserved_seats = getattr(obj, "reserved_seats", 0)
+        reserved_seats = self.get_reserved_seats(obj)
         seating_capacity = getattr(obj, "seating_capacity", 0)
+        
         return max(seating_capacity - reserved_seats, 0)
 
     def get_is_full(self, obj):
