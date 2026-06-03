@@ -24,6 +24,7 @@ export function TripsHomePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savingTripId, setSavingTripId] = useState<number | null>(null)
+  const [reservedTripIds, setReservedTripIds] = useState<number[]>([])
 
   useEffect(() => {
     const loadTrips = async () => {
@@ -57,6 +58,8 @@ export function TripsHomePage() {
         method: 'POST',
         body: JSON.stringify({ trip: tripId }),
       })
+      setReservedTripIds((prev) => [...prev, tripId])
+      
       const data = await apiFetch<AvailableTrip[]>('/reservations/available-trips/')
       setTrips(data)
     } catch (err) {
@@ -99,6 +102,8 @@ export function TripsHomePage() {
         ) : (
           <div className="space-y-4">
             {trips.map((trip) => {
+              const isAlreadyReserved = reservedTripIds.includes(trip.id)
+
               return (
                 <article
                   key={trip.id}
@@ -123,16 +128,18 @@ export function TripsHomePage() {
                       </span>
 
                       <Button
-                        variant="default"
+                        variant={isAlreadyReserved ? "outline" : "default"}
                         size="sm"
-                        disabled={!trip.is_reservable || savingTripId === trip.id}
+                        disabled={!trip.is_reservable || savingTripId === trip.id || isAlreadyReserved}
                         onClick={() => handleReserve(trip.id)}
                       >
                         {!trip.is_reservable
                           ? 'Indisponível'
                           : savingTripId === trip.id
                             ? 'Reservando...'
-                            : 'Reservar'}
+                            : isAlreadyReserved
+                              ? 'Reservado'
+                              : 'Reservar'}
                       </Button>
                     </div>
                   </div>
