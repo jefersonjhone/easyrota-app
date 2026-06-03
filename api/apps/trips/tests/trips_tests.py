@@ -181,7 +181,7 @@ class TripAPITestCase(APITestCase):
         )
         self.assertEqual(detail_response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_cannot_create_trip_in_the_past(self):
+    def test_cannot_create_trip_in_previous_days(self):
         """It ensures that the system blocks trips scheduled for previous days."""
 
         self.client.force_authenticate(user=self.admin_user)
@@ -191,6 +191,42 @@ class TripAPITestCase(APITestCase):
             "trip_date": yesterday.isoformat(),
             "bus": self.bus.id,
             "route": self.route_morning.id,
+        }
+
+        response = self.client.post(self.trip_list_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("trip_date", response.data)
+        self.assertIn(
+            "A data da viagem não pode estar no passado.",
+            response.data["trip_date"],
+        )
+
+    def test_cannot_create_trip_for_past_time_today(self):
+        """It ensures that the system blocks trips for times that already passed today."""
+
+        self.client.force_authenticate(user=self.admin_user)
+        
+        now = timezone.localtime()
+        # If it's before 2 AM, we can't easily test a "past time today" 
+        # that exceeds the 1-hour grace period.
+        if now.hour < 2:
+            return
+
+        past_dep = (now - timedelta(hours=2)).time()
+        past_arr = (now - timedelta(hours=1)).time()
+        
+        route_past = Route.objects.create(
+            origin="Salvador",
+            destiny="Feira",
+            departure_time=past_dep,
+            arrival_time=past_arr,
+            administrator=self.admin_profile,
+        )
+
+        data = {
+            "trip_date": self.today.isoformat(),
+            "bus": self.bus.id,
+            "route": route_past.id,
         }
 
         response = self.client.post(self.trip_list_url, data, format="json")
