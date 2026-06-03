@@ -292,7 +292,8 @@ def process_trip_punishments(trip):
                 defaults={
                     "student": reservation.student,
                     "description": (
-                        f"Faltou ao check-in na viagem {trip.route} em {trip.trip_date}"
+                        f"Faltou ao check-in na viagem {trip.route} em "
+                        f"{trip.trip_date.strftime('%d/%m/%Y')}"
                     ),
                     "is_active": True,
                 },
