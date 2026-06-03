@@ -62,7 +62,7 @@ export function ChangePasswordForms({ token, otp }: Props) {
       
       setSuccess(true)
       setTimeout(() => {
-        navigate({ to: LoginRoute.to, replace: true })
+        window.location.href = "/login"
       }, 2000)
     } catch (err: unknown) {
       console.error(err)

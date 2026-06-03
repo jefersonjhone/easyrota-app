@@ -66,7 +66,7 @@ def _trip_notification_users(trip):
     seen_user_ids = set()
 
     reservations = (
-        Reservation.objects.filter(trip=trip, status="CONFIRMADA")
+        Reservation.objects.filter(trip=trip, status__in=ACTIVE_RESERVATION_STATUSES)
         .select_related("student__user", "civil_servant__user")
     )
 
