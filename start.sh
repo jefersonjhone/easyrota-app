@@ -7,6 +7,7 @@ API_DIR="$ROOT_DIR/api"
 cleanup() {
     echo ""
     echo "Finalizando aplicação..."
+    trap - INT TERM EXIT
     kill 0
 }
 
