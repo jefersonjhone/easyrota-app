@@ -181,18 +181,38 @@ export function CurrentTripPage() {
 
                 <Separator className="my-6" />
 
-                <div
-                  className={`grid gap-4 items-stretch ${showMinutesCard ? "md:grid-cols-3" : "md:grid-cols-2"}`}
-                >
-                  <div className="rounded-lg bg-white p-4 shadow-sm">
-                    <p className="text-sm text-slate-500">
-                      Percentual concluído
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold">
-                      {trip.percentage_complete}%
-                    </p>
+                <div className="mb-6 px-2">
+                  <p className="text-sm text-slate-500 mb-3">Progresso da viagem</p>
+                  <div className="relative h-14">
+                    <div className="absolute top-1/2 left-0 right-0 h-2.5 -translate-y-1/2 rounded-full bg-slate-200">
+                      <div
+                        className="h-full rounded-full bg-orange-400 transition-all duration-500"
+                        style={{ width: `${trip.percentage_complete}%` }}
+                      />
+                    </div>
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500"
+                      style={{ left: `clamp(1.5rem, ${trip.percentage_complete}%, calc(100% - 1.5rem))` }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500 drop-shadow">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <path d="M2 10h20" />
+                        <circle cx="7" cy="19" r="1.5" fill="currentColor" stroke="none" />
+                        <circle cx="17" cy="19" r="1.5" fill="currentColor" stroke="none" />
+                        <path d="M7 5V3M17 5V3" />
+                      </svg>
+                    </div>
                   </div>
+                  <div className="flex justify-between text-sm text-slate-500 mt-1">
+                    <span>{trip.origin}</span>
+                    <span className="font-semibold text-orange-500">{trip.percentage_complete}%</span>
+                    <span>{trip.destiny}</span>
+                  </div>
+                </div>
 
+                <div
+                  className={`grid gap-4 items-stretch ${showMinutesCard ? "md:grid-cols-2" : "md:grid-cols-1"}`}
+                >
                   {showMinutesCard && (
                     <div className="rounded-lg bg-white p-4 shadow-sm">
                       <p className="text-sm text-slate-500">
