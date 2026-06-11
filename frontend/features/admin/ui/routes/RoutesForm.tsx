@@ -70,8 +70,15 @@ export function RouteForm({
       if (onCreate) {
         onCreate();
       }
-    } catch (error: any) {
-      const errorData = error?.data || error?.response?.data;
+    } catch (error) {
+      const err = error as {
+        data?: Record<string, string | string[]>;
+        response?: {
+          data?: Record<string, string | string[]>;
+        };
+      };
+
+      const errorData = err.data || err.response?.data;
 
       if (errorData) {
         if (errorData.destiny) {

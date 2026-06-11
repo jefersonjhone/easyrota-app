@@ -41,48 +41,80 @@ type CurrentTripData = {
   passenger_guests: PassengerGuest[];
 };
 
+function getErrorMessage(detail?: string) {
+  if (!detail)
+    return "Não foi possível carregar os dados da viagem atual.";
+
+  if (detail.includes("Given token not valid"))
+    return "Token inválido. Faça login novamente.";
+
+  if (detail.includes("Token is invalid"))
+    return "Token inválido ou expirado. Faça login novamente.";
+
+  if (detail.includes("Authentication credentials"))
+    return "Faça login para acessar esse recurso.";
+
+  if (detail.includes("Nenhuma viagem"))
+    return "Você não tem nenhuma viagem próxima agendada.";
+
+  return detail;
+}
+
 export function CurrentTripPage() {
   const [trip, setTrip] = useState<CurrentTripData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const showMinutesCard = trip !== null && trip.minutes_remaining !== null;
   const user = useAuthStore((state) => state.user);
   const isTripInProgress = trip?.status_trip?.toLowerCase() === "em andamento";
+  const percentage = Math.min(
+    100,
+    Math.max(0, trip?.percentage_complete ?? 0)
+  );
+
   const [showQrCodes, setShowQrCodes] = useState(false);
 
-  const loadCurrentTrip = async () => {
-    setError(null);
-    if (!trip) setIsLoading(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-    try {
-      const data = await apiFetch(`/trips/current/`);
-      setTrip(data as CurrentTripData);
-    } catch (err) {
-      console.error("Erro ao carregar viagem atual:", err);
+  useEffect(() => {
+    setShowQrCodes(false);
+  }, [trip?.id]);
+
+  useEffect(() => {
+    if (!isTripInProgress) return;
+
+    const intervalId = setInterval(() => {
+      setRefreshKey((old) => old + 1);
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [isTripInProgress]);
+
+  useEffect(() => {
+    const loadCurrentTrip = async () => {
+      setError(null);
+
+      if (refreshKey === 0) {
+        setIsLoading(true);
+      }
+
+      try {
+        const data = await apiFetch(`/trips/current/`);
+        setTrip(data as CurrentTripData);
+      } catch (err) {
+        console.error("Erro ao carregar viagem atual:", err);
         const errorData = err as { data?: { detail?: string } } | undefined;
         const detail = errorData?.data?.detail;
 
-        const message =
-          (detail &&
-            (detail.includes("Given token not valid")
-              ? "Token inválido. Faça login novamente."
-              : detail.includes("Token is invalid")
-                ? "Token inválido ou expirado. Faça login novamente."
-                : detail.includes("Authentication credentials")
-                  ? "Faça login para acessar esse recurso."
-                  : detail.includes("Nenhuma viagem")
-                    ? "Você não tem nenhuma viagem próxima agendada."
-                    : detail)) ||
-          "Não foi possível carregar os dados da viagem atual.";
-        setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
+        setError(getErrorMessage(detail));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
     loadCurrentTrip();
-  }, []);
+  }, [refreshKey]);
 
   return (
     <AppLayout>
@@ -209,12 +241,12 @@ export function CurrentTripPage() {
                     <div className="absolute top-1/2 left-0 right-0 h-2.5 -translate-y-1/2 rounded-full bg-slate-200">
                       <div
                         className="h-full rounded-full bg-orange-400 transition-all duration-500"
-                        style={{ width: `${trip.percentage_complete}%` }}
+                        style={{ width: `${percentage}%` }}
                       />
                     </div>
                     <div
                       className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500"
-                      style={{ left: `clamp(1.5rem, ${trip.percentage_complete}%, calc(100% - 1.5rem))` }}
+                      style={{ left: `clamp(1.5rem, ${percentage}%, calc(100% - 1.5rem))` }}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500 drop-shadow">
                         <rect x="2" y="5" width="20" height="14" rx="2" />
@@ -227,7 +259,7 @@ export function CurrentTripPage() {
                   </div>
                   <div className="flex justify-between text-sm text-slate-500 mt-1">
                     <span>{trip.origin}</span>
-                    <span className="font-semibold text-orange-500">{trip.percentage_complete}%</span>
+                    <span className="font-semibold text-orange-500">{percentage}%</span>
                     <span>{trip.destiny}</span>
                   </div>
                 </div>
@@ -255,10 +287,8 @@ export function CurrentTripPage() {
                 </div>
               </CardContent>
             </Card>
-            {!isTripInProgress && user?.profile_type == "CIVIL-SERVANT" ? (
-              <GuestForm tripId={trip.id} onGuestAdded={loadCurrentTrip} />
-            ) : (
-              <></>
+            {!isTripInProgress && user?.profile_type === "CIVIL-SERVANT" && (
+              <GuestForm tripId={trip.id} onGuestAdded={() => setRefreshKey((old) => old + 1)} />
             )}
           </div>
         ) : (
