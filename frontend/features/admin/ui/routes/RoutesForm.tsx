@@ -54,19 +54,49 @@ export function RouteForm({
   const isSubmitting = state.isSubmitting || createRouteMutation.isPending;
 
   const onSubmit = async (data: Schema) => {
-    if (onSend ) {
-      const values: CreateRouteValues = {
-        origin: data.origin,
-        destiny: data.destiny,
-        departure_time: data.departure_time,
-        arrival_time: data.arrival_time,
-      };
-      onSend(values);
-    } else {
-      await createRouteMutation.mutateAsync(data);
-    }
-    if (onCreate) {
-      onCreate();
+    try {
+      if (onSend) {
+        const values: CreateRouteValues = {
+          origin: data.origin,
+          destiny: data.destiny,
+          departure_time: data.departure_time,
+          arrival_time: data.arrival_time,
+        };
+        onSend(values);
+      } else {
+        await createRouteMutation.mutateAsync(data);
+      }
+      
+      if (onCreate) {
+        onCreate();
+      }
+    } catch (error: any) {
+      const errorData = error?.data || error?.response?.data;
+
+      if (errorData) {
+        if (errorData.destiny) {
+          const message = Array.isArray(errorData.destiny) 
+            ? errorData.destiny[0] 
+            : errorData.destiny;
+          form.setError("destiny", { type: "server", message });
+        }
+
+        if (errorData.arrival_time) {
+          const message = Array.isArray(errorData.arrival_time) 
+            ? errorData.arrival_time[0] 
+            : errorData.arrival_time;
+          form.setError("arrival_time", { type: "server", message });
+        }
+        
+        if (errorData.origin) {
+          const message = Array.isArray(errorData.origin) 
+            ? errorData.origin[0] 
+            : errorData.origin;
+          form.setError("origin", { type: "server", message });
+        }
+      } else {
+        console.error("Erro inesperado ao criar rota:", error);
+      }
     }
   };
 
