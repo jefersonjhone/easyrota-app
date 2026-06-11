@@ -7,7 +7,7 @@ interface PassengerQRCodeProps {
 const PassengerQRCode = ({ identifier } : PassengerQRCodeProps) => {
   return (
     <div className="flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">Identificador para Embarque</h2>
+      <h2 className="text-center text-xl font-bold mb-4">Identificador para Embarque</h2>
       
       <QRCodeSVG 
         value={identifier} 
