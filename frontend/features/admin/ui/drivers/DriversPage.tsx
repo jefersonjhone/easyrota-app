@@ -87,23 +87,30 @@ export function ManageDriversPage() {
     },
 
     onError: (error) => {
-        const errorData = error as {
-          data?: {
-            cnh?: string[]
-            email?: string[]
-          }
+      const err = error as {
+        data?: Record<string, string | string[]>;
+        response?: { data?: Record<string, string | string[]> };
+      };
+      
+      const errorData = err.data || err.response?.data;
+
+      if (errorData) {
+        if (errorData.cnh) {
+          const message = Array.isArray(errorData.cnh) ? errorData.cnh[0] : errorData.cnh;
+          createForm.setError("cnh", { type: "server", message });
         }
-      if (errorData.data?.cnh){
-        createForm.setError("cnh", {
-          type: "server",
-          message: "Já existe um motorista com essa CNH.",
-        })
-      }
-      if (errorData.data?.email) {
-        createForm.setError("email", {
-          type: "server",
-          message: errorData.data.email[0],
-        })
+        
+        if (errorData.email) {
+          const message = Array.isArray(errorData.email) ? errorData.email[0] : errorData.email;
+          createForm.setError("email", { type: "server", message });
+        }
+
+        if (errorData.password) {
+          const message = Array.isArray(errorData.password) ? errorData.password[0] : errorData.password;
+          createForm.setError("password", { type: "server", message });
+        }
+      } else {
+        console.error("Erro inesperado ao criar motorista:", error);
       }
     }
   })
@@ -137,23 +144,25 @@ export function ManageDriversPage() {
     },
 
     onError: (error) => {
-      const errorData = error as {
-        data?: {
-          cnh?: string[]
-          email?: string[]
+      const err = error as {
+        data?: Record<string, string | string[]>;
+        response?: { data?: Record<string, string | string[]> };
+      };
+      
+      const errorData = err.data || err.response?.data;
+
+      if (errorData) {
+        if (errorData.cnh) {
+          const message = Array.isArray(errorData.cnh) ? errorData.cnh[0] : errorData.cnh;
+          editForm.setError("cnh", { type: "server", message });
         }
-      }
-      if (errorData.data?.cnh){
-        editForm.setError("cnh", {
-          type: "server",
-          message: "Já existe um motorista com essa CNH.",
-        })
-      }
-      if (errorData.data?.email) {
-        editForm.setError("email", {
-          type: "server",
-          message: errorData.data.email[0],
-        })
+        
+        if (errorData.email) {
+          const message = Array.isArray(errorData.email) ? errorData.email[0] : errorData.email;
+          editForm.setError("email", { type: "server", message });
+        }
+      } else {
+        console.error("Erro inesperado ao atualizar motorista:", error);
       }
     }
   })

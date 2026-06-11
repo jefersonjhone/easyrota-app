@@ -174,16 +174,17 @@ class DriverSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        print(validated_data)
         user_data = validated_data.pop("user")
         password = validated_data.pop("password")
-
-        user = CustomUser.objects.create_user(
-            full_name=user_data["full_name"],
-            email=user_data["email"],
-            password=password,
-        )
-        driver_profile = DriverProfile.objects.create(user=user, **validated_data)
+        
+        with transaction.atomic():
+            user = CustomUser.objects.create_user(
+                full_name=user_data["full_name"],
+                email=user_data["email"],
+                password=password,
+            )
+            driver_profile = DriverProfile.objects.create(user=user, **validated_data)
+            
         return driver_profile
 
     def update(self, instance, validated_data):
