@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
 import AppLayout from "@/lib/layout/app-layout";
+import { Button } from "@/lib/ui/button";
 import {
   Card,
   CardContent,
@@ -46,17 +47,18 @@ export function CurrentTripPage() {
   const [error, setError] = useState<string | null>(null);
   const showMinutesCard = trip !== null && trip.minutes_remaining !== null;
   const user = useAuthStore((state) => state.user);
+  const isTripInProgress = trip?.status_trip?.toLowerCase() === "em andamento";
+  const [showQrCodes, setShowQrCodes] = useState(false);
 
-  useEffect(() => {
-    const loadCurrentTrip = async () => {
-      setError(null);
-      setIsLoading(true);
+  const loadCurrentTrip = async () => {
+    setError(null);
+    if (!trip) setIsLoading(true);
 
-      try {
-        const data = await apiFetch(`/trips/current/`);
-        setTrip(data as CurrentTripData);
-      } catch (err) {
-        console.error("Erro ao carregar viagem atual:", err);
+    try {
+      const data = await apiFetch(`/trips/current/`);
+      setTrip(data as CurrentTripData);
+    } catch (err) {
+      console.error("Erro ao carregar viagem atual:", err);
         const errorData = err as { data?: { detail?: string } } | undefined;
         const detail = errorData?.data?.detail;
 
@@ -73,11 +75,12 @@ export function CurrentTripPage() {
                     : detail)) ||
           "Não foi possível carregar os dados da viagem atual.";
         setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadCurrentTrip();
   }, []);
 
@@ -103,38 +106,57 @@ export function CurrentTripPage() {
           </div>
         ) : trip ? (
           <div className="space-y-6">
-            <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
-              <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
-                <PassengerQRCode identifier={trip.passenger_identifier} />
 
-                {trip.has_checked_in ? (
-                  <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-semibold border border-green-200 flex items-center gap-2">
-                    Check-in Realizado
-                  </span>
-                ) : (
-                  <span className="px-4 py-1.5 rounded-full bg-amber-100 text-amber-800 text-sm font-semibold border border-amber-200 flex items-center gap-2">
-                    Check-in Pendente
-                  </span>
-                )}
-              </CardContent>
-            </Card>
+            {!isTripInProgress && (
+              <div className="flex justify-center sm:justify-start">
+                <Button 
+                  className="w-full sm:w-auto font-semibold"
+                  onClick={() => setShowQrCodes(!showQrCodes)}
+                >
+                  {showQrCodes ? "Ocultar QR Codes" : "Mostrar QR Codes"}
+                </Button>
+              </div>
+            )}
 
-            {trip.passenger_guests.length > 0 ? (
-              <Card className="rounded-xl border overflow-hidden bg-white shadow-sm grid grid-cols-2">
-                {trip.passenger_guests.map(
-                  (passenger_guest: PassengerGuest) => (
-                    <>
-                      <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-2">
-                        <PassengerQRCode identifier={passenger_guest.id} />
-                        <FieldLabel>{passenger_guest.full_name}</FieldLabel>
-                        <FieldLabel>{passenger_guest.cpf}</FieldLabel>
-                      </CardContent>
-                    </>
-                  ),
-                )}
+            {!isTripInProgress && showQrCodes && (
+              <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
+                <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
+                  <PassengerQRCode identifier={trip.passenger_identifier} />
+
+                  {trip.has_checked_in ? (
+                    <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-semibold border border-green-200 flex items-center gap-2">
+                      Check-in Realizado
+                    </span>
+                  ) : (
+                    <span className="px-4 py-1.5 rounded-full bg-amber-100 text-amber-800 text-sm font-semibold border border-amber-200 flex items-center gap-2">
+                      Check-in Pendente
+                    </span>
+                  )}
+                </CardContent>
               </Card>
-            ) : (
-              <></>
+            )}
+
+            {!isTripInProgress && showQrCodes && trip.passenger_guests.length > 0 && (
+              <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
+                <div 
+                  className={`grid grid-cols-1 ${
+                    trip.passenger_guests.length === 1 
+                      ? "" 
+                      : "sm:grid-cols-2 sm:divide-y-0 sm:divide-x"
+                  } divide-y`}
+                >
+                  {trip.passenger_guests.map((guest: PassengerGuest) => (
+                    <div key={guest.id} className="flex flex-col items-center justify-center p-6 gap-4">
+                      <PassengerQRCode identifier={guest.id} />
+                      
+                      <div className="text-center space-y-1">
+                        <FieldLabel className="text-base text-center w-full block">{guest.full_name}</FieldLabel>
+                        <p className="text-sm text-slate-500 font-medium text-center w-full">{guest.cpf}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
             )}
 
             <Card className="rounded-xl border">
@@ -233,8 +255,8 @@ export function CurrentTripPage() {
                 </div>
               </CardContent>
             </Card>
-            {user?.profile_type == "CIVIL-SERVANT" ? (
-              <GuestForm tripId={trip.id} />
+            {!isTripInProgress && user?.profile_type == "CIVIL-SERVANT" ? (
+              <GuestForm tripId={trip.id} onGuestAdded={loadCurrentTrip} />
             ) : (
               <></>
             )}
