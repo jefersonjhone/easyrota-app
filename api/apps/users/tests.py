@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from apps.reservations.models import Reservation
-from apps.trips.models import Bus, Route, Trip
+from apps.trips.models import Bus, Route, Trip, TripPassenger
 
 from .models.auth import AllowedStaff, MFAChallenge
 from .models.profiles import (
@@ -411,6 +411,110 @@ class AllowedStaffValidationTests(APITestCase):
 
         assert create_response.status_code == status.HTTP_201_CREATED
         assert create_response.data["passenger"]["id"]
+
+
+class DriverTripPassengerRemovalTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin_user = CustomUser.objects.create_superuser(
+            email="admin.remove@teste.com",
+            full_name="Admin Remocao",
+            password="12345678",
+            role="admin",
+        )
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin_user)
+        self.driver_user = CustomUser.objects.create_user(
+            email="driver.remove@teste.com",
+            full_name="Motorista Remocao",
+            password="12345678",
+            is_active=True,
+        )
+        self.driver_profile = DriverProfile.objects.create(
+            user=self.driver_user,
+            cnh="12345670001",
+        )
+        self.bus = Bus.objects.create(
+            number_plate="REM-1234",
+            seating_capacity=40,
+            brand="Mercedes-Benz",
+            administrator=self.admin_profile,
+        )
+        self.route = Route.objects.create(
+            origin="Feira",
+            destiny="Salvador",
+            departure_time=time(8, 0),
+            arrival_time=time(10, 0),
+            administrator=self.admin_profile,
+        )
+        self.trip = Trip.objects.create(
+            trip_date=timezone.now().date() + timedelta(days=1),
+            bus=self.bus,
+            route=self.route,
+            status="CONFIRMADA",
+            driver=self.driver_profile,
+        )
+        self.client.force_authenticate(user=self.driver_user)
+        self.url = "/api/staff/passengers/"
+
+    def test_driver_can_remove_local_passenger_from_trip(self):
+        allowed_staff = AllowedStaff.objects.create(
+            name="SERVIDOR REMOVIDO",
+            registration_number="12340000",
+        )
+        passenger = TripPassenger.objects.create(
+            trip=self.trip,
+            allowed_staff=allowed_staff,
+            recorded_by=self.driver_profile,
+        )
+
+        response = self.client.delete(
+            self.url,
+            {
+                "trip": self.trip.id,
+                "local_passenger_id": passenger.id,
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["removed_passenger"]["name"] == allowed_staff.name
+        assert response.data["checked_in_count"] == 0
+        assert not TripPassenger.objects.filter(id=passenger.id).exists()
+
+    def test_driver_can_remove_reservation_check_in_without_deleting_reservation(self):
+        passenger_user = CustomUser.objects.create_user(
+            email="passageiro.remove@teste.com",
+            full_name="Passageiro Removido",
+            password="12345678",
+            is_active=True,
+        )
+        student_profile = StudentProfile.objects.create(
+            user=passenger_user,
+            student_id="REM-0001",
+        )
+        reservation = Reservation.objects.create(
+            trip=self.trip,
+            student=student_profile,
+            status="CONFIRMADA",
+            check_in=True,
+            checkin_date=timezone.now(),
+        )
+
+        response = self.client.delete(
+            self.url,
+            {
+                "trip": self.trip.id,
+                "reservation_id": reservation.id,
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["removed_passenger"]["name"] == passenger_user.full_name
+        assert response.data["checked_in_count"] == 0
+        reservation.refresh_from_db()
+        assert reservation.check_in is False
+        assert reservation.checkin_date is None
 
 
 class DriverProfileTests(APITestCase):

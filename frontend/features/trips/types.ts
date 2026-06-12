@@ -79,6 +79,12 @@ export type LocalTripPassengerPayload = {
   cpf?: string
 }
 
+export type RemoveTripPassengerPayload = {
+  trip: number | string
+  reservation_id?: number
+  local_passenger_id?: number
+}
+
 export type LocalTripPassengerResponse = {
   passenger?: {
     id?: number
@@ -101,4 +107,13 @@ export type LocalTripPassengerResponse = {
     reservation_id: number
   }>
   checked_in_count?: number
+}
+
+export type RemoveTripPassengerResponse = {
+  removed_passenger: {
+    name: string
+    reservation_id?: number
+    local_passenger_id?: number
+  }
+  checked_in_count: number
 }

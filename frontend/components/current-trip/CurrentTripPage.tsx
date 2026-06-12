@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BusIcon } from "@phosphor-icons/react";
 
 import AppLayout from "@/lib/layout/app-layout";
 import { Button } from "@/lib/ui/button";
@@ -248,13 +249,9 @@ export function CurrentTripPage() {
                       className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-500"
                       style={{ left: `clamp(1.5rem, ${percentage}%, calc(100% - 1.5rem))` }}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500 drop-shadow">
-                        <rect x="2" y="5" width="20" height="14" rx="2" />
-                        <path d="M2 10h20" />
-                        <circle cx="7" cy="19" r="1.5" fill="currentColor" stroke="none" />
-                        <circle cx="17" cy="19" r="1.5" fill="currentColor" stroke="none" />
-                        <path d="M7 5V3M17 5V3" />
-                      </svg>
+                      <span className="grid size-11 place-items-center rounded-full border border-orange-200 bg-white text-orange-500 shadow-sm drop-shadow">
+                        <BusIcon aria-hidden="true" weight="fill" className="size-7" />
+                      </span>
                     </div>
                   </div>
                   <div className="flex justify-between text-sm text-slate-500 mt-1">

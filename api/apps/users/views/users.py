@@ -324,6 +324,107 @@ class LocalDriverTripPassengerView(views.APIView):
         return Response(response_payload, status=response_status)
 
     @transaction.atomic
+    def delete(self, request):
+        trip_id = request.data.get("trip")
+        if not trip_id:
+            return Response(
+                {"trip": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            trip = Trip.objects.get(id=trip_id)
+        except (TypeError, ValueError, Trip.DoesNotExist):
+            return Response(
+                {"detail": "Viagem nao encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        local_passenger_id = request.data.get("local_passenger_id")
+        reservation_id = request.data.get("reservation_id")
+        if not local_passenger_id and not reservation_id:
+            return Response(
+                {
+                    "detail": (
+                        "Informe o passageiro local ou a reserva "
+                        "para remover do embarque."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if local_passenger_id:
+            try:
+                local_passenger_id = int(local_passenger_id)
+            except (TypeError, ValueError):
+                return Response(
+                    {"detail": "Passageiro local invalido."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            passenger = (
+                TripPassenger.objects
+                .filter(id=local_passenger_id, trip=trip)
+                .select_related("allowed_staff", "associated_staff")
+                .first()
+            )
+            if passenger is None:
+                return Response(
+                    {"detail": "Passageiro local nao encontrado nesta viagem."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            passenger_payload = self._serialize_local_passenger(passenger)
+            passenger.delete()
+            sync_trip_status(trip)
+            return Response(
+                {
+                    "removed_passenger": {
+                        "name": passenger_payload["name"],
+                        "local_passenger_id": passenger_payload["id"],
+                    },
+                    "checked_in_count": self._checked_in_count(trip),
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        try:
+            reservation_id = int(reservation_id)
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Reserva invalida."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reservation = (
+            Reservation.objects
+            .select_related("student__user", "civil_servant__user", "guest_passenger")
+            .filter(id=reservation_id, trip=trip, check_in=True)
+            .first()
+        )
+        if reservation is None:
+            return Response(
+                {"detail": "Reserva embarcada nao encontrada nesta viagem."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        passenger_name = get_reservation_passenger_name(reservation)
+        reservation.check_in = False
+        reservation.checkin_date = None
+        reservation.save(update_fields=["check_in", "checkin_date"])
+        sync_trip_status(trip)
+        return Response(
+            {
+                "removed_passenger": {
+                    "name": passenger_name,
+                    "reservation_id": reservation.id,
+                },
+                "checked_in_count": self._checked_in_count(trip),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @transaction.atomic
     def post(self, request):
         serializer = LocalTripPassengerSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

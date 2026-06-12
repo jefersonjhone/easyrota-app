@@ -4,6 +4,8 @@ import type {
   CurrentTripDetail,
   LocalTripPassengerPayload,
   LocalTripPassengerResponse,
+  RemoveTripPassengerPayload,
+  RemoveTripPassengerResponse,
   Trip,
   TripPassengerCheckInResponse,
 } from '../types'
@@ -54,6 +56,13 @@ export function searchAllowedStaff(query: string) {
 export function registerLocalTripPassenger(payload: LocalTripPassengerPayload) {
   return apiFetch<LocalTripPassengerResponse>('/staff/passengers/', {
     method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function removeTripPassenger(payload: RemoveTripPassengerPayload) {
+  return apiFetch<RemoveTripPassengerResponse>('/staff/passengers/', {
+    method: 'DELETE',
     body: JSON.stringify(payload),
   })
 }

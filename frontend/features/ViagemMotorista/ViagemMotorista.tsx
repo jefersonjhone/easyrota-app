@@ -13,6 +13,7 @@ import { type FormEvent, useCallback, useEffect, useState } from 'react'
 import {
   checkInTripPassenger,
   registerLocalTripPassenger,
+  removeTripPassenger,
   searchAllowedStaff,
 } from '@features/trips/services/trips'
 import type { AllowedStaffOption } from '@features/trips/types'
@@ -42,6 +43,7 @@ type PassengerBoardItem = {
   kind?: PassengerKind
   identifier?: string
   reservationId?: number
+  localPassengerId?: number
 }
 
 type PassengerKind = 'Servidor' | 'Convidado'
@@ -126,6 +128,14 @@ function normalizeTripStatus(status?: string | null) {
     .toUpperCase()
 }
 
+function normalizeSearchText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+}
+
 function normalizeCapacity(capacity?: number | null) {
   return typeof capacity === 'number' && capacity > 0 ? capacity : 46
 }
@@ -165,6 +175,7 @@ function normalizeCheckedInPassengers(trip: TripModel, capacity: number): Passen
         return {
           id: reservationId ?? localPassengerId ?? fallbackId,
           reservationId,
+          localPassengerId,
           identifier: localPassengerId ? `local-${localPassengerId}` : undefined,
           name: passenger.passenger_name ?? `Passageiro ${String(fallbackId).padStart(3, '0')}`,
           source,
@@ -303,6 +314,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const [isConfirmationLoading, setIsConfirmationLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [isPassengerMenuOpen, setIsPassengerMenuOpen] = useState(false)
+  const [isRemovePassengerMenuOpen, setIsRemovePassengerMenuOpen] = useState(false)
   const [passengerName, setPassengerName] = useState('')
   const [passengerCpf, setPassengerCpf] = useState('')
   const [passengerKind, setPassengerKind] = useState<PassengerKind>('Servidor')
@@ -312,6 +324,10 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const [isStaffSearchLoading, setIsStaffSearchLoading] = useState(false)
   const [staffSearchError, setStaffSearchError] = useState<string | null>(null)
   const [isPassengerSaving, setIsPassengerSaving] = useState(false)
+  const [passengerRemoveQuery, setPassengerRemoveQuery] = useState('')
+  const [selectedPassengerToRemove, setSelectedPassengerToRemove] =
+    useState<PassengerBoardItem | null>(null)
+  const [isPassengerRemoving, setIsPassengerRemoving] = useState(false)
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
   const [isQrCheckInLoading, setIsQrCheckInLoading] = useState(false)
   const [qrFeedback, setQrFeedback] = useState<QrFeedback | null>(null)
@@ -336,6 +352,15 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const canSubmitLocalPassenger = Boolean(selectedStaff)
     && (!isGuestPassenger || (passengerName.trim().length > 0 && passengerCpf.trim().length === 11))
     && !isPassengerSaving
+  const normalizedPassengerRemoveQuery = normalizeSearchText(passengerRemoveQuery)
+  const removablePassengers = normalizedPassengerRemoveQuery
+    ? boardedPassengers.filter((passenger) =>
+        normalizeSearchText(passenger.name).includes(normalizedPassengerRemoveQuery),
+      )
+    : boardedPassengers
+  const selectedPassengerIdentifier =
+    selectedPassengerToRemove?.reservationId ?? selectedPassengerToRemove?.localPassengerId
+  const canSubmitRemovePassenger = Boolean(selectedPassengerIdentifier) && !isPassengerRemoving
   const qrAccessMessage = !trip?.isDriverAssociated
     ? 'Associe-se a esta viagem antes de ler QR Code.'
     : null
@@ -521,6 +546,13 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
     setIsPassengerMenuOpen(true)
   }
 
+  const handleOpenRemovePassenger = () => {
+    setPassengerRemoveQuery('')
+    setSelectedPassengerToRemove(null)
+    setActionError(null)
+    setIsRemovePassengerMenuOpen(true)
+  }
+
   const handleRegisterPassenger = async () => {
     if (!trip || !selectedStaff || !canSubmitLocalPassenger) {
       return
@@ -568,6 +600,42 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
       setActionError(getApiErrorMessage(error, 'Nao foi possivel cadastrar passageiro.'))
     } finally {
       setIsPassengerSaving(false)
+    }
+  }
+
+  const handleRemovePassenger = async () => {
+    if (!trip || !selectedPassengerToRemove || !canSubmitRemovePassenger) {
+      return
+    }
+
+    setIsPassengerRemoving(true)
+    setActionError(null)
+
+    try {
+      const response = await removeTripPassenger({
+        trip: trip.id,
+        reservation_id: selectedPassengerToRemove.reservationId,
+        local_passenger_id: selectedPassengerToRemove.localPassengerId,
+      })
+      const refreshedTrip = await getTripFromApi(trip.id)
+      const removedName = response.removed_passenger?.name ?? selectedPassengerToRemove.name
+
+      setTrip({
+        ...refreshedTrip,
+        isDriverAssociated: trip.isDriverAssociated,
+      })
+      setPassengerRemoveQuery('')
+      setSelectedPassengerToRemove(null)
+      setIsRemovePassengerMenuOpen(false)
+      setQrFeedback({
+        kind: 'success',
+        message: `${removedName} removido do embarque.`,
+      })
+    } catch (error) {
+      console.warn('Nao foi possivel remover passageiro:', error)
+      setActionError(getApiErrorMessage(error, 'Nao foi possivel remover passageiro.'))
+    } finally {
+      setIsPassengerRemoving(false)
     }
   }
 
@@ -970,7 +1038,8 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
                   type="button"
                   variant="outline"
                   className="min-h-12 rounded-lg font-bold"
-                  disabled
+                  onClick={handleOpenRemovePassenger}
+                  disabled={boardedPassengers.length === 0 || isPassengerRemoving}
                 >
                   <UserMinusIcon aria-hidden="true" weight="bold" />
                   Remover passageiro
@@ -1240,6 +1309,144 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
                   disabled={!canSubmitLocalPassenger}
                 >
                   {isPassengerSaving ? 'Cadastrando...' : 'Cadastrar'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={isRemovePassengerMenuOpen}
+          onOpenChange={(isOpen) => {
+            setIsRemovePassengerMenuOpen(isOpen)
+            if (!isOpen) {
+              setPassengerRemoveQuery('')
+              setSelectedPassengerToRemove(null)
+              setActionError(null)
+            }
+          }}
+        >
+          <DialogContent className="rounded-lg sm:max-w-md">
+            <form
+              className="grid gap-5"
+              onSubmit={(event) => {
+                event.preventDefault()
+                void handleRemovePassenger()
+              }}
+            >
+              <DialogHeader className="items-center text-center">
+                <UserMinusIcon aria-hidden="true" weight="fill" className="size-8 text-primary" />
+                <DialogTitle>Remover passageiro</DialogTitle>
+                <DialogDescription>
+                  Pesquise pelo nome na lista de passageiros embarcados.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-2">
+                <Label htmlFor="driver-passenger-remove-search">
+                  Pesquisar nome
+                </Label>
+                <Input
+                  id="driver-passenger-remove-search"
+                  type="text"
+                  value={passengerRemoveQuery}
+                  onChange={(event) => {
+                    setPassengerRemoveQuery(event.target.value)
+                    setSelectedPassengerToRemove(null)
+                  }}
+                  placeholder="Digite o nome"
+                  autoFocus
+                />
+              </div>
+              {boardedPassengers.length === 0 ? (
+                <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm font-semibold text-muted-foreground">
+                  Nenhum passageiro embarcado.
+                </p>
+              ) : removablePassengers.length > 0 ? (
+                <div
+                  role="listbox"
+                  aria-label="Passageiros embarcados"
+                  className="max-h-56 overflow-y-auto rounded-lg border border-border bg-background p-1"
+                >
+                  {removablePassengers.map((passenger) => {
+                    const isSelected =
+                      selectedPassengerToRemove?.reservationId === passenger.reservationId
+                      && selectedPassengerToRemove?.localPassengerId === passenger.localPassengerId
+                      && selectedPassengerToRemove?.name === passenger.name
+                    const hasIdentifier = Boolean(passenger.reservationId ?? passenger.localPassengerId)
+                    const passengerMeta = passenger.kind
+                      ? `${passenger.source} - ${passenger.kind}`
+                      : passenger.source
+
+                    return (
+                      <button
+                        key={`${passenger.source}-${passenger.reservationId ?? passenger.localPassengerId ?? passenger.id}-${passenger.name}`}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        disabled={!hasIdentifier || isPassengerRemoving}
+                        className={cn(
+                          'flex w-full min-w-0 flex-col items-start gap-0.5 rounded-md px-3 py-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+                          isSelected
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-muted focus-visible:bg-muted focus-visible:outline-none',
+                        )}
+                        onClick={() => setSelectedPassengerToRemove(passenger)}
+                      >
+                        <span className="w-full truncate text-sm font-bold">
+                          {passenger.name}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-xs font-semibold',
+                            isSelected
+                              ? 'text-primary-foreground/80'
+                              : 'text-muted-foreground',
+                          )}
+                        >
+                          {hasIdentifier
+                            ? passengerMeta
+                            : 'Identificador indisponivel'}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm font-semibold text-muted-foreground">
+                  Nenhum passageiro encontrado.
+                </p>
+              )}
+              {selectedPassengerToRemove ? (
+                <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                  {selectedPassengerToRemove.name} selecionado para remocao.
+                </p>
+              ) : null}
+              {actionError ? (
+                <p role="alert" className="text-sm font-bold text-red-700">
+                  {actionError}
+                </p>
+              ) : null}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-lg"
+                  onClick={() => {
+                    setIsRemovePassengerMenuOpen(false)
+                    setPassengerRemoveQuery('')
+                    setSelectedPassengerToRemove(null)
+                    setActionError(null)
+                  }}
+                  disabled={isPassengerRemoving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  className="rounded-lg"
+                  disabled={!canSubmitRemovePassenger}
+                >
+                  {isPassengerRemoving ? 'Removendo...' : 'Remover'}
                 </Button>
               </DialogFooter>
             </form>

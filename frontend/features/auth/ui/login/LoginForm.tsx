@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useState } from "react"
+import easyRotaLogo from "@assets/logo-light-mode.svg"
 
 // Hooks
 import { useLoginMutation } from "@features/auth/hooks/useLogin"
@@ -104,7 +105,10 @@ export function LoginForm() {
     return (
         <Card className="w-full max-w-sm">
             <CardHeader>
-                <CardTitle>Entrar</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                    <img src={easyRotaLogo} alt="Logo EasyRota" className="h-8 w-8 shrink-0 object-contain" />
+                    Entrar
+                </CardTitle>
                 <CardDescription>Entre com seu email institucional.</CardDescription>
                 <CardAction>
                     <Link to={SignupRoute.to} className="w-full">
