@@ -2,6 +2,7 @@ import resend
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
 
+
 class ResendEmailBackend(BaseEmailBackend):
     def __init__(self, fail_silently=False, **kwargs):
         super().__init__(fail_silently=fail_silently, **kwargs)
