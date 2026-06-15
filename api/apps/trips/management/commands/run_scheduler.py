@@ -14,6 +14,7 @@ from apps.reservations.services import (
     sync_trip_status,
 )
 from apps.trips.models import Trip
+from apps.users.models import CustomUser
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,22 @@ def check_upcoming_trips_quorum():
             logger.info("Trip %s com quórum mínimo atendido.", trip.id)
 
 
+def anonymize_user_past_30_days():
+    limit = timezone.now() - timedelta(days=30)
+    
+    users_to_anonymize = CustomUser.objects.filter(
+        is_deleted=True,
+        deleted_at__lte=limit,
+    ).select_related(
+        'student_profile', 
+        'civil_servant_profile'
+        ).prefetch_related(
+        'civil_servant_profile__guest_set')
+    
+    for user in users_to_anonymize:
+        user.anonymize_user()
+
+
 @util.close_old_connections
 def delete_old_job_executions(max_age=604_800):
     DjangoJobExecution.objects.delete_old_job_executions(max_age)
@@ -67,6 +84,15 @@ class Command(BaseCommand):
             replace_existing=True,
         )
         logger.info("Added job 'check_upcoming_trips_quorum'.")
+
+        scheduler.add_job(
+            anonymize_user_past_30_days,
+            trigger=CronTrigger(hour="03", minute="00"),
+            id="anonymize_user_past_30_days",
+            max_instances=1,
+            replace_existing=True,
+        )
+        logger.info("Added daily job: 'anonymize_user_past_30_days'.")
 
         scheduler.add_job(
             delete_old_job_executions,

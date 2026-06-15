@@ -73,12 +73,34 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def can_reactivate_account(self):
         """User can reactivate account for up to 30 days after deletion request."""
 
-        # TODO:
-        # After 30 days the account can no longer be reactivated.
-        # Future implementation should anonymize and purge personal data
-        # according to the retention policy.
-
         if not self.deleted_at:
             return False
 
         return timezone.now() <= self.deleted_at + timedelta(days=30)
+
+    def anonymize_user(self):
+        self.email = f"deleted_{self.id}@anonymize"
+        self.full_name = "Usuário deletado"
+        self.save()
+
+        if hasattr(self, "student_profile"):
+            profile = self.student_profile
+            profile.student_id = f"DEL_{self.id}"
+            profile.save()
+
+        if hasattr(self, "civil_servant_profile"):
+            profile = self.civil_servant_profile
+            profile.civil_servant_id = f"DEL_{self.id}"
+            profile.save()
+
+            guests_to_update = []
+
+            for guest in profile.guest_set.all():
+                guest.name = "Convidado deletado"
+                guest.cpf = f"DEL_{guest.id}"
+                guests_to_update.append(guest)
+            
+            if guests_to_update:
+                from apps.reservations.models import Guest
+                Guest.objects.bulk_update(guests_to_update, fields=['name', 'cpf'])
+            

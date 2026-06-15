@@ -45,7 +45,6 @@ from ..serializers.users import (
     DeleteOwnAccountSerializer,
 )
 
-
 logger = logging.getLogger("api")
 
 SIMPLE_JWT_REFRESH_TOKEN_LIFETIME = SIMPLE_JWT.get(
