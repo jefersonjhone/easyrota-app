@@ -28,6 +28,7 @@ export function AsidePanel({
 }: Props) {
   return (
     <aside className="grid content-start gap-4" aria-label="Leitura de QR e lotacao">
+      <FeedbackBanner feedback={!isQrScannerOpen ? qrFeedback : null} />
       <button
         type="button"
         className={cn(
@@ -38,9 +39,9 @@ export function AsidePanel({
         disabled={isQrCheckInLoading || !canReadQr}
       >
         <span className="grid size-32 place-items-center rounded-lg bg-muted text-foreground">
-          <QrCodeIcon weight="bold" className="size-28" />
+          <QrCodeIcon weight="regular" className="size-28" />
         </span>
-        <strong className="text-sm font-black uppercase text-foreground">Ler QR</strong>
+        <strong className="text-sm font- uppercase text-foreground">Ler QR</strong>
       </button>
 
       {qrAccessMessage ? (
@@ -49,21 +50,20 @@ export function AsidePanel({
         </p>
       ) : null}
 
-      <FeedbackBanner feedback={!isQrScannerOpen ? qrFeedback : null} />
 
       <section className="rounded-lg border border-border bg-background p-4 shadow-md" aria-labelledby="driver-passengers-title">
-        <h2 id="driver-passengers-title" className="text-base font-black text-foreground">Controle de lotacao</h2>
+        <h2 id="driver-passengers-title" className=" font-medium text-lg text-center">Controle de lotacao</h2>
         <div className="mt-4 grid grid-cols-3 gap-2" aria-label="Resumo dos embarques">
-          <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs font-bold text-muted-foreground">
-            <strong className="block text-2xl font-black text-primary">{embarkedCount}</strong>
+          <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs text-muted-foreground">
+            <strong className="block text-2xl text-primary">{embarkedCount}</strong>
             embarques
           </span>
-          <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs font-bold text-muted-foreground">
-            <strong className="block text-2xl font-black text-primary">{qrCount}</strong>
+          <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs text-muted-foreground">
+            <strong className="block text-2xl  text-primary">{qrCount}</strong>
             QR
           </span>
-          <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs font-bold text-muted-foreground">
-            <strong className="block text-2xl font-black text-primary">{manualCount}</strong>
+          <span className="grid min-h-20 place-items-center rounded-lg border border-border bg-muted/30 p-2 text-center text-xs text-muted-foreground">
+            <strong className="block text-2xl text-primary">{manualCount}</strong>
             manual
           </span>
         </div>

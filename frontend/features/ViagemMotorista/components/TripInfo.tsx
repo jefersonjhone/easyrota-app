@@ -28,7 +28,7 @@ export function TripInfo({
         {origin} <span className="font-sans text-xl font-semibold text-muted-foreground md:text-2xl">para</span> {destiny}
       </h1>
       <div className="flex flex-wrap justify-center gap-2">
-        <span className="rounded-full border border-border bg-background px-3 py-1 text-sm font-semibold text-muted-foreground">
+        <span className="flex items-center rounded-full border border-border bg-background px-3 py-1 text-sm font-semibold text-muted-foreground">
           {departureTime}
         </span>
         <label className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-2 py-1 text-sm font-semibold text-muted-foreground">

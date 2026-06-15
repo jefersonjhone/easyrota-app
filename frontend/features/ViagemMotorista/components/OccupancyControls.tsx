@@ -25,16 +25,16 @@ export function OccupancyControls({
   return (
     <>
       <div className="mt-8 grid w-full max-w-md gap-2">
-        <div className="h-8 overflow-hidden rounded-full border-2 border-foreground bg-background">
+        <div className="h-4 overflow-hidden rounded-full border border-primary-foreground bg-slate-100">
           <span className="block h-full rounded-full bg-primary transition-[width]" style={{ width: `${occupancyPercent}%` }} />
         </div>
-        <strong className="text-sm font-black text-foreground">{embarkedCount}/{activeCapacity} check-ins confirmados</strong>
+        <p className="text-sm  text-foreground font-medium uppercase tracking-wide">{embarkedCount}/{activeCapacity} check-ins confirmados</p>
       </div>
 
       <div className="mt-6 grid w-full max-w-md gap-3">
-        <Button type="button" className="min-h-12 rounded-lg font-bold" onClick={onAddPassenger}>
+        <Button type="button" className="min-h-12 rounded-lg font-bold border" onClick={onAddPassenger}>
           <UserPlusIcon aria-hidden="true" weight="bold" />
-          Add passageiro
+          Adicionar passageiro
         </Button>
 
         <Button

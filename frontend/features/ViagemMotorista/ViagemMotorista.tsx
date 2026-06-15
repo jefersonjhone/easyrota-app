@@ -187,7 +187,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   return (
     <MotoraLayout user={{ name: 'Motorista', kind: 'driver' }}>
       <section className="mx-auto w-[min(100%-1rem,72rem)] sm:w-[min(100%-2rem,72rem)]" aria-labelledby="driver-trip-screen-title">
-        <div className="relative overflow-hidden rounded-lg border border-border bg-background shadow-xl">
+        <div className="relative overflow-hidden rounded-lg border border-border bg-background shadow-md">
           <HeaderActions
             onBack={() => setConfirmation('back')}
             onStart={() => setConfirmation('start')}
