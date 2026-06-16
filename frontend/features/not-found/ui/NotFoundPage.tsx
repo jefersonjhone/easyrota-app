@@ -4,7 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import iguanaImage from '@/assets/iguana-404.png'
 import './NotFoundPage.css'
 
-const REDIRECT_DELAY_SECONDS = 700
+const REDIRECT_DELAY_SECONDS = 7
 
 export function NotFoundPage() {
   const navigate = useNavigate()
