@@ -199,6 +199,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
     status_trip = serializers.SerializerMethodField()
     reserved_seats = serializers.SerializerMethodField()
     available_seats = serializers.SerializerMethodField()
+    server_reserved_seats = serializers.SerializerMethodField()
     is_full = serializers.SerializerMethodField()
     is_reservable = serializers.SerializerMethodField()
     quorum_met = serializers.SerializerMethodField()
@@ -216,6 +217,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
             "status_trip",
             "available_seats",
             "reserved_seats",
+            "server_reserved_seats",
             "is_full",
             "is_reservable",
             "quorum_met",
@@ -228,15 +230,24 @@ class AvailableTripSerializer(serializers.ModelSerializer):
     def get_reserved_seats(self, obj):
         return Reservation.objects.filter(trip=obj).count()
 
+    def get_server_reserved_seats(self, obj):
+        return Reservation.objects.filter(
+            trip=obj, civil_servant__isnull=False, status__in=["CONFIRMADA", "PENDENTE"]
+        ).count()
+
     def get_available_seats(self, obj):
-        reserved_seats = getattr(
-            obj,
-            "active_reservation_seats",
-            getattr(obj, "reserved_seats", 0),
-        )
-        passenger_seats = getattr(obj, "passenger_seats", 0)
+        from .services import get_trip_occupancy
+        
+        total_occupied, server_occupied = get_trip_occupancy(obj)
         seating_capacity = obj.bus.seating_capacity if obj.bus else 0
-        return max(seating_capacity - reserved_seats - passenger_seats, 0)
+        
+        user = self.context["request"].user
+        if hasattr(user, "civil_servant_profile"):
+            # For servers, show capacity minus other servers
+            return max(seating_capacity - server_occupied, 0)
+
+        # For students and others, show total occupied
+        return max(seating_capacity - total_occupied, 0)
 
     def get_is_full(self, obj):
         return self.get_available_seats(obj) == 0

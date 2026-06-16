@@ -147,3 +147,41 @@ def test_is_reservable_for_server_with_available_bus(trip, server_user, superadm
     
     serializer = AvailableTripSerializer(trip, context={'request': request})
     assert serializer.data['is_reservable'] is True
+
+@pytest.mark.django_db
+def test_role_based_available_seats(trip, student_user, server_user):
+    from apps.reservations.services import sync_trip_status
+    # Trip capacity is 2. 
+    # 1 student reserved.
+    Reservation.objects.create(trip=trip, student=student_user.student_profile, status="CONFIRMADA")
+    sync_trip_status(trip)
+    
+    from apps.reservations.serializers import AvailableTripSerializer
+    from rest_framework.test import APIRequestFactory
+    factory = APIRequestFactory()
+
+    # Case 1: Student viewing
+    req_student = factory.get('/')
+    req_student.user = student_user
+    ser_student = AvailableTripSerializer(trip, context={'request': req_student})
+    # Total capacity 2 - 1 student = 1 seat left
+    assert ser_student.data['available_seats'] == 1
+
+    # Case 2: Server viewing
+    req_server = factory.get('/')
+    req_server.user = server_user
+    ser_server = AvailableTripSerializer(trip, context={'request': req_server})
+    # Total capacity 2 - 0 servers = 2 seats left (student doesn't count for server)
+    assert ser_server.data['available_seats'] == 2
+
+    # Case 3: 1 server joins
+    Reservation.objects.create(trip=trip, civil_servant=server_user.civil_servant_profile, status="CONFIRMADA")
+    sync_trip_status(trip)
+    
+    # Student sees 0 seats left (1 student + 1 server = 2)
+    ser_student = AvailableTripSerializer(trip, context={'request': req_student})
+    assert ser_student.data['available_seats'] == 0
+    
+    # Server sees 1 seat left (only the other server counts)
+    ser_server = AvailableTripSerializer(trip, context={'request': req_server})
+    assert ser_server.data['available_seats'] == 1
