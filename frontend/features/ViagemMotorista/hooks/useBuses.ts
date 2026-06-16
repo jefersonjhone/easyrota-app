@@ -41,12 +41,12 @@ export function useBuses(
       return
     }
 
-    if (trip?.busId && busOptions.some((bus) => bus.id === trip.busId)) {
+    if (trip?.busId && busOptions.some((bus) => bus.id === trip?.busId)) {
       setSelectedBusId(trip.busId)
       return
     }
 
-    const matchingBus = trip?.busPlate ? busOptions.find((bus) => bus.plate === trip.busPlate) : null
+    const matchingBus = trip?.busPlate ? busOptions.find((bus) => bus.plate === trip?.busPlate) : null
     setSelectedBusId(matchingBus?.id ?? null)
   }, [busOptions, trip])
 
@@ -67,18 +67,14 @@ export function useBuses(
       } else {
         await unassignBusFromTrip(trip.id)
       }
-
-      setTrip((currentTrip) =>
-        currentTrip
-          ? {
-              ...currentTrip,
+      trip = {
+        ...trip,
               busId: nextBusId,
-              busPlate: nextBus?.plate ?? currentTrip.busPlate,
-              isDriverAssociated: nextBusId ? true : currentTrip.isDriverAssociated,
-              associatedBuses: nextBusId ? Math.max(currentTrip.associatedBuses, 1) : 0,
-            }
-          : currentTrip,
-      )
+             busPlate: nextBus?.plate ?? trip.busPlate,
+             isDriverAssociated: nextBusId ? true : trip.isDriverAssociated,
+             associatedBuses: nextBusId ? Math.max(trip.associatedBuses, 1) : 0,
+      }
+      setTrip(trip  )
     } catch (error) {
       console.warn('Nao foi possivel atualizar o onibus da viagem:', error)
       setSelectedBusId(previousBusId)

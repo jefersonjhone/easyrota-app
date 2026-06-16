@@ -48,29 +48,33 @@ export function useQrScanner(
         const refreshedTrip = await getTripFromApi(trip.id)
         setTrip({ ...refreshedTrip, isDriverAssociated: trip.isDriverAssociated })
       } else {
-        setBoardedPassengers((currentPassengers) => {
-          const alreadyRegistered = currentPassengers.some(
-            (passenger) => passenger.identifier === decodedText || (reservationId !== undefined && passenger.reservationId === reservationId),
+        
+        const alreadyRegistered = boardedPassengers.some(
+          (passenger) => passenger.identifier === decodedText || (reservationId !== undefined && passenger.reservationId === reservationId),
+        )
+        if (alreadyRegistered) {
+          return
+        }
+        const passengerFromQr: PassengerBoardItem = {
+          id: reservationId ?? boardedPassengers.length + 1,
+          reservationId,
+          identifier: decodedText,
+          name: passengerName,
+          source: 'QR',
+        }
+        
+        const placeholderIndex = boardedPassengers.findIndex(
+          (p) => p.source === 'Manual' && p.identifier === undefined && p.name.startsWith('Passageiro '),
+        )
+
+        if (placeholderIndex === -1) {
+          setBoardedPassengers([...boardedPassengers, passengerFromQr])
+      }
+        else {
+          setBoardedPassengers(
+            boardedPassengers.map((passenger, index) => (index === placeholderIndex ? { ...passengerFromQr, id: reservationId ?? passenger.id } : passenger))
           )
-
-          if (alreadyRegistered) return currentPassengers
-
-          const passengerFromQr: PassengerBoardItem = {
-            id: reservationId ?? currentPassengers.length + 1,
-            reservationId,
-            identifier: decodedText,
-            name: passengerName,
-            source: 'QR',
-          }
-
-          const placeholderIndex = currentPassengers.findIndex(
-            (p) => p.source === 'Manual' && p.identifier === undefined && p.name.startsWith('Passageiro '),
-          )
-
-          if (placeholderIndex === -1) return [...currentPassengers, passengerFromQr]
-
-          return currentPassengers.map((passenger, index) => (index === placeholderIndex ? { ...passengerFromQr, id: reservationId ?? passenger.id } : passenger))
-        })
+        }
       }
 
       setQrFeedback({ kind: evictedNames ? 'info' : 'success', message: evictedNames ? `Check-in realizado para ${passengerName}. Retire do onibus: ${evictedNames}.` : response.status ?? `Check-in realizado para ${passengerName}.` })
