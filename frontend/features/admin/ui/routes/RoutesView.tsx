@@ -53,6 +53,9 @@ export function RoutesView({ routes, onRefresh, onInteract }: Props) {
                         {" "}
                         {"Chegada: " + route.arrival_time}
                       </CardDescription>
+                      <CardDescription>
+                        {"Ônibus disponíveis: " + route.max_bus}
+                      </CardDescription>
                     </CardHeader>
                     <div className="grid grid-cols-2">
                       {clicked && route.id === cardId && (
