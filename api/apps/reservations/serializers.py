@@ -204,6 +204,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
     is_reservable = serializers.SerializerMethodField()
     quorum_met = serializers.SerializerMethodField()
     reservation_deadline = serializers.SerializerMethodField()
+    user_is_reserved = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Trip
@@ -222,6 +223,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
             "is_reservable",
             "quorum_met",
             "reservation_deadline",
+            "user_is_reserved",
         ]
 
     def get_status_trip(self, obj):

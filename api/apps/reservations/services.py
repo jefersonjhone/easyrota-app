@@ -238,8 +238,9 @@ def send_admin_leftover_server_alert(trip, civil_servant):
                     f"O servidor {civil_servant.user.full_name} tentou reservar a viagem de "
                     f"{trip.route.origin} para {trip.route.destiny} no dia {trip.trip_date}, "
                     f"mas o ônibus já está lotado por outros servidores.\n\n"
-                    f"Por favor, verifique a disponibilidade de outro ônibus e aloque se possível.\n\n"
-                    f"Contato de Emergência (Ricardo): https://wa.me/557599744054"
+                    f"Ação Necessária: Por favor, verifique a disponibilidade de outro ônibus na frota e realize a alocação de um novo veículo para esta viagem no painel administrativo.\n\n"
+                    f"Este é um alerta automático de alta prioridade.\n\n"
+                    f"Contato de Emergência (Ricardo): +55 75 99744-054"
                 ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[admin.user.email],

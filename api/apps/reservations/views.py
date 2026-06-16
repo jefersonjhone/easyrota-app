@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Exists, OuterRef
 from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
@@ -78,9 +78,9 @@ class AvailableTripListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
         available_trips = (
-            Trip.objects
-            .filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
+            Trip.objects.filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
             .select_related("route", "bus")
             .annotate(
                 active_reservation_seats=Count(
@@ -89,6 +89,15 @@ class AvailableTripListView(generics.ListAPIView):
                     distinct=True,
                 ),
                 passenger_seats=Count("trip_passengers", distinct=True),
+                user_is_reserved=Exists(
+                    Reservation.objects.filter(
+                        trip=OuterRef("pk"),
+                        student=getattr(user, "student_profile", None),
+                        civil_servant=getattr(user, "civil_servant_profile", None),
+                    )
+                    if hasattr(user, "student_profile") or hasattr(user, "civil_servant_profile")
+                    else Reservation.objects.none()
+                ),
             )
             .order_by("trip_date", "route__departure_time")
         )

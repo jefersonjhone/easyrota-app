@@ -102,7 +102,7 @@ export function TripsHomePage() {
         ) : (
           <div className="space-y-4">
             {trips.map((trip) => {
-              const isAlreadyReserved = reservedTripIds.includes(trip.id)
+              const isAlreadyReserved = trip.user_is_reserved || reservedTripIds.includes(trip.id)
 
               return (
                 <article
