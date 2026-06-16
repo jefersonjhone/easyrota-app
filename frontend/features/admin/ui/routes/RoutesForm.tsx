@@ -17,6 +17,7 @@ const schema = z.object({
   destiny: z.string().nonempty("Informe o destino"),
   departure_time: z.string().nonempty("Informe o horário de saída"),
   arrival_time: z.string().nonempty("Informe o horário de saída"),
+  max_bus: z.int().positive("A quantidade de ônibus disponíveis deve ser maior que 0")
 });
 
 type Schema = z.infer<typeof schema>;
@@ -47,6 +48,7 @@ export function RouteForm({
       destiny: routeValues ? routeValues.destiny : "",
       departure_time: routeValues ? routeValues.departure_time : "",
       arrival_time: routeValues ? routeValues.arrival_time : "",
+      max_bus: routeValues ? routeValues.max_bus : 1,
     },
   });
 
@@ -61,6 +63,7 @@ export function RouteForm({
           destiny: data.destiny,
           departure_time: data.departure_time,
           arrival_time: data.arrival_time,
+          max_bus: data.max_bus,
         };
         onSend(values);
       } else {
@@ -133,9 +136,9 @@ export function RouteForm({
             {...register("destiny")}
           ></Input>
           <HintInvalid for={state.errors.destiny} />
-          <section className="grid  grid-cols-2 gap-2">
+          <section className="grid  grid-cols-3 gap-2">
             <section>
-              <FieldLabel>HORÁRIO DE SAIDA (HORAS:MINUTOS)</FieldLabel>
+              <FieldLabel>HORÁRIO DE SAIDA</FieldLabel>
               <Input
                 id="departure_time"
                 type="time"
@@ -147,7 +150,7 @@ export function RouteForm({
               <HintInvalid for={state.errors.departure_time} />
             </section>
             <section>
-              <FieldLabel>HORÁRIO DE CHEGADA (HORAS:MINUTOS)</FieldLabel>
+              <FieldLabel>HORÁRIO DE CHEGADA</FieldLabel>
               <Input
                 id="arrival_time"
                 type="time"
@@ -158,6 +161,16 @@ export function RouteForm({
                 {...register("arrival_time")}
               ></Input>
               <HintInvalid for={state.errors.arrival_time} />
+            </section>
+            <section>
+              <FieldLabel>ÔNIBUS DISPONÍVEIS</FieldLabel>
+              <Input
+              id="max_bus"
+              type="number"
+              min={1}
+              defaultValue={routeValues ? routeValues.max_bus : 1}
+              required
+              {...register("max_bus")}></Input>
             </section>
           </section>
         </form>
