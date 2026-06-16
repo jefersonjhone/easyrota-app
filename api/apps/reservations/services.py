@@ -198,8 +198,54 @@ def evict_lowest_priority_active_reservation(trip):
     lowest_priority = sorted(
         removable_reservations, key=get_priority_tuple, reverse=True
     )[0]
-    lowest_priority.delete()
+    lowest_priority.status = "LISTA SECUNDÁRIA"
+    lowest_priority.save(update_fields=["status"])
     return lowest_priority
+
+
+def send_admin_leftover_server_alert(trip, civil_servant):
+    """
+    Sends an automatic alert (Email and WebPush) to superadmins when a civil servant
+    cannot find a seat on a trip.
+    """
+    from apps.users.models.profiles import AdministratorProfile
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    payload = {
+        "head": "Servidor sem vaga",
+        "body": f"O servidor {civil_servant.user.full_name} não conseguiu vaga na viagem {trip}. Por favor, aloque um novo ônibus.",
+        "url": "/app/admin/trips/",
+    }
+
+    # Find the superadmins (e.g. Ricardo Mattos)
+    superadmins = AdministratorProfile.objects.filter(level=AdministratorProfile.Level.SUPERADMIN)
+    
+    for admin in superadmins:
+        # WebPush notification
+        try:
+            logger.info(f"Sending webpush notification to {admin.user.email}")
+            send_user_notification(user=admin.user, payload=payload, ttl=1000)
+        except Exception as exc:
+            logger.error("Failed to send webpush notification to %s: %s", admin.user.email, exc)
+
+        # Email notification
+        try:
+            send_mail(
+                subject="Alerta: Servidor sem vaga na viagem",
+                message=(
+                    f"Olá,\n\n"
+                    f"O servidor {civil_servant.user.full_name} tentou reservar a viagem de "
+                    f"{trip.route.origin} para {trip.route.destiny} no dia {trip.trip_date}, "
+                    f"mas o ônibus já está lotado por outros servidores.\n\n"
+                    f"Por favor, verifique a disponibilidade de outro ônibus e aloque se possível.\n\n"
+                    f"Contato de Emergência (Ricardo): https://wa.me/557599744054"
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[admin.user.email],
+            )
+        except Exception as exc:
+            logger.error("Failed to send email notification to %s: %s", admin.user.email, exc)
 
 
 def promote_next_waitlisted_reservation(trip):

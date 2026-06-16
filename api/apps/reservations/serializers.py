@@ -77,8 +77,23 @@ class ReservationSerializer(serializers.ModelSerializer):
 
         if trip_has_capacity(trip):
             reservation.status = get_reservation_status_for_user(user, trip)
+        elif hasattr(user, "civil_servant_profile"):
+            # If full, try to evict a student to accommodate the civil servant
+            from .services import (
+                evict_lowest_priority_active_reservation,
+                send_admin_leftover_server_alert,
+            )
+
+            evicted = evict_lowest_priority_active_reservation(trip)
+            if evicted:
+                reservation.status = "CONFIRMADA"
+            else:
+                # Trip is full and no student can be displaced (all are servers)
+                reservation.status = "LISTA SECUNDÁRIA"
+                send_admin_leftover_server_alert(trip, user.civil_servant_profile)
         else:
             reservation.status = "LISTA SECUNDÁRIA"
+
         reservation.save()
         return reservation
 
@@ -227,11 +242,20 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         return self.get_available_seats(obj) == 0
 
     def get_is_reservable(self, obj):
-        return (
-            obj.status != "CANCELADA"
-            and is_reservation_open(obj)
-            and self.get_available_seats(obj) > 0
-        )
+        base_reservable = obj.status != "CANCELADA" and is_reservation_open(obj)
+        if not base_reservable:
+            return False
+
+        if self.get_available_seats(obj) > 0:
+            return True
+
+        # Special case: Civil servants can reserve if full but an unallocated bus is available
+        user = self.context["request"].user
+        if hasattr(user, "civil_servant_profile"):
+            from ..trips.services import has_available_bus
+            return has_available_bus(obj.trip_date, obj.route)
+
+        return False
 
     def get_quorum_met(self, obj):
         return trip_has_quorum(obj)

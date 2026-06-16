@@ -364,10 +364,10 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const qrAccessMessage = !trip?.isDriverAssociated
     ? 'Associe-se a esta viagem antes de ler QR Code.'
     : null
-  const whatsappAlertUrl = `https://wa.me/?text=${encodeURIComponent(
+  const whatsappAlertUrl = `https://wa.me/557599744054?text=${encodeURIComponent(
     `Estou com problema no onibus ${selectedBusPlate} na viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
   )}`
-  const whatsappRequestUrl = `https://wa.me/?text=${encodeURIComponent(
+  const whatsappRequestUrl = `https://wa.me/557599744054?text=${encodeURIComponent(
     `Solicito novo onibus para a viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
   )}`
 
