@@ -15,13 +15,13 @@ type LayoutProps = {
 
 const AppLayout = ({ children, showFooter = true }: LayoutProps) => {
   const user = useAuthStore((state) => state.user)
-  const userTypes = user?.profile_type === "STUDENT" || user?.profile_type === "CIVIL-SERVANT" ? "passager" : user?.profile_type;
+  const userTypes = user?.profile_type === "STUDENT" || user?.profile_type === "CIVIL-SERVANT" ? "passager" : user?.profile_type?.toLowerCase();
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header 
         description="Sistema de gerenciamento de rotas"
-        user={{name: user?.full_name || 'Usuário', kind: userTypes?.toLocaleLowerCase()} as any}
+        user={{name: user?.full_name || 'Usuário', kind: userTypes as 'passager' | 'admin' | 'driver'}}
         paths={paths}
       />
       <main className="flex-1 flex flex-col gap-6 ">

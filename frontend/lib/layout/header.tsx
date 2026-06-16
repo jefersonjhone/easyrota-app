@@ -30,7 +30,11 @@ const Header = ({ description, user, paths }: Props) => {
     const historyIdx = window.history.state?.idx;
     const isAdminPage = location.pathname.startsWith('/admin');
 
-    historyIdx === 0 || isAdminPage  ? router.history.push('/app') : router.history.back();
+    if (historyIdx === 0 || isAdminPage) {
+      router.history.push('/app');
+    } else {
+      router.history.back();
+    }
   };
 
   const blackListPaths = ['/app']
