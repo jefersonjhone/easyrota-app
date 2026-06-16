@@ -17,6 +17,7 @@ type AvailableTrip = {
   is_reservable: boolean
   quorum_met?: boolean
   reservation_deadline?: string
+  user_is_reserved?: boolean
 }
 
 export function TripsHomePage() {
@@ -128,19 +129,25 @@ export function TripsHomePage() {
                       </span>
 
                       <Button
-                        variant={isAlreadyReserved ? "outline" : "default"}
+                        variant="default"
                         size="sm"
                         disabled={!trip.is_reservable || savingTripId === trip.id || isAlreadyReserved}
                         onClick={() => handleReserve(trip.id)}
+                        className={
+                          isAlreadyReserved 
+                            ? "bg-teal-600 text-white disabled:opacity-100 disabled:bg-teal-600" 
+                            : ""
+                        }
                       >
-                        {!trip.is_reservable
-                          ? 'Indisponível'
-                          : savingTripId === trip.id
-                            ? 'Reservando...'
-                            : isAlreadyReserved
-                              ? 'Reservado'
+                        {isAlreadyReserved
+                          ? 'Reservado'
+                          : !trip.is_reservable
+                            ? 'Indisponível'
+                            : savingTripId === trip.id
+                              ? 'Reservando...'
                               : 'Reservar'}
                       </Button>
+
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
