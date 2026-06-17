@@ -17,7 +17,7 @@ const schema = z.object({
   destiny: z.string().nonempty("Informe o destino"),
   departure_time: z.string().nonempty("Informe o horário de saída"),
   arrival_time: z.string().nonempty("Informe o horário de saída"),
-  max_bus: z.int().positive("A quantidade de ônibus disponíveis deve ser maior que 0")
+  max_bus: z.number().positive("A quantidade de ônibus disponíveis deve ser maior que 0")
 });
 
 type Schema = z.infer<typeof schema>;
@@ -56,8 +56,10 @@ export function RouteForm({
   const isSubmitting = state.isSubmitting || createRouteMutation.isPending;
 
   const onSubmit = async (data: Schema) => {
+    console.log("submitting....")
     try {
       if (onSend) {
+        console.log("trying to send")
         const values: CreateRouteValues = {
           origin: data.origin,
           destiny: data.destiny,
@@ -167,13 +169,11 @@ export function RouteForm({
               <Input
               id="max_bus"
               type="number"
-              min={1}
-              defaultValue={routeValues ? routeValues.max_bus : 1}
+              defaultValue={1}
               required
               {...register("max_bus")}></Input>
             </section>
           </section>
-        </form>
         <Button
           form="createRoute"
           type="submit"
@@ -188,6 +188,7 @@ export function RouteForm({
               ? buttonCaption
               : "PUBLICAR ROTA NO SISTEMA"}
         </Button>
+        </form>
       </Field>
     </>
   );

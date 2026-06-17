@@ -37,6 +37,7 @@ class Route(models.Model):
     destiny = models.CharField(max_length=50)
     departure_time = models.TimeField()
     arrival_time = models.TimeField()
+    max_bus = models.IntegerField(default=1)
 
     administrator = models.ForeignKey(
         "users.AdministratorProfile", on_delete=models.CASCADE
