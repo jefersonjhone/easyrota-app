@@ -29,6 +29,7 @@ import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
 import { Route as AppViagensIndexRouteImport } from './pages/app/viagens/index'
 import { Route as AppViagensHistoricoRouteImport } from './pages/app/viagens/historico'
 import { Route as AppViagensAtualRouteImport } from './pages/app/viagens/atual'
+import { Route as AppPenalidadesHistoricoRouteImport } from './pages/app/penalidades/historico'
 import { Route as AppDriverViagensRouteImport } from './pages/app/driver/viagens'
 import { Route as AppDriverViagemTripIdRouteImport } from './pages/app/driver/viagem.$tripId'
 
@@ -129,6 +130,11 @@ const AppViagensAtualRoute = AppViagensAtualRouteImport.update({
   path: '/app/viagens/atual',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppPenalidadesHistoricoRoute = AppPenalidadesHistoricoRouteImport.update({
+  id: '/app/penalidades/historico',
+  path: '/app/penalidades/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppDriverViagensRoute = AppDriverViagensRouteImport.update({
   id: '/app/driver/viagens',
   path: '/app/driver/viagens',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens': typeof AppViagensIndexRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens/__root': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/app/driver/viagens'
+    | '/app/penalidades/historico'
     | '/app/viagens'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/perfil'
     | '/app/driver/viagens'
+    | '/app/penalidades/historico'
     | '/app/viagens'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/app/driver/viagens'
+    | '/app/penalidades/historico'
     | '/app/viagens/__root'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
@@ -300,6 +312,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDriverViagensRoute: typeof AppDriverViagensRoute
+  AppPenalidadesHistoricoRoute: typeof AppPenalidadesHistoricoRoute
   AppViagens_rootRoute: typeof AppViagens_rootRoute
   AppViagensAtualRoute: typeof AppViagensAtualRoute
   AppViagensHistoricoRoute: typeof AppViagensHistoricoRoute
@@ -449,6 +462,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppViagensAtualRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/penalidades/historico': {
+      id: '/app/penalidades/historico'
+      path: '/app/penalidades/historico'
+      fullPath: '/app/penalidades/historico'
+      preLoaderRoute: typeof AppPenalidadesHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/driver/viagens': {
       id: '/app/driver/viagens'
       path: '/app/driver/viagens'
@@ -484,6 +504,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
   AppDriverViagensRoute: AppDriverViagensRoute,
+  AppPenalidadesHistoricoRoute: AppPenalidadesHistoricoRoute,
   AppViagens_rootRoute: AppViagens_rootRoute,
   AppViagensAtualRoute: AppViagensAtualRoute,
   AppViagensHistoricoRoute: AppViagensHistoricoRoute,

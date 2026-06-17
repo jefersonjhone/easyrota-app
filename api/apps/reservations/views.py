@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Count, Q, Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
@@ -95,7 +95,8 @@ class AvailableTripListView(generics.ListAPIView):
                         student=getattr(user, "student_profile", None),
                         civil_servant=getattr(user, "civil_servant_profile", None),
                     )
-                    if hasattr(user, "student_profile") or hasattr(user, "civil_servant_profile")
+                    if hasattr(user, "student_profile") or hasattr(user, 
+                                                                   "civil_servant_profile")
                     else Reservation.objects.none()
                 ),
             )

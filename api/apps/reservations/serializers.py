@@ -262,7 +262,8 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         if self.get_available_seats(obj) > 0:
             return True
 
-        # Special case: Civil servants can reserve if full but an unallocated bus is available
+        # Special case: Civil servants can reserve 
+        # if full but an unallocated bus is available
         user = self.context["request"].user
         if hasattr(user, "civil_servant_profile"):
             from ..trips.services import has_available_bus
@@ -284,7 +285,7 @@ class ManageReservationSerializer(serializers.ModelSerializer):
 
 
 class PunishmentHistorySerializer(serializers.ModelSerializer):
-    created_at = serializers.DateTimeField(format="%d/%m/%Y", read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Punishment
