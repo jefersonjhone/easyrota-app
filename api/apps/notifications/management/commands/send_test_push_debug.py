@@ -1,30 +1,32 @@
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from webpush import send_user_notification
+
+from ...backends.push_backend import PushBackend
 
 
 class Command(BaseCommand):
-    help = "Envia uma notificação de teste para todos os "
-    "usuários inscritos com debug detalhado"
+    help = (
+        "Envia uma notificação push de teste para todos os usuários "
+        "com debug detalhado (via PushBackend direto)."
+    )
 
     def handle(self, *args, **options):
         User = get_user_model()
         users = User.objects.all()
+        backend = PushBackend()
         payload = {
             "head": "Teste do EasyRota",
             "body": "🚀 Integração de Notificações funcionando!",
             "url": "/app/",
         }
+
         for user in users:
             self.stdout.write(f"Tentando enviar para: {user.email}")
             try:
-                # O send_user_notification não retorna nada (ou a request em si), 
-                # mas se falhar lança WebPushException
-                response = send_user_notification(user=user, payload=payload, ttl=1000)
+                success = backend.send(user, payload)
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"Envio concluído (sem exception) para {user.email}. Retorno: {
-                            response}"
+                        f"Envio {'OK' if success else 'FALHOU'} para {user.email}."
                     )
                 )
             except Exception as e:

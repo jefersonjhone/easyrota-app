@@ -1,5 +1,4 @@
-from datetime import date, datetime, timedelta
-from uuid import UUID
+from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -11,18 +10,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.reservations.services import process_trip_punishments
-
-from ..reservations.models import Reservation
 from ..reservations.serializers import ReservationSerializer
-from ..reservations.services import (
-    ACTIVE_RESERVATION_STATUSES,
-    WAITLIST_STATUS,
-    evict_lowest_priority_active_reservation,
-    get_reservation_passenger_name,
-    sync_trip_status,
-    trip_has_capacity,
-)
+from ..reservations.services import sync_trip_status
 from ..users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
@@ -37,6 +26,7 @@ from .serializers import (
     TripCurrentScreenSerializer,
     TripSerializer,
 )
+from .services import CheckinService, TripService, TripStatusService
 
 User = get_user_model()
 
@@ -102,25 +92,14 @@ class TripViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
-        Trip.objects.filter(id=pk).update(
-            status="CONCLUÍDA", arrival_timestamp=timezone.now()
-        )
-
+        trip = self.get_object()
+        TripService.finish_trip(trip)
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"])
-    def start_trip(
-        self, request, pk=None
-    ):  # CONTRIBUIÇÃO ENORME DE MATHEUS PRO BACKEND
-
+    def start_trip(self, request, pk=None):
         trip = self.get_object()
-
-        Trip.objects.filter(id=pk).update(
-            status="EM ANDAMENTO", departure_timestamp=timezone.now()
-        )
-
-        process_trip_punishments(trip)
-
+        TripService.start_trip(trip)
         return Response("trip iniciada com sucesso", status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="check-in")
@@ -132,211 +111,94 @@ class TripViewSet(viewsets.ModelViewSet):
             or request.data.get("uuid")
         )
 
-        if not passenger_identifier:
-            return Response(
-                {"error": "UUID do passageiro e obrigatorio."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         try:
-            passenger_uuid = UUID(str(passenger_identifier))
-        except (TypeError, ValueError):
+            payload = CheckinService.perform(
+                trip_id=int(pk),
+                passenger_identifier=passenger_identifier,
+                driver=request.user.driver_profile,
+            )
+            return Response(payload, status=status.HTTP_200_OK)
+        except CheckinService.Error as exc:
+            status_code = exc.status_code
+            if status_code == 409:
+                transaction.set_rollback(True)
             return Response(
-                {"error": "QR Code invalido."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": exc.detail},
+                status=status_code,
             )
-
-        try:
-            trip = Trip.objects.select_related("driver").get(id=pk)
-        except Trip.DoesNotExist:
-            return Response(
-                {"error": "Viagem nao encontrada."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        driver = request.user.driver_profile
-        if trip.driver_id != driver.id:
-            return Response(
-                {"error": "Motorista nao autorizado para esta viagem."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        try:
-            passenger = User.objects.get(
-                id=passenger_uuid
-            )  # trocar por uuid se for usar
-        except User.DoesNotExist:
-            try:
-                passenger = GuestPassenger.objects.get(
-                    id=passenger_uuid
-                )  # trocar por uuid se for usar
-            except GuestPassenger.DoesNotExist:
-                return Response(
-                    {"error": "QR Code invalido ou usuario inexistente."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        if isinstance(passenger, GuestPassenger):
-            passenger_filter = Q(guest_passenger=passenger)
-        else:
-            passenger_filter = Q(student__user=passenger) | Q(
-                civil_servant__user=passenger
-            )
-
-        reservation = (
-            Reservation.objects
-            .select_related("student__user", "civil_servant__user", "guest_passenger")
-            .filter(
-                passenger_filter,
-                trip=trip,
-                status__in=(*ACTIVE_RESERVATION_STATUSES, WAITLIST_STATUS),
-            )
-            .first()
-        )
-
-        if reservation is None:
-            return Response(
-                {"error": "Passageiro sem reserva nesta viagem."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        evicted_passenger = None
-        priority_check_in = bool(
-            reservation.civil_servant_id or reservation.guest_passenger_id
-        )
-
-        if reservation.status == WAITLIST_STATUS:
-            if not priority_check_in:
-                return Response(
-                    {"error": "Passageiro sem reserva ativa nesta viagem."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
-            if not trip_has_capacity(trip):
-                evicted = evict_lowest_priority_active_reservation(trip)
-                if evicted is None:
-                    transaction.set_rollback(True)
-                    return Response(
-                        {
-                            "error": "Nao ha vaga disponivel "
-                            "para priorizar o passageiro."
-                        },
-                        status=status.HTTP_409_CONFLICT,
-                    )
-
-                evicted_passenger = {
-                    "name": get_reservation_passenger_name(evicted),
-                    "reservation_id": evicted.id,
-                }
-
-            reservation.status = "CONFIRMADA"
-
-        if reservation.check_in:
-            return Response(
-                {
-                    "error": "Passageiro ja fez check-in.",
-                    "reservation_id": reservation.id,
-                    "passenger_name": passenger.full_name,
-                },
-                status=status.HTTP_409_CONFLICT,
-            )
-
-        reservation.check_in = True
-        reservation.checkin_date = timezone.now()
-        reservation.save(update_fields=["status", "check_in", "checkin_date"])
-        sync_trip_status(trip)
-
-        response_payload = {
-            "status": "Check-in realizado com sucesso.",
-            "reservation_id": reservation.id,
-            "passenger_name": passenger.full_name,
-            "checkin_date": reservation.checkin_date,
-        }
-        if evicted_passenger is not None:
-            response_payload["evicted_passenger"] = evicted_passenger
-            response_payload["evicted_passengers"] = [evicted_passenger]
-
-        return Response(
-            response_payload,
-            status=status.HTTP_200_OK,
-        )
 
     @action(detail=True, methods=["post"])
     def assign_driver(self, request, pk=None):
         driver = request.user.driver_profile
         trip = Trip.objects.get(id=pk)
-        if trip.driver and trip.driver != driver:
+
+        if not TripService.can_assign_driver(trip, driver):
             return Response(
                 {"error": "Você não é o motorista desta viagem."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        trip.driver = driver
-        trip.save()
+
+        TripService.assign_driver(trip, driver)
         return Response(
             {"status": "Motorista associado com sucesso."}, status=status.HTTP_200_OK
         )
 
     @action(detail=True, methods=["post"])
-    def unassign_driver(self, request, pk):
+    def unassign_driver(self, request, pk=None):
         trip = Trip.objects.get(id=pk)
-        if trip.driver and trip.driver == request.user.driver_profile:
-            trip.driver = None
-            trip.save()
+        driver = request.user.driver_profile
+
+        if not TripService.can_unassign_driver(trip, driver):
             return Response(
-                {"status": "Motorista desassociado com sucesso."},
-                status=status.HTTP_200_OK,
+                {"error": "Você não é o motorista desta viagem."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
+        TripService.unassign_driver(trip)
         return Response(
-            {"error": "Você não é o motorista desta viagem."},
-            status=status.HTTP_403_FORBIDDEN,
+            {"status": "Motorista desassociado com sucesso."},
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=True, methods=["post"])
     def assign_bus(self, request, pk=None):
-        bus = request.data.get("bus")
-        if not bus:
+        bus_id = request.data.get("bus")
+        if not bus_id:
             return Response(
                 {"error": "O campo 'bus' é obrigatório."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        # verify if bus already is in use
-        # create a custom queryset in bus model to do it and reuse
-        bus = Bus.objects.get(id=bus)
-        if not bus:
-            return Response(
-                {"error": "Onibus não encontrado."}, status=status.HTTP_400_BAD_REQUEST
-            )
-        trip = Trip.objects.get(id=pk)
 
-        if trip.driver and trip.driver == request.user.driver_profile:
-            trip.bus = bus
-            trip.capacity = bus.seating_capacity
-            trip.save()
+        bus = Bus.objects.get(id=bus_id)
+        trip = Trip.objects.get(id=pk)
+        driver = request.user.driver_profile
+
+        if not TripService.can_assign_bus(trip, driver):
             return Response(
-                {"status": "Onibus associado com sucesso."}, status=status.HTTP_200_OK
+                {"error": "Você não é o motorista desta viagem."},
+                status=status.HTTP_403_FORBIDDEN,
             )
+
+        TripService.assign_bus(trip, bus)
         return Response(
-            {"error": "Você não é o motorista desta viagem."},
-            status=status.HTTP_403_FORBIDDEN,
+            {"status": "Onibus associado com sucesso."}, status=status.HTTP_200_OK
         )
 
     @action(detail=True, methods=["post"])
-    def unassign_bus(self, request, pk):
+    def unassign_bus(self, request, pk=None):
         trip = Trip.objects.get(id=pk)
+        driver = request.user.driver_profile
 
-        if trip.driver and trip.driver == request.user.driver_profile:
-            trip.bus = None
-            trip.capacity = 46
-            trip.save()
+        if not TripService.can_assign_bus(trip, driver):
             return Response(
-                {"status": "Onibus desassociado com sucesso."},
-                status=status.HTTP_200_OK,
+                {"error": "Você não é o motorista desta viagem."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
+        TripService.unassign_bus(trip)
         return Response(
-            {"error": "Você não é o motorista desta viagem."},
-            status=status.HTTP_403_FORBIDDEN,
+            {"status": "Onibus desassociado com sucesso."},
+            status=status.HTTP_200_OK,
         )
 
     def get_queryset(self):
@@ -364,55 +226,6 @@ class TripViewSet(viewsets.ModelViewSet):
 class MyNextTripView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def _update_trip_status(self, trip):
-        """
-        Check schedules, reservations and driver actions
-        to update the trip status in the database.
-        """
-        if trip.status in ["CONCLUÍDA", "CANCELADA"]:
-            return trip
-
-        now = timezone.now()
-
-        if trip.arrival_timestamp:
-            real_status = "CONCLUÍDA"
-        elif trip.departure_timestamp:
-            real_status = "EM ANDAMENTO"
-        else:
-            has_civil_servant = trip.reservation_set.filter(
-                civil_servant__isnull=False
-            ).exists()
-
-            time_zone = timezone.get_current_timezone()
-            expected_dep = timezone.make_aware(
-                datetime.combine(trip.trip_date, trip.route.departure_time), time_zone
-            )
-            expected_arr = timezone.make_aware(
-                datetime.combine(trip.trip_date, trip.route.arrival_time), time_zone
-            )
-
-            if expected_arr <= expected_dep:
-                expected_arr += timedelta(days=1)
-
-            if not has_civil_servant:
-                cancel_limit = expected_dep + timedelta(minutes=30)
-
-                if now >= cancel_limit:
-                    real_status = "CANCELADA"
-                else:
-                    real_status = "RISCO DE CANCELAMENTO"
-            else:
-                if now >= expected_arr:
-                    real_status = "CANCELADA"
-                else:
-                    real_status = "CONFIRMADA"
-
-        if trip.status != real_status:
-            trip.status = real_status
-            trip.save(update_fields=["status"])
-
-        return trip
-
     def get(self, request):
         now = timezone.localtime()
         today = now.date()
@@ -421,14 +234,8 @@ class MyNextTripView(APIView):
         is_admin = hasattr(request.user, "admin_profile") or request.user.is_staff
 
         if is_admin:
-            base_running_query = Trip.objects.filter(
-                status="EM ANDAMENTO", trip_date__gte=yesterday
-            )
-
-            base_next_query = Trip.objects.filter(trip_date__gte=today).exclude(
-                status__in=["CONCLUÍDA", "CANCELADA"]
-            )
-
+            base_running_query = Trip.objects.running().by_date_gte(yesterday)
+            base_next_query = Trip.objects.upcoming().by_date_gte(today)
         else:
             valid_statuses = ["CONFIRMADA", "LISTA SECUNDÁRIA", "PENDENTE"]
 
@@ -444,14 +251,17 @@ class MyNextTripView(APIView):
                 | Q(driver__user=request.user)
             )
 
-            base_running_query = Trip.objects.filter(
-                user_trip_filter, status="EM ANDAMENTO", trip_date__gte=yesterday
-            ).distinct()
+            base_running_query = (
+                Trip.objects.filter(user_trip_filter)
+                .running()
+                .by_date_gte(yesterday)
+                .distinct()
+            )
 
             base_next_query = (
-                Trip.objects
-                .filter(user_trip_filter, trip_date__gte=today)
-                .exclude(status__in=["CONCLUÍDA", "CANCELADA"])
+                Trip.objects.filter(user_trip_filter)
+                .upcoming()
+                .by_date_gte(today)
                 .distinct()
             )
 
@@ -460,7 +270,7 @@ class MyNextTripView(APIView):
         )
 
         for trip in running_trips:
-            updated_trip = self._update_trip_status(trip)
+            updated_trip = TripStatusService.compute_status(trip)
             if updated_trip.status == "EM ANDAMENTO":
                 serializer = TripCurrentScreenSerializer(
                     updated_trip, context={"request": request}
@@ -470,7 +280,7 @@ class MyNextTripView(APIView):
         next_trips = base_next_query.order_by("trip_date", "route__departure_time")
 
         for trip in next_trips:
-            updated_trip = self._update_trip_status(trip)
+            updated_trip = TripStatusService.compute_status(trip)
             if updated_trip.status not in ["CONCLUÍDA", "CANCELADA"]:
                 serializer = TripCurrentScreenSerializer(
                     updated_trip, context={"request": request}

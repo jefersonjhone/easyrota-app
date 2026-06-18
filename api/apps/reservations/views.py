@@ -1,11 +1,11 @@
 from django.db import transaction
-from django.db.models import Count, Q
-from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+
+from apps.trips.services.checkin_service import CheckinService
 
 from ..trips.models import Trip
 from ..users.permissions import IsDriver, IsSuperAdmin
@@ -18,13 +18,8 @@ from .serializers import (
     ReservationSerializer,
 )
 from .services import (
-    ACTIVE_RESERVATION_STATUSES,
-    WAITLIST_STATUS,
-    evict_lowest_priority_active_reservation,
-    get_reservation_passenger_name,
     promote_next_waitlisted_reservation,
     sync_trip_status,
-    trip_has_capacity,
 )
 
 
@@ -80,17 +75,9 @@ class AvailableTripListView(generics.ListAPIView):
     def get_queryset(self):
         available_trips = (
             Trip.objects
-            .filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
-            .select_related("route", "bus")
-            .annotate(
-                active_reservation_seats=Count(
-                    "reservation",
-                    filter=Q(reservation__status__in=ACTIVE_RESERVATION_STATUSES),
-                    distinct=True,
-                ),
-                passenger_seats=Count("trip_passengers", distinct=True),
-            )
-            .order_by("trip_date", "route__departure_time")
+            .available_for_reservation()
+                     .with_availability_annotations()
+                     .order_by("trip_date", "route__departure_time")
         )
 
         return available_trips
@@ -115,60 +102,16 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     @transaction.atomic
     def checkin(self, request, pk=None):
-        """
-        It records the passenger's presence on the bus.
-        """
+        """Record passenger presence on the bus."""
         reservation = self.get_object()
-        evicted_passenger = None
-        priority_check_in = bool(
-            reservation.civil_servant_id or reservation.guest_passenger_id
-        )
 
-        if reservation.status == WAITLIST_STATUS:
-            if not priority_check_in:
-                return Response(
-                    {"error": "Apenas reservas ativas podem fazer check-in."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            if not trip_has_capacity(reservation.trip):
-                evicted = evict_lowest_priority_active_reservation(reservation.trip)
-                if evicted is None:
-                    transaction.set_rollback(True)
-                    return Response(
-                        {
-                            "error": "Nao ha vaga disponivel para "
-                            "priorizar o passageiro."
-                        },
-                        status=status.HTTP_409_CONFLICT,
-                    )
-
-                evicted_passenger = {
-                    "name": get_reservation_passenger_name(evicted),
-                    "reservation_id": evicted.id,
-                }
-
-            reservation.status = "CONFIRMADA"
-        elif reservation.status not in ACTIVE_RESERVATION_STATUSES:
-            return Response(
-                {"error": "Apenas reservas ativas podem fazer check-in."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        reservation.check_in = True
-        reservation.checkin_date = timezone.now()
-        reservation.save(update_fields=["check_in", "checkin_date", "status"])
-        sync_trip_status(reservation.trip)
-
-        response_payload = {"status": "Check-in realizado com sucesso."}
-        if evicted_passenger is not None:
-            response_payload["evicted_passenger"] = evicted_passenger
-            response_payload["evicted_passengers"] = [evicted_passenger]
-
-        return Response(
-            response_payload,
-            status=status.HTTP_200_OK,
-        )
+        try:
+            payload, _evicted = CheckinService.perform_on_reservation(reservation)
+            return Response(payload, status=status.HTTP_200_OK)
+        except CheckinService.Error as exc:
+            if exc.status_code == 409:
+                transaction.set_rollback(True)
+            return Response({"error": exc.detail}, status=exc.status_code)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def cancel(self, request, pk=None):

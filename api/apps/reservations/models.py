@@ -1,5 +1,7 @@
 from django.db import models
 
+from .managers import PunishmentManager, ReservationManager
+
 
 class Reservation(models.Model):
     """Represents a seat reservation made by a student or civil servant
@@ -32,6 +34,8 @@ class Reservation(models.Model):
     )
     trip = models.ForeignKey("trips.Trip", on_delete=models.CASCADE)
 
+    objects = ReservationManager()
+
     def __str__(self):
         return f"Reservation #{self.id} - {self.status}"
 
@@ -47,7 +51,7 @@ class Guest(models.Model):
     civil_servant = models.ForeignKey(
         "users.CivilServantProfile", on_delete=models.CASCADE
     )
-    reservations = models.ManyToManyField(Reservation)
+    reservations = models.ManyToManyField(Reservation, related_name="guests")
 
     def __str__(self):
         return f"{self.name} (CPF: {self.cpf})"
@@ -66,6 +70,8 @@ class Punishment(models.Model):
     reservation = models.OneToOneField(Reservation, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = PunishmentManager()
 
     def __str__(self):
         status = "Ativa" if self.is_active else "Inativa"

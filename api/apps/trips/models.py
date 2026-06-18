@@ -1,11 +1,10 @@
 import uuid
 
-from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 
 from apps.users.models.profiles import CivilServantProfile, DriverProfile
 
-from .querysets import TripQuerySet
+from .managers import BusManager, RouteManager, TripManager
 
 
 class Bus(models.Model):
@@ -26,6 +25,8 @@ class Bus(models.Model):
         "users.AdministratorProfile", on_delete=models.SET_NULL, null=True
     )
 
+    objects = BusManager()
+
     def __str__(self):
         return f"Bus {self.number_plate}"
 
@@ -41,6 +42,8 @@ class Route(models.Model):
     administrator = models.ForeignKey(
         "users.AdministratorProfile", on_delete=models.CASCADE
     )
+
+    objects = RouteManager()
 
     def __str__(self):
         return f"{self.origin} -> {self.destiny}"
@@ -78,7 +81,7 @@ class Trip(models.Model):
     )
 
     # for custom queryset methods
-    objects = TripQuerySet.as_manager()
+    objects = TripManager()
 
     @property
     def has_server(self):
@@ -172,27 +175,22 @@ class TripPassenger(models.Model):
         return f"{self.allowed_staff} on {self.trip}"
 
 
-class GuestPassengerManager(BaseUserManager):
-    """Custom manager that authenticates guests by cpf and trip."""
+class GuestPassengerManager(models.Manager):
+    """Custom manager for guest passengers with creation helpers."""
 
-    use_in_migrations = True
-
-    def _create_passenger(self, cpf, trip, **extra_fields):
-        """Create and persist a user with normalized email credentials."""
+    def create_passenger(self, cpf, trip, **extra_fields):
+        """Create a guest passenger record."""
         if not cpf:
             raise ValueError("The cpf field must be set.")
         if not trip:
             raise ValueError("The trip field must be set.")
 
+        extra_fields.setdefault("recorded_by", None)
+        extra_fields.setdefault("full_name", "")
+
         passenger = self.model(cpf=cpf, trip=trip, **extra_fields)
         passenger.save(using=self._db)
         return passenger
-
-    def create_passenger(self, cpf, trip, **extra_fields):
-        """Create a regular passenger account."""
-        extra_fields.setdefault("recorded_by", None)
-        extra_fields.setdefault("full_name", "")
-        return self._create_passenger(cpf, trip, **extra_fields)
 
 
 class GuestPassenger(models.Model):
@@ -205,9 +203,6 @@ class GuestPassenger(models.Model):
     full_name = models.CharField(max_length=255)
 
     objects = GuestPassengerManager()
-
-    USERNAME_FIELD = "cpf"
-    REQUIRED_FIELDS = ("full_name",)
 
     class Meta:
         unique_together = (("cpf", "trip"),)

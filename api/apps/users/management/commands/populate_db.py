@@ -1,20 +1,29 @@
 from __future__ import annotations
-from django.core.management.base import BaseCommand, CommandError
+
 from datetime import datetime, time, timedelta
+
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
 from apps.reservations.models import Punishment, Reservation
 from apps.reservations.services import sync_trip_status
-from apps.trips.models import Bus, GuestPassenger, Occurrence, Route, Trip, TripPassenger
+from apps.trips.models import (
+    Bus,
+    GuestPassenger,
+    Occurrence,
+    Route,
+    Trip,
+    TripPassenger,
+)
 from apps.users.models import AllowedStaff
 from apps.users.models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
     DriverProfile,
     StudentProfile,
-)       
+)
 
 
 class Command(BaseCommand):
@@ -22,13 +31,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        
         User = get_user_model()
-        
         
         def backdate_user_joined(user, days_ago):
             User.objects.filter(pk=user.pk).update(date_joined=timezone.now() - timedelta(days=days_ago))
-        
         
         def ensure_user(email, full_name, password, *, is_staff=False, is_superuser=False):
             user, _ = User.objects.get_or_create(
@@ -48,13 +54,11 @@ class Command(BaseCommand):
             user.save()
             return user
         
-        
         def ensure_student(email, full_name, student_id, days_ago):
             user = ensure_user(email, full_name, "password123")
             StudentProfile.objects.update_or_create(user=user, defaults={"student_id": student_id})
             backdate_user_joined(user, days_ago)
             return user
-        
         
         def ensure_civil_servant(email, full_name, civil_servant_id, days_ago):
             user = ensure_user(email, full_name, "password123")
@@ -65,13 +69,11 @@ class Command(BaseCommand):
             backdate_user_joined(user, days_ago)
             return user
         
-        
         def ensure_driver(email, full_name, cnh, days_ago):
             user = ensure_user(email, full_name, "password123")
             profile, _ = DriverProfile.objects.update_or_create(user=user, defaults={"cnh": cnh})
             backdate_user_joined(user, days_ago)
             return profile
-        
         
         def ensure_admin(email, full_name, role, level, days_ago):
             user = ensure_user(
@@ -87,7 +89,6 @@ class Command(BaseCommand):
             )
             backdate_user_joined(user, days_ago)
             return user
-        
         
         with transaction.atomic():
 

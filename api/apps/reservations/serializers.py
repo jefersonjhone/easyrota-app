@@ -4,12 +4,11 @@ from rest_framework import serializers
 from ..trips.models import GuestPassenger, Trip
 from .models import Punishment, Reservation
 from .services import (
-    get_reservation_status_for_user,
     is_reservation_open,
     reservation_cutoff,
-    trip_has_capacity,
     trip_has_quorum,
 )
+from .services.reservation_service import ReservationService
 
 
 class ReservationSerializer(serializers.ModelSerializer):
@@ -67,31 +66,11 @@ class ReservationSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         user = request.user
         trip = validated_data["trip"]
-
-        reservation = Reservation(trip=trip)
-
-        if hasattr(user, "student_profile"):
-            reservation.student = user.student_profile
-        elif hasattr(user, "civil_servant_profile"):
-            reservation.civil_servant = user.civil_servant_profile
-
-        if trip_has_capacity(trip):
-            reservation.status = get_reservation_status_for_user(user, trip)
-        else:
-            reservation.status = "LISTA SECUNDÁRIA"
-        reservation.save()
-        return reservation
+        return ReservationService.create(user, trip)
 
     def reserveToGuest(self, guest: GuestPassenger, trip: Trip):
-        reservation = Reservation(trip=trip, guest_passenger=guest)
-        if trip_has_capacity(trip):
-            # reserva sempre confirmada para convidados e servidores publicos
-            reservation.status = "CONFIRMADA"
-        else:
-            reservation.status = "LISTA SECUNDÁRIA"
-
-        reservation.save()
-        return reservation
+        """Deprecated: use ReservationService.create_for_guest() instead."""
+        return ReservationService.create_for_guest(guest, trip)
 
 
 class ReservationHistorySerializer(serializers.ModelSerializer):
@@ -159,18 +138,8 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
 
     def get_total_trips(self, obj):
         """Returns the total number of trips the user has booked."""
-
         user = self.context["request"].user
-
-        if hasattr(user, "student_profile"):
-            return Reservation.objects.filter(student=user.student_profile).count()
-
-        if hasattr(user, "civil_servant_profile"):
-            return Reservation.objects.filter(
-                civil_servant=user.civil_servant_profile
-            ).count()
-
-        return 0
+        return Reservation.objects.for_user(user).count()
 
 
 class AvailableTripSerializer(serializers.ModelSerializer):
@@ -220,11 +189,11 @@ class AvailableTripSerializer(serializers.ModelSerializer):
             getattr(obj, "reserved_seats", 0),
         )
         passenger_seats = getattr(obj, "passenger_seats", 0)
-        seating_capacity = obj.bus.seating_capacity if obj.bus else 0
+        seating_capacity = obj.bus.seating_capacity if obj.bus else 46
         return max(seating_capacity - reserved_seats - passenger_seats, 0)
 
     def get_is_full(self, obj):
-        return self.get_available_seats(obj) == 0
+        return self.get_available_seats(obj) == 0   
 
     def get_is_reservable(self, obj):
         return (

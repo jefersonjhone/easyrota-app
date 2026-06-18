@@ -9,6 +9,7 @@ from rest_framework import serializers
 
 from ..reservations.models import Reservation
 from .models import Bus, GuestPassenger, Route, Trip, TripPassenger
+from .services.trip_service import TripService
 
 
 class BusSerializer(serializers.ModelSerializer):
@@ -206,118 +207,8 @@ class TripSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        bus = data.get("bus", self.instance.bus if self.instance else None)
-        trip_date = data.get(
-            "trip_date", self.instance.trip_date if self.instance else None
-        )
-        route = data.get("route", self.instance.route if self.instance else None)
-        status = data.get("status", self.instance.status if self.instance else None)
-
-        now = timezone.localtime()
-        tz = timezone.get_current_timezone()
-
-        if trip_date and trip_date < now.date():
-            raise serializers.ValidationError({
-                "trip_date": "A data da viagem não pode estar no passado."
-            })
-
-        if status == "EM ANDAMENTO" and trip_date and trip_date < now.date():
-            raise serializers.ValidationError({
-                "trip_date": "A data da viagem não pode estar no passado."
-            })
-
-        if trip_date and route:
-            expected_dep = timezone.make_aware(
-                datetime.combine(trip_date, route.departure_time), tz
-            )
-
-            is_new = self.instance is None
-            date_changed = self.instance and self.instance.trip_date != trip_date
-            route_changed = self.instance and self.instance.route != route
-
-            if is_new or date_changed or route_changed:
-                grace_limit = expected_dep + timedelta(hours=1)
-
-                if now > grace_limit:
-                    raise serializers.ValidationError({
-                        "route": "Não é possível agendar uma viagem "
-                        "para um horário que já passou hoje."
-                    })
-
-        if status == "EM ANDAMENTO":
-            if trip_date == now.date() and route:
-                expected_dep = timezone.make_aware(
-                    datetime.combine(trip_date, route.departure_time), tz
-                )
-
-                if now < expected_dep - timedelta(minutes=30):
-                    raise serializers.ValidationError({
-                        "status": "Muito cedo para iniciar a viagem. "
-                        "O horário previsto é {route.departure_time.strftime('%H:%M')}."
-                    })
-
-            elif trip_date > now.date():
-                raise serializers.ValidationError({
-                    "status": "Não é possível iniciar uma viagem "
-                    "agendada para o futuro."
-                })
-
-            departure = data.get(
-                "departure_timestamp",
-                self.instance.departure_timestamp if self.instance else None,
-            )
-            if not departure:
-                data["departure_timestamp"] = now
-
-        if bus and trip_date and route:
-            date_range = [
-                trip_date - timedelta(days=1),
-                trip_date,
-                trip_date + timedelta(days=1),
-            ]
-            overlapping_trips = Trip.objects.filter(bus=bus, trip_date__in=date_range)
-            if self.instance:
-                overlapping_trips = overlapping_trips.exclude(id=self.instance.id)
-
-            tz = timezone.get_current_timezone()
-            new_start = timezone.make_aware(
-                datetime.combine(trip_date, route.departure_time), tz
-            )
-            new_end = timezone.make_aware(
-                datetime.combine(trip_date, route.arrival_time), tz
-            )
-
-            if new_end <= new_start:
-                new_end += timedelta(days=1)
-
-            for existing_trip in overlapping_trips:
-                ex_start = timezone.make_aware(
-                    datetime.combine(
-                        existing_trip.trip_date, existing_trip.route.departure_time
-                    ),
-                    tz,
-                )
-                ex_end = timezone.make_aware(
-                    datetime.combine(
-                        existing_trip.trip_date, existing_trip.route.arrival_time
-                    ),
-                    tz,
-                )
-
-                if ex_end <= ex_start:
-                    ex_end += timedelta(days=1)
-
-                if new_start < ex_end and new_end > ex_start:
-                    raise serializers.ValidationError({
-                        "bus": (
-                            f"Este ônibus já está alocado para a viagem "
-                            f"'{existing_trip.route}' "
-                            f"(Data: {existing_trip.trip_date}) "
-                            "que conflita com este horário."
-                        )
-                    })
-
-        return data
+        """Delegate all business rule validation to TripService."""
+        return TripService.validate_trip(data, instance=self.instance)
 
 
 class TripCurrentScreenSerializer(serializers.ModelSerializer):
