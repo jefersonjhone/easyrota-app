@@ -340,7 +340,12 @@ class TripViewSet(viewsets.ModelViewSet):
         )
 
     def get_queryset(self):
-        return Trip.objects.joinable_by_driver(self.request.user)
+        queryset = Trip.objects.select_related("route", "bus", "driver__user")
+
+        if self.action == "list":
+            return queryset.daily_driver_list(self.request.user)
+
+        return queryset.joinable_by_driver(self.request.user)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:

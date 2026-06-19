@@ -8,19 +8,21 @@ import {
   fetchTrips,
   updateTrip,
 } from '../services/trips'
+import type { TripFilters } from '../services/trips'
 import { fetchBuses, fetchRoutes } from '../services/resources'
 import type { Trip } from '../types'
 
 export const tripsKeys = {
   all: ['trips'] as const,
+  list: (filters: TripFilters = {}) => ['trips', 'list', filters] as const,
   detail: (id: number) => ['trips', id] as const,
   nextTrip: ['trips', 'next'] as const,
 }
 
-export function useTrips() {
+export function useTrips(filters: TripFilters = {}) {
   return useQuery({
-    queryKey: tripsKeys.all,
-    queryFn: fetchTrips,
+    queryKey: tripsKeys.list(filters),
+    queryFn: () => fetchTrips(filters),
     retry: false,
   })
 }

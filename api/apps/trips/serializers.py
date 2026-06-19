@@ -114,6 +114,8 @@ class TripSerializer(serializers.ModelSerializer):
     active_reservations = serializers.SerializerMethodField(read_only=True)
     checked_in_count = serializers.SerializerMethodField(read_only=True)
     checked_in_passengers = serializers.SerializerMethodField(read_only=True)
+    is_current_driver = serializers.SerializerMethodField(read_only=True)
+    is_occupied_by_other_driver = serializers.SerializerMethodField(read_only=True)
     departure_time = serializers.CharField(
         source="route.departure_time", read_only=True
     )
@@ -127,6 +129,23 @@ class TripSerializer(serializers.ModelSerializer):
         """filter reservations by especific trip"""
         reservations = Reservation.objects.filter(trip=obj).count()
         return reservations
+
+    def _get_request_driver(self):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+
+        if not user or not user.is_authenticated:
+            return None
+
+        return getattr(user, "driver_profile", None)
+
+    def get_is_current_driver(self, obj) -> bool:
+        driver = self._get_request_driver()
+        return bool(driver and obj.driver_id == driver.id)
+
+    def get_is_occupied_by_other_driver(self, obj) -> bool:
+        driver = self._get_request_driver()
+        return bool(obj.driver_id and (driver is None or obj.driver_id != driver.id))
 
     def get_checked_in_count(self, obj) -> int:
         """Count QR check-ins and passengers registered locally by the driver."""

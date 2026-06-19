@@ -7,6 +7,7 @@ import {
   useUpdateTrip,
 } from '@/features/trips/hooks/useTrips'
 import type { Trip, TripStatus } from '@/features/trips/types'
+import type { TripDateOrder } from '@/features/trips/services/trips'
 import { Button } from '@ui/button'
 import { Input } from '@ui/input'
 import { ConfirmDeleteDialog } from '@ui/delete-alert'
@@ -34,6 +35,8 @@ type FormData = {
 //  bus: string
   route: string
 }
+
+type TripStatusFilter = 'TODAS' | TripStatus
 
 const EMPTY_FORM: FormData = {
   trip_date: '',
@@ -80,8 +83,13 @@ export function TripsPage() {
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null)
   const [form, setForm] = useState<FormData>(EMPTY_FORM)
   const [formError, setFormError] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<TripStatusFilter>('TODAS')
+  const [dateOrder, setDateOrder] = useState<TripDateOrder>('recent')
 
-  const { data: trips, isLoading, error } = useTrips()
+  const { data: trips, isLoading, error } = useTrips({
+    status: statusFilter === 'TODAS' ? undefined : statusFilter,
+    dateOrder,
+  })
   const { data: routes } = useRoutes()
 
   const createMutation = useCreateTrip()
@@ -176,6 +184,38 @@ export function TripsPage() {
             </Button>
           )}
         </header>
+
+        {!isFormMode && (
+          <div className="mb-6 grid gap-3 rounded-4xl border border-border/70 bg-card/90 px-5 py-4 shadow-sm sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Status da viagem</label>
+              <select
+                className={selectClass()}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as TripStatusFilter)}
+              >
+                <option value="TODAS">Todos os status</option>
+                {TRIP_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {STATUS_CONFIG[status].label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Data</label>
+              <select
+                className={selectClass()}
+                value={dateOrder}
+                onChange={(e) => setDateOrder(e.target.value as TripDateOrder)}
+              >
+                <option value="recent">Mais recentes</option>
+                <option value="distant">Mais distantes</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         {isFormMode && (
           <form
