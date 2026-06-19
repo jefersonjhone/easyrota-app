@@ -132,7 +132,7 @@ export function TripsPage() {
       trip_date: form.trip_date,
       status: form.status,
  //     bus: form.bus ? Number(form.bus) : null,
-      route: Number(form.route),
+      route: form.route,
     }
 
     if (mode === 'create') {
@@ -148,7 +148,7 @@ export function TripsPage() {
     }
   }
 
-  function handleDelete(id: number) {
+  function handleDelete(id: string) {
     deleteMutation.mutate(id)
   }
 

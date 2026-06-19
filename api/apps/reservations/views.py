@@ -11,6 +11,7 @@ from ..trips.models import Trip
 from ..users.permissions import IsDriver, IsSuperAdmin
 from .models import Punishment, Reservation
 from .serializers import (
+    ActiveReservationSerializer,
     AvailableTripSerializer,
     ManageReservationSerializer,
     PunishmentHistorySerializer,
@@ -23,9 +24,22 @@ from .services import (
 )
 
 
-class ReservationCreateView(generics.CreateAPIView):
+class ReservationCreateView(generics.ListCreateAPIView):
     serializer_class = ReservationSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Reservation.objects.select_related("trip", "trip__route")
+
+        if hasattr(user, "student_profile"):
+            qs = qs.filter(student=user.student_profile)
+        elif hasattr(user, "civil_servant_profile"):
+            qs = qs.filter(civil_servant=user.civil_servant_profile)
+        else:
+            return Reservation.objects.none()
+
+        return qs.exclude(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("-created_at")
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -37,33 +51,46 @@ class ReservationCreateView(generics.CreateAPIView):
         sync_trip_status(reservation.trip)
 
 
+class ActiveReservationListView(generics.ListAPIView):
+    """Returns active (non-finished) reservations for the authenticated user."""
+
+    serializer_class = ActiveReservationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Reservation.objects.select_related(
+            "trip", "trip__route", "trip__bus", "trip__driver__user"
+        )
+
+        if hasattr(user, "student_profile"):
+            qs = qs.filter(student=user.student_profile)
+        elif hasattr(user, "civil_servant_profile"):
+            qs = qs.filter(civil_servant=user.civil_servant_profile)
+        else:
+            return Reservation.objects.none()
+
+        return qs.exclude(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("trip__trip_date", "trip__route__departure_time")
+
+
 class ReservationHistoryView(generics.ListAPIView):
-    """Trips history page."""
+    """Trips history page — only finished trips."""
 
     serializer_class = ReservationHistorySerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-
         user = self.request.user
+        qs = Reservation.objects.select_related("trip", "trip__route")
 
         if hasattr(user, "student_profile"):
-            return (
-                Reservation.objects
-                .filter(student=user.student_profile)
-                .select_related("trip", "trip__route")
-                .order_by("-created_at")
-            )
+            qs = qs.filter(student=user.student_profile)
+        elif hasattr(user, "civil_servant_profile"):
+            qs = qs.filter(civil_servant=user.civil_servant_profile)
+        else:
+            return Reservation.objects.none()
 
-        if hasattr(user, "civil_servant_profile"):
-            return (
-                Reservation.objects
-                .filter(civil_servant=user.civil_servant_profile)
-                .select_related("trip", "trip__route")
-                .order_by("-created_at")
-            )
-
-        return Reservation.objects.none()
+        return qs.filter(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("-created_at")
 
 
 class AvailableTripListView(generics.ListAPIView):
@@ -86,9 +113,15 @@ class AvailableTripListView(generics.ListAPIView):
 class ReservationViewSet(viewsets.ModelViewSet):
     """ViewSet for managing all reservations by admins."""
 
-    queryset = Reservation.objects.all()
-    serializer_class = ManageReservationSerializer
-    permission_classes = [IsAdminUser]
+    queryset = Reservation.objects.select_related(
+        "trip", "trip__route", "trip__bus", "trip__driver__user"
+    )
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ActiveReservationSerializer
+        return ManageReservationSerializer
 
     def get_permissions(self):
         if self.action == "cancel":
@@ -97,7 +130,22 @@ class ReservationViewSet(viewsets.ModelViewSet):
         if self.action == "checkin":
             return [IsDriver(), IsSuperAdmin()]
 
+        if self.action in ("create", "update", "partial_update", "destroy"):
+            return [IsAdminUser()]
+
         return super().get_permissions()
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if self.action == "retrieve":
+            if hasattr(user, "student_profile"):
+                return self.queryset.filter(student=user.student_profile)
+            if hasattr(user, "civil_servant_profile"):
+                return self.queryset.filter(civil_servant=user.civil_servant_profile)
+            return Reservation.objects.none()
+
+        return self.queryset
 
     @action(detail=True, methods=["post"])
     @transaction.atomic
@@ -153,6 +201,6 @@ class PunishmentHistoryView(generics.ListAPIView):
 
         if hasattr(user, "student_profile"):
             return Punishment.objects.filter(student=user.student_profile).order_by(
-                "-id"
+                "-created_at"
             )
         return Punishment.objects.none()

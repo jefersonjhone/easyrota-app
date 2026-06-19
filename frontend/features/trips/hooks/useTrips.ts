@@ -13,7 +13,7 @@ import type { Trip } from '../types'
 
 export const tripsKeys = {
   all: ['trips'] as const,
-  detail: (id: number) => ['trips', id] as const,
+  detail: (id: string) => ['trips', id] as const,
   nextTrip: ['trips', 'next'] as const,
 }
 
@@ -25,7 +25,7 @@ export function useTrips() {
   })
 }
 
-export function useTrip(id: number) {
+export function useTrip(id: string) {
   return useQuery({
     queryKey: tripsKeys.detail(id),
     queryFn: () => fetchTrip(id),
@@ -49,7 +49,7 @@ export function useCreateTrip() {
   })
 }
 
-export function useUpdateTrip(id: number) {
+export function useUpdateTrip(id: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<Trip>) => updateTrip(id, data),
@@ -63,7 +63,7 @@ export function useUpdateTrip(id: number) {
 export function useDeleteTrip() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => deleteTrip(id),
+    mutationFn: (id: string) => deleteTrip(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: tripsKeys.all }),
   })
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { DriverBusOption, DriverTripDetail } from '../types'
-import { getBusesFromApi, assignBusToTrip, unassignBusFromTrip, assignDriverToTrip } from '../api'
+import { getBusesFromApi, assignBusToTrip, unassignBusFromTrip } from '../api'
 
 export function useBuses(
   trip: DriverTripDetail | null,
@@ -8,7 +8,7 @@ export function useBuses(
   setActionError: (msg: string | null) => void,
 ) {
   const [busOptions, setBusOptions] = useState<DriverBusOption[]>([])
-  const [selectedBusId, setSelectedBusId] = useState<number | null>(null)
+  const [selectedBusId, setSelectedBusId] = useState<string | null>(null)
   const [isBusActionLoading, setIsBusActionLoading] = useState(false)
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export function useBuses(
     setSelectedBusId(matchingBus?.id ?? null)
   }, [busOptions, trip])
 
-  const handleBusSelection = async (nextBusId: number | null) => {
+  const handleBusSelection = async (nextBusId: string | null) => {
     if (!trip) return
 
     const previousBusId = selectedBusId
@@ -62,19 +62,16 @@ export function useBuses(
 
     try {
       if (nextBusId) {
-        await assignDriverToTrip(trip.id)
         await assignBusToTrip(trip.id, nextBusId)
       } else {
         await unassignBusFromTrip(trip.id)
       }
-      trip = {
+      setTrip({
         ...trip,
-              busId: nextBusId,
-             busPlate: nextBus?.plate ?? trip.busPlate,
-             isDriverAssociated: nextBusId ? true : trip.isDriverAssociated,
-             associatedBuses: nextBusId ? Math.max(trip.associatedBuses, 1) : 0,
-      }
-      setTrip(trip  )
+        busId: nextBusId,
+        busPlate: nextBus?.plate ?? trip.busPlate,
+        associatedBuses: nextBusId ? Math.max(trip.associatedBuses, 1) : 0,
+      })
     } catch (error) {
       console.warn('Nao foi possivel atualizar o onibus da viagem:', error)
       setSelectedBusId(previousBusId)

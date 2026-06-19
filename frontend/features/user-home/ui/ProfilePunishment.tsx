@@ -14,62 +14,83 @@ export function PunishmentsHistoryCard() {
 
   if (isPending) {
     return (
-      <Card className="w-full rounded-sm border-0 shadow-md">
-        <CardHeader><CardTitle className="text-xl">Histórico de Penalidades</CardTitle></CardHeader>
-        <CardContent><p className="text-gray-500 text-sm">Carregando...</p></CardContent>
+      <Card className="border-border/70 bg-card/95">
+        <CardHeader className="border-b border-border/70 pb-3 md:pb-5">
+          <CardTitle className="font-heading text-sm md:text-xl font-semibold tracking-tight">Penalidades</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-3 md:pt-6">
+          <div className="rounded-3xl border border-dashed border-border bg-muted/30 p-4 md:p-6 text-xs md:text-sm text-muted-foreground">
+            Carregando...
+          </div>
+        </CardContent>
       </Card>
     );
   }
 
   if (isError || !punishments || punishments.length === 0) {
     return (
-      <Card className="w-full rounded-sm border-0 shadow-md">
-        <CardHeader>
-          <CardTitle className="font-medium font-heading text-xl">Histórico de Penalidades</CardTitle>
+      <Card className="border-border/70 bg-card/95">
+        <CardHeader className="border-b border-border/70 pb-3 md:pb-5">
+          <CardTitle className="font-heading text-sm md:text-xl font-semibold tracking-tight">Penalidades</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-gray-500 text-sm">Nenhuma penalidade registrada no seu perfil.</p>
+        <CardContent className="pt-3 md:pt-6">
+          <div className="rounded-3xl border border-dashed border-border bg-muted/30 p-4 md:p-6 text-xs md:text-sm text-muted-foreground">
+            Nenhuma penalidade registrada no seu perfil.
+          </div>
         </CardContent>
       </Card>
     );
   }
 
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('pt-BR');
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
-    <Card className="w-full rounded-sm border-0 shadow-md px-0 mx-0">
-      <CardHeader>
-        <CardTitle className="font-medium font-heading text-xl">Histórico de Penalidades</CardTitle>
+    <Card className="border-border/70 bg-card/95">
+      <CardHeader className="border-b border-border/70 pb-3 md:pb-5">
+        <CardTitle className="font-heading text-sm md:text-xl font-semibold tracking-tight">Penalidades</CardTitle>
       </CardHeader>
-      <CardContent className="px-2">
-        <div className="space-y-2 md:space-y-4">
+      <CardContent className="pt-3 md:pt-6">
+        <div className="space-y-2 md:space-y-3">
           {punishments.slice(0, 3).map((punishment: Punishment) => (
             <div
               key={punishment.id}
-              className="flex justify-between items-center p-3 border rounded-sm transition-colors bg-white"
+              className="rounded-3xl border border-border/70 bg-muted/20 p-3 md:p-4"
             >
-              <div className="flex items-center gap-3 flex-1">
-                <Warning 
-                  className={`w-10 h-10 p-2 rounded-md ${
-                    punishment.is_active 
-                      ? "text-red-600 bg-red-100" 
-                      : "text-gray-500 bg-gray-100"
-                  }`} 
-                />
-                <div className="flex-1">
-                  <p className="font-medium text-sm md:text-base text-gray-900">
-                    {punishment.description}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Registrado em: {punishment.created_at}
-                  </p>
+              <div className="flex items-start justify-between gap-2 md:gap-3">
+                <div className="flex items-start gap-2 md:gap-3 min-w-0">
+                  <Warning
+                    size={16}
+                    className={`mt-0.5 shrink-0 md:size-[20px] ${
+                      punishment.is_active
+                        ? "text-destructive"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs md:text-sm font-medium">
+                      {punishment.description}
+                    </p>
+                    <p className="mt-0.5 md:mt-1 text-[10px] md:text-xs text-muted-foreground">
+                      Registrado em: {formatDate(punishment.created_at)}
+                    </p>
+                  </div>
                 </div>
+                <span
+                  className={`inline-flex shrink-0 rounded-full px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-xs font-semibold tracking-wide uppercase ring-1 ${
+                    punishment.is_active
+                      ? "bg-destructive/10 text-destructive ring-destructive/20"
+                      : "bg-muted text-muted-foreground ring-border"
+                  }`}
+                >
+                  {punishment.is_active ? "Ativa" : "Cumprida"}
+                </span>
               </div>
-              <span
-                className={`px-2 py-0.5 h-fit rounded-sm text-xs font-medium text-white ${
-                  punishment.is_active ? "bg-red-600" : "bg-gray-400"
-                }`}
-              >
-                {punishment.is_active ? "Ativa" : "Cumprida"}
-              </span>
             </div>
           ))}
         </div>

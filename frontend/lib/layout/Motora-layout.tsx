@@ -2,7 +2,7 @@ import Header from '@layout/header'
 
 const paths = {
   passager: '/app',
-  driver: '/app/driver/viagens',
+  driver: '/app/motorista/viagens',
   admin: '/admin',
 }
 

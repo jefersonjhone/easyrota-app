@@ -252,14 +252,6 @@ class LocalDriverTripPassengerView(views.APIView):
         # --- remove local passenger ---
         if local_passenger_id:
             try:
-                local_passenger_id = int(local_passenger_id)
-            except (TypeError, ValueError):
-                return Response(
-                    {"detail": "Passageiro local invalido."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            try:
                 passenger_payload = LocalPassengerService.remove_local_passenger(
                     trip, local_passenger_id
                 )
@@ -278,14 +270,6 @@ class LocalDriverTripPassengerView(views.APIView):
             )
 
         # --- remove reservation check-in ---
-        try:
-            reservation_id = int(reservation_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"detail": "Reserva invalida."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         try:
             name, res_id = LocalPassengerService.remove_reservation_checkin(
                 trip, reservation_id

@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import type { DriverTripDetail } from '../types'
-import { unassignDriverFromTrip, startTrip, finishTrip } from '../api'
+import { startTrip, finishTrip } from '../api'
 
-export function useConfirmation(trip: DriverTripDetail | null, setTrip: (t: DriverTripDetail | null) => void, setActionError: (s: string | null) => void) {
+export function useConfirmation(trip: DriverTripDetail | null, _setTrip: (t: DriverTripDetail | null) => void, setActionError: (s: string | null) => void) {
   const [isConfirmationLoading, setIsConfirmationLoading] = useState(false)
+  const navigate = useNavigate()
 
   const handleConfirmBack = async () => {
     if (!trip) return
@@ -12,18 +14,10 @@ export function useConfirmation(trip: DriverTripDetail | null, setTrip: (t: Driv
     setActionError(null)
 
     try {
-      // if trip in progress, just redirect
-      const normalized = (trip.status ?? '').normalize('NFD').replace(/[^\p{L}\s]/gu, '').trim().toUpperCase()
-      if (normalized === 'EM ANDAMENTO') {
-        window.location.href = '/app/driver/viagens'
-        return
-      }
-
-      await unassignDriverFromTrip(trip.id)
-      window.location.href = '/app/driver/viagens'
+      navigate({ to: '/app/motorista/viagens' })
     } catch (error) {
-      console.warn('Nao foi possivel desassociar o motorista da viagem:', error)
-      setActionError('Nao foi possivel desassociar o motorista antes de voltar.')
+      console.warn('Erro ao redirecionar:', error)
+      setActionError('Nao foi possivel voltar.')
       setIsConfirmationLoading(false)
     }
   }
@@ -36,9 +30,7 @@ export function useConfirmation(trip: DriverTripDetail | null, setTrip: (t: Driv
 
     try {
       await startTrip(trip.id)
-      trip.status = "EM ANDAMENTO"
-      setTrip(trip)
-      window.location.reload();  
+      navigate({ to: '/app/motorista/viagem/$tripId', params: { tripId: trip.id }, replace: true })
     } catch (error) {
       console.warn('Nao foi possivel iniciar a viagem:', error)
       setActionError('Nao foi possivel iniciar a viagem.')
@@ -55,7 +47,7 @@ export function useConfirmation(trip: DriverTripDetail | null, setTrip: (t: Driv
 
     try {
       await finishTrip(trip.id)
-      window.location.href = '/app/driver/viagens'
+      navigate({ to: '/app/motorista/viagens' })
     } catch (error) {
       console.warn('Nao foi possivel finalizar a viagem:', error)
       setActionError('Nao foi possivel finalizar a viagem.')

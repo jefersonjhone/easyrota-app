@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { PlusIcon } from '@phosphor-icons/react'
 
 export interface Bus {
-  id: number
+  id: string
   number_plate: string
   brand: string
   seating_capacity: number
@@ -23,7 +23,7 @@ export function BusesPage() {
   const [selectedBus, setSelectedBus] = useState<Bus | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const deleteBus = async (idBus: number) => {
+  const deleteBus = async (idBus: string) => {
     try {
       await apiFetch(`/buses/${idBus}/`, {
         method: "DELETE"

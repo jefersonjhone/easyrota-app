@@ -65,6 +65,7 @@ class MFAChallenge(models.Model):
 class AllowedStaff(models.Model):
     """Staff imported from the official ODS file."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     registration_number = models.CharField(max_length=32, unique=True)
 

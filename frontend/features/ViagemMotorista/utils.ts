@@ -56,9 +56,9 @@ export function normalizeCheckedInPassengers(trip: TripModel, capacity: number):
       .map((passenger, index) => {
         const fallbackId = index + 1
         const reservationId =
-          typeof passenger.reservation_id === 'number' ? passenger.reservation_id : undefined
+          typeof passenger.reservation_id === 'string' ? passenger.reservation_id : undefined
         const localPassengerId =
-          typeof passenger.local_passenger_id === 'number'
+          typeof passenger.local_passenger_id === 'string'
             ? passenger.local_passenger_id
             : undefined
         const source = passenger.source === 'Manual' ? 'Manual' : 'QR'
@@ -85,12 +85,15 @@ export function normalizeCheckedInPassengers(trip: TripModel, capacity: number):
 
 export function normalizeTripDetail(trip: TripModel) {
   const capacity = normalizeCapacity(trip.seating_capacity)
-  const driverId = typeof trip.driver === 'number' ? trip.driver : null
+  const driverId = typeof trip.driver === 'string' ? trip.driver : null
 
   return {
-    id: String(trip.id),
+    id: trip.id,
     origin: trip.origin ?? 'Origem',
     destiny: trip.destiny ?? 'Destino',
+    departureDate: trip.departure_timestamp
+      ? new Date(trip.departure_timestamp).toLocaleDateString('pt-BR')
+      : trip.departure_time?.split(',')[0]?.trim() ?? '—',
     departureTime: normalizeTripTime(
       trip.departure_time ?? trip.departure_timestamp,
     ),
@@ -101,6 +104,7 @@ export function normalizeTripDetail(trip: TripModel) {
     capacity,
     associatedBuses: trip.bus ? 1 : 0,
     status: trip.status ?? '',
+    checkinStarted: trip.checkin_started ?? null,
     passengers: normalizeCheckedInPassengers(trip, capacity),
   }
 }

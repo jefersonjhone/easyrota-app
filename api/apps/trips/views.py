@@ -10,6 +10,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..reservations.models import Reservation
 from ..reservations.serializers import ReservationSerializer
 from ..reservations.services import sync_trip_status
 from ..users.permissions import (
@@ -21,6 +22,7 @@ from .filters import FilterTripViewSet
 from .models import Bus, GuestPassenger, Route, Trip
 from .serializers import (
     BusSerializer,
+    GuestHistorySerializer,
     GuestPassengerSerializer,
     RouteSerializer,
     TripCurrentScreenSerializer,
@@ -48,7 +50,10 @@ class BusViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def perform_create(self, serializer):
-        serializer.save(administrator=self.request.user.admin_profile)
+        profile = getattr(self.request.user, "admin_profile", None)
+        if not profile:
+            raise PermissionDenied("Usuário não é administrador")
+        serializer.save(administrator=profile)
 
 
 class RouteListCreateView(generics.ListCreateAPIView):
@@ -91,6 +96,28 @@ class TripViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     @action(detail=True, methods=["post"])
+    def start_checkin(self, request, pk=None):
+        trip = self.get_object()
+        from django.utils import timezone
+
+        from apps.notifications.services import NotificationService
+
+        trip.checkin_started = timezone.now()
+        trip.save(update_fields=["checkin_started"])
+
+        NotificationService.notify_trip_users(trip, {
+            "head": "Check-in iniciado",
+            "body": (
+                f"O motorista iniciou o check-in para a viagem "
+                f"de {trip.route.origin} para {trip.route.destiny}."
+            ),
+            "url": f"/app/driver/viagem/{trip.id}",
+        })
+
+        serializer = TripSerializer(trip, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
         trip = self.get_object()
         TripService.finish_trip(trip)
@@ -101,6 +128,43 @@ class TripViewSet(viewsets.ModelViewSet):
         trip = self.get_object()
         TripService.start_trip(trip)
         return Response("trip iniciada com sucesso", status.HTTP_200_OK)
+
+    @action(detail=True, methods=["get"])
+    def reservations(self, request, pk=None):
+        trip = self.get_object()
+        reservations = (
+            Reservation.objects
+            .with_passenger_details()
+            .for_trip(trip)
+            .order_by("status", "checkin_date", "id")
+        )
+
+        data = []
+        for res in reservations:
+            passenger_name = "Passageiro"
+            kind = None
+
+            if hasattr(res, "student_id"):
+                passenger_name = res.student.user.full_name
+                kind = "Aluno"
+            elif hasattr(res, "civil_servant_id"):
+                passenger_name = res.civil_servant.user.full_name
+                kind = "Servidor"
+            elif hasattr(res, "guest_passenger_id"):
+                passenger_name = res.guest_passenger.full_name or "Convidado"
+                kind = "Convidado"
+
+            data.append({
+                "id": res.id,
+                "passenger_name": passenger_name,
+                "kind": kind,
+                "status": res.status,
+                "check_in": res.check_in,
+                "checkin_date": res.checkin_date,
+                "created_at": res.created_at,
+            })
+
+        return Response(data)
 
     @action(detail=True, methods=["post"], url_path="check-in")
     @transaction.atomic
@@ -113,7 +177,7 @@ class TripViewSet(viewsets.ModelViewSet):
 
         try:
             payload = CheckinService.perform(
-                trip_id=int(pk),
+                trip_id=pk,
                 passenger_identifier=passenger_identifier,
                 driver=request.user.driver_profile,
             )
@@ -210,6 +274,7 @@ class TripViewSet(viewsets.ModelViewSet):
         elif self.action in [
             "finish_trip",
             "start_trip",
+            "start_checkin",
             "check_in",
             "assign_bus",
             "unassign_bus",
@@ -217,6 +282,8 @@ class TripViewSet(viewsets.ModelViewSet):
             "unassign_driver",
         ]:
             self.permission_classes = [IsDriver]
+        elif self.action == "reservations":
+            self.permission_classes = [IsDriver | permissions.IsAdminUser]
         else:
             self.permission_classes = [permissions.IsAdminUser]
 
@@ -295,6 +362,12 @@ class GuestPassengerView(APIView):
     serializer_class = GuestPassengerSerializer
 
     def post(self, request):
+        if not hasattr(request.user, "civil_servant_profile"):
+            return Response(
+                {"detail": "Apenas servidores podem adicionar convidados."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         trip_id = request.data.get("trip")
         cpf = request.data.get("cpf")
         if not trip_id:
@@ -322,3 +395,21 @@ class GuestPassengerView(APIView):
         reservetionSerializer.reserveToGuest(passenger, trip)
         sync_trip_status(trip)
         return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)
+
+
+class GuestHistoryView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not hasattr(request.user, "civil_servant_profile"):
+            return Response(
+                {"detail": "Apenas servidores podem acessar o histórico."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        guests = GuestPassenger.objects.filter(
+            recorded_by=request.user.civil_servant_profile
+        ).select_related("trip__route").order_by("-trip__trip_date")
+
+        serializer = GuestHistorySerializer(guests, many=True)
+        return Response(serializer.data)

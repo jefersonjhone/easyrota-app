@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ui/card'
@@ -8,6 +9,7 @@ type ResendOtpResponse = {
 } | null
 
 export function VerifyCodePage() {
+  const navigate = useNavigate()
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -105,7 +107,7 @@ export function VerifyCodePage() {
       setSuccess(true)
       
       setTimeout(() => {
-        window.location.href = '/login'
+        navigate({ to: '/login' })
       }, 2000)
 
     } catch (err: unknown) {

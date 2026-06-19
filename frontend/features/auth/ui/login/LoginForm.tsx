@@ -68,7 +68,7 @@ export function LoginForm() {
             if (isAdmin) {
                 navigate({ to: AdminRoute.to, replace: true })
             } else if (user?.profile_type === 'DRIVER') {
-                navigate({ to: '/app/driver/viagens' as never, replace: true })
+                navigate({ to: '/app/motorista' as never, replace: true })
             } else {
                 navigate({ to: AppRoute.to, replace: true })
             }

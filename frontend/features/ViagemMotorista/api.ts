@@ -1,5 +1,5 @@
 import { apiFetch } from '@lib/api'
-import type { ApiList, BusModel, DriverBusOption, TripModel } from './types'
+import type { ApiList, BusModel, DriverBusOption, ReservationItem, TripModel } from './types'
 import { toList, normalizeTripDetail, normalizeBusOption } from './utils'
 
 export async function getTripFromApi(tripId: string) {
@@ -24,7 +24,7 @@ export async function unassignDriverFromTrip(tripId: string) {
   await apiFetch(`/trips/${tripId}/unassign_driver/`, { method: 'POST' })
 }
 
-export async function assignBusToTrip(tripId: string, busId: number) {
+export async function assignBusToTrip(tripId: string, busId: string) {
   await apiFetch(`/trips/${tripId}/assign_bus/`, {
     method: 'POST',
     body: JSON.stringify({ bus: busId }),
@@ -41,4 +41,12 @@ export async function startTrip(tripId: string) {
 
 export async function finishTrip(tripId: string) {
   await apiFetch(`/trips/${tripId}/finish_trip/`, { method: 'POST' })
+}
+
+export async function startCheckin(tripId: string) {
+  return apiFetch<TripModel>(`/trips/${tripId}/start_checkin/`, { method: 'POST' })
+}
+
+export async function getTripReservationsFromApi(tripId: string) {
+  return apiFetch<ReservationItem[]>(`/trips/${tripId}/reservations/`)
 }

@@ -19,7 +19,7 @@ const historyFormatter = new Intl.DateTimeFormat('pt-BR', {
 const statusToneMap: Record<string, string> = {
   'CONCLUÍDA': 'bg-emerald-500/10 text-emerald-700 ring-emerald-600/20',
   CONCLUIDA: 'bg-emerald-500/10 text-emerald-700 ring-emerald-600/20',
-  CONFIRMADA: 'bg-primary/10 text-primary ring-primary/20',
+  CONFIRMADA: 'bg-blue-500/10 text-blue-700 ring-blue-600/20',
   PENDENTE: 'bg-amber-500/10 text-amber-700 ring-amber-600/20',
   FALTA: 'bg-rose-500/10 text-rose-700 ring-rose-600/20',
   CANCELADA: 'bg-muted text-muted-foreground ring-border',

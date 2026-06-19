@@ -143,13 +143,13 @@ class TripAPITestCase(APITestCase):
 
         list_response = self.client.get(self.trip_list_url)
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertIn(trip.id, [item["id"] for item in list_response.data])
+        self.assertIn(str(trip.id), [item["id"] for item in list_response.data])
 
         detail_response = self.client.get(
             reverse("trip-detail", kwargs={"pk": trip.id})
         )
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(detail_response.data["id"], trip.id)
+        self.assertEqual(detail_response.data["id"], str(trip.id))
 
     def test_driver_cannot_list_or_retrieve_another_in_progress_trip(self):
         """Trips in progress remain hidden from drivers that are not assigned."""
@@ -499,7 +499,7 @@ class CurrentTripPassengerAPITests(APITestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], trip.id)
+        self.assertEqual(response.data["id"], str(trip.id))
 
     def test_updates_status_automatically(self):
         """
@@ -648,7 +648,7 @@ class TripCheckInAPITests(APITestCase):
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_user.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_user.id}"},
             format="json",
         )
 
@@ -665,7 +665,7 @@ class TripCheckInAPITests(APITestCase):
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_user.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_user.id}"},
             format="json",
         )
 
@@ -678,19 +678,19 @@ class TripCheckInAPITests(APITestCase):
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_without_reservation.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_without_reservation.id}"},
             format="json",
         )
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data["error"], "Passageiro sem reserva nesta viagem.")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "QR Code invalido ou usuario inexistente.")
 
     def test_check_in_rejects_driver_not_associated_with_trip(self):
         self.client.force_authenticate(user=self.other_driver_user)
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_user.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_user.id}"},
             format="json",
         )
 
@@ -721,7 +721,7 @@ class TripCheckInAPITests(APITestCase):
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_user.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_user.id}"},
             format="json",
         )
 
@@ -822,7 +822,7 @@ class TripAssignDriverTestCase(TestCase):
 
     def test_assign_driver_with_invalid_trip_id(self):
         """Test assignment failure with invalid trip ID"""
-        url = "/api/trips/99999/assign_driver/"
+        url = "/api/trips/00000000-0000-0000-0000-000000000000/assign_driver/"
 
         with self.assertRaises(Trip.DoesNotExist):
             self.client.post(url, format="json")
@@ -924,7 +924,7 @@ class TripUnassignDriverTestCase(TestCase):
 
     def test_unassign_driver_with_invalid_trip_id(self):
         """Test unassignment failure with invalid trip ID"""
-        url = "/api/trips/99999/unassign_driver/"
+        url = "/api/trips/00000000-0000-0000-0000-000000000000/unassign_driver/"
 
         with self.assertRaises(Trip.DoesNotExist):
             self.client.post(url, format="json")
@@ -1021,7 +1021,7 @@ class TripAssignBusTestCase(TestCase):
     def test_assign_bus_with_invalid_bus_id(self):
         """Test assignment failure with invalid bus ID"""
         url = f"/api/trips/{self.trip.id}/assign_bus/"
-        data = {"bus": 99999}
+        data = {"bus": "00000000-0000-0000-0000-000000000000"}
 
         with self.assertRaises(Bus.DoesNotExist):
             self.client.post(url, data, format="json")
@@ -1081,7 +1081,7 @@ class TripAssignBusTestCase(TestCase):
 
     def test_assign_bus_with_invalid_trip_id(self):
         """Test assignment failure with invalid trip ID"""
-        url = "/api/trips/99999/assign_bus/"
+        url = "/api/trips/00000000-0000-0000-0000-000000000000/assign_bus/"
         data = {"bus": self.bus.id}
 
         with self.assertRaises(Trip.DoesNotExist):
@@ -1194,7 +1194,7 @@ class TripUnassignBusTestCase(TestCase):
 
     def test_unassign_bus_with_invalid_trip_id(self):
         """Test unassignment failure with invalid trip ID"""
-        url = "/api/trips/99999/unassign_bus/"
+        url = "/api/trips/00000000-0000-0000-0000-000000000000/unassign_bus/"
 
         with self.assertRaises(Trip.DoesNotExist):
             self.client.post(url, format="json")

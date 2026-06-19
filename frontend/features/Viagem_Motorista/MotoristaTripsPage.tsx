@@ -17,7 +17,7 @@ type TripModelStatus =
   | string
 
 type TripModel = {
-  id: number
+  id: string
   trip_date: string
   status: TripModelStatus
   origin?: string
@@ -31,7 +31,7 @@ type TripModel = {
 }
 
 type DriverTrip = {
-  id: number
+  id: string
   tripDate: string
   tripDateLabel: string
   origin: string
@@ -190,7 +190,7 @@ function getActionClasses(isCanceled: boolean) {
   return ' hover:translate-y-0 hover:-translate-y-px transition-transform'
 }
 
-export function DriverTripsPage() {
+export function MotoristaTripsPage() {
   const [trips, setTrips] = useState<DriverTrip[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -332,8 +332,8 @@ export function DriverTripsPage() {
                 <Link
                   key={trip.id}
                   className={`${baseCardClass} grid-cols-1 md:grid-cols-[1fr_10rem_10rem] no-underline text-current hover:-translate-y-px hover:shadow-xl`}
-                  to="/app/driver/viagem/$tripId"
-                  params={{ tripId: String(trip.id) }}
+                  to="/app/motorista/viagem/$tripId"
+                  params={{ tripId: trip.id }}
                   aria-label={`Abrir detalhes da viagem ${trip.origin} para ${trip.destiny}`}
                 >
                   {cardContent}

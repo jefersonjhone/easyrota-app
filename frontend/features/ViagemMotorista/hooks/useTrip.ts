@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { DriverTripDetail, QrFeedback } from '../types'
-import { getApiErrorMessage } from '../utils'
 import { getTripFromApi } from '../api'
-import { assignDriverToTrip } from '../api'
 
 type Options = {
   setActionError?: (msg: string | null) => void
@@ -33,28 +31,9 @@ export function useTrip(tripId?: string, options: Options = {}) {
 
       try {
         const tripDetail = await getTripFromApi(tripId)
-        let nextTripDetail = { ...tripDetail, isDriverAssociated: false }
-        let driverAssociationError: string | null = null
-
-        try {
-          await assignDriverToTrip(tripDetail.id)
-          nextTripDetail = { ...tripDetail, isDriverAssociated: true }
-        } catch (error) {
-          console.warn('Nao foi possivel associar o motorista a viagem:', error)
-          driverAssociationError = getApiErrorMessage(
-            error,
-            'Motorista nao autorizado para esta viagem.',
-          )
-        }
 
         if (!isMounted) return
-
-        setTrip(nextTripDetail)
-
-        if (driverAssociationError) {
-          setActionError?.(driverAssociationError)
-          setQrFeedback?.({ kind: 'error', message: driverAssociationError })
-        }
+        setTrip(tripDetail)
       } catch (error) {
         console.warn('Nao foi possivel carregar a viagem selecionada:', error)
 

@@ -105,6 +105,7 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
     admin_profile = serializers.SerializerMethodField()
     student_profile = serializers.SerializerMethodField()
     civil_servant_profile = serializers.SerializerMethodField()
+    driver_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -116,6 +117,7 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
             "admin_profile",
             "student_profile",
             "civil_servant_profile",
+            "driver_profile",
         )
 
     def get_profile_type(self, obj):
@@ -153,6 +155,12 @@ class AuthenticatedUserWithProfileSerializer(serializers.ModelSerializer):
         civil_servant_profile = getattr(obj, "civil_servant_profile", None)
         if civil_servant_profile is not None:
             return CivilServantProfileSerializer(civil_servant_profile).data
+        return None
+
+    def get_driver_profile(self, obj):
+        driver_profile = getattr(obj, "driver_profile", None)
+        if driver_profile is not None:
+            return {"id": driver_profile.id}
         return None
 
 

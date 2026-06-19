@@ -7,6 +7,7 @@ import { getApiErrorMessage } from '../utils'
 type Options = {
   setActionError: (msg: string | null) => void
   setQrFeedback: (f: QrFeedback | null) => void
+  onScanComplete?: (result: { success: boolean; passengerName?: string }) => void
 }
 
 export function useQrScanner(
@@ -14,11 +15,9 @@ export function useQrScanner(
   setTrip: (t: DriverTripDetail | null) => void,
   boardedPassengers: PassengerBoardItem[],
   setBoardedPassengers: (p: PassengerBoardItem[]) => void,
-  { setActionError, setQrFeedback }: Options,
+  { setActionError, setQrFeedback, onScanComplete }: Options,
 ) {
-  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false)
   const [isQrCheckInLoading, setIsQrCheckInLoading] = useState(false)
-  const [scanRestartSignal, setScanRestartSignal] = useState(0)
 
   const handleQrCameraError = useCallback((message: string) => {
     setQrFeedback({ kind: 'error', message })
@@ -27,16 +26,17 @@ export function useQrScanner(
   const handleQrScan = useCallback(async (decodedText: string) => {
     if (!trip) {
       setQrFeedback({ kind: 'error', message: 'Viagem nao encontrada.' })
+      onScanComplete?.({ success: false })
       return
     }
 
     if (!decodedText) {
       setQrFeedback({ kind: 'error', message: 'QR Code invalido.' })
+      onScanComplete?.({ success: false })
       return
     }
 
     setIsQrCheckInLoading(true)
-    setQrFeedback({ kind: 'info', message: 'QR Code lido. Confirmando check-in...' })
 
     try {
       const response = await checkInTripPassenger(trip.id, decodedText)
@@ -48,11 +48,18 @@ export function useQrScanner(
         const refreshedTrip = await getTripFromApi(trip.id)
         setTrip({ ...refreshedTrip, isDriverAssociated: trip.isDriverAssociated })
       } else {
-        
         const alreadyRegistered = boardedPassengers.some(
-          (passenger) => passenger.identifier === decodedText || (reservationId !== undefined && passenger.reservationId === reservationId),
+          (passenger) =>
+            passenger.identifier === decodedText ||
+            (reservationId !== undefined && passenger.reservationId === reservationId),
         )
         if (alreadyRegistered) {
+          const existing = boardedPassengers.find(
+            (p) => p.identifier === decodedText || p.reservationId === reservationId,
+          )
+          setQrFeedback({ kind: 'info', message: `${existing?.name ?? 'Passageiro'} ja registrado.` })
+          onScanComplete?.({ success: true, passengerName: existing?.name ?? 'Passageiro' })
+          setIsQrCheckInLoading(false)
           return
         }
         const passengerFromQr: PassengerBoardItem = {
@@ -62,41 +69,44 @@ export function useQrScanner(
           name: passengerName,
           source: 'QR',
         }
-        
         const placeholderIndex = boardedPassengers.findIndex(
           (p) => p.source === 'Manual' && p.identifier === undefined && p.name.startsWith('Passageiro '),
         )
-
         if (placeholderIndex === -1) {
           setBoardedPassengers([...boardedPassengers, passengerFromQr])
-      }
-        else {
+        } else {
           setBoardedPassengers(
-            boardedPassengers.map((passenger, index) => (index === placeholderIndex ? { ...passengerFromQr, id: reservationId ?? passenger.id } : passenger))
+            boardedPassengers.map((passenger, index) =>
+              index === placeholderIndex
+                ? { ...passengerFromQr, id: reservationId ?? passenger.id }
+                : passenger,
+            ),
           )
         }
       }
 
-      setQrFeedback({ kind: evictedNames ? 'info' : 'success', message: evictedNames ? `Check-in realizado para ${passengerName}. Retire do onibus: ${evictedNames}.` : response.status ?? `Check-in realizado para ${passengerName}.` })
-      setIsQrScannerOpen(false)
+      setQrFeedback({
+        kind: evictedNames ? 'info' : 'success',
+        message: evictedNames
+          ? `Check-in realizado para ${passengerName}. Retire do onibus: ${evictedNames}.`
+          : response.status ?? `Check-in realizado para ${passengerName}.`,
+      })
+      onScanComplete?.({ success: true, passengerName })
     } catch (error) {
       setQrFeedback({ kind: 'error', message: getApiErrorMessage(error, 'Nao foi possivel confirmar o check-in.') })
       setActionError(null)
+      onScanComplete?.({ success: false })
     } finally {
       setIsQrCheckInLoading(false)
     }
-  }, [trip, setBoardedPassengers, setQrFeedback, setTrip, setActionError])
+  }, [trip, boardedPassengers, setBoardedPassengers, setQrFeedback, setTrip, setActionError, onScanComplete])
 
-  const handleRetryQrScan = () => {
+  const handleRetryQrScan = useCallback(() => {
     setQrFeedback({ kind: 'info', message: 'Aguardando nova leitura do QR Code.' })
-    setScanRestartSignal((s) => s + 1)
-  }
+  }, [setQrFeedback])
 
   return {
-    isQrScannerOpen,
-    setIsQrScannerOpen,
     isQrCheckInLoading,
-    scanRestartSignal,
     handleQrScan,
     handleQrCameraError,
     handleRetryQrScan,

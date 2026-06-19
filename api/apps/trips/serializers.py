@@ -119,6 +119,10 @@ class TripSerializer(serializers.ModelSerializer):
         source="route.departure_time", read_only=True
     )
     arrival_time = serializers.CharField(source="route.arrival_time", read_only=True)
+    bus_plate = serializers.SerializerMethodField(read_only=True)
+    checkin_started = serializers.DateTimeField(read_only=True)
+    students_count = serializers.SerializerMethodField(read_only=True)
+    servants_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Trip
@@ -197,6 +201,19 @@ class TripSerializer(serializers.ModelSerializer):
             })
 
         return passengers
+
+    def get_bus_plate(self, obj):
+        if obj.bus_id:
+            return obj.bus.number_plate
+        return None
+
+    def get_students_count(self, obj):
+        return Reservation.objects.filter(trip=obj, student__isnull=False).count()
+
+    def get_servants_count(self, obj):
+        return Reservation.objects.filter(
+            trip=obj, civil_servant__isnull=False
+        ).count()
 
     def validate_trip_date(self, value):
         today = timezone.localtime().date()
@@ -404,7 +421,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     def get_passenger_identifier(self, obj):
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
-            return str(request.user.id)
+            return f"{obj.id}@{request.user.id}"
         return None
 
 
@@ -414,3 +431,16 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
     class Meta:
         model = GuestPassenger
         fields = ("id", "cpf", "full_name")
+
+
+class GuestHistorySerializer(serializers.ModelSerializer):
+    """Serializes a guest with trip context for history display."""
+
+    trip_id = serializers.UUIDField(source="trip.id")
+    trip_origin = serializers.CharField(source="trip.route.origin")
+    trip_destiny = serializers.CharField(source="trip.route.destiny")
+    trip_date = serializers.DateField(source="trip.trip_date")
+
+    class Meta:
+        model = GuestPassenger
+        fields = ("id", "full_name", "trip_id", "trip_origin", "trip_destiny", "trip_date")

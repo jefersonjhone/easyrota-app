@@ -1,23 +1,25 @@
+import { Link } from '@tanstack/react-router'
 import { useTripsHistory } from "@features/user-home/hooks/useTripsHistory"
 import { Card, CardContent, CardHeader, CardTitle } from "@/lib/ui/card"
-import { BusIcon } from "@phosphor-icons/react"
+import { getStatusTone } from "@features/user-home/config"
 import type { Trip } from "@features/user-home/types"
 
-
 export function TripsHistoryCard() {
-  const { data: trips} = useTripsHistory(3)
+  const { data: trips } = useTripsHistory(3)
 
   const loading = false
   const error = false
-  
+
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de Viagens</CardTitle>
+      <Card className="border-border/70 bg-card/95">
+        <CardHeader className="border-b border-border/70 pb-3 md:pb-5">
+          <CardTitle className="font-heading text-sm md:text-xl font-semibold tracking-tight">Histórico de Viagens</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-gray-500">Carregando...</p>
+        <CardContent className="pt-3 md:pt-6">
+          <div className="rounded-3xl border border-dashed border-border bg-muted/30 p-4 md:p-6 text-xs md:text-sm text-muted-foreground">
+            Carregando...
+          </div>
         </CardContent>
       </Card>
     )
@@ -25,12 +27,14 @@ export function TripsHistoryCard() {
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de Viagens</CardTitle>
+      <Card className="border-border/70 bg-card/95">
+        <CardHeader className="border-b border-border/70 pb-3 md:pb-5">
+          <CardTitle className="font-heading text-sm md:text-xl font-semibold tracking-tight">Histórico de Viagens</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-red-500">Erro ao carregar histórico</p>
+        <CardContent className="pt-3 md:pt-6">
+          <div className="rounded-3xl bg-destructive/10 p-3 md:p-4 text-xs md:text-sm text-destructive">
+            Erro ao carregar histórico
+          </div>
         </CardContent>
       </Card>
     )
@@ -38,68 +42,60 @@ export function TripsHistoryCard() {
 
   if (!trips || trips.length === 0) {
     return (
-      <Card className="w-full rounded-sm ">
-        <CardHeader>
-          <CardTitle>Histórico de Viagens</CardTitle>
+      <Card className="border-border/70 bg-card/95">
+        <CardHeader className="border-b border-border/70 pb-3 md:pb-5">
+          <CardTitle className="font-heading text-sm md:text-xl font-semibold tracking-tight">Histórico de Viagens</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-gray-500">Nenhuma viagem encontrada</p>
+        <CardContent className="pt-3 md:pt-6">
+          <div className="rounded-3xl border border-dashed border-border bg-muted/30 p-4 md:p-6 text-xs md:text-sm text-muted-foreground">
+            Nenhuma viagem encontrada.
+          </div>
         </CardContent>
       </Card>
     )
   }
 
-  const handleTripClick = (tripId: string) => {
-    console.log("Apertou numa viagem: ", tripId)
-  }
-
   return (
-    <Card className="w-full rounded-sm gap-2 border-0 shadow-md  px-0 mx-0">
-      <CardHeader>
-        <CardTitle className="font-medium font-heading text-xl">Últimas Reservas</CardTitle>
+    <Card className="border-border/70 bg-card/95">
+      <CardHeader className="border-b border-border/70 pb-3 md:pb-5">
+        <CardTitle className="font-heading text-sm md:text-xl font-semibold tracking-tight">Últimas Reservas</CardTitle>
       </CardHeader>
-      <CardContent className="px-2">
-        <div className="space-y-2 md:space-y-6 w-full">
-          {trips.map((trip: Trip) => {
-            return (
-              <div
-                key={trip.id}
-                onClick={() => handleTripClick(trip.id)}
-                className="flex justify-between p-2 border rounded-sm cursor-pointer hover:bg-gray-50 transition-colors"
-              >
-                <div
-                  className="w-full flex justify-between items-center p-2 md:p-4 gap-2 md:gap-4 "
-                >
-                  <BusIcon className="w-12 h-12 text-white bg-primary p-1 rounded-md " />
-                  <div className="flex-1 ">
-                    <p className="font-semibold md:text-base font-heading">
-                      {trip.origin} → {trip.destiny}
-                    </p>
-                    <p className="text-sm md:text-base text-gray-600">
-                      {trip.trip_date} às {trip.trip_departure}
-                    </p>
-                  </div>
+      <CardContent className="pt-3 md:pt-6">
+        <div className="space-y-2 md:space-y-3">
+          {trips.map((trip: Trip) => (
+            <Link
+              key={trip.id}
+              to="/app/viagens/$id"
+              params={{ id: trip.id }}
+              className="block rounded-3xl border border-border/70 bg-muted/20 p-3 md:p-4 transition-shadow hover:shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2 md:gap-3">
+                <div className="min-w-0">
+                  <p className="font-heading text-sm md:text-base font-semibold tracking-tight">
+                    {trip.origin} → {trip.destiny}
+                  </p>
+                  <p className="mt-0.5 md:mt-1 text-[11px] md:text-sm text-muted-foreground">
+                    {trip.trip_date} às {trip.trip_departure}
+                  </p>
                 </div>
-                  <span
-                    className="px-2 py-1 h-fit rounded-sm my-auto text-xs font-medium text-white bg-gray-500"
-                  >
-                   {trip.trip_history_status}
-                  </span>
+                <span
+                  className={`inline-flex shrink-0 rounded-full px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-xs font-semibold tracking-wide uppercase ring-1 ${getStatusTone(trip.trip_history_status)}`}
+                >
+                  {trip.trip_history_status}
+                </span>
               </div>
-            )
-          })}
+            </Link>
+          ))}
 
-        <div className="w-full flex items center">
-          <a href="/app/viagens/historico" 
-          className="mx-auto py-2 text-center text-chart-3 hover:text-chart-4 font-medium md:font-semibold underline">
-        
-        
-          Ver histórico completo
-          </a>
+          <div className="pt-2 text-center">
+            <Link
+              to="/app/historico"
+              className="text-sm font-medium text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+            >
+              Ver histórico completo
+            </Link>
+          </div>
         </div>
-
-        </div>
-        
       </CardContent>
     </Card>
   )

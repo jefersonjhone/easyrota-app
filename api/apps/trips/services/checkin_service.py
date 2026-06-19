@@ -94,7 +94,7 @@ class CheckinService:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def perform(trip_id: int, passenger_identifier: str, driver):
+    def perform(trip_id: str, passenger_identifier: str, driver):
         """
         Execute the full QR-code check-in flow.
         Returns a dict with response payload on success.
@@ -128,25 +128,35 @@ class CheckinService:
 
     @staticmethod
     def _resolve_passenger(passenger_identifier):
-        """Resolve passenger from UUID (User or GuestPassenger)."""
+        """Resolve passenger from '{reservation_id}@{user_id}'."""
 
-        if not passenger_identifier:
-            raise CheckinService.Error("UUID do passageiro e obrigatorio.", 400)
+        if not passenger_identifier or "@" not in passenger_identifier:
+            raise CheckinService.Error("QR Code invalido.", 400)
+
+        reservation_id_str, user_id_str = passenger_identifier.rsplit("@", 1)
 
         try:
-            passenger_uuid = UUID(str(passenger_identifier))
+            reservation_id = UUID(str(reservation_id_str))
         except (TypeError, ValueError):
             raise CheckinService.Error("QR Code invalido.", 400)
 
-        try:
-            return User.objects.get(id=passenger_uuid)
-        except User.DoesNotExist:
-            try:
-                return GuestPassenger.objects.get(id=passenger_uuid)
-            except GuestPassenger.DoesNotExist:
-                raise CheckinService.Error(
-                    "QR Code invalido ou usuario inexistente.", 400
-                )
+        reservation = Reservation.objects.select_related(
+            "student__user", "civil_servant__user", "guest_passenger"
+        ).filter(id=reservation_id).first()
+
+        if not reservation:
+            raise CheckinService.Error("QR Code invalido.", 400)
+
+        if reservation.student_id and str(reservation.student.user.id) == user_id_str:
+            return reservation.student.user
+        if reservation.civil_servant_id and str(reservation.civil_servant.user.id) == user_id_str:
+            return reservation.civil_servant.user
+        if reservation.guest_passenger_id and str(reservation.guest_passenger_id) == user_id_str:
+            return reservation.guest_passenger
+
+        raise CheckinService.Error(
+            "QR Code invalido ou usuario inexistente.", 400
+        )
 
     @staticmethod
     def _find_reservation(passenger, trip):

@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from .managers import PunishmentManager, ReservationManager
@@ -16,6 +18,7 @@ class Reservation(models.Model):
         ("LISTA SECUNDÁRIA", "Lista Secundária"),
     )
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     checkin_date = models.DateTimeField(null=True, blank=True)
     check_in = models.BooleanField(default=False)
     status = models.CharField(
@@ -45,6 +48,7 @@ class Guest(models.Model):
     Can be associated with multiple reservations.
     """
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     cpf = models.CharField(max_length=15, unique=True)
 
@@ -63,6 +67,7 @@ class Punishment(models.Model):
     (For missing a trip without cancellation).
     """
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     is_active = models.BooleanField(default=True)
     description = models.CharField(max_length=255)
     student = models.ForeignKey("users.StudentProfile", on_delete=models.CASCADE)

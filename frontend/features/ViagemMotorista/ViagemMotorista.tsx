@@ -1,120 +1,172 @@
-import MotoraLayout from '@layout/Motora-layout'
+import { useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import MotoristaLayout from '@layout/motorista-layout'
 import { Button } from '@ui/button'
+import { NativeSelect, NativeSelectOption } from '@ui/native-select'
+import { useAuthStore } from '@features/auth/store/auth-store'
+import { apiFetch } from '@lib/api'
+import { getStatusTone } from '@/features/user-home/config'
+import {
+  ArrowLeftIcon,
+  PlayCircleIcon,
+  CheckCircleIcon,
+  WarningCircleIcon,
+  BusIcon,
+  CalendarBlankIcon,
+  ClockIcon,
+  UsersIcon,
+  WarningIcon,
+  MapPinLine,
+} from '@phosphor-icons/react'
 
-import { HeaderActions } from './components/HeaderActions'
-import { TripInfo } from './components/TripInfo'
-import { OccupancyControls } from './components/OccupancyControls'
-import { AsidePanel } from './components/AsidePanel'
-import { QrScannerDialog } from './components/QrScannerDialog'
-import { PassengerRegisterDialog } from './components/PassengerRegisterDialog'
-import { PassengerRemoveDialog } from './components/PassengerRemoveDialog'
 import { ConfirmationDialog } from './components/ConfirmationDialog'
-import { useTrip } from './hooks/useTrip'
 import { useBuses } from './hooks/useBuses'
-import { usePassengers } from './hooks/usePassengers'
-import { useQrScanner } from './hooks/useQrScanner'
 import { useConfirmation } from './hooks/useConfirmation'
-import type { ViagemMotoristaProps, PassengerBoardItem, QrFeedback } from './types'
-import { useState, type FormEvent } from 'react'
+import {
+  getTripFromApi,
+  assignDriverToTrip,
+  startCheckin,
+} from './api'
+import type {
+  ViagemMotoristaProps,
+  DriverTripDetail,
+} from './types'
 import { normalizeTripStatus } from './utils'
 
+function getStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    'CONFIRMADA': 'Confirmada',
+    'EM ANDAMENTO': 'Em Andamento',
+    'CONCLUÍDA': 'Concluída',
+    'CANCELADA': 'Cancelada',
+    'RISCO DE CANCELAMENTO': 'Risco de Cancelamento',
+    'PENDENTE': 'Pendente',
+  }
+  return labels[status] ?? status
+}
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`inline-flex rounded-full px-2 md:px-3 py-0.5 md:py-1 text-[9px] md:text-xs font-semibold tracking-wide uppercase ring-1 ${getStatusTone(status)}`}>
+      {getStatusLabel(status)}
+    </span>
+  )
+}
+
 export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
-  // central UI-level state for cross-cutting concerns
+  const navigate = useNavigate()
   const [actionError, setActionError] = useState<string | null>(null)
-  const [qrFeedback, setQrFeedback] = useState<QrFeedback | null>(null)
-  const [boardedPassengers, setBoardedPassengers] = useState<PassengerBoardItem[]>([])
-  const [confirmation, setConfirmation] = useState<'back' | 'bus' | 'start' | 'finish' | null>(null)
+  const [confirmation, setConfirmation] = useState<'back' | 'start' | 'finish' | null>(null)
+  const [trip, setTrip] = useState<DriverTripDetail | null>(null)
+  const [isTripLoading, setIsTripLoading] = useState(true)
+  const [tripError, setTripError] = useState<string | null>(null)
+  const [isDriverAssociating, setIsDriverAssociating] = useState(false)
+  const [isCheckinStarting, setIsCheckinStarting] = useState(false)
 
-  // Trip loader (assigns driver on load)
-  const { trip, setTrip, isTripLoading, tripError } = useTrip(tripId, { setActionError, setQrFeedback })
+  const authDriverId = useAuthStore((s) => s.user?.driver_profile?.id)
+  const [profileDriverId, setProfileDriverId] = useState<string | null>(null)
 
-  // Buses
+  useEffect(() => {
+    if (!authDriverId) {
+      apiFetch<{ driver_profile?: { id: string } }>('/profile/')
+        .then((data) => setProfileDriverId(data?.driver_profile?.id ?? null))
+        .catch(() => setProfileDriverId(null))
+    }
+  }, [authDriverId])
+
+  const currentDriverId = authDriverId ?? profileDriverId
+  const isDriverAssociated = currentDriverId != null && trip?.driverId === currentDriverId
+  const isCheckinActive = trip?.checkinStarted != null || normalizeTripStatus(trip?.status) === 'EM ANDAMENTO' || normalizeTripStatus(trip?.status).startsWith('CONCLUI')
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadTrip = async () => {
+      if (!tripId) {
+        setTrip(null)
+        setTripError('Viagem nao encontrada.')
+        setIsTripLoading(false)
+        return
+      }
+
+      setIsTripLoading(true)
+      setTripError(null)
+      setActionError(null)
+
+      try {
+        const tripDetail = await getTripFromApi(tripId)
+        if (!isMounted) return
+        setTrip(tripDetail)
+      } catch (error) {
+        console.warn('Nao foi possivel carregar a viagem selecionada:', error)
+        if (!isMounted) return
+        setTrip(null)
+        setTripError('Nao foi possivel carregar a viagem selecionada.')
+      } finally {
+        if (isMounted) setIsTripLoading(false)
+      }
+    }
+
+    loadTrip()
+    return () => { isMounted = false }
+  }, [tripId])
+
   const { busOptions, selectedBusId, isBusActionLoading, handleBusSelection } = useBuses(trip, setTrip, setActionError)
-
-  // Passengers (register / remove)
-  const passengers = usePassengers(trip, setTrip, setBoardedPassengers, { setActionError, setQrFeedback })
-
-  // QR scanner
-  const {
-    isQrScannerOpen,
-    setIsQrScannerOpen,
-    isQrCheckInLoading,
-    scanRestartSignal,
-    handleQrScan,
-    handleQrCameraError,
-    handleRetryQrScan,
-  } = useQrScanner(trip, setTrip, boardedPassengers, setBoardedPassengers, { setActionError, setQrFeedback })
-
-  // Confirmation actions
   const { isConfirmationLoading, handleConfirmBack, handleStartTrip, handleFinishTrip } = useConfirmation(trip, setTrip, setActionError)
 
-  // expose passengers fields for convenience
-  const {
-    isPassengerMenuOpen,
-    setIsPassengerMenuOpen,
-    isRemovePassengerMenuOpen,
-    setIsRemovePassengerMenuOpen,
-    passengerName,
-    setPassengerName,
-    passengerCpf,
-    setPassengerCpf,
-    passengerKind,
-    setPassengerKind,
-    passengerStaffQuery,
-    setPassengerStaffQuery,
-    staffOptions: staffOptionsFromHook,
-    isStaffSearchLoading,
-    staffSearchError,
-    selectedStaff,
-    setSelectedStaff,
-    isPassengerSaving,
-    handleRegisterPassenger,
-    passengerRemoveQuery,
-    setPassengerRemoveQuery,
-    removablePassengers,
-    selectedPassengerToRemove,
-    setSelectedPassengerToRemove,
-    isPassengerRemoving,
-    handleRemovePassenger,
-    handleAddPassenger,
-    handleOpenRemovePassenger,
-  } = passengers
-
-
-
-  // derived values
   const selectedBus = busOptions.find((b) => b.id === selectedBusId) ?? null
   const activeCapacity = selectedBus?.capacity ?? trip?.capacity ?? 46
-  const embarkedCount = boardedPassengers.length
-  const qrCount = boardedPassengers.filter((p) => p.source === 'QR').length
-  const manualCount = boardedPassengers.filter((p) => p.source === 'Manual').length
+  const embarkedCount = trip?.passengers?.length ?? 0
   const occupancyPercent = Math.min((embarkedCount / activeCapacity) * 100, 100)
-  const shouldWarnBeforeRequestingBus = (trip?.associatedBuses ?? 0) >= 2
   const selectedBusPlate = selectedBus?.plate ?? trip?.busPlate ?? 'Sem onibus'
   const normalizedTripStatus = normalizeTripStatus(trip?.status)
   const isTripInProgress = normalizedTripStatus === 'EM ANDAMENTO'
   const isTripFinished = normalizedTripStatus.startsWith('CONCLUI')
-  const isStartTripDisabled = isConfirmationLoading || isTripInProgress || isTripFinished
+  const isStartTripDisabled = isConfirmationLoading || isTripInProgress || isTripFinished || !isDriverAssociated || !isCheckinActive
   const isFinishTripDisabled = !isTripInProgress || isConfirmationLoading || isTripFinished
-  const canReadQr = Boolean(trip?.isDriverAssociated)
-  const qrAccessMessage = !trip?.isDriverAssociated
-    ? 'Associe-se a esta viagem antes de ler QR Code.'
-    : null
   const whatsappAlertUrl = `https://wa.me/?text=${encodeURIComponent(
     `Estou com problema no onibus ${selectedBusPlate} na viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
   )}`
-  const whatsappRequestUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Solicito novo onibus para a viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
+  const whatsappOvercrowdUrl = `https://wa.me/?text=${encodeURIComponent(
+    `Informo alta demanda/superlotacao no onibus ${selectedBusPlate} na viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}.`,
   )}`
+
+  const handleAssignDriver = async () => {
+    if (!trip) return
+    setIsDriverAssociating(true)
+    setActionError(null)
+    try {
+      await assignDriverToTrip(trip.id)
+      const refreshed = await getTripFromApi(trip.id)
+      setTrip(refreshed)
+    } catch (error) {
+      console.warn('Erro ao associar motorista:', error)
+      setActionError('Nao foi possivel se associar a esta viagem.')
+    } finally {
+      setIsDriverAssociating(false)
+    }
+  }
+
+  const handleStartCheckin = async () => {
+    if (!trip) return
+    setIsCheckinStarting(true)
+    setActionError(null)
+    try {
+      await startCheckin(trip.id)
+      navigate({ to: '/app/motorista/checkin/$tripId', params: { tripId: trip.id } })
+    } catch (error) {
+      console.warn('Erro ao iniciar check-in:', error)
+      setActionError('Nao foi possivel iniciar o check-in.')
+      setIsCheckinStarting(false)
+    }
+  }
 
   const confirmationTitle =
     confirmation === 'back'
       ? 'Atencao ao voltar'
       : confirmation === 'start'
         ? 'Iniciar viagem'
-        : confirmation === 'finish'
-          ? 'Finalizar viagem'
-          : 'Solicitar novo onibus'
+        : 'Finalizar viagem'
   const confirmationDescription =
     confirmation === 'back'
       ? isTripInProgress
@@ -122,200 +174,243 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
         : 'Se o motorista voltar, ele sera desassociado da viagem.'
       : confirmation === 'start'
         ? 'Deseja iniciar esta viagem? Esta acao marcara a viagem como em andamento.'
-        : confirmation === 'finish'
-          ? 'Deseja finalizar esta viagem? Esta acao marcara a viagem como concluida.'
-          : 'Ja existem 2 onibus associados a essa viagem, deseja solicitar mais?'
-
-  const handleOpenQrScanner = () => {
-    if (!trip?.isDriverAssociated) {
-      setQrFeedback({
-        kind: 'error',
-        message: 'Motorista nao autorizado para esta viagem.',
-      })
-      return
-    }
-
-    setQrFeedback({
-      kind: 'info',
-      message: 'Aguardando leitura do QR Code.',
-    })
-    setIsQrScannerOpen(true)
-  }
-
-  const handlePassengerSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    void handleRegisterPassenger()
-  }
-
-  const selectedPassengerIdentifier = selectedPassengerToRemove?.reservationId ?? selectedPassengerToRemove?.localPassengerId
-  const canSubmitRemovePassenger = Boolean(selectedPassengerIdentifier) && !isPassengerRemoving
+        : 'Deseja finalizar esta viagem? Esta acao marcara a viagem como concluida.'
 
   if (isTripLoading) {
     return (
-      <MotoraLayout user={{ name: 'Motorista', kind: 'driver' }}>
-        <section className="mx-auto w-[min(100%-1rem,72rem)] sm:w-[min(100%-2rem,72rem)]">
-          <div className="grid min-h-56 place-items-center rounded-lg border border-border bg-background p-8 text-center text-sm font-semibold text-muted-foreground shadow-xl">
-            Carregando viagem selecionada...
-          </div>
-        </section>
-      </MotoraLayout>
+      <MotoristaLayout>
+      <section className="mx-auto w-full max-w-lg px-4 pt-6">
+        <div className="grid min-h-56 place-items-center text-center text-sm font-semibold text-muted-foreground">
+          Carregando viagem selecionada...
+        </div>
+      </section>
+      </MotoristaLayout>
     )
   }
 
   if (tripError || !trip) {
     return (
-      <MotoraLayout user={{ name: 'Motorista', kind: 'driver' }}>
-        <section className="mx-auto w-[min(100%-1rem,72rem)] sm:w-[min(100%-2rem,72rem)]">
-          <div className="grid min-h-56 place-items-center rounded-lg border border-border bg-background p-8 text-center shadow-xl">
-            <div className="grid gap-3">
-              <h1 className="font-heading text-2xl font-semibold text-foreground">
-                Viagem indisponivel
-              </h1>
-              <p className="text-sm font-medium text-muted-foreground">
-                {tripError ?? 'Nao foi possivel encontrar a viagem selecionada.'}
-              </p>
-              <Button asChild className="justify-self-center">
-                <a href="/app/driver/viagens">Voltar para viagens</a>
-              </Button>
-            </div>
-          </div>
-        </section>
-      </MotoraLayout>
+      <MotoristaLayout>
+      <section className="mx-auto w-full max-w-lg px-4 pt-6">
+        <div className="grid gap-3 text-center">
+          <h1 className="font-heading text-2xl font-semibold text-foreground">Viagem indisponivel</h1>
+          <p className="text-sm font-medium text-muted-foreground">
+            {tripError ?? 'Nao foi possivel encontrar a viagem selecionada.'}
+          </p>
+          <Button asChild className="justify-self-center">
+            <a href="/app/motorista">Voltar para viagens</a>
+          </Button>
+        </div>
+      </section>
+      </MotoristaLayout>
     )
   }
 
   return (
-    <MotoraLayout user={{ name: 'Motorista', kind: 'driver' }}>
-      <section className="mx-auto w-[min(100%-1rem,72rem)] sm:w-[min(100%-2rem,72rem)]" aria-labelledby="driver-trip-screen-title">
-        <div className="relative overflow-hidden rounded-lg border border-border bg-background shadow-md">
-          <HeaderActions
-            onBack={() => setConfirmation('back')}
-            onStart={() => setConfirmation('start')}
-            onFinish={() => setConfirmation('finish')}
-            whatsappAlertUrl={whatsappAlertUrl}
-            isConfirmationLoading={isConfirmationLoading}
-            isStartDisabled={isStartTripDisabled}
-            isFinishDisabled={isFinishTripDisabled}
-          />
+    <MotoristaLayout>
+    <section className="mx-auto w-full max-w-6xl  px-4 pt-6">
+        <div className="rounded-2xl bg-card">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+              onClick={() => setConfirmation('back')}
+              disabled={isConfirmationLoading}
+            >
+              <ArrowLeftIcon weight="bold" className="size-5" />
+              Voltar
+            </Button>
+            <StatusBadge status={trip.status} />
+          </div>
 
           {actionError ? (
-            <p
-              role="alert"
-              className="border-b border-red-200 bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-800"
-            >
+            <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-800">
               {actionError}
             </p>
           ) : null}
 
-          <div className="grid gap-6 p-4 pb-20 md:grid-cols-[minmax(0,1fr)_18rem] md:p-8 md:pb-20">
-            <section className="flex min-h-[22rem] flex-col items-center justify-center text-center md:min-h-[27rem]" aria-labelledby="driver-trip-screen-title">
-              <TripInfo
-                origin={trip.origin}
-                destiny={trip.destiny}
-                departureTime={trip.departureTime}
-                selectedBusId={selectedBusId}
-                isBusActionLoading={isBusActionLoading}
-                busOptions={busOptions}
-                onBusSelection={(busId) => void handleBusSelection(busId)}
-              />
+          <div className="grid gap-5 px-4 pt-5 pb-4">
+            {/* Route */}
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <MapPinLine weight="duotone" className="size-4 shrink-0 md:size-5" />
+                <p className="text-[9px] font-semibold uppercase tracking-[0.15em] md:text-[10px]">Rota</p>
+              </div>
+              <h1 className="font-heading mt-1 text-xl font-semibold leading-tight text-foreground md:text-3xl">
+                {trip.origin} <span className="font-sans text-base font-medium text-muted-foreground md:text-xl">para</span> {trip.destiny}
+              </h1>
+            </div>
 
-              <OccupancyControls
-                embarkedCount={embarkedCount}
-                activeCapacity={activeCapacity}
-                occupancyPercent={occupancyPercent}
-                onAddPassenger={handleAddPassenger}
-                onOpenRemovePassenger={handleOpenRemovePassenger}
-                onRequestBus={() => {
-                  if (shouldWarnBeforeRequestingBus) {
-                    setConfirmation('bus')
-                  } else {
-                    window.open(whatsappRequestUrl, '_blank', 'noreferrer')
-                  }
-                }}
-                boardedPassengersLength={boardedPassengers.length}
-                isPassengerRemoving={isPassengerRemoving}
-              />
-            </section>
+            {/* Info rows: Data | Partida */}
+            <div className="grid grid-cols-2 gap-2 md:gap-3">
+              <div className="rounded-xl bg-muted/30 p-2.5 md:p-4">
+                <div className="flex items-center gap-1.5">
+                  <CalendarBlankIcon weight="duotone" className="size-3.5 text-muted-foreground md:size-4" />
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground md:text-[10px]">Data</p>
+                </div>
+                <p className="mt-1.5 truncate text-xs font-semibold text-foreground md:text-sm">
+                  {trip.departureDate}
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/30 p-2.5 md:p-4">
+                <div className="flex items-center gap-1.5">
+                  <ClockIcon weight="duotone" className="size-3.5 text-muted-foreground md:size-4" />
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground md:text-[10px]">Partida</p>
+                </div>
+                <p className="mt-1.5 truncate text-xs font-semibold text-foreground md:text-sm">
+                  {trip.departureTime}
+                </p>
+              </div>
+            </div>
 
-            <AsidePanel
-              canReadQr={canReadQr}
-              isQrCheckInLoading={isQrCheckInLoading}
-              onOpenQrScanner={handleOpenQrScanner}
-              qrAccessMessage={qrAccessMessage}
-              qrFeedback={qrFeedback}
-              isQrScannerOpen={isQrScannerOpen}
-              embarkedCount={embarkedCount}
-              qrCount={qrCount}
-              manualCount={manualCount}
-            />
+            {/* Ônibus (own row, full width) */}
+            <div className="rounded-xl bg-muted/30 p-2.5 md:p-4">
+              <div className="flex items-center gap-1.5">
+                <BusIcon weight="duotone" className="size-3.5 text-muted-foreground md:size-4" />
+                <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground md:text-[10px]">Ônibus</p>
+              </div>
+              <NativeSelect
+                aria-label="Selecionar onibus da viagem"
+                value={selectedBusId ?? ''}
+                disabled={isBusActionLoading || !isDriverAssociated}
+                onChange={(event) => handleBusSelection(event.target.value || null)}
+                className="mt-1.5 w-full"
+                size="sm"
+              >
+                <NativeSelectOption value="">Selecionar</NativeSelectOption>
+                {busOptions.map((bus) => (
+                  <NativeSelectOption key={bus.id} value={bus.id}>
+                    {bus.plate}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+
+            {/* Embarques card (when associated) */}
+            {isDriverAssociated ? (
+              <div className="rounded-xl bg-muted/30 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <UsersIcon weight="duotone" className="size-4" />
+                  Embarques
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                    <span>Ocupação</span>
+                    <span className="font-semibold text-foreground">
+                      {embarkedCount}/{activeCapacity}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full border border-primary-foreground bg-slate-100">
+                    <span
+                      className="block h-full rounded-full bg-primary transition-[width]"
+                      style={{ width: `${occupancyPercent}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* CTA: Associate driver */}
+            {!isDriverAssociated && currentDriverId != null ? (
+              <div className="rounded-xl bg-primary/5 border border-primary/20 px-5 py-5 text-center">
+                <p className="mb-3 text-xs font-medium text-muted-foreground">
+                  Você ainda não está associado a esta viagem como motorista.
+                </p>
+                <Button
+                  type="button"
+                  className="min-h-11 w-full rounded-xl font-bold text-sm"
+                  onClick={() => void handleAssignDriver()}
+                  disabled={isDriverAssociating}
+                >
+                  {isDriverAssociating ? 'Associando...' : 'Sou motorista desta viagem'}
+                </Button>
+              </div>
+            ) : null}
+
+            {/* When associated */}
+            {isDriverAssociated ? (
+              <>
+                {/* Check-in init */}
+                {!isCheckinActive && !isTripInProgress && !isTripFinished ? (
+                  <div className="rounded-xl bg-primary/5 border border-primary/20 px-5 py-4 text-center">
+                    <p className="mb-3 text-xs font-medium text-muted-foreground">
+                      Para realizar o embarque dos passageiros, acesse o controle de embarque.
+                    </p>
+                    <Button
+                      type="button"
+                      className="min-h-11 w-full rounded-xl font-bold text-sm"
+                      onClick={() => void handleStartCheckin()}
+                      disabled={isCheckinStarting}
+                    >
+                      {isCheckinStarting ? 'A iniciar...' : 'Abrir check-in'}
+                    </Button>
+                  </div>
+                ) : null}
+
+                {/* Go to checkin (when checkin already started) */}
+                {isCheckinActive && !isTripFinished ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-11 w-full rounded-xl font-bold text-sm"
+                    onClick={() => navigate({ to: '/app/motorista/checkin/$tripId', params: { tripId: trip.id } })}
+                  >
+                    Controle de embarque
+                  </Button>
+                ) : null}
+
+                {/* Main CTA row */}
+                <div className="grid gap-2">
+                  {!isTripInProgress && !isTripFinished ? (
+                    <Button
+                      type="button"
+                      className="min-h-12 w-full rounded-xl font-bold text-base"
+                      onClick={() => setConfirmation('start')}
+                      disabled={isStartTripDisabled}
+                    >
+                      <PlayCircleIcon weight="bold" className="size-5" />
+                      Iniciar viagem
+                    </Button>
+                  ) : null}
+                  {isTripInProgress ? (
+                    <Button
+                      type="button"
+                      className="min-h-12 w-full rounded-xl font-bold text-base bg-emerald-600 text-white hover:bg-emerald-700"
+                      onClick={() => setConfirmation('finish')}
+                      disabled={isFinishTripDisabled}
+                    >
+                      <CheckCircleIcon weight="bold" className="size-5" />
+                      Finalizar viagem
+                    </Button>
+                  ) : null}
+                </div>
+
+                {/* Superlotação */}
+                <Button type="button" variant="outline" size="sm" className="w-full rounded-xl font-bold text-xs" onClick={() => window.open(whatsappOvercrowdUrl, '_blank', 'noreferrer')}>
+                  <WarningIcon weight="bold" className="size-4" />
+                  Informar superlotação
+                </Button>
+
+                {/* Report link — subtle, at the bottom */}
+                <a
+                  href={whatsappAlertUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <WarningCircleIcon weight="bold" className="size-3.5" />
+                  Reportar problema
+                </a>
+              </>
+            ) : null}
           </div>
-
         </div>
-
-        <QrScannerDialog
-          isOpen={isQrScannerOpen}
-          onOpenChange={setIsQrScannerOpen}
-          restartSignal={scanRestartSignal}
-          onScan={handleQrScan}
-          onCameraError={handleQrCameraError}
-          isQrCheckInLoading={isQrCheckInLoading}
-          qrFeedback={qrFeedback}
-          onRetry={handleRetryQrScan}
-        />
-
-        <PassengerRegisterDialog
-          isOpen={isPassengerMenuOpen}
-          onOpenChange={setIsPassengerMenuOpen}
-          passengerKind={passengerKind}
-          onPassengerKindChange={(k) => { setPassengerKind(k); setPassengerName(''); setPassengerCpf('') }}
-          passengerStaffQuery={passengerStaffQuery}
-          onPassengerStaffQueryChange={(v) => { setPassengerStaffQuery(v); setSelectedStaff(null) }}
-          staffOptions={staffOptionsFromHook}
-          isStaffSearchLoading={isStaffSearchLoading}
-          staffSearchError={staffSearchError}
-          selectedStaff={selectedStaff}
-          onSelectStaff={setSelectedStaff}
-          isGuestPassenger={passengerKind === 'Convidado'}
-          passengerName={passengerName}
-          onPassengerNameChange={setPassengerName}
-          passengerCpf={passengerCpf}
-          onPassengerCpfChange={setPassengerCpf}
-          isPassengerSaving={isPassengerSaving}
-          actionError={actionError}
-          onCancel={() => { setIsPassengerMenuOpen(false); setActionError(null) }}
-          onSubmit={handlePassengerSubmit}
-        />
-
-        <PassengerRemoveDialog
-          isOpen={isRemovePassengerMenuOpen}
-          onOpenChange={(isOpen) => {
-            setIsRemovePassengerMenuOpen(isOpen)
-            if (!isOpen) {
-              setPassengerRemoveQuery('')
-              setSelectedPassengerToRemove(null)
-              setActionError(null)
-            }
-          }}
-          passengerRemoveQuery={passengerRemoveQuery}
-          onPassengerRemoveQueryChange={(v) => { setPassengerRemoveQuery(v); setSelectedPassengerToRemove(null) }}
-          boardedPassengersLength={boardedPassengers.length}
-          removablePassengers={removablePassengers}
-          selectedPassengerToRemove={selectedPassengerToRemove}
-          onSelectPassengerToRemove={setSelectedPassengerToRemove}
-          isPassengerRemoving={isPassengerRemoving}
-          actionError={actionError}
-          onCancel={() => { setIsRemovePassengerMenuOpen(false); setPassengerRemoveQuery(''); setSelectedPassengerToRemove(null); setActionError(null) }}
-          onSubmit={() => void handleRemovePassenger()}
-          canSubmitRemovePassenger={canSubmitRemovePassenger}
-        />
 
         <ConfirmationDialog
           open={confirmation !== null}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setConfirmation(null)
-            }
-          }}
+          onOpenChange={(isOpen) => { if (!isOpen) setConfirmation(null) }}
           confirmation={confirmation}
           title={confirmationTitle}
           description={confirmationDescription}
@@ -324,9 +419,8 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
           onConfirmBack={() => void handleConfirmBack()}
           onConfirmStart={() => void handleStartTrip()}
           onConfirmFinish={() => void handleFinishTrip()}
-          whatsappRequestUrl={whatsappRequestUrl}
         />
       </section>
-    </MotoraLayout>
+      </MotoristaLayout>
   )
 }

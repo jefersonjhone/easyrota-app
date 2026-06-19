@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  confirmation: 'back' | 'bus' | 'start' | 'finish' | null
+  confirmation: 'back' | 'start' | 'finish' | null
   title: string
   description: string
   actionError: string | null
@@ -13,7 +13,6 @@ type Props = {
   onConfirmBack: () => void
   onConfirmStart: () => void
   onConfirmFinish: () => void
-  whatsappRequestUrl: string
 }
 
 export function ConfirmationDialog({
@@ -27,7 +26,6 @@ export function ConfirmationDialog({
   onConfirmBack,
   onConfirmStart,
   onConfirmFinish,
-  whatsappRequestUrl,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,12 +47,8 @@ export function ConfirmationDialog({
             <Button type="button" className="rounded-lg" onClick={onConfirmBack} disabled={isConfirmationLoading}>OK</Button>
           ) : confirmation === 'start' ? (
             <Button type="button" className="rounded-lg border-green-600 bg-green-600 text-white hover:bg-green-700" onClick={onConfirmStart} disabled={isConfirmationLoading}>OK</Button>
-          ) : confirmation === 'finish' ? (
-            <Button type="button" className="rounded-lg" onClick={onConfirmFinish} disabled={isConfirmationLoading}>OK</Button>
           ) : (
-            <Button asChild className="rounded-lg">
-              <a href={whatsappRequestUrl} target="_blank" rel="noreferrer">OK</a>
-            </Button>
+            <Button type="button" className="rounded-lg" onClick={onConfirmFinish} disabled={isConfirmationLoading}>OK</Button>
           )}
         </DialogFooter>
       </DialogContent>

@@ -17,6 +17,7 @@ class Bus(models.Model):
         ("MANUTENÇÃO", "Manutenção"),
     )
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     number_plate = models.CharField(max_length=10, unique=True)
     seating_capacity = models.IntegerField()
     brand = models.CharField(max_length=100)
@@ -34,6 +35,7 @@ class Bus(models.Model):
 class Route(models.Model):
     """Defines a travel route with specific origin, destination, and expected times."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     origin = models.CharField(max_length=50)
     destiny = models.CharField(max_length=50)
     departure_time = models.TimeField()
@@ -63,6 +65,7 @@ class Trip(models.Model):
         ("CONCLUÍDA", "Concluída"),
     )
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip_date = models.DateField()
     status = models.CharField(
         max_length=25, choices=STATUS_TRIP, default="RISCO DE CANCELAMENTO"
@@ -73,6 +76,8 @@ class Trip(models.Model):
     reserved_seats = models.IntegerField(default=0)
     quorum_met_notified_at = models.DateTimeField(null=True, blank=True)
     quorum_warning_notified_at = models.DateTimeField(null=True, blank=True)
+
+    checkin_started = models.DateTimeField(null=True, blank=True)
 
     bus = models.ForeignKey(Bus, on_delete=models.SET_NULL, null=True, blank=True)
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
@@ -115,6 +120,7 @@ class Occurrence(models.Model):
         ("CANCELADO", "Cancelado"),
     )
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100)
     description = models.TextField()
     event_date = models.DateField()
@@ -136,6 +142,7 @@ class TripPassenger(models.Model):
         LOCAL_SERVER = "LOCAL_SERVER", "Servidor local"
         LOCAL_GUEST = "LOCAL_GUEST", "Convidado local"
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip = models.ForeignKey(
         Trip, on_delete=models.CASCADE, related_name="trip_passengers"
     )
@@ -201,7 +208,7 @@ class GuestPassenger(models.Model):
         to=CivilServantProfile, on_delete=models.SET_NULL, null=True
     )
     full_name = models.CharField(max_length=255)
-
+    
     objects = GuestPassengerManager()
 
     class Meta:

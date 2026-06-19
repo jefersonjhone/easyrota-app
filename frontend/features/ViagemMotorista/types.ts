@@ -1,11 +1,11 @@
 export type PassengerBoardItem = {
-  id: number
+  id: string
   name: string
   source: 'QR' | 'Manual'
   kind?: PassengerKind
   identifier?: string
-  reservationId?: number
-  localPassengerId?: number
+  reservationId?: string
+  localPassengerId?: string
 }
 
 export type PassengerKind = 'Servidor' | 'Convidado'
@@ -14,21 +14,23 @@ export type DriverTripDetail = {
   id: string
   origin: string
   destiny: string
+  departureDate: string
   departureTime: string
   busPlate: string
-  busId: number | null
-  driverId: number | null
+  busId: string | null
+  driverId: string | null
   isDriverAssociated: boolean
   capacity: number
   associatedBuses: number
   passengers: PassengerBoardItem[]
   status: string
+  checkinStarted: string | null
 }
 
 export type ApiList<T> = T[] | { results?: T[] }
 
 export type TripModel = {
-  id: number
+  id: string
   origin?: string | null
   destiny?: string | null
   departure_timestamp?: string | null
@@ -37,15 +39,16 @@ export type TripModel = {
   checked_in_count?: number | null
   checked_in_passengers?: TripCheckedInPassenger[] | null
   seating_capacity?: number | null
-  bus?: number | null
-  driver?: number | null
+  bus?: string | null
+  driver?: string | null
   bus_number_plate?: string | null
   status?: string | null
+  checkin_started?: string | null
 }
 
 export type TripCheckedInPassenger = {
-  reservation_id?: number | null
-  local_passenger_id?: number | null
+  reservation_id?: string | null
+  local_passenger_id?: string | null
   passenger_name?: string | null
   check_in?: boolean | null
   checkin?: boolean | null
@@ -55,7 +58,7 @@ export type TripCheckedInPassenger = {
 }
 
 export type BusModel = {
-  id: number
+  id: string
   number_plate?: string
   plate?: string
   bus_number_plate?: string
@@ -64,7 +67,7 @@ export type BusModel = {
 }
 
 export type DriverBusOption = {
-  id: number
+  id: string
   plate: string
   capacity: number | null
 }
@@ -76,4 +79,14 @@ export type ViagemMotoristaProps = {
 export type QrFeedback = {
   kind: 'success' | 'error' | 'info'
   message: string
+}
+
+export type ReservationItem = {
+  id: string
+  passenger_name: string
+  kind: 'Aluno' | 'Servidor' | 'Convidado' | null
+  status: string
+  check_in: boolean
+  checkin_date: string | null
+  created_at: string
 }
