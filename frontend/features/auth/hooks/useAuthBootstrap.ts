@@ -11,9 +11,8 @@ export function useAuthBootstrap() {
   
   useEffect(() => {
     if (!user) return;
-    if ( !accessToken || isTokenExpired(accessToken)) {
-      refreshTokenIfNeeded().catch(() => {clearAuth();});
-      return;
+    if (!accessToken || isTokenExpired(accessToken)) {
+      refreshTokenIfNeeded().catch(() => { clearAuth(); });
     }
-  }, )
+  }, [user, accessToken, clearAuth])
 }

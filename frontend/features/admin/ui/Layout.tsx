@@ -13,7 +13,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             <AppSidebar />
             <SidebarInset className="flex flex-1 flex-col max-w-300 mx-auto relative ">
                <header className="flex items-center -b px-2 sticky top-18  z-50 ">
-                 <SidebarTrigger className='h-12 w-12 p-0 text-2xl md:hidden bg-gray-100 rounded-sm'/>
+                 <SidebarTrigger className='h-12 w-12 p-0 text-2xl md:hidden bg-muted rounded-lg'/>
                </header>
                <main className="flex-1 overflow-auto p-2 md:p-6 justify-center">
                  {children}

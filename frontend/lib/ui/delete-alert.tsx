@@ -4,21 +4,25 @@ import { Card, CardFooter, CardDescription, CardHeader, CardTitle } from '@ui/ca
 
 interface Props {
   onConfirm: () => void
+  trigger?: React.ReactNode
 }
 
 export const ConfirmDeleteDialog = ({
   onConfirm,
+  trigger,
 }: Props) => {
   return (
     <AlertDialog.Root>
       <AlertDialog.Trigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-destructive hover:bg-destructive/10"
-        >
-          Excluir
-        </Button>
+        {trigger ?? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10"
+          >
+            Excluir
+          </Button>
+        )}
       </AlertDialog.Trigger>
 
       <AlertDialog.Portal>

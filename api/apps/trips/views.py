@@ -29,8 +29,16 @@ from ..users.permissions import (
     IsDriverReadOnly,
 )
 from .filters import FilterTripViewSet
+from ..users.models.profiles import DriverProfile
 from .models import Bus, GuestPassenger, Route, Trip
+from .services import (
+    MAX_RECURRING_DAYS,
+    MAX_RECURRING_MONTHS,
+    create_recurring_trips,
+    export_trip_passengers,
+)
 from .serializers import (
+    AdminTripDetailSerializer,
     BusSerializer,
     GuestPassengerSerializer,
     RouteSerializer,
@@ -60,6 +68,13 @@ class BusViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(administrator=self.request.user.admin_profile)
 
+    @action(detail=True, methods=["get"])
+    def admin_detail(self, request, pk=None):
+        bus = self.get_object()
+        from .serializers import BusAdminDetailSerializer
+        serializer = BusAdminDetailSerializer(bus, context={"request": request})
+        return Response(serializer.data)
+
 
 class RouteListCreateView(generics.ListCreateAPIView):
     queryset = Route.objects.all()
@@ -80,11 +95,72 @@ class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class TripViewSet(viewsets.ModelViewSet):
-    queryset = Trip.objects.all()
+    queryset = Trip.objects.all().order_by('trip_date', 'route__departure_time')
     serializer_class = TripSerializer
     filter_backends = [FilterTripViewSet]
 
     def create(self, request, *args, **kwargs):
+        if request.data.get("recurring"):
+            weekdays = request.data.get("weekdays", [])
+            date_start = request.data.get("date_start")
+            date_end = request.data.get("date_end")
+            route_id = request.data.get("route")
+            status_val = request.data.get("status", "CONFIRMADA")
+
+            if not weekdays:
+                return Response(
+                    {"weekdays": ["Selecione pelo menos um dia da semana."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not date_start or not date_end:
+                return Response(
+                    {"date": ["Informe a data de início e fim."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                date_start_parsed = date.fromisoformat(date_start)
+                date_end_parsed = date.fromisoformat(date_end)
+            except (TypeError, ValueError):
+                return Response(
+                    {"date": ["Formato de data inválido."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if date_start_parsed > date_end_parsed:
+                return Response(
+                    {"date": ["Data início não pode ser posterior à data fim."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if (date_end_parsed - date_start_parsed).days > MAX_RECURRING_DAYS:
+                return Response(
+                    {"date": [f"O intervalo não pode exceder {MAX_RECURRING_MONTHS} meses."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                route = Route.objects.get(id=route_id)
+            except Route.DoesNotExist:
+                return Response(
+                    {"route": ["Rota não encontrada."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Converte JS weekday (0=Dom…6=Sáb) → Python weekday (0=Seg…6=Dom)
+            py_weekdays = [(wd - 1) % 7 for wd in weekdays]
+            create_recurring_trips(
+                date_start=date_start_parsed,
+                date_end=date_end_parsed,
+                weekdays=py_weekdays,
+                route=route,
+                status=status_val,
+            )
+            return Response(
+                {"detail": "Viagens recorrentes criadas com sucesso."},
+                status=status.HTTP_201_CREATED,
+            )
+
         trip_date = request.data.get("trip_date")
         if trip_date:
             try:
@@ -292,6 +368,18 @@ class TripViewSet(viewsets.ModelViewSet):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    @action(detail=True, methods=["get"], permission_classes=[permissions.IsAdminUser])
+    def admin_detail(self, request, pk=None):
+        trip = self.get_object()
+        serializer = AdminTripDetailSerializer(trip)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"], permission_classes=[permissions.IsAdminUser])
+    def export_passengers(self, request, pk=None):
+        trip = self.get_object()
+        fmt = request.query_params.get("format", "csv")
+        return export_trip_passengers(trip, fmt)
+
     @action(detail=True, methods=["post"])
     def assign_bus(self, request, pk=None):
         bus = request.data.get("bus")
@@ -339,8 +427,88 @@ class TripViewSet(viewsets.ModelViewSet):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    def get_queryset(self):
-        return Trip.objects.joinable_by_driver(self.request.user)
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def admin_assign_driver(self, request, pk=None):
+        driver_id = request.data.get("driver_id")
+        if not driver_id:
+            return Response(
+                {"error": "O campo 'driver_id' é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            driver = DriverProfile.objects.get(id=driver_id)
+        except DriverProfile.DoesNotExist:
+            return Response(
+                {"error": "Motorista não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        trip = self.get_object()
+        if trip.status in ["EM ANDAMENTO", "CANCELADA"]:
+            return Response(
+                {"error": "Não é possível alterar o motorista de uma viagem em andamento ou cancelada."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        trip.driver = driver
+        trip.save()
+        return Response({"status": "Motorista atribuído com sucesso."})
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def admin_unassign_driver(self, request, pk=None):
+        trip = self.get_object()
+        if trip.status in ["EM ANDAMENTO", "CANCELADA"]:
+            return Response(
+                {"error": "Não é possível remover o motorista de uma viagem em andamento ou cancelada."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        trip.driver = None
+        trip.save()
+        return Response({"status": "Motorista removido com sucesso."})
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def admin_assign_bus(self, request, pk=None):
+        bus_id = request.data.get("bus_id")
+        if not bus_id:
+            return Response(
+                {"error": "O campo 'bus_id' é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            bus = Bus.objects.get(id=bus_id)
+        except Bus.DoesNotExist:
+            return Response(
+                {"error": "Ônibus não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        trip = self.get_object()
+        if trip.status in ["EM ANDAMENTO", "CANCELADA"]:
+            return Response(
+                {"error": "Não é possível alterar o ônibus de uma viagem em andamento ou cancelada."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        trip.bus = bus
+        trip.seating_capacity = bus.seating_capacity
+        trip.save()
+        return Response({"status": "Ônibus atribuído com sucesso."})
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def admin_unassign_bus(self, request, pk=None):
+        trip = self.get_object()
+        if trip.status in ["EM ANDAMENTO", "CANCELADA"]:
+            return Response(
+                {"error": "Não é possível remover o ônibus de uma viagem em andamento ou cancelada."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        trip.bus = None
+        trip.save()
+        return Response({"status": "Ônibus removido com sucesso."})
+
+    @action(detail=False, methods=['post'], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        ids = request.data.get('ids', [])
+        if not ids or not isinstance(ids, list):
+            return Response({'detail': 'Lista de IDs inválida.'}, status=status.HTTP_400_BAD_REQUEST)
+        deleted, _ = Trip.objects.filter(id__in=ids).delete()
+        return Response({'deleted': deleted}, status=status.HTTP_200_OK)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -353,8 +521,16 @@ class TripViewSet(viewsets.ModelViewSet):
             "unassign_bus",
             "assign_driver",
             "unassign_driver",
+            "unassign_driver",
         ]:
             self.permission_classes = [IsDriver]
+        elif self.action in [
+            "admin_assign_driver",
+            "admin_unassign_driver",
+            "admin_assign_bus",
+            "admin_unassign_bus",
+        ]:
+            self.permission_classes = [permissions.IsAdminUser]
         else:
             self.permission_classes = [permissions.IsAdminUser]
 

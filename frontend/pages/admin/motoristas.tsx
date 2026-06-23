@@ -1,8 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ManageDriversPage } from '@/features/admin/ui/drivers/DriversPage'
+import { Outlet, createFileRoute } from '@tanstack/react-router'
 import { requireAdmin } from '@/features/auth/services/require-admin'
 
 export const Route = createFileRoute('/admin/motoristas')({
   beforeLoad: requireAdmin,
-  component: ManageDriversPage,
+  component: () => <Outlet />,
 })

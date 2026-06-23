@@ -31,10 +31,10 @@ function formatTime(time: string) {
 export function TripsTable({ data, onFilterChange }: { data: TripsByRoute; onFilterChange: (days: number) => void }) {
   
   return (
-    <Card className="rounded-sm ">
-      <CardHeader className="flex justify-between items-center">
+    <Card className="rounded-lg">
+      <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <CardTitle>Tabela de Viagens Por Rota </CardTitle>
-        <NativeSelect className="rounded-sm bg-gray-200" onChange={(e) => onFilterChange(Number(e.target.value))}>
+        <NativeSelect onChange={(e) => onFilterChange(Number(e.target.value))}>
                         <NativeSelectOption  value="7">Últimos 7 dias</NativeSelectOption>
                         <NativeSelectOption value="30">Últimos 30 dias</NativeSelectOption>
                         <NativeSelectOption value="90">Últimos 90 dias</NativeSelectOption>

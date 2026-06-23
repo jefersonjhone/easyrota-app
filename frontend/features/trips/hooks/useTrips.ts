@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 import {
+  bulkDeleteTrips,
   createTrip,
   deleteTrip,
   fetchNextTrip,
@@ -8,7 +10,7 @@ import {
   fetchTrips,
   updateTrip,
 } from '../services/trips'
-import { fetchBuses, fetchRoutes } from '../services/resources'
+import { fetchBuses, fetchDrivers, fetchRoutes } from '../services/resources'
 import type { Trip } from '../types'
 
 export const tripsKeys = {
@@ -45,7 +47,13 @@ export function useCreateTrip() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<Trip>) => createTrip(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: tripsKeys.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tripsKeys.all })
+      toast.success('Viagem criada com sucesso')
+    },
+    onError: () => {
+      toast.error('Erro ao criar viagem')
+    },
   })
 }
 
@@ -56,6 +64,10 @@ export function useUpdateTrip(id: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tripsKeys.all })
       queryClient.invalidateQueries({ queryKey: tripsKeys.detail(id) })
+      toast.success('Viagem atualizada com sucesso')
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar viagem')
     },
   })
 }
@@ -64,7 +76,27 @@ export function useDeleteTrip() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => deleteTrip(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: tripsKeys.all }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tripsKeys.all })
+      toast.success('Viagem excluída com sucesso')
+    },
+    onError: () => {
+      toast.error('Erro ao excluir viagem')
+    },
+  })
+}
+
+export function useBulkDeleteTrips() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: number[]) => bulkDeleteTrips(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tripsKeys.all })
+      toast.success('Viagens excluídas com sucesso')
+    },
+    onError: () => {
+      toast.error('Erro ao excluir viagens')
+    },
   })
 }
 
@@ -79,5 +111,12 @@ export function useRoutes() {
   return useQuery({
     queryKey: ['routes'],
     queryFn: fetchRoutes,
+  })
+}
+
+export function useDrivers() {
+  return useQuery({
+    queryKey: ['drivers'],
+    queryFn: fetchDrivers,
   })
 }

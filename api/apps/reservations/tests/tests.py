@@ -6,16 +6,16 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from ..trips.models import Bus, Route, Trip
-from ..users.models import (
+from apps.trips.models import Bus, Route, Trip
+from apps.users.models import (
     AdministratorProfile,
     CivilServantProfile,
     CustomUser,
     DriverProfile,
     StudentProfile,
 )
-from .models import Punishment, Reservation
-from .services import (
+from apps.reservations.models import Punishment, Reservation
+from apps.reservations.services import (
     get_priority_tuple,
     process_trip_punishments,
     trip_has_capacity,

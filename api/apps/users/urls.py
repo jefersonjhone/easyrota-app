@@ -19,21 +19,27 @@ from .views.auth import (
 )
 from .views.users import (
     AdminDelegationView,
+    AdminDetailView,
     AllowedStaffSearchView,
+    CivilServantViewSet,
     DriverViewSet,
     HealthCheckView,
     LocalDriverTripPassengerView,
     SelfProfileView,
+    StudentViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"drivers", DriverViewSet, basename="drivers")
+router.register(r"students", StudentViewSet, basename="students")
+router.register(r"civil-servants", CivilServantViewSet, basename="civil-servants")
 
 urlpatterns = [
     path("health/", HealthCheckView.as_view()),
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
-    path("admins/", AdminDelegationView.as_view(), name="create-subadmin"),
+    path("admins/", AdminDelegationView.as_view(), name="admin-list"),
+    path("admins/<uuid:user_id>/", AdminDetailView.as_view(), name="admin-detail"),
     path("profile/", SelfProfileView.as_view(), name="profile"),
     # auth views, 2fa enabled to login and register
     path("auth/login/", LoginView2fa.as_view(), name="login-2fa"),

@@ -9,7 +9,7 @@ export function getAuthRedirect() {
     if (user.admin_profile || user.profile_type === 'ADMIN') {
       throw redirect({ to: '/admin' })
     } else if (user.profile_type === 'DRIVER') {
-      throw redirect({ to: '/app/driver/viagens' })
+      throw redirect({ to: '/app/motorista/viagens' })
     } else {
       throw redirect({ to: '/app' })
     }

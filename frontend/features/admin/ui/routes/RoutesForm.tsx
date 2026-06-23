@@ -1,6 +1,5 @@
-import { Field, FieldLabel } from "@/lib/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/lib/ui/field";
 import { Button } from "@ui/button";
-import { Separator } from "@ui/separator";
 import { Input } from "@/lib/ui/input";
 import {
   useCreateRouteMutation,
@@ -9,14 +8,13 @@ import {
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import HintInvalid from "@/features/auth/ui/HintInvalid";
 import type { CreateRouteValues } from "../../services/RoutesRequests";
 
 const schema = z.object({
   origin: z.string().nonempty("Informe a origem"),
   destiny: z.string().nonempty("Informe o destino"),
   departure_time: z.string().nonempty("Informe o horário de saída"),
-  arrival_time: z.string().nonempty("Informe o horário de saída"),
+  arrival_time: z.string().nonempty("Informe o horário de chegada"),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -32,7 +30,6 @@ type Props = {
 
 export function RouteForm({
   onCreate,
-  title,
   routeValues,
   buttonCaption,
   buttonCaptionLoad,
@@ -66,7 +63,7 @@ export function RouteForm({
       } else {
         await createRouteMutation.mutateAsync(data);
       }
-      
+
       if (onCreate) {
         onCreate();
       }
@@ -82,22 +79,22 @@ export function RouteForm({
 
       if (errorData) {
         if (errorData.destiny) {
-          const message = Array.isArray(errorData.destiny) 
-            ? errorData.destiny[0] 
+          const message = Array.isArray(errorData.destiny)
+            ? errorData.destiny[0]
             : errorData.destiny;
           form.setError("destiny", { type: "server", message });
         }
 
         if (errorData.arrival_time) {
-          const message = Array.isArray(errorData.arrival_time) 
-            ? errorData.arrival_time[0] 
+          const message = Array.isArray(errorData.arrival_time)
+            ? errorData.arrival_time[0]
             : errorData.arrival_time;
           form.setError("arrival_time", { type: "server", message });
         }
-        
+
         if (errorData.origin) {
-          const message = Array.isArray(errorData.origin) 
-            ? errorData.origin[0] 
+          const message = Array.isArray(errorData.origin)
+            ? errorData.origin[0]
             : errorData.origin;
           form.setError("origin", { type: "server", message });
         }
@@ -108,74 +105,80 @@ export function RouteForm({
   };
 
   return (
-    <>
-      <h1 className="text-center text-2xl font-heading font-medium">
-        {title ? title : "Configurar Nova Rota"}
-      </h1>
-      <Separator className="max-w-xl mx-auto " />
-      <Field className="px-4 text-2xl">
-        <form id="createRoute" onSubmit={handleSubmit(onSubmit)}>
-          <section>
-            <FieldLabel>PONTO DE PARTIDA</FieldLabel>
-            <Input
-              id="origin"
-              placeholder="Local de saída"
-              required
-              {...register("origin")}
-            ></Input>
-            <HintInvalid for={state.errors.origin} />
-          </section>
-          <FieldLabel>DESTINO</FieldLabel>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="origin" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Origem</FieldLabel>
+          <Input
+            id="origin"
+            placeholder="Local de partida"
+            className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2"
+            {...register("origin")}
+          />
+          {state.errors.origin && (
+            <FieldDescription className="text-red-500">
+              {state.errors.origin.message}
+            </FieldDescription>
+          )}
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="destiny" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Destino</FieldLabel>
           <Input
             id="destiny"
             placeholder="Local de chegada"
-            required
+            className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2"
             {...register("destiny")}
-          ></Input>
-          <HintInvalid for={state.errors.destiny} />
-          <section className="grid  grid-cols-2 gap-2">
-            <section>
-              <FieldLabel>HORÁRIO DE SAIDA (HORAS:MINUTOS)</FieldLabel>
-              <Input
-                id="departure_time"
-                type="time"
-                step="60"
-                placeholder="Ex: 08:28 PM"
-                required
-                {...register("departure_time")}
-              ></Input>
-              <HintInvalid for={state.errors.departure_time} />
-            </section>
-            <section>
-              <FieldLabel>HORÁRIO DE CHEGADA (HORAS:MINUTOS)</FieldLabel>
-              <Input
-                id="arrival_time"
-                type="time"
-                step="60"
-                placeholder="Ex: 10:30 AM"
-                defaultValue={routeValues ? routeValues.arrival_time : ""}
-                required
-                {...register("arrival_time")}
-              ></Input>
-              <HintInvalid for={state.errors.arrival_time} />
-            </section>
-          </section>
-        </form>
-        <Button
-          form="createRoute"
-          type="submit"
-          className="w-full cursor-pointer"
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? buttonCaptionLoad
-              ? buttonCaptionLoad
-              : "PUBLICANDO..."
-            : buttonCaption
-              ? buttonCaption
-              : "PUBLICAR ROTA NO SISTEMA"}
-        </Button>
-      </Field>
-    </>
+          />
+          {state.errors.destiny && (
+            <FieldDescription className="text-red-500">
+              {state.errors.destiny.message}
+            </FieldDescription>
+          )}
+        </Field>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field>
+            <FieldLabel htmlFor="departure_time" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Horário de saída</FieldLabel>
+            <Input
+              id="departure_time"
+              type="time"
+              step="60"
+              className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2"
+              {...register("departure_time")}
+            />
+            {state.errors.departure_time && (
+              <FieldDescription className="text-red-500">
+                {state.errors.departure_time.message}
+              </FieldDescription>
+            )}
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="arrival_time" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Horário de chegada</FieldLabel>
+            <Input
+              id="arrival_time"
+              type="time"
+              step="60"
+              className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2"
+              {...register("arrival_time")}
+            />
+            {state.errors.arrival_time && (
+              <FieldDescription className="text-red-500">
+                {state.errors.arrival_time.message}
+              </FieldDescription>
+            )}
+          </Field>
+        </div>
+
+        <Field>
+          <Button type="submit" className="cursor-pointer" disabled={isSubmitting}>
+            {isSubmitting
+              ? buttonCaptionLoad || "Salvando..."
+              : buttonCaption || "Criar rota"}
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
   );
 }

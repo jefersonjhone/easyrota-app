@@ -51,7 +51,6 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
       const errorData = err as { data?: { detail?: string, number_plate?: string[] } } | undefined
       const detail = errorData?.data?.detail;
       const plateError = errorData?.data?.number_plate?.[0];
-      console.log(errorData)
 
       if (plateError){
         setError("number_plate", {message: `${errorData?.data?.number_plate}`})
@@ -92,7 +91,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
         <form onSubmit={handleSubmit(onSubmit)}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="plate">Placa</FieldLabel>
+              <FieldLabel htmlFor="plate" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Placa</FieldLabel>
               <Input {...register("number_plate")} type="text" placeholder="ABC-1234"/>
 
             {errors.number_plate && (
@@ -103,7 +102,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="brand">Modelo</FieldLabel>
+              <FieldLabel htmlFor="brand" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Modelo</FieldLabel>
               <Input {...register("brand")} type="text" placeholder="Marcopolo Torino"/>
 
               {errors.brand && (
@@ -114,7 +113,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="capacity">Capacidade</FieldLabel>
+              <FieldLabel htmlFor="capacity" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Capacidade</FieldLabel>
               <Input {...register("seating_capacity", {valueAsNumber: true})} type="number" min={1} max={120}
                 placeholder="40"
               />

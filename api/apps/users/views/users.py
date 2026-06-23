@@ -1,7 +1,9 @@
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status, views, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -15,9 +17,10 @@ from apps.reservations.services import (
     trip_has_capacity,
 )
 
-from ...trips.models import Trip, TripPassenger
+from ...trips.models import GuestPassenger, Trip, TripPassenger
 from ..models.auth import AllowedStaff
-from ..models.profiles import DriverProfile
+from ..models.profiles import AdministratorProfile, CivilServantProfile, DriverProfile, StudentProfile
+from ..models.user import CustomUser
 from ..permissions import IsDriver, IsSuperAdmin
 from ..serializers.auth import (
     AllowedStaffSearchSerializer,
@@ -25,9 +28,14 @@ from ..serializers.auth import (
     LocalTripPassengerSerializer,
 )
 from ..serializers.users import (
+    AdminListSerializer,
+    AdminUpdateSerializer,
     AuthenticatedUserWithProfileSerializer,
+    CivilServantSerializer,
     CreateSubAdminSerializer,
+    DriverAdminDetailSerializer,
     DriverSerializer,
+    StudentSerializer,
 )
 
 
@@ -98,13 +106,31 @@ class SelfProfileView(views.APIView):
 
 
 class AdminDelegationView(generics.GenericAPIView):
-    """Allow superadmins to delegate new subadmin accounts."""
+    """List or create admin accounts. Superadmin only."""
 
-    serializer_class = CreateSubAdminSerializer
     permission_classes = (IsAuthenticated, IsSuperAdmin)
 
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CreateSubAdminSerializer
+        return AdminListSerializer
+
+    def get(self, request):
+        q = request.query_params.get("q", "").strip()
+        profiles = AdministratorProfile.objects.select_related(
+            "user", "created_by__user"
+        )
+        if q:
+            profiles = profiles.filter(
+                Q(user__full_name__icontains=q) | Q(user__email__icontains=q)
+            )
+        serializer = AdminListSerializer(profiles, many=True)
+        return Response(serializer.data)
+
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = CreateSubAdminSerializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         created = serializer.save()
         return Response(
@@ -113,10 +139,177 @@ class AdminDelegationView(generics.GenericAPIView):
         )
 
 
+class AdminDetailView(generics.GenericAPIView):
+    """Update or soft-delete an admin account. Superadmin only."""
+
+    permission_classes = (IsAuthenticated, IsSuperAdmin)
+    serializer_class = AdminUpdateSerializer
+
+    def get_object(self):
+        user_id = self.kwargs["user_id"]
+        return get_object_or_404(
+            AdministratorProfile.objects.select_related("user"),
+            user_id=user_id,
+        )
+
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = AdminUpdateSerializer(
+            instance, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        updated = serializer.save()
+        return Response(AdminListSerializer(updated).data)
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = instance.user
+        user.is_staff = False
+        user.save(update_fields=["is_staff"])
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class DriverViewSet(viewsets.ModelViewSet):
-    queryset = DriverProfile.objects.all()
     serializer_class = DriverSerializer
     permission_classes = (IsAdminUser,)
+
+    def get_queryset(self):
+        qs = DriverProfile.objects.select_related("user").all()
+        q = self.request.query_params.get("q", "").strip()
+        if q:
+            qs = qs.filter(
+                Q(user__full_name__icontains=q)
+                | Q(user__email__icontains=q)
+                | Q(cnh__icontains=q)
+            )
+        return qs
+
+    @action(detail=True, methods=["get"])
+    def admin_detail(self, request, pk=None):
+        driver = self.get_object()
+        serializer = DriverAdminDetailSerializer(driver, context={"request": request})
+        return Response(serializer.data)
+
+
+def _build_user_detail_response(profile, profile_type):
+    if profile_type == "STUDENT":
+        reservations = Reservation.objects.filter(student=profile)
+    else:
+        reservations = Reservation.objects.filter(civil_servant=profile)
+
+    reservations = reservations.select_related("trip", "trip__route")
+    user = profile.user
+
+    total_reservations = reservations.count()
+    total_checked_in = reservations.filter(check_in=True).count()
+    total_absences = total_reservations - total_checked_in
+    attendance_rate = (
+        round((total_checked_in / total_reservations * 100), 2)
+        if total_reservations > 0
+        else 0
+    )
+
+    trips_data = [
+        {
+            "id": r.trip.id,
+            "date": r.trip.trip_date,
+            "route": f"{r.trip.route.origin} → {r.trip.route.destiny}",
+            "departure_time": str(r.trip.route.departure_time),
+            "arrival_time": str(r.trip.route.arrival_time),
+            "status": r.trip.status,
+            "checked_in": r.check_in,
+            "reservation_status": r.status,
+        }
+        for r in reservations.order_by("-trip__trip_date")
+    ]
+
+    guests_data = []
+    guest_count = 0
+
+    if profile_type == "CIVIL-SERVANT":
+        guest_qs = (
+            GuestPassenger.objects.filter(recorded_by=profile)
+            .select_related("trip", "trip__route")
+            .order_by("-trip__trip_date")
+        )
+        guest_count = guest_qs.count()
+        guests_data = [
+            {
+                "id": str(g.id),
+                "full_name": g.full_name,
+                "cpf": g.cpf,
+                "trip_date": g.trip.trip_date,
+                "route": f"{g.trip.route.origin} → {g.trip.route.destiny}",
+            }
+            for g in guest_qs
+        ]
+
+    return {
+        "user": {
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "profile_type": profile_type,
+            "is_active": user.is_active,
+            "date_joined": user.date_joined,
+        },
+        "profile": {
+            "student_id": profile.student_id if profile_type == "STUDENT" else None,
+            "civil_servant_id": profile.civil_servant_id if profile_type == "CIVIL-SERVANT" else None,
+        },
+        "stats": {
+            "total_trips": total_reservations,
+            "total_reservations": total_reservations,
+            "total_absences": total_absences,
+            "attendance_rate": attendance_rate,
+        },
+        "trips": trips_data,
+        "guests": guests_data,
+        "guest_count": guest_count,
+    }
+
+
+class StudentViewSet(viewsets.ModelViewSet):
+    serializer_class = StudentSerializer
+    permission_classes = (IsAdminUser,)
+
+    def get_queryset(self):
+        qs = StudentProfile.objects.select_related("user").all()
+        q = self.request.query_params.get("q", "").strip()
+        if q:
+            qs = qs.filter(
+                Q(user__full_name__icontains=q)
+                | Q(user__email__icontains=q)
+                | Q(student_id__icontains=q)
+            )
+        return qs
+
+    @action(detail=True, methods=["get"], url_path="detail")
+    def user_detail(self, request, pk=None):
+        profile = self.get_object()
+        return Response(_build_user_detail_response(profile, "STUDENT"))
+
+
+class CivilServantViewSet(viewsets.ModelViewSet):
+    serializer_class = CivilServantSerializer
+    permission_classes = (IsAdminUser,)
+
+    def get_queryset(self):
+        qs = CivilServantProfile.objects.select_related("user").all()
+        q = self.request.query_params.get("q", "").strip()
+        if q:
+            qs = qs.filter(
+                Q(user__full_name__icontains=q)
+                | Q(user__email__icontains=q)
+                | Q(civil_servant_id__icontains=q)
+            )
+        return qs
+
+    @action(detail=True, methods=["get"], url_path="detail")
+    def user_detail(self, request, pk=None):
+        profile = self.get_object()
+        return Response(_build_user_detail_response(profile, "CIVIL-SERVANT"))
 
 
 class AllowedStaffSearchView(views.APIView):

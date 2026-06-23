@@ -18,10 +18,21 @@ export type Route = {
   administrator: number | null
 }
 
+export type Driver = {
+  id: number
+  full_name: string
+  cnh: string
+  email: string
+}
+
 export function fetchBuses() {
   return apiFetch<Bus[]>('/buses/')
 }
 
 export function fetchRoutes() {
   return apiFetch<Route[]>('/routes/')
+}
+
+export function fetchDrivers() {
+  return apiFetch<Driver[]>('/drivers/')
 }

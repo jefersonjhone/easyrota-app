@@ -42,12 +42,12 @@ export function CheckinStatsCard({
   ]
 
   return (
-    <Card className="rounded-sm">
-      <CardHeader className="flex items-center justify-between">
+    <Card className="rounded-lg">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <CardTitle>
           Taxa de Check-in
         </CardTitle>
-        <NativeSelect className="rounded-sm bg-gray-200" onChange={(e) => onFilterChange(Number(e.target.value))}>
+        <NativeSelect onChange={(e) => onFilterChange(Number(e.target.value))}>
                     <NativeSelectOption value="7">Últimos 7 dias</NativeSelectOption>
                     <NativeSelectOption value="15">Últimos 15 dias</NativeSelectOption>
                     <NativeSelectOption value="30">Últimos 30 dias</NativeSelectOption>
@@ -57,22 +57,22 @@ export function CheckinStatsCard({
       <CardContent className="flex flex-col lg:flex-row gap-6 items-center justify-between">
         
         <div className="grid grid-cols-2 gap-4 w-full">
-          <div className="border rounded-md p-4">
-            <p className="text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border/70 bg-card p-4">
+            <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
               Check-ins
             </p>
 
-            <h2 className="text-3xl font-bold text-chart-4">
+            <h2 className="mt-2 text-3xl font-bold text-chart-4">
               {data?.total_checkins}
             </h2>
           </div>
 
-          <div className="border rounded-md p-4 ">
-            <p className="text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border/70 bg-card p-4">
+            <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
               Sem check-in
             </p>
 
-            <h2 className="text-3xl font-bold text-primary ">
+            <h2 className="mt-2 text-3xl font-bold text-primary">
               {data?.without_checkin}
             </h2>
           </div>

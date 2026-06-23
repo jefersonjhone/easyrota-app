@@ -10,15 +10,15 @@ import {
   SidebarGroupLabel,
   SidebarTrigger,
 } from "@/lib/ui/sidebar"
-import { BusIcon } from "@phosphor-icons/react"
+import { BusIcon, WarningCircle, ClockCounterClockwise, GraduationCap } from "@phosphor-icons/react"
 import { SteeringWheel } from "@phosphor-icons/react"
-import {MapTrifold} from "@phosphor-icons/react"
-import {  Path} from "@phosphor-icons/react"
+import { MapTrifold } from "@phosphor-icons/react"
+import { Path } from "@phosphor-icons/react"
 import { Gauge } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { NavUser } from "./navUser"
 import { useLocation } from "@tanstack/react-router"
-
+import { CalendarCheckIcon, ShieldCheckIcon, UserCircleCheckIcon } from "@phosphor-icons/react"
 
 export function AppSidebar() {
   const location = useLocation()
@@ -27,10 +27,18 @@ export function AppSidebar() {
   const frotaItems = [
     {title:"Gerenciar Ônibus", icon:BusIcon, url:"/admin/onibus"},
     {title:"Gerenciar Motoristas", icon:SteeringWheel, url:"/admin/motoristas"},
+    {title:"Gerenciar Administradores", icon:ShieldCheckIcon, url:"/admin/administradores"},
   ]
   const ViagensItems = [
-    {title:"Gerenciar Viagens", icon:MapTrifold, url:"/admin/viagens"},
+    {title:"Gerenciar Viagens", icon:MapTrifold, url:"/admin/viagens", exact: true},
+    {title:"Histórico de Viagens", icon:ClockCounterClockwise, url:"/admin/viagens/historico"},
     {title:"Gerenciar Rotas", icon:Path, url:"/admin/rotas"},
+  ]
+  const UsersItems = [
+    {title:"Gerenciar Estudantes", icon:GraduationCap, url:"/admin/estudantes"},
+    {title:"Gerenciar Servidores", icon:UserCircleCheckIcon, url:"/admin/servidores"},
+    {title:"Gerenciar Reservas", icon:CalendarCheckIcon, url:"/admin/reservas"},
+    {title:"Gerenciar Penalidades", icon:WarningCircle, url:"/admin/penalidades"},
   ]
 
   return (
@@ -66,8 +74,7 @@ export function AppSidebar() {
             <SidebarMenu className="font-lg text-semibold">
               {frotaItems.map((item) => (
                 <SidebarMenuItem key={item.title} >
-                  <SidebarMenuButton asChild tooltip={item.title} size="default" isActive={pathname === item.url ||
-                                    pathname.startsWith(item.url)}>
+                  <SidebarMenuButton asChild tooltip={item.title} size="default" isActive={pathname === item.url || pathname.startsWith(item.url)}>
                     <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -86,8 +93,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {ViagensItems.map((item) => (
                 <SidebarMenuItem key={item.title} >
-                  <SidebarMenuButton asChild tooltip={item.title} size="default" isActive={pathname === item.url ||
-                              pathname.startsWith(item.url)}>
+                  <SidebarMenuButton asChild tooltip={item.title} size="default" isActive={pathname === item.url }>
                     <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -98,6 +104,27 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarGroup>
+                                   <SidebarGroupLabel>
+                                     <span>Usuários e Reservas</span>
+                                   </SidebarGroupLabel>
+                                   <SidebarGroupContent>
+                                     <SidebarMenu>
+                                       {UsersItems.map((item) => (
+                                         <SidebarMenuItem key={item.title} >
+                                           <SidebarMenuButton asChild tooltip={item.title} size="default" isActive={pathname === item.url ||
+                                             pathname.startsWith(item.url)}>
+                                             <Link to={item.url}>
+                                               <item.icon />
+                                               <span>{item.title}</span>
+                                             </Link>
+                                           </SidebarMenuButton>
+                                         </SidebarMenuItem>
+                                       ))}
+                                     </SidebarMenu>
+                                   </SidebarGroupContent>
+                                   </SidebarGroup>
+        
       </SidebarContent>
     </Sidebar>
   )

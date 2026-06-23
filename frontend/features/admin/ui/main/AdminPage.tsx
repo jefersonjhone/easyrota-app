@@ -51,8 +51,8 @@ const AdminPage = () => {
 
   return (
     <AdminLayout>
-      <section className="max-w-300 mx-auto flex flex-col gap-y-12 md:gap-20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-6 md:h-82 mb-12">
+      <section className="mx-auto flex w-full max-w-6xl flex-col gap-8 md:gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
            <TotalUsersCard
             users_data={usersData ?? {
               total_users: 0,
@@ -61,7 +61,7 @@ const AdminPage = () => {
             onFilterChange={setFilter}
             isMobile={isMobile}
             />
-          <div className='grid grid-cols-2 md:col-span-2 w-full gap-2 md:gap-6'>
+          <div className='grid grid-cols-2 lg:col-span-2 w-full gap-4 md:gap-6'>
             <TotalDriversCard total={driversData?.total_drivers ?? 0} />
              <TotalBusesCard total={busesData?.total_buses ?? 0} />
              <TotalTripsCard total={tripsData?.total_trips ?? 0} onFilterChange={setDays} />

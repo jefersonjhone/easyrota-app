@@ -44,14 +44,13 @@ export function ChartLineDefault({
 }) {
 
   return (
-    <Card className="rounded-md">
-      <CardHeader className="flex justify-between items-center">
+    <Card className="rounded-lg">
+      <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <CardTitle>
           Histórico de Viagens Registradas
         </CardTitle>
 
         <NativeSelect
-          className="rounded-sm bg-gray-200"
           onChange={(e) => {
             onFilterChange?.(Number(e.target.value))
           }}
@@ -135,13 +134,12 @@ export function ChartBarMixed(
   }) {
 
   return (
-    <Card className="rounded-sm">
+    <Card className="rounded-lg">
       <CardHeader className="flex flex-col">
         <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-2">
           <CardTitle>Viagens por Status</CardTitle>
 
           <NativeSelect
-            className="rounded-sm bg-gray-200"
             onChange={(e) => {
               onFilterChange(Number(e.target.value))
             }}
@@ -194,8 +192,8 @@ export function ChartBarMixed(
 
             <Bar
               dataKey="value"
-              radius={10}
-              fill="#666"
+              radius={6}
+              fill="var(--chart-4)"
             >
               <LabelList
                 dataKey="value"

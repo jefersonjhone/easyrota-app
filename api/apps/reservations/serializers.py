@@ -1,9 +1,12 @@
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
 from ..trips.models import GuestPassenger, Trip
+from ..users.models.profiles import CivilServantProfile, StudentProfile
 from .models import Punishment, Reservation
 from .services import (
+    ACTIVE_RESERVATION_STATUSES,
     get_reservation_status_for_user,
     is_reservation_open,
     reservation_cutoff,
@@ -278,10 +281,189 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         return reservation_cutoff(obj)
 
 
+class AdminReservationListSerializer(serializers.ModelSerializer):
+    passenger_name = serializers.SerializerMethodField()
+    passenger_type = serializers.SerializerMethodField()
+    passenger_id_display = serializers.SerializerMethodField()
+    trip_id = serializers.IntegerField(source="trip.id")
+    trip_date = serializers.DateField(source="trip.trip_date")
+    route = serializers.SerializerMethodField()
+    departure_time = serializers.TimeField(source="trip.route.departure_time", format="%H:%M")
+    trip_status = serializers.CharField(source="trip.status")
+
+    class Meta:
+        model = Reservation
+        fields = [
+            "id",
+            "passenger_name",
+            "passenger_type",
+            "passenger_id_display",
+            "trip_id",
+            "trip_date",
+            "route",
+            "departure_time",
+            "trip_status",
+            "status",
+            "check_in",
+            "created_at",
+        ]
+
+    def get_passenger_name(self, obj):
+        if obj.student:
+            return obj.student.user.full_name
+        if obj.civil_servant:
+            return obj.civil_servant.user.full_name
+        if obj.guest_passenger:
+            return obj.guest_passenger.full_name
+        return "—"
+
+    def get_passenger_type(self, obj):
+        if obj.student:
+            return "ESTUDANTE"
+        if obj.civil_servant:
+            return "SERVIDOR"
+        if obj.guest_passenger:
+            return "CONVIDADO"
+        return "—"
+
+    def get_passenger_id_display(self, obj):
+        if obj.student:
+            return obj.student.student_id
+        if obj.civil_servant:
+            return obj.civil_servant.civil_servant_id
+        if obj.guest_passenger:
+            return obj.guest_passenger.cpf
+        return None
+
+    def get_route(self, obj):
+        return f"{obj.trip.route.origin} → {obj.trip.route.destiny}"
+
+
+class AdminCreateReservationSerializer(serializers.Serializer):
+    trip = serializers.PrimaryKeyRelatedField(queryset=Trip.objects.all())
+    passenger_type = serializers.ChoiceField(choices=["ESTUDANTE", "SERVIDOR", "CONVIDADO"])
+    profile_id = serializers.IntegerField(required=False, allow_null=True, default=None)
+    guest_name = serializers.CharField(required=False, allow_blank=True, default="")
+    guest_cpf = serializers.CharField(required=False, allow_blank=True, default="")
+
+    class Meta:
+        fields = ["trip", "passenger_type", "profile_id", "guest_name", "guest_cpf"]
+
+    def validate(self, data):
+        trip = data["trip"]
+        passenger_type = data["passenger_type"]
+
+        if trip.status == "CANCELADA":
+            raise serializers.ValidationError("Viagem cancelada.")
+
+        if passenger_type in ("ESTUDANTE", "SERVIDOR"):
+            profile_id = data.get("profile_id")
+            if not profile_id:
+                raise serializers.ValidationError(
+                    {"profile_id": "Campo obrigatório para estudante/servidor."}
+                )
+
+            if passenger_type == "ESTUDANTE":
+                try:
+                    profile = StudentProfile.objects.get(id=profile_id)
+                except StudentProfile.DoesNotExist:
+                    raise serializers.ValidationError(
+                        {"profile_id": "Estudante não encontrado."}
+                    )
+                if Reservation.objects.filter(trip=trip, student=profile).exists():
+                    raise serializers.ValidationError(
+                        "Estudante já possui reserva nesta viagem."
+                    )
+                data["student"] = profile
+
+            else:
+                try:
+                    profile = CivilServantProfile.objects.get(id=profile_id)
+                except CivilServantProfile.DoesNotExist:
+                    raise serializers.ValidationError(
+                        {"profile_id": "Servidor não encontrado."}
+                    )
+                if Reservation.objects.filter(trip=trip, civil_servant=profile).exists():
+                    raise serializers.ValidationError(
+                        "Servidor já possui reserva nesta viagem."
+                    )
+                data["civil_servant"] = profile
+
+        else:
+            guest_name = data.get("guest_name", "").strip()
+            guest_cpf = data.get("guest_cpf", "").strip()
+            if not guest_name or not guest_cpf:
+                raise serializers.ValidationError(
+                    {"guest_name": "Nome e CPF obrigatórios para convidado."}
+                )
+
+            guest = GuestPassenger.objects.filter(cpf=guest_cpf, trip=trip).first()
+            if guest:
+                data["guest_passenger"] = guest
+            else:
+                data["guest_passenger"] = GuestPassenger(
+                    cpf=guest_cpf, full_name=guest_name, trip=trip
+                )
+
+        return data
+
+    def create(self, validated_data):
+        trip = validated_data["trip"]
+
+        reservation = Reservation(trip=trip)
+
+        if validated_data.get("student"):
+            reservation.student = validated_data["student"]
+        elif validated_data.get("civil_servant"):
+            reservation.civil_servant = validated_data["civil_servant"]
+        elif validated_data.get("guest_passenger"):
+            guest = validated_data["guest_passenger"]
+            if not guest.pk:
+                guest.save()
+            reservation.guest_passenger = guest
+
+        with transaction.atomic():
+            from .services import (
+                evict_lowest_priority_active_reservation,
+                send_admin_leftover_server_alert,
+            )
+
+            if trip_has_capacity(trip):
+                reservation.status = "CONFIRMADA"
+            elif validated_data.get("civil_servant"):
+                evicted = evict_lowest_priority_active_reservation(trip)
+                if evicted:
+                    reservation.status = "CONFIRMADA"
+                else:
+                    reservation.status = "LISTA SECUNDÁRIA"
+                    send_admin_leftover_server_alert(
+                        trip, validated_data["civil_servant"]
+                    )
+            else:
+                reservation.status = "LISTA SECUNDÁRIA"
+
+            reservation.save()
+
+        from .services import sync_trip_status
+        sync_trip_status(trip)
+
+        return reservation
+
+
 class ManageReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = "__all__"
+
+
+class AdminTripReservationsGroupSerializer(serializers.Serializer):
+    trip_id = serializers.IntegerField()
+    trip_date = serializers.DateField()
+    departure_time = serializers.TimeField(format="%H:%M")
+    route = serializers.CharField()
+    trip_status = serializers.CharField()
+    reservation_count = serializers.IntegerField()
+    reservations = AdminReservationListSerializer(many=True)
 
 
 class PunishmentHistorySerializer(serializers.ModelSerializer):
@@ -290,3 +472,51 @@ class PunishmentHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Punishment
         fields = ["id", "description", "is_active", "created_at"]
+
+
+class AdminPunishmentListSerializer(serializers.ModelSerializer):
+    student_name = serializers.SerializerMethodField()
+    student_id_display = serializers.SerializerMethodField()
+    trip_date = serializers.DateField(source="reservation.trip.trip_date")
+    route = serializers.SerializerMethodField()
+    departure_time = serializers.TimeField(source="reservation.trip.route.departure_time", format="%H:%M")
+    reservation_id = serializers.IntegerField(source="reservation.id")
+
+    class Meta:
+        model = Punishment
+        fields = [
+            "id",
+            "student_name",
+            "student_id_display",
+            "description",
+            "is_active",
+            "trip_date",
+            "route",
+            "departure_time",
+            "reservation_id",
+            "created_at",
+        ]
+
+    def get_student_name(self, obj):
+        return obj.student.user.full_name
+
+    def get_student_id_display(self, obj):
+        return obj.student.student_id
+
+    def get_route(self, obj):
+        return f"{obj.reservation.trip.route.origin} → {obj.reservation.trip.route.destiny}"
+
+
+class AdminTripPunishmentsGroupSerializer(serializers.Serializer):
+    trip_id = serializers.IntegerField()
+    trip_date = serializers.DateField()
+    departure_time = serializers.TimeField(format="%H:%M")
+    route = serializers.CharField()
+    punishment_count = serializers.IntegerField()
+    punishments = AdminPunishmentListSerializer(many=True)
+
+
+class AdminPunishmentUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Punishment
+        fields = ["is_active"]
