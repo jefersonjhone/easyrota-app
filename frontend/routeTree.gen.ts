@@ -13,9 +13,11 @@ import { Route as App_rootRouteImport } from './pages/app/__root'
 import { Route as Admin_rootRouteImport } from './pages/admin/__root'
 import { Route as AppViagens_rootRouteImport } from './pages/app/viagens/__root'
 import { Route as VerificarRouteImport } from './pages/verificar'
+import { Route as TermosDeUsoRouteImport } from './pages/termos-de-uso'
 import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecuperarRouteImport } from './pages/recuperar'
+import { Route as PoliticaDePrivacidadeRouteImport } from './pages/politica-de-privacidade'
 import { Route as LoginRouteImport } from './pages/login'
 import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as IndexRouteImport } from './pages/index'
@@ -50,6 +52,11 @@ const VerificarRoute = VerificarRouteImport.update({
   path: '/verificar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermosDeUsoRoute = TermosDeUsoRouteImport.update({
+  id: '/termos-de-uso',
+  path: '/termos-de-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SobreProjetoRoute = SobreProjetoRouteImport.update({
   id: '/sobre-projeto',
   path: '/sobre-projeto',
@@ -63,6 +70,11 @@ const SignupRoute = SignupRouteImport.update({
 const RecuperarRoute = RecuperarRouteImport.update({
   id: '/recuperar',
   path: '/recuperar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
+  id: '/politica-de-privacidade',
+  path: '/politica-de-privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -150,9 +162,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
   '/admin': typeof Admin_rootRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -175,9 +189,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
   '/admin': typeof AdminIndexRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -198,9 +214,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
   '/admin/__root': typeof Admin_rootRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -225,9 +243,11 @@ export interface FileRouteTypes {
     | '/'
     | '/equipe'
     | '/login'
+    | '/politica-de-privacidade'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/termos-de-uso'
     | '/verificar'
     | '/admin'
     | '/admin/motoristas'
@@ -250,9 +270,11 @@ export interface FileRouteTypes {
     | '/'
     | '/equipe'
     | '/login'
+    | '/politica-de-privacidade'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/termos-de-uso'
     | '/verificar'
     | '/admin'
     | '/admin/motoristas'
@@ -272,9 +294,11 @@ export interface FileRouteTypes {
     | '/'
     | '/equipe'
     | '/login'
+    | '/politica-de-privacidade'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/termos-de-uso'
     | '/verificar'
     | '/admin/__root'
     | '/admin/motoristas'
@@ -298,9 +322,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EquipeRoute: typeof EquipeRoute
   LoginRoute: typeof LoginRoute
+  PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   RecuperarRoute: typeof RecuperarRoute
   SignupRoute: typeof SignupRoute
   SobreProjetoRoute: typeof SobreProjetoRoute
+  TermosDeUsoRoute: typeof TermosDeUsoRoute
   VerificarRoute: typeof VerificarRoute
   Admin_rootRoute: typeof Admin_rootRoute
   AdminMotoristasRoute: typeof AdminMotoristasRoute
@@ -350,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerificarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/termos-de-uso': {
+      id: '/termos-de-uso'
+      path: '/termos-de-uso'
+      fullPath: '/termos-de-uso'
+      preLoaderRoute: typeof TermosDeUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sobre-projeto': {
       id: '/sobre-projeto'
       path: '/sobre-projeto'
@@ -369,6 +402,13 @@ declare module '@tanstack/react-router' {
       path: '/recuperar'
       fullPath: '/recuperar'
       preLoaderRoute: typeof RecuperarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-de-privacidade': {
+      id: '/politica-de-privacidade'
+      path: '/politica-de-privacidade'
+      fullPath: '/politica-de-privacidade'
+      preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -490,9 +530,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EquipeRoute: EquipeRoute,
   LoginRoute: LoginRoute,
+  PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   RecuperarRoute: RecuperarRoute,
   SignupRoute: SignupRoute,
   SobreProjetoRoute: SobreProjetoRoute,
+  TermosDeUsoRoute: TermosDeUsoRoute,
   VerificarRoute: VerificarRoute,
   Admin_rootRoute: Admin_rootRoute,
   AdminMotoristasRoute: AdminMotoristasRoute,
