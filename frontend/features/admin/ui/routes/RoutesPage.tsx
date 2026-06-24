@@ -12,7 +12,7 @@ export default function RoutesPage() {
   const [creating, setCreating] = useState(false);
   const { data, refetch } = useShowRoutes();
 
-  console.log(data);
+  //console.log(data);
   return (
     <AdminLayout>
       <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">
