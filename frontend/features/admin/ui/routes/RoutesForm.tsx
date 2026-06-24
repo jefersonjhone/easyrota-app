@@ -108,6 +108,12 @@ export function RouteForm({
             : errorData.origin;
           form.setError("origin", { type: "server", message });
         }
+        if (errorData.max_bus) {
+          const message = Array.isArray(errorData.max_bus)
+            ? errorData.max_bus[0]
+            : errorData.max_bus;
+          form.setError("origin", { type: "server", message });
+        }
       } else {
         console.error("Erro inesperado ao criar rota:", error);
       }
