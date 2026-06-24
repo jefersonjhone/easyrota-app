@@ -4,7 +4,7 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
 // Hooks
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { useState } from "react"
 import { useSignupMutation } from "@features/auth/hooks/useSignup"
 
@@ -14,7 +14,8 @@ import { type SignupVariant } from "@features/auth/hooks/useSignup"
 // Components
 import HintInvalid from "@features/auth/ui/HintInvalid"
 import { Button } from "@ui/button"
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
+import { Checkbox } from "@ui/checkbox"
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
 import { Input } from "@ui/input"
 
 
@@ -38,6 +39,9 @@ const signupSchema = z.object({
   confirmPassword: z
     .string()
     .nonempty("Confirme sua senha."),
+  acceptedLegal: z
+    .boolean()
+    .refine((value) => value, "Você precisa aceitar os Termos de Uso e a Política de Privacidade."),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não correspondem.",
   path: ["confirmPassword"],
@@ -82,10 +86,11 @@ export default function SignupForm(props: Props) {
       id: "",
       password: "",
       confirmPassword: "",
+      acceptedLegal: false,
     },
   })
 
-  const { register, handleSubmit, formState: state, setError } = form
+  const { control, register, handleSubmit, formState: state, setError } = form
   const isSubmitting = state.isSubmitting || signupMutation.isPending
 
   const [verificationModal, setVerificationModal] = useState(false)
@@ -185,6 +190,46 @@ export default function SignupForm(props: Props) {
           />
           <HintInvalid for={state.errors.confirmPassword} />
         </Field>
+        <Controller
+          name="acceptedLegal"
+          control={control}
+          render={({ field }) => (
+            <Field orientation="horizontal" data-invalid={!!state.errors.acceptedLegal} className="items-start">
+              <Checkbox
+                id="acceptedLegal"
+                checked={field.value}
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+                onBlur={field.onBlur}
+                aria-invalid={!!state.errors.acceptedLegal}
+                className="mt-0.5"
+              />
+              <FieldContent>
+                <label htmlFor="acceptedLegal" className="block text-sm font-normal leading-6 text-foreground">
+                  Li e aceito os{' '}
+                  <a
+                    href="/termos-de-uso"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary underline underline-offset-4"
+                  >
+                    Termos de Uso
+                  </a>{' '}
+                  e a{' '}
+                  <a
+                    href="/politica-de-privacidade"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary underline underline-offset-4"
+                  >
+                    Política de Privacidade
+                  </a>
+                  .
+                </label>
+                <HintInvalid for={state.errors.acceptedLegal} />
+              </FieldContent>
+            </Field>
+          )}
+        />
         {state.errors.root && (
           <div className="text-red-500 text-sm mt-2">{state.errors.root.message}</div>
         )}

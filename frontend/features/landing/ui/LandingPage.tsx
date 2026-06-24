@@ -326,6 +326,8 @@ export function LandingPage() {
             <a href="/">Início</a>
             <a href="/sobre-projeto">Sobre o projeto</a>
             <a href="/equipe">Equipe</a>
+            <a href="/termos-de-uso">Termos de Uso</a>
+            <a href="/politica-de-privacidade">Política de Privacidade</a>
             <a href="#depoimentos">Depoimentos</a>
           </div>
 
