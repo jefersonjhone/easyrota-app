@@ -1,3 +1,4 @@
+from ..managers import CustomUserManager as CustomUserManager
 from .auth import AllowedStaff as AllowedStaff
 from .auth import MFAChallenge as MFAChallenge
 from .profiles import (
@@ -13,4 +14,3 @@ from .profiles import (
     StudentProfile as StudentProfile,
 )
 from .user import CustomUser as CustomUser
-from .user import CustomUserManager as CustomUserManager

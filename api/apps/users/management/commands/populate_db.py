@@ -38,9 +38,7 @@ class Command(BaseCommand):
                 pk=user.pk
                 ).update(date_joined=timezone.now() - timedelta(days=days_ago))
         
-        def ensure_user(
-            email, full_name, password, *, is_staff=False, is_superuser=False
-            ):
+        def ensure_user(email, full_name, password, *, is_staff=False, is_superuser=False):
             user, _ = User.objects.get_or_create(
                 email=email,
                 defaults={

@@ -7,6 +7,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.trips.services.checkin_service import CheckinService
+
 from ..trips.models import Trip
 from ..users.permissions import IsDriver, IsSuperAdmin
 from .models import Punishment, Reservation
@@ -19,6 +21,7 @@ from .serializers import (
     AdminTripPunishmentsGroupSerializer,
     AdminTripReservationsGroupSerializer,
     AdminReservationListSerializer,
+    ActiveReservationSerializer,
     AvailableTripSerializer,
     ManageReservationSerializer,
     PunishmentHistorySerializer,
@@ -26,19 +29,27 @@ from .serializers import (
     ReservationSerializer,
 )
 from .services import (
-    ACTIVE_RESERVATION_STATUSES,
-    WAITLIST_STATUS,
-    evict_lowest_priority_active_reservation,
-    get_reservation_passenger_name,
     promote_next_waitlisted_reservation,
     sync_trip_status,
-    trip_has_capacity,
 )
 
 
-class ReservationCreateView(generics.CreateAPIView):
+class ReservationCreateView(generics.ListCreateAPIView):
     serializer_class = ReservationSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Reservation.objects.select_related("trip", "trip__route")
+
+        if hasattr(user, "student_profile"):
+            qs = qs.filter(student=user.student_profile)
+        elif hasattr(user, "civil_servant_profile"):
+            qs = qs.filter(civil_servant=user.civil_servant_profile)
+        else:
+            return Reservation.objects.none()
+
+        return qs.exclude(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("-created_at")
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -50,33 +61,46 @@ class ReservationCreateView(generics.CreateAPIView):
         sync_trip_status(reservation.trip)
 
 
+class ActiveReservationListView(generics.ListAPIView):
+    """Returns active (non-finished) reservations for the authenticated user."""
+
+    serializer_class = ActiveReservationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Reservation.objects.select_related(
+            "trip", "trip__route", "trip__bus", "trip__driver__user"
+        )
+
+        if hasattr(user, "student_profile"):
+            qs = qs.filter(student=user.student_profile)
+        elif hasattr(user, "civil_servant_profile"):
+            qs = qs.filter(civil_servant=user.civil_servant_profile)
+        else:
+            return Reservation.objects.none()
+
+        return qs.exclude(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("trip__trip_date", "trip__route__departure_time")
+
+
 class ReservationHistoryView(generics.ListAPIView):
-    """Trips history page."""
+    """Trips history page — only finished trips."""
 
     serializer_class = ReservationHistorySerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-
         user = self.request.user
+        qs = Reservation.objects.select_related("trip", "trip__route")
 
         if hasattr(user, "student_profile"):
-            return (
-                Reservation.objects
-                .filter(student=user.student_profile)
-                .select_related("trip", "trip__route")
-                .order_by("-created_at")
-            )
+            qs = qs.filter(student=user.student_profile)
+        elif hasattr(user, "civil_servant_profile"):
+            qs = qs.filter(civil_servant=user.civil_servant_profile)
+        else:
+            return Reservation.objects.none()
 
-        if hasattr(user, "civil_servant_profile"):
-            return (
-                Reservation.objects
-                .filter(civil_servant=user.civil_servant_profile)
-                .select_related("trip", "trip__route")
-                .order_by("-created_at")
-            )
-
-        return Reservation.objects.none()
+        return qs.filter(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("-created_at")
 
 
 class AvailableTripListView(generics.ListAPIView):
@@ -170,6 +194,9 @@ class ReservationViewSet(viewsets.ModelViewSet):
         if self.action == "checkin":
             return [IsDriver(), IsSuperAdmin()]
 
+        if self.action in ("create", "update", "partial_update", "destroy"):
+            return [IsAdminUser()]
+
         return super().get_permissions()
 
     @action(detail=False, methods=["get"], url_path="grouped-by-trip")
@@ -199,60 +226,16 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     @transaction.atomic
     def checkin(self, request, pk=None):
-        """
-        It records the passenger's presence on the bus.
-        """
+        """Record passenger presence on the bus."""
         reservation = self.get_object()
-        evicted_passenger = None
-        priority_check_in = bool(
-            reservation.civil_servant_id or reservation.guest_passenger_id
-        )
 
-        if reservation.status == WAITLIST_STATUS:
-            if not priority_check_in:
-                return Response(
-                    {"error": "Apenas reservas ativas podem fazer check-in."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            if not trip_has_capacity(reservation.trip):
-                evicted = evict_lowest_priority_active_reservation(reservation.trip)
-                if evicted is None:
-                    transaction.set_rollback(True)
-                    return Response(
-                        {
-                            "error": "Nao ha vaga disponivel para "
-                            "priorizar o passageiro."
-                        },
-                        status=status.HTTP_409_CONFLICT,
-                    )
-
-                evicted_passenger = {
-                    "name": get_reservation_passenger_name(evicted),
-                    "reservation_id": evicted.id,
-                }
-
-            reservation.status = "CONFIRMADA"
-        elif reservation.status not in ACTIVE_RESERVATION_STATUSES:
-            return Response(
-                {"error": "Apenas reservas ativas podem fazer check-in."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        reservation.check_in = True
-        reservation.checkin_date = timezone.now()
-        reservation.save(update_fields=["check_in", "checkin_date", "status"])
-        sync_trip_status(reservation.trip)
-
-        response_payload = {"status": "Check-in realizado com sucesso."}
-        if evicted_passenger is not None:
-            response_payload["evicted_passenger"] = evicted_passenger
-            response_payload["evicted_passengers"] = [evicted_passenger]
-
-        return Response(
-            response_payload,
-            status=status.HTTP_200_OK,
-        )
+        try:
+            payload, _evicted = CheckinService.perform_on_reservation(reservation)
+            return Response(payload, status=status.HTTP_200_OK)
+        except CheckinService.Error as exc:
+            if exc.status_code == 409:
+                transaction.set_rollback(True)
+            return Response({"error": exc.detail}, status=exc.status_code)
 
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def cancel(self, request, pk=None):
@@ -307,7 +290,7 @@ class PunishmentHistoryView(generics.ListAPIView):
 
         if hasattr(user, "student_profile"):
             return Punishment.objects.filter(student=user.student_profile).order_by(
-                "-id"
+                "-created_at"
             )
         return Punishment.objects.none()
 

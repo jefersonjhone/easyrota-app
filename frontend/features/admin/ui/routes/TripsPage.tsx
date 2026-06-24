@@ -154,7 +154,7 @@ export function TripsPage() {
     setIsEditOpen(true)
   }
 
-  function handleDelete(id: number) {
+  function handleDelete(id: string) {
     deleteMutation.mutate(id)
   }
 

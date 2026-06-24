@@ -5,12 +5,12 @@ import { API_URL } from "@lib/config";
 
 
 export type RouteValues = {
-  id: number;
+  id: string;
   origin: string;
   destiny: string;
   departure_time: string;
   arrival_time: string;
-  administrator: number;
+  administrator: string;
 };
 
 export type RoutesResponse = RouteValues[];

@@ -9,10 +9,8 @@ from django_apscheduler import util
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 
-from apps.reservations.services import (
-    send_trip_quorum_warning_notification,
-    sync_trip_status,
-)
+from apps.notifications.services.notification_service import NotificationService
+from apps.reservations.services import sync_trip_status
 from apps.trips.models import Trip
 from apps.users.models import CustomUser
 
@@ -38,7 +36,7 @@ def check_upcoming_trips_quorum():
             trip.status = "RISCO DE CANCELAMENTO"
             trip.save()
 
-            send_trip_quorum_warning_notification(trip)
+            NotificationService.notify_quorum_warning(trip)
         else:
             logger.info("Trip %s com quórum mínimo atendido.", trip.id)
 

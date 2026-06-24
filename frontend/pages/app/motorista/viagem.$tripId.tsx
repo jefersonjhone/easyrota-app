@@ -5,10 +5,10 @@ import { ViagemMotorista } from '@/features/ViagemMotorista/ViagemMotorista'
 
 export const Route = createFileRoute('/app/motorista/viagem/$tripId')({
   beforeLoad: () => requireProfile(['DRIVER', 'ADMIN']),
-  component: DriverTripDetailRoute,
+  component: MotoristaTripDetailRoute,
 })
 
-function DriverTripDetailRoute() {
+function MotoristaTripDetailRoute() {
   const { tripId } = Route.useParams()
 
   return <ViagemMotorista tripId={tripId} />

@@ -26,22 +26,22 @@ export function UserHomeHistoryCard({
 }: UserHomeHistoryCardProps) {
   return (
     <Card id="historico" className="border-border/70 bg-card/95">
-      <CardHeader className="border-b border-border/70 pb-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <CardTitle>Histórico recente</CardTitle>
-            <CardDescription>
+      <CardHeader className="border-b border-border/70 pb-3 md:pb-5">
+        <div className="flex items-start justify-between gap-3 md:gap-4">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-sm md:text-lg">Histórico recente</CardTitle>
+            <CardDescription className="text-xs md:text-sm hidden sm:block">
               Últimas reservas recuperadas do sistema de reservas.
             </CardDescription>
           </div>
-          <Link to="/app/viagens/historico">
+          <Link to="/app/historico">
             <Button variant="outline" size="sm">
               Ver tudo
             </Button>
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 pt-6">
+      <CardContent className="space-y-3 md:space-y-4 pt-3 md:pt-6">
         {error ? (
           <div className="rounded-3xl bg-destructive/10 p-4 text-sm text-destructive">
             {error}

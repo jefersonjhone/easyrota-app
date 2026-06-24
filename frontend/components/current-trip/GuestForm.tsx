@@ -26,13 +26,13 @@ const guestSchema = z.object({
       (val) => val.replace(/\D/g, "").length === 11,
       "CPF deve ter exatamente 11 números."
     ),
-  trip: z.number(),
+  trip: z.string(),
 });
 
 type GuestSchema = z.infer<typeof guestSchema>;
 
 type Props = {
-  tripId: number;
+  tripId: string;
   onGuestAdded: () => void;
 };
 

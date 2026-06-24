@@ -1,21 +1,21 @@
 import { apiFetch } from '@lib/api'
 
 export type Bus = {
-  id: number
+  id: string
   number_plate: string
   seating_capacity: number
   brand: string
-  driver: number | null
-  administrator: number | null
+  driver: string | null
+  administrator: string | null
 }
 
 export type Route = {
-  id: number
+  id: string
   origin: string
   destiny: string
   departure_time: string
   arrival_time: string
-  administrator: number | null
+  administrator: string | null
 }
 
 export type Driver = {

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import {
   Html5Qrcode,
   type Html5QrcodeCameraScanConfig,
@@ -7,13 +7,11 @@ import {
 } from 'html5-qrcode'
 
 type QrCodeScannerProps = {
-  isOpen: boolean
-  restartSignal: number
-  onScan: (decodedText: string) => void | Promise<void>
+  onScan: (decodedText: string) => void
   onCameraError: (message: string) => void
+  onStatusChange?: (status: 'loading' | 'ready' | 'error') => void
+  enabled: boolean
 }
-
-type CameraState = 'starting' | 'ready' | 'error'
 
 const scannerConfig: Html5QrcodeCameraScanConfig = {
   fps: 10,
@@ -22,177 +20,119 @@ const scannerConfig: Html5QrcodeCameraScanConfig = {
     const maxSize = Math.max(80, minEdge - 16)
     const preferredSize = Math.min(280, Math.floor(minEdge * 0.72))
     const qrboxSize = Math.min(maxSize, Math.max(120, preferredSize))
-
     return { width: qrboxSize, height: qrboxSize }
   },
   aspectRatio: 1,
 }
 
 function isScannerActive(scanner: Html5Qrcode) {
-  const scannerState = scanner.getState()
-
-  return (
-    scannerState === Html5QrcodeScannerState.SCANNING
-    || scannerState === Html5QrcodeScannerState.PAUSED
-  )
+  const state = scanner.getState()
+  return state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED
 }
 
 async function stopScanner(scanner: Html5Qrcode) {
   try {
-    if (isScannerActive(scanner)) {
-      await scanner.stop()
-    }
-  } catch {
-    // The camera can already be stopped by the browser permission flow.
-  }
-
-  try {
-    scanner.clear()
-  } catch {
-    // html5-qrcode throws if the internal element is already empty.
-  }
-}
-
-async function startScanner(
-  scanner: Html5Qrcode,
-  elementId: string,
-  onSuccess: (decodedText: string) => void,
-) {
-  document.getElementById(elementId)?.replaceChildren()
-
-  try {
-    await scanner.start(
-      { facingMode: 'environment' },
-      scannerConfig,
-      onSuccess,
-      () => undefined,
-    )
-    return
-  } catch {
-    await stopScanner(scanner)
-    document.getElementById(elementId)?.replaceChildren()
-
-    const cameras = await Html5Qrcode.getCameras()
-    const fallbackCamera = cameras[0]
-
-    if (!fallbackCamera) {
-      throw new Error('Nenhuma camera encontrada.')
-    }
-
-    await scanner.start(
-      fallbackCamera.id,
-      scannerConfig,
-      onSuccess,
-      () => undefined,
-    )
-  }
+    if (isScannerActive(scanner)) await scanner.stop()
+  } catch { /* camera may already be stopped */ }
+  try { scanner.clear() } catch { /* internal element may be empty */ }
 }
 
 export function QrCodeScanner({
-  isOpen,
-  restartSignal,
   onScan,
   onCameraError,
+  onStatusChange,
+  enabled,
 }: QrCodeScannerProps) {
   const reactId = useId()
-  const scannerElementId = `driver-qr-reader-${reactId.replace(/:/g, '')}`
+  const elementId = `driver-qr-reader-${reactId.replace(/:/g, '')}`
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const stopPromiseRef = useRef<Promise<void>>(Promise.resolve())
-  const hasScannedRef = useRef(false)
-  const [cameraState, setCameraState] = useState<CameraState>('starting')
+  const lastScanRef = useRef(0)
+  const enabledRef = useRef(enabled)
+  const onScanRef = useRef(onScan)
+  const onCameraErrorRef = useRef(onCameraError)
+  const onStatusChangeRef = useRef(onStatusChange)
 
   useEffect(() => {
-    if (!isOpen) {
-      return undefined
-    }
+    enabledRef.current = enabled
+    onScanRef.current = onScan
+    onCameraErrorRef.current = onCameraError
+    onStatusChangeRef.current = onStatusChange
+  })
 
-    let isCancelled = false
-    hasScannedRef.current = false
+  useEffect(() => {
+    let cancelled = false
 
-    const scanner = new Html5Qrcode(scannerElementId, {
+    const scanner = new Html5Qrcode(elementId, {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
       verbose: false,
     })
-
     scannerRef.current = scanner
 
-    const handleScanSuccess = (decodedText: string) => {
-      if (hasScannedRef.current) {
-        return
-      }
-
-      hasScannedRef.current = true
-      scanner.pause(true)
-      void onScan(decodedText.trim())
+    const handleSuccess = (decodedText: string) => {
+      if (!enabledRef.current) return
+      const now = Date.now()
+      if (now - lastScanRef.current < 2000) return
+      lastScanRef.current = now
+      onScanRef.current(decodedText.trim())
     }
 
     const startTask = stopPromiseRef.current
       .catch(() => undefined)
       .then(async () => {
-        if (isCancelled) {
-          return
-        }
-
-        setCameraState('starting')
-        await startScanner(scanner, scannerElementId, handleScanSuccess)
-      })
-      .then(() => {
-        if (!isCancelled) {
-          setCameraState('ready')
+        if (cancelled) return
+        onStatusChangeRef.current?.('loading')
+        document.getElementById(elementId)?.replaceChildren()
+        try {
+          await scanner.start(
+            { facingMode: 'environment' },
+            scannerConfig,
+            handleSuccess,
+            () => undefined,
+          )
+          if (!cancelled) onStatusChangeRef.current?.('ready')
+        } catch {
+          await stopScanner(scanner)
+          document.getElementById(elementId)?.replaceChildren()
+          const cameras = await Html5Qrcode.getCameras()
+          const fallback = cameras[0]
+          if (!fallback) throw new Error('Nenhuma camera encontrada.')
+          await scanner.start(fallback.id, scannerConfig, handleSuccess, () => undefined)
+          if (!cancelled) onStatusChangeRef.current?.('ready')
         }
       })
       .catch(() => {
-        if (!isCancelled) {
-          setCameraState('error')
-          onCameraError('Nao foi possivel abrir a camera para ler o QR Code.')
+        if (!cancelled) {
+          onStatusChangeRef.current?.('error')
+          onCameraErrorRef.current('Nao foi possivel abrir a camera para ler o QR Code.')
         }
       })
 
     return () => {
-      isCancelled = true
+      cancelled = true
       scannerRef.current = null
       stopPromiseRef.current = startTask
         .catch(() => undefined)
         .then(() => stopScanner(scanner))
     }
-  }, [isOpen, onCameraError, onScan, scannerElementId])
+  }, [elementId])
 
   useEffect(() => {
-    if (!isOpen || restartSignal === 0) {
-      return
-    }
-
     const scanner = scannerRef.current
-
-    if (!scanner || scanner.getState() !== Html5QrcodeScannerState.PAUSED) {
-      return
+    if (!scanner) return
+    const state = scanner.getState()
+    if (enabled && state === Html5QrcodeScannerState.PAUSED) {
+      scanner.resume()
     }
-
-    hasScannedRef.current = false
-    scanner.resume()
-  }, [isOpen, restartSignal])
+    if (!enabled && state === Html5QrcodeScannerState.SCANNING) {
+      scanner.pause(true)
+    }
+  }, [enabled])
 
   return (
-    <div className="grid gap-3">
-      <div
-        id={scannerElementId}
-        className="mx-auto aspect-square w-full max-w-md overflow-hidden rounded-lg bg-slate-950 text-white [&_video]:!h-full [&_video]:!w-full [&_video]:object-cover"
-      />
-      {cameraState === 'starting' ? (
-        <p className="text-sm font-medium text-muted-foreground">
-          Iniciando camera...
-        </p>
-      ) : null}
-      {cameraState === 'ready' ? (
-        <p className="text-sm font-medium text-muted-foreground">
-          Aponte a camera para o QR Code do passageiro.
-        </p>
-      ) : null}
-      {cameraState === 'error' ? (
-        <p className="text-sm font-semibold text-destructive" role="alert">
-          Nao foi possivel acessar a camera. Verifique a permissao do navegador.
-        </p>
-      ) : null}
-    </div>
+    <div
+      id={elementId}
+      className="aspect-[3/4] w-full bg-black [&_video]:!h-full [&_video]:!w-full [&_video]:object-cover"
+    />
   )
 }

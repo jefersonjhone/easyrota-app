@@ -6,6 +6,7 @@ import { Input } from "@ui/input"
 
 // Hooks
 import { useState } from "react"
+import { useNavigate } from "@tanstack/react-router"
 import { apiFetch } from "@/lib/api"
 
 // Routes
@@ -16,6 +17,7 @@ type Props = {
 }
 
 export function ChangePasswordForms({ token, otp }: Props) {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -59,7 +61,7 @@ export function ChangePasswordForms({ token, otp }: Props) {
       
       setSuccess(true)
       setTimeout(() => {
-        window.location.href = "/login"
+        navigate({ to: "/login" })
       }, 2000)
     } catch (err: unknown) {
       console.error(err)

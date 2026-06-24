@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from ..managers import AllowedStaffManager, MFAChallengeManager
+
 
 class MFAChallenge(models.Model):
     """A model for validate email at registration"""
@@ -41,6 +43,8 @@ class MFAChallenge(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    objects = MFAChallengeManager()
+
     class Meta:
         db_table = "auth_mfa_challenges"
 
@@ -61,12 +65,15 @@ class MFAChallenge(models.Model):
 class AllowedStaff(models.Model):
     """Staff imported from the official ODS file."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     registration_number = models.CharField(max_length=32, unique=True)
 
     class Meta:
         db_table = "users_allowed_staff"
         ordering = ["name"]
+
+    objects = AllowedStaffManager()
 
     def __str__(self):
         return f"{self.name} ({self.registration_number})"

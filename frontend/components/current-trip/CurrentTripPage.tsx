@@ -25,7 +25,7 @@ type PassengerGuest = {
 };
 
 type CurrentTripData = {
-  id: number;
+  id: string;
   trip_date: string;
   origin: string;
   destiny: string;

@@ -102,11 +102,11 @@ class NotificationFlowTests(TestCase):
         )
 
         with patch(
-            "apps.trips.management.commands.send_test_push.send_user_notification"
+            "apps.notifications.management.commands.send_test_push.PushService.send_to_users"
         ) as mocked_send:
             call_command("send_test_push")
 
-        assert mocked_send.call_count >= 2
+        assert mocked_send.call_count == 1
 
     def test_scheduler_sends_notifications_when_quorum_is_missing(self):
         trip = Trip.objects.create(
@@ -199,7 +199,7 @@ class NotificationFlowTests(TestCase):
         trip = self._create_trip_with_minimum_quorum()
 
         with patch(
-            "apps.trips.management.commands.run_scheduler.send_trip_quorum_warning_notification"
+            "apps.trips.management.commands.run_scheduler.NotificationService.notify_quorum_warning"
         ) as mocked_warning:
             check_upcoming_trips_quorum()
 

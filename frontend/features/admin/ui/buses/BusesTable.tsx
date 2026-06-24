@@ -6,7 +6,7 @@ import { Button } from "@ui/button"
 
 interface BusesTableProps {
   buses: Bus[]
-  onDeleteBus: (id: number) => void
+  onDeleteBus: (id: string) => void
   onEditBus: (bus: Bus) => void
 }
 

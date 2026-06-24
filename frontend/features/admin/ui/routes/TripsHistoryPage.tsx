@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Button } from '@ui/button'
-import { Card, CardContent } from '@ui/card'
 import { apiFetch } from '@/lib/api'
-import { formatTripDate } from "@/features/user-home/config";
+import { formatTripDate, getStatusTone } from '@/features/user-home/config'
 
 interface TripReservation {
-  id: number
+  id: string
   origin: string
   destiny: string
   trip_date: string
@@ -16,19 +16,33 @@ interface TripReservation {
   created_at: string
 }
 
+const statusLabel: Record<string, string> = {
+  CONCLUÍDA: 'Concluída',
+  CONCLUIDA: 'Concluída',
+  PENDENTE: 'Em espera',
+  FALTA: 'Falta',
+  CANCELADA: 'Cancelada',
+}
+
+const FILTER_OPTIONS = ['Todas', 'CONCLUÍDA', 'FALTA', 'CANCELADA'] as const
+
 export function TripsHistoryPage() {
   const [trips, setTrips] = useState<TripReservation[]>([])
   const [loading, setLoading] = useState(true)
   const [cancelingId, setCancelingId] = useState<number | null>(null)
+  const [activeFilter, setActiveFilter] = useState<string>('Todas')
 
   useEffect(() => {
     apiFetch<TripReservation[]>('/reservations/history/')
-      .then((data) => {
-        setTrips(data)
-      })
+      .then(setTrips)
       .catch((err) => console.error('Erro ao buscar histórico:', err))
       .finally(() => setLoading(false))
   }, [])
+
+  const filteredTrips = useMemo(() => {
+    if (activeFilter === 'Todas') return trips
+    return trips.filter((t) => t.trip_history_status === activeFilter)
+  }, [trips, activeFilter])
 
   const handleCancel = async (reservationId: number) => {
     setCancelingId(reservationId)
@@ -45,103 +59,127 @@ export function TripsHistoryPage() {
     }
   }
 
-  const getStatusStyles = (status: TripReservation['trip_history_status']) => {
-    switch (status) {
-      case 'CONCLUÍDA':
-        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
-      case 'PENDENTE':
-        return 'bg-amber-500/10 text-amber-600 border-amber-500/20'
-      case 'CANCELADA':
-        return 'bg-muted text-muted-foreground border-border'
-      case 'FALTA':
-        return 'bg-destructive/10 text-destructive border-destructive/20'
-      default:
-        return 'bg-muted text-muted-foreground border-border'
-    }
-  }
-
-  const getStatusLabel = (status: TripReservation['trip_history_status']) => {
-    switch (status) {
-      case 'CONCLUÍDA': return 'Concluída'
-      case 'PENDENTE': return 'Em Espera / Pendente'
-      case 'CANCELADA': return 'Cancelada'
-      case 'FALTA': return 'Falta Computada'
-      default: return status
-    }
-  }
-
   if (loading) {
     return (
-      <div className="w-full text-center p-8 text-muted-foreground animate-pulse font-medium">
-        Carregando histórico...
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="rounded-4xl border border-dashed border-border bg-muted/30 p-4 md:p-8 text-center text-xs md:text-sm text-muted-foreground">
+          Carregando histórico...
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 md:p-6 text-left">
-      <h1 className="text-2xl md:text-3xl font-heading font-bold mb-6 text-foreground">
-        Histórico de Viagens
-      </h1>
+    <section className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="mb-5 md:mb-8 space-y-1.5 md:space-y-2">
+        <span className="inline-flex w-fit rounded-full bg-primary/10 px-2.5 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-semibold tracking-[0.2em] text-primary uppercase">
+          Histórico
+        </span>
+        <h1 className="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight">
+          Histórico de viagens
+        </h1>
+        <p className="max-w-2xl text-xs md:text-sm lg:text-base leading-relaxed text-muted-foreground">
+          Todas as reservas realizadas anteriormente, incluindo concluídas e canceladas.
+        </p>
+      </div>
 
-      <div className="flex flex-col gap-4">
-        {trips.length === 0 ? (
-          <div className="text-center p-8 text-muted-foreground border border-dashed border-border rounded-xl">
-            Nenhuma viagem encontrada no seu histórico.
+      {trips.length === 0 ? (
+        <div className="rounded-4xl border border-dashed border-border bg-muted/30 p-4 md:p-8 text-center">
+          <div className="space-y-3 md:space-y-4">
+            <div>
+              <h3 className="text-sm md:text-lg font-semibold">Nenhum histórico</h3>
+              <p className="mt-1.5 md:mt-2 text-xs md:text-sm leading-relaxed text-muted-foreground">
+              Você ainda não realizou nenhuma viagem pelo sistema.
+            </p>
           </div>
-        ) : (
-          trips.map((trip) => (
-            <Card key={trip.id} className="w-full bg-card border-border">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                      Data e Rota
-                    </span>
-                    <div className="flex items-center gap-2 text-sm md:text-base font-medium text-foreground">
-                      <span>{formatTripDate(trip.trip_date)}</span>
-                      <span className="text-muted-foreground">•</span>
-                      <span>{trip.origin}</span>
-                      <span className="text-muted-foreground">↔</span>
-                      <span>{trip.destiny}</span>
+            <Link to="/app/viagens">
+              <Button size="sm" className="md:default">Explorar viagens disponíveis</Button>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mb-4 md:mb-6 flex flex-wrap gap-2">
+            {FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                onClick={() => setActiveFilter(opt)}
+                className={`rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-semibold tracking-wide transition-colors ${
+                  activeFilter === opt
+                    ? 'bg-primary text-primary-foreground'
+                    : opt === 'Todas'
+                    ? 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                    : opt === 'CONCLUÍDA'
+                      ? 'bg-muted text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-700'
+                      : opt === 'FALTA'
+                        ? 'bg-muted text-muted-foreground hover:bg-rose-500/10 hover:text-rose-700'
+                        : 'bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+                }`}
+              >
+                {opt === 'Todas' ? 'Todas' : statusLabel[opt] || opt}
+              </button>
+            ))}
+          </div>
+
+          {filteredTrips.length === 0 ? (
+            <div className="rounded-4xl border border-dashed border-border bg-muted/30 p-4 md:p-8 text-center text-xs md:text-sm text-muted-foreground">
+              Nenhuma viagem encontrada para este filtro.
+            </div>
+          ) : (
+          <div className="space-y-3 md:space-y-4">
+            {filteredTrips.map((trip) => (
+              <Link
+                key={trip.id}
+                to="/app/viagens/$id"
+                params={{ id: trip.id }}
+                className="block rounded-4xl border border-border/70 bg-card/95 px-4 md:px-6 py-3 md:py-5 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="flex flex-col gap-3 md:gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1.5 md:space-y-2 flex-1">
+                    <div className="flex items-start justify-between gap-2 md:gap-4">
+                      <div className="min-w-0">
+                        <p className="font-heading text-sm md:text-lg font-semibold tracking-tight">
+                          {trip.origin} → {trip.destiny}
+                        </p>
+                        <p className="mt-0.5 md:mt-1 text-xs md:text-sm text-muted-foreground">
+                          {formatTripDate(trip.trip_date)}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 inline-flex rounded-full px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs font-semibold tracking-wide uppercase ring-1 ${getStatusTone(trip.trip_history_status)}`}
+                      >
+                        {statusLabel[trip.trip_history_status] || trip.trip_history_status}
+                      </span>
                     </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold border ${getStatusStyles(trip.trip_history_status)}`}>
-                      {getStatusLabel(trip.trip_history_status)}
-                    </span>
-                    <div className="mt-2 flex gap-2 text-xs text-muted-foreground">
-                      <span className="rounded-full bg-muted px-3 py-1">
+
+                    <div className="flex flex-wrap gap-1.5 md:gap-2 pt-0.5 md:pt-1">
+                      <span className="rounded-full bg-muted px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs text-muted-foreground">
                         Reserva: {trip.reservation_status}
                       </span>
-                      <span className="rounded-full bg-muted px-3 py-1">
+                      <span className="rounded-full bg-muted px-2 md:px-3 py-0.5 md:py-1 text-[10px] md:text-xs text-muted-foreground">
                         Quórum: {trip.quorum_met ? 'atingido' : 'pendente'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-3 pt-2 md:pt-0 border-t border-border md:border-none">
-                    <Button variant="outline" size="sm" className="font-bold text-xs h-9 px-4 hidden">
-                      Detalhes
+                  {trip.can_cancel && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:bg-destructive/10 border-destructive/20 shrink-0"
+                      onClick={(e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); handleCancel(trip.id) }}
+                      disabled={cancelingId === trip.id}
+                    >
+                      {cancelingId === trip.id ? 'Cancelando...' : 'Cancelar'}
                     </Button>
-                    {trip.can_cancel && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="font-bold text-xs h-9 px-4 text-destructive hover:bg-destructive/10 border-destructive/20"
-                        onClick={() => handleCancel(trip.id)}
-                        disabled={cancelingId === trip.id}
-                      >
-                        {cancelingId === trip.id ? 'Cancelando...' : 'Cancelar'}
-                      </Button>
-                    )}
-                  </div>
-
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-    </div>
+              </Link>
+            ))}
+          </div>
+          )}
+        </>
+      )}
+    </section>
   )
 }
