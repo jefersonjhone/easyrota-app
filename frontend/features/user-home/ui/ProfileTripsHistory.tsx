@@ -60,7 +60,7 @@ export function TripsHistoryCard() {
       </CardHeader>
       <CardContent className="px-2">
         <div className="space-y-2 md:space-y-6 w-full">
-          {trips.map((trip: Trip) => {
+          {trips.slice(0, 3).map((trip: Trip) => {
             return (
               <div
                 key={trip.id}

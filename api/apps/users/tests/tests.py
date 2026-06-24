@@ -12,7 +12,6 @@ from rest_framework.test import APIClient, APITestCase
 
 from apps.reservations.models import Reservation
 from apps.trips.models import Bus, Route, Trip, TripPassenger
-
 from apps.users.models.auth import AllowedStaff, MFAChallenge
 from apps.users.models.profiles import (
     AdministratorProfile,

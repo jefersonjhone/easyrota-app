@@ -1,19 +1,30 @@
-import pytest
 from datetime import date, time, timedelta
-from django.utils import timezone
+
+import pytest
 from django.contrib.auth import get_user_model
-from apps.trips.models import Bus, Route, Trip
+
 from apps.reservations.models import Reservation
-from apps.users.models.profiles import StudentProfile, CivilServantProfile, AdministratorProfile
 from apps.reservations.services import trip_has_capacity
+from apps.trips.models import Bus, Route, Trip
+from apps.users.models.profiles import (
+    AdministratorProfile,
+    CivilServantProfile,
+    StudentProfile,
+)
 
 User = get_user_model()
 
+
 @pytest.fixture
 def superadmin(db):
-    user = User.objects.create_user(email="admin_test@test.com", password="password123", full_name="Ricardo Admin")
-    AdministratorProfile.objects.create(user=user, level=AdministratorProfile.Level.SUPERADMIN)
+    user = User.objects.create_user(
+        email="admin_test@test.com", password="password123", full_name="Ricardo Admin"
+        )
+    AdministratorProfile.objects.create(
+        user=user, level=AdministratorProfile.Level.SUPERADMIN
+        )
     return user
+
 
 @pytest.fixture
 def route(db, superadmin):
@@ -23,12 +34,14 @@ def route(db, superadmin):
         administrator=superadmin.admin_profile
     )
 
+
 @pytest.fixture
 def bus(db, superadmin):
     return Bus.objects.create(
         number_plate="BUS-001", seating_capacity=2, brand="Test",
         status="ATIVO", administrator=superadmin.admin_profile
     )
+
 
 @pytest.fixture
 def trip(db, bus, route):
@@ -39,40 +52,56 @@ def trip(db, bus, route):
         status="CONFIRMADA"
     )
 
+
 @pytest.fixture
 def student_user(db):
-    user = User.objects.create_user(email="student@test.com", password="password123", full_name="Student One")
+    user = User.objects.create_user(
+        email="student@test.com", password="password123", full_name="Student One"
+        )
     StudentProfile.objects.create(user=user, student_id="ST001")
     return user
 
+
 @pytest.fixture
 def server_user(db):
-    user = User.objects.create_user(email="server@test.com", password="password123", full_name="Server One")
+    user = User.objects.create_user(
+        email="server@test.com", password="password123", full_name="Server One"
+        )
     CivilServantProfile.objects.create(user=user, civil_servant_id="CS001")
     return user
+
 
 @pytest.mark.django_db
 def test_civil_servant_displaces_student(trip, student_user, server_user):
     from apps.reservations.services import sync_trip_status
     # Fill trip with students (capacity is 2)
-    s2_user = User.objects.create_user(email="student2@test.com", password="password123", full_name="Student Two")
+    s2_user = User.objects.create_user(
+        email="student2@test.com", password="password123", full_name="Student Two"
+        )
     StudentProfile.objects.create(user=s2_user, student_id="ST002")
     
-    Reservation.objects.create(trip=trip, student=student_user.student_profile, status="CONFIRMADA")
-    Reservation.objects.create(trip=trip, student=s2_user.student_profile, status="CONFIRMADA")
+    Reservation.objects.create(
+        trip=trip, student=student_user.student_profile, status="CONFIRMADA"
+        )
+    Reservation.objects.create(
+        trip=trip, student=s2_user.student_profile, status="CONFIRMADA"
+        )
     sync_trip_status(trip)
     
     assert not trip_has_capacity(trip)
     
     # Civil servant attempts to reserve
-    from apps.reservations.serializers import ReservationSerializer
     from rest_framework.test import APIRequestFactory
+
+    from apps.reservations.serializers import ReservationSerializer
     
     factory = APIRequestFactory()
     request = factory.post('/api/reservations/')
     request.user = server_user
     
-    serializer = ReservationSerializer(data={'trip': trip.id}, context={'request': request})
+    serializer = ReservationSerializer(
+        data={'trip': trip.id}, context={'request': request}
+        )
     assert serializer.is_valid()
     
     reservation = serializer.save()
@@ -82,37 +111,56 @@ def test_civil_servant_displaces_student(trip, student_user, server_user):
     assert reservation.civil_servant == server_user.civil_servant_profile
     
     # One student should have been displaced
-    displaced = Reservation.objects.filter(trip=trip, student=s2_user.student_profile).first()
+    displaced = Reservation.objects.filter(
+        trip=trip, student=s2_user.student_profile
+        ).first()
     assert displaced.status == "LISTA SECUNDÁRIA"
+
 
 @pytest.mark.django_db
 def test_civil_servant_to_waitlist_when_only_servers(trip, server_user, superadmin):
     from apps.reservations.services import sync_trip_status
     # Fill trip with civil servants
-    s2_user = User.objects.create_user(email="server2@test.com", password="password123", full_name="Server Two")
+    s2_user = User.objects.create_user(
+        email="server2@test.com", password="password123", full_name="Server Two"
+        )
     CivilServantProfile.objects.create(user=s2_user, civil_servant_id="CS002")
     
-    Reservation.objects.create(trip=trip, civil_servant=server_user.civil_servant_profile, status="CONFIRMADA")
-    Reservation.objects.create(trip=trip, civil_servant=s2_user.civil_servant_profile, status="CONFIRMADA")
+    Reservation.objects.create(
+        trip=trip, civil_servant=server_user.civil_servant_profile, status="CONFIRMADA"
+        )
+    Reservation.objects.create(
+        trip=trip, civil_servant=s2_user.civil_servant_profile, status="CONFIRMADA"
+        )
     sync_trip_status(trip)
     
     assert not trip_has_capacity(trip)
     
     # Third civil servant attempts to reserve
-    s3_user = User.objects.create_user(email="server3@test.com", password="password123", full_name="Server Three")
+    s3_user = User.objects.create_user(
+        email="server3@test.com", password="password123", full_name="Server Three"
+        )
     CivilServantProfile.objects.create(user=s3_user, civil_servant_id="CS003")
     
     # Ensure there's another bus available for the alert logic
-    Bus.objects.create(number_plate="BUS-002", seating_capacity=10, brand="Extra", status="ATIVO", administrator=superadmin.admin_profile)
+    Bus.objects.create(
+        number_plate="BUS-002", 
+        seating_capacity=10, 
+        brand="Extra", 
+        status="ATIVO", 
+        administrator=superadmin.admin_profile)
     
-    from apps.reservations.serializers import ReservationSerializer
     from rest_framework.test import APIRequestFactory
+
+    from apps.reservations.serializers import ReservationSerializer
     
     factory = APIRequestFactory()
     request = factory.post('/api/reservations/')
     request.user = s3_user
     
-    serializer = ReservationSerializer(data={'trip': trip.id}, context={'request': request})
+    serializer = ReservationSerializer(
+        data={'trip': trip.id}, context={'request': request}
+        )
     assert serializer.is_valid()
     
     reservation = serializer.save()
@@ -121,18 +169,26 @@ def test_civil_servant_to_waitlist_when_only_servers(trip, server_user, superadm
     assert reservation.status == "LISTA SECUNDÁRIA"
     assert reservation.civil_servant == s3_user.civil_servant_profile
 
+
 @pytest.mark.django_db
 def test_is_reservable_for_server_with_available_bus(trip, server_user, superadmin):
     from apps.reservations.services import sync_trip_status
     # Fill trip
-    Reservation.objects.create(trip=trip, status="CONFIRMADA", civil_servant=server_user.civil_servant_profile)
-    s2_user = User.objects.create_user(email="server2@test.com", password="password123", full_name="Server Two")
+    Reservation.objects.create(
+        trip=trip, status="CONFIRMADA", civil_servant=server_user.civil_servant_profile
+        )
+    s2_user = User.objects.create_user(
+        email="server2@test.com", password="password123", full_name="Server Two"
+        )
     CivilServantProfile.objects.create(user=s2_user, civil_servant_id="CS002")
-    Reservation.objects.create(trip=trip, status="CONFIRMADA", civil_servant=s2_user.civil_servant_profile)
+    Reservation.objects.create(
+        trip=trip, status="CONFIRMADA", civil_servant=s2_user.civil_servant_profile
+        )
     sync_trip_status(trip)
     
-    from apps.reservations.serializers import AvailableTripSerializer
     from rest_framework.test import APIRequestFactory
+
+    from apps.reservations.serializers import AvailableTripSerializer
     
     factory = APIRequestFactory()
     request = factory.get('/')
@@ -143,21 +199,30 @@ def test_is_reservable_for_server_with_available_bus(trip, server_user, superadm
     assert serializer.data['is_reservable'] is False
     
     # Now add an available bus
-    Bus.objects.create(number_plate="BUS-003", seating_capacity=10, brand="Extra", status="ATIVO", administrator=superadmin.admin_profile)
+    Bus.objects.create(
+        number_plate="BUS-003", 
+        seating_capacity=10, 
+        brand="Extra", 
+        status="ATIVO", 
+        administrator=superadmin.admin_profile)
     
     serializer = AvailableTripSerializer(trip, context={'request': request})
     assert serializer.data['is_reservable'] is True
+
 
 @pytest.mark.django_db
 def test_role_based_available_seats(trip, student_user, server_user):
     from apps.reservations.services import sync_trip_status
     # Trip capacity is 2. 
     # 1 student reserved.
-    Reservation.objects.create(trip=trip, student=student_user.student_profile, status="CONFIRMADA")
+    Reservation.objects.create(
+        trip=trip, student=student_user.student_profile, status="CONFIRMADA"
+        )
     sync_trip_status(trip)
     
-    from apps.reservations.serializers import AvailableTripSerializer
     from rest_framework.test import APIRequestFactory
+
+    from apps.reservations.serializers import AvailableTripSerializer
     factory = APIRequestFactory()
 
     # Case 1: Student viewing
@@ -175,7 +240,9 @@ def test_role_based_available_seats(trip, student_user, server_user):
     assert ser_server.data['available_seats'] == 2
 
     # Case 3: 1 server joins
-    Reservation.objects.create(trip=trip, civil_servant=server_user.civil_servant_profile, status="CONFIRMADA")
+    Reservation.objects.create(
+        trip=trip, civil_servant=server_user.civil_servant_profile, status="CONFIRMADA"
+        )
     sync_trip_status(trip)
     
     # Student sees 0 seats left (1 student + 1 server = 2)

@@ -13,9 +13,11 @@ import { Route as App_rootRouteImport } from './pages/app/__root'
 import { Route as Admin_rootRouteImport } from './pages/admin/__root'
 import { Route as AppViagens_rootRouteImport } from './pages/app/viagens/__root'
 import { Route as VerificarRouteImport } from './pages/verificar'
+import { Route as TermosDeUsoRouteImport } from './pages/termos-de-uso'
 import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
 import { Route as SignupRouteImport } from './pages/signup'
 import { Route as RecuperarRouteImport } from './pages/recuperar'
+import { Route as PoliticaDePrivacidadeRouteImport } from './pages/politica-de-privacidade'
 import { Route as LoginRouteImport } from './pages/login'
 import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as IndexRouteImport } from './pages/index'
@@ -29,6 +31,7 @@ import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
 import { Route as AppViagensIndexRouteImport } from './pages/app/viagens/index'
 import { Route as AppViagensHistoricoRouteImport } from './pages/app/viagens/historico'
 import { Route as AppViagensAtualRouteImport } from './pages/app/viagens/atual'
+import { Route as AppPenalidadesHistoricoRouteImport } from './pages/app/penalidades/historico'
 import { Route as AppDriverViagensRouteImport } from './pages/app/driver/viagens'
 import { Route as AppDriverViagemTripIdRouteImport } from './pages/app/driver/viagem.$tripId'
 
@@ -49,6 +52,11 @@ const VerificarRoute = VerificarRouteImport.update({
   path: '/verificar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermosDeUsoRoute = TermosDeUsoRouteImport.update({
+  id: '/termos-de-uso',
+  path: '/termos-de-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SobreProjetoRoute = SobreProjetoRouteImport.update({
   id: '/sobre-projeto',
   path: '/sobre-projeto',
@@ -62,6 +70,11 @@ const SignupRoute = SignupRouteImport.update({
 const RecuperarRoute = RecuperarRouteImport.update({
   id: '/recuperar',
   path: '/recuperar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
+  id: '/politica-de-privacidade',
+  path: '/politica-de-privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -129,6 +142,11 @@ const AppViagensAtualRoute = AppViagensAtualRouteImport.update({
   path: '/app/viagens/atual',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppPenalidadesHistoricoRoute = AppPenalidadesHistoricoRouteImport.update({
+  id: '/app/penalidades/historico',
+  path: '/app/penalidades/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppDriverViagensRoute = AppDriverViagensRouteImport.update({
   id: '/app/driver/viagens',
   path: '/app/driver/viagens',
@@ -144,9 +162,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
   '/admin': typeof Admin_rootRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -158,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
@@ -168,9 +189,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
   '/admin': typeof AdminIndexRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -180,6 +203,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens': typeof AppViagensIndexRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
@@ -190,9 +214,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
+  '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/recuperar': typeof RecuperarRoute
   '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
+  '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
   '/admin/__root': typeof Admin_rootRoute
   '/admin/motoristas': typeof AdminMotoristasRoute
@@ -204,6 +230,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens/__root': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
@@ -216,9 +243,11 @@ export interface FileRouteTypes {
     | '/'
     | '/equipe'
     | '/login'
+    | '/politica-de-privacidade'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/termos-de-uso'
     | '/verificar'
     | '/admin'
     | '/admin/motoristas'
@@ -230,6 +259,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/app/driver/viagens'
+    | '/app/penalidades/historico'
     | '/app/viagens'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
@@ -240,9 +270,11 @@ export interface FileRouteTypes {
     | '/'
     | '/equipe'
     | '/login'
+    | '/politica-de-privacidade'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/termos-de-uso'
     | '/verificar'
     | '/admin'
     | '/admin/motoristas'
@@ -252,6 +284,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/perfil'
     | '/app/driver/viagens'
+    | '/app/penalidades/historico'
     | '/app/viagens'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
@@ -261,9 +294,11 @@ export interface FileRouteTypes {
     | '/'
     | '/equipe'
     | '/login'
+    | '/politica-de-privacidade'
     | '/recuperar'
     | '/signup'
     | '/sobre-projeto'
+    | '/termos-de-uso'
     | '/verificar'
     | '/admin/__root'
     | '/admin/motoristas'
@@ -275,6 +310,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/app/driver/viagens'
+    | '/app/penalidades/historico'
     | '/app/viagens/__root'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
@@ -286,9 +322,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EquipeRoute: typeof EquipeRoute
   LoginRoute: typeof LoginRoute
+  PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   RecuperarRoute: typeof RecuperarRoute
   SignupRoute: typeof SignupRoute
   SobreProjetoRoute: typeof SobreProjetoRoute
+  TermosDeUsoRoute: typeof TermosDeUsoRoute
   VerificarRoute: typeof VerificarRoute
   Admin_rootRoute: typeof Admin_rootRoute
   AdminMotoristasRoute: typeof AdminMotoristasRoute
@@ -300,6 +338,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDriverViagensRoute: typeof AppDriverViagensRoute
+  AppPenalidadesHistoricoRoute: typeof AppPenalidadesHistoricoRoute
   AppViagens_rootRoute: typeof AppViagens_rootRoute
   AppViagensAtualRoute: typeof AppViagensAtualRoute
   AppViagensHistoricoRoute: typeof AppViagensHistoricoRoute
@@ -337,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerificarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/termos-de-uso': {
+      id: '/termos-de-uso'
+      path: '/termos-de-uso'
+      fullPath: '/termos-de-uso'
+      preLoaderRoute: typeof TermosDeUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sobre-projeto': {
       id: '/sobre-projeto'
       path: '/sobre-projeto'
@@ -356,6 +402,13 @@ declare module '@tanstack/react-router' {
       path: '/recuperar'
       fullPath: '/recuperar'
       preLoaderRoute: typeof RecuperarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-de-privacidade': {
+      id: '/politica-de-privacidade'
+      path: '/politica-de-privacidade'
+      fullPath: '/politica-de-privacidade'
+      preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -449,6 +502,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppViagensAtualRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/penalidades/historico': {
+      id: '/app/penalidades/historico'
+      path: '/app/penalidades/historico'
+      fullPath: '/app/penalidades/historico'
+      preLoaderRoute: typeof AppPenalidadesHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/driver/viagens': {
       id: '/app/driver/viagens'
       path: '/app/driver/viagens'
@@ -470,9 +530,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EquipeRoute: EquipeRoute,
   LoginRoute: LoginRoute,
+  PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   RecuperarRoute: RecuperarRoute,
   SignupRoute: SignupRoute,
   SobreProjetoRoute: SobreProjetoRoute,
+  TermosDeUsoRoute: TermosDeUsoRoute,
   VerificarRoute: VerificarRoute,
   Admin_rootRoute: Admin_rootRoute,
   AdminMotoristasRoute: AdminMotoristasRoute,
@@ -484,6 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AppIndexRoute: AppIndexRoute,
   AppDriverViagensRoute: AppDriverViagensRoute,
+  AppPenalidadesHistoricoRoute: AppPenalidadesHistoricoRoute,
   AppViagens_rootRoute: AppViagens_rootRoute,
   AppViagensAtualRoute: AppViagensAtualRoute,
   AppViagensHistoricoRoute: AppViagensHistoricoRoute,

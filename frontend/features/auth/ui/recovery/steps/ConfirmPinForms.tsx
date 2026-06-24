@@ -11,7 +11,7 @@ import {
 } from "@ui/card"
 import { Field, FieldLabel } from "@ui/field"
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@ui/input-otp"
-import { ReloadIcon } from "@radix-ui/react-icons"
+import { ArrowClockwiseIcon } from "@phosphor-icons/react"
 
 // Hooks
 import { useEffect, useState } from "react"
@@ -149,7 +149,7 @@ const PinField = ({ code, setCode, onResend, resendLoading, resendSuccess }: { c
         className="h-8 px-2 text-xs font-medium text-muted-foreground hover:text-primary"
       >
         {resendLoading ? (
-          <><ReloadIcon className="mr-2 h-3 w-3 animate-spin" /> Enviando...</>
+          <><ArrowClockwiseIcon className="mr-2 h-3 w-3 animate-spin" /> Enviando...</>
         ) : resendSuccess ? (
           <span className="text-emerald-500">Enviado!</span>
         ) : (
@@ -188,4 +188,3 @@ const SubmitPin = ({ disabled, loading }: { disabled: boolean, loading: boolean 
     {loading ? "Verificando..." : "Confirmar"}
   </Button>
 )
-

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/lib/ui/card";
 import { Warning } from "@phosphor-icons/react";
 import { usePunishmentsHistory } from "@/features/user-home/hooks/usePunishmentHistory";
+import { formatReservationCreatedAt } from '../config'
 
 interface Punishment {
   id: string;
@@ -59,7 +60,7 @@ export function PunishmentsHistoryCard() {
                     {punishment.description}
                   </p>
                   <p className="text-xs text-gray-500">
-                    Registrado em: {punishment.created_at}
+                    Registrado em: {formatReservationCreatedAt(punishment.created_at)}
                   </p>
                 </div>
               </div>
@@ -72,6 +73,16 @@ export function PunishmentsHistoryCard() {
               </span>
             </div>
           ))}
+
+          <div className="w-full flex items-center mt-4">
+            <a 
+              href="/app/penalidades/historico" 
+              className="mx-auto py-2 text-center text-chart-3 hover:text-chart-4 font-medium md:font-semibold underline"
+            >
+              Ver histórico completo
+            </a>
+          </div>
+          
         </div>
       </CardContent>
     </Card>
