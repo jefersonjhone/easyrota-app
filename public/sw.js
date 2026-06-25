@@ -1,3 +1,5 @@
+const VERSION = 'easyrota-app-v1.0.1'
+
 self.addEventListener('install', (event) => {
   const toCache = [
     '/app/',
@@ -10,7 +12,7 @@ self.addEventListener('install', (event) => {
   ]
 
   event.waitUntil(
-    caches.open('easyrota-app-v1')
+    caches.open(VERSION)
       .then((cache) =>  cache.addAll(toCache))
       .then(() => self.skipWaiting())
   )
@@ -21,7 +23,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => Promise.all(
       cacheNames
         .filter((cacheName) => 
-          cacheName.startsWith('easyrota-') && cacheName !== 'easyrota-app-v1')
+          cacheName.startsWith('easyrota-') && cacheName !== VERSION)
         .map((cacheName) => caches.delete(cacheName))
     ))
     .then(() => self.clients.claim())
@@ -49,7 +51,7 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => {
           const responseClone = response.clone()
-          caches.open('easyrota-app-v1')
+          caches.open(VERSION)
             .then((cache) => {cache.put(request, responseClone)})
           return response
         })
@@ -71,7 +73,7 @@ self.addEventListener('fetch', (event) => {
       caches.match(request).then((cachedResponse) => {
         return cachedResponse || fetch(request).then((response) => {
           const responseClone = response.clone()
-          caches.open('easyrota-app-v1')
+          caches.open(VERSION)
             .then((cache) => {cache.put(request, responseClone)})
           return response
         })
