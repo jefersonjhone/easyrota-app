@@ -105,7 +105,7 @@ export function VerifyCodePage() {
       setSuccess(true)
       
       setTimeout(() => {
-        window.location.href = '/app/login'
+        window.location.href = '/login'
       }, 2000)
 
     } catch (err: unknown) {

@@ -21,10 +21,10 @@ export const SignupPage = () => (
         </CardHeader>
         <CardContent>
           <TabsContent value="civil-servant">
-            <SignupForm variant="civil-servant" paths={{ login: "/app/login" }} />
+            <SignupForm variant="civil-servant" paths={{ login: "/login" }} />
           </TabsContent>
           <TabsContent value="student">
-            <SignupForm variant="student" paths={{ login: "/app/login" }} />
+            <SignupForm variant="student" paths={{ login: "/login" }} />
           </TabsContent>
         </CardContent>
       </Card>

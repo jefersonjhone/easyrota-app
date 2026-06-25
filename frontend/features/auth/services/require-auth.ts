@@ -5,6 +5,6 @@ export function requireAuth() {
   const { user, accessToken } = useAuthStore.getState()
 
   if (!user || !accessToken) {
-    throw redirect({ to: '/app/login' })
+    throw redirect({ to: '/login' })
   }
 }

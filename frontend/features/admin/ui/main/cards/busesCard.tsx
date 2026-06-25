@@ -8,7 +8,7 @@ import { BusIcon, ArrowUpRightIcon } from "@phosphor-icons/react"
 export function TotalBusesCard({ total }: { total: number }) {
   return (
       <Card className="cursor-pointer hover:shadow-md transition group rounded-sm p-2 md:p-4 md:max-h-72">
-        <Link to="/app/admin">
+        <Link to="/admin">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 ">
           <BusIcon className="h-10 md:h-12 w-10 md:w-12 bg-chart-2 text-gray-200 p-2 rounded-full" />
           <CardTitle className="text-sm font-semibold text-center">

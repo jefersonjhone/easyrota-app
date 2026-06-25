@@ -3,7 +3,7 @@ import Header from '@layout/header'
 const paths = {
   passager: '/app',
   driver: '/app/driver/viagens',
-  admin: '/app/admin',
+  admin: '/admin',
 }
 
 type MotoraLayoutProps = {

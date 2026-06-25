@@ -103,7 +103,7 @@ export default function SignupForm(props: Props) {
       // O backend retorna um token no registro para vincular ao desafio OTP
       const token = (response as { token?: string }).token
       const email = data.email
-      const targetPath = `/app/verificar?token=${encodeURIComponent(String(token ?? ""))}&email=${encodeURIComponent(email)}`
+      const targetPath = `/verificar?token=${encodeURIComponent(String(token ?? ""))}&email=${encodeURIComponent(email)}`
 
       await navigate({ to: targetPath as never, replace: true })
     } catch (error: unknown) {
@@ -265,9 +265,9 @@ export default function SignupForm(props: Props) {
 									onClick={() => {
                     const email = form.getValues("email")
                     if (type === "register"){
-                      navigate({ to: `/app/verificar?email=${email}&mode=register` as never, replace: true })
+                      navigate({ to: `/verificar?email=${email}&mode=register` as never, replace: true })
                     } else {
-                      navigate({ to: `/app/verificar?email=${email}&mode=reactivate` as never, replace: true })
+                      navigate({ to: `/verificar?email=${email}&mode=reactivate` as never, replace: true })
                     }
                   }}>
 										{type === "register" ? "Sim" : "Reativar Conta"}

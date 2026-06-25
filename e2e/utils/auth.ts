@@ -21,7 +21,7 @@ export const signupAsCivilServant = async (page: Page, password: string) => {
   await signupPage.password.fill(password)
   await signupPage.confirmPassword.fill(password)
   await signupPage.submitButton.click()
-  await expect(page).toHaveURL('/app/login')
+  await expect(page).toHaveURL('/login')
 
   return { email, password }
 }
@@ -42,7 +42,7 @@ export const signupAsStudent = async (
   await signupPage.password.fill(password)
   await signupPage.confirmPassword.fill(password)
   await signupPage.submitButton.click()
-  await expect(page).toHaveURL('/app/login')
+  await expect(page).toHaveURL('/login')
 
   return { email, password }
 }

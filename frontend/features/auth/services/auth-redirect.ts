@@ -7,7 +7,7 @@ export function getAuthRedirect() {
   if (user && accessToken) {
 
     if (user.admin_profile || user.profile_type === 'ADMIN') {
-      throw redirect({ to: '/app/admin' })
+      throw redirect({ to: '/admin' })
     } else if (user.profile_type === 'DRIVER') {
       throw redirect({ to: '/app/driver/viagens' })
     } else {

@@ -28,7 +28,7 @@ const Header = ({ description, user, paths }: Props) => {
 
   const handleBack = () => {
     const historyIdx = window.history.state?.idx;
-    const isAdminPage = location.pathname.startsWith('/app/admin');
+    const isAdminPage = location.pathname.startsWith('/admin');
 
     if (historyIdx === 0 || isAdminPage) {
       router.history.push('/app');
@@ -69,7 +69,7 @@ const Header = ({ description, user, paths }: Props) => {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {isAdmin && (
             <Button variant="default" size="sm" className="sm:inline-flex">
-              <a href="/app/admin">
+              <a href="/admin">
                 <span>Painel</span>
               </a>
             </Button>

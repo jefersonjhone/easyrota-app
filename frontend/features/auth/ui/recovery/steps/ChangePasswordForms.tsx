@@ -59,7 +59,7 @@ export function ChangePasswordForms({ token, otp }: Props) {
       
       setSuccess(true)
       setTimeout(() => {
-        window.location.href = "/app/login"
+        window.location.href = "/login"
       }, 2000)
     } catch (err: unknown) {
       console.error(err)

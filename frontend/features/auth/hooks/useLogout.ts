@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../store/auth-store"
 import { apiFetch } from "@/lib/api";
-import { Route as LoginRoute } from "@pages/app/login"
+import { Route as LoginRoute } from "@pages/login"
 
 async function logoutRequest() {
     await apiFetch("/auth/logout/", {
