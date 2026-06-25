@@ -11,7 +11,7 @@ import { SignupPage } from '../pages/signup'
 test.describe('Signup Page', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/signup')
+    await page.goto('/app/signup')
   })
 
   test('Can create a new account as Professor', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('Signup Page', () => {
     await signupPage.confirmPassword.fill('12345678')
     await signupPage.submitButton.click()
 
-    await expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL('/app/login')
   })
 
   test('Can create a new account as Student', async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe('Signup Page', () => {
     await signupPage.confirmPassword.fill('12345678')
     await signupPage.submitButton.click()
 
-    await expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL('/app/login')
   })
 
   test('Can go to Login page', async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe('Signup Page', () => {
     await expect(loginLink).toBeVisible()
     await loginLink.click()
 
-    await expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL('/app/login')
   })
 
   test('Has all fields visible for Civil Servant', async ({ page }) => {

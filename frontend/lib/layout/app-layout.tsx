@@ -5,7 +5,7 @@ import { useAuthStore } from "@/features/auth/store/auth-store"
 const paths = {
   passager: "/app",
   driver: "/app/driver/viagens",
-  admin: "/admin"
+  admin: "/app/admin"
 }
 
 type LayoutProps = {

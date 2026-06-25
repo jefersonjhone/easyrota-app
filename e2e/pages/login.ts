@@ -4,8 +4,8 @@ export class LoginPage {
   constructor(public page: Page) {}
 
   async goto() {
-    await this.page.goto('/login')
-    await this.page.waitForURL('/login')
+    await this.page.goto('/app/login')
+    await this.page.waitForURL('/app/login')
   }
 
   get email(): Locator {

@@ -217,7 +217,7 @@ def send_admin_leftover_server_alert(trip, civil_servant):
         "head": "Servidor sem vaga",
         "body": f"O servidor {civil_servant.user.full_name} não conseguiu vaga na "
                 f"viagem {trip}. Por favor, aloque um novo ônibus.",
-        "url": "/app/admin/trips/",
+        "url": "/app/admin/viagens",
     }
 
     # Find the superadmins (e.g. Ricardo Mattos)

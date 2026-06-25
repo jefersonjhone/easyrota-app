@@ -25,12 +25,12 @@ export function AppSidebar() {
   const pathname = location.pathname
 
   const frotaItems = [
-    {title:"Gerenciar Ônibus", icon:BusIcon, url:"/admin/onibus"},
-    {title:"Gerenciar Motoristas", icon:SteeringWheel, url:"/admin/motoristas"},
+    {title:"Gerenciar Ônibus", icon:BusIcon, url:"/app/admin/onibus"},
+    {title:"Gerenciar Motoristas", icon:SteeringWheel, url:"/app/admin/motoristas"},
   ]
   const ViagensItems = [
-    {title:"Gerenciar Viagens", icon:MapTrifold, url:"/admin/viagens"},
-    {title:"Gerenciar Rotas", icon:Path, url:"/admin/rotas"},
+    {title:"Gerenciar Viagens", icon:MapTrifold, url:"/app/admin/viagens"},
+    {title:"Gerenciar Rotas", icon:Path, url:"/app/admin/rotas"},
   ]
 
   return (
@@ -47,8 +47,8 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="font-lg text-semibold">
               <SidebarMenuItem key="Dashboard">
-                <SidebarMenuButton asChild tooltip="Dashboard" size="default" isActive={pathname === "/admin"}>
-                  <Link to="/admin">
+                <SidebarMenuButton asChild tooltip="Dashboard" size="default" isActive={pathname === "/app/admin"}>
+                  <Link to="/app/admin">
                     <Gauge />
                     Dashboard
                   </Link>

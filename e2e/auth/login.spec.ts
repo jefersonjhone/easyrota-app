@@ -32,7 +32,7 @@ test.describe('Login Page', () => {
 
     await expect(loginPage.createAccountButton).toBeVisible()
     await loginPage.createAccountButton.click()
-    await expect(page).toHaveURL('/signup')
+    await expect(page).toHaveURL('/app/signup')
   })
 
   test('Has all fields visible', async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe('Login Page', () => {
 
     await expect(loginPage.forgotPasswordButton).toBeVisible()
     await loginPage.forgotPasswordButton.click()
-    await expect(page).toHaveURL('/recuperar')
+    await expect(page).toHaveURL('/app/recuperar')
   })
 
 })

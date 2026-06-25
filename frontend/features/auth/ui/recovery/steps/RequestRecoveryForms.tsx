@@ -18,7 +18,7 @@ import { useState } from "react"
 import { apiFetch } from "@/lib/api"
 
 // Routes
-import { Route as LoginRoute } from "@/pages/login"
+import { Route as LoginRoute } from "@/pages/app/login"
 
 
 type Props = {

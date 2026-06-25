@@ -12,7 +12,7 @@ import {
 export function TotalTripsCard({ total, onFilterChange }: { total: number; onFilterChange: (days: number) => void }) {
   return (
     <Card className="cursor-pointer hover:shadow-md transition group rounded-sm p-2 md:p-4 max-h-86 md:max-h-96">
-      <Link to="/admin">
+      <Link to="/app/admin">
         <CardHeader className="flex flex-col lg:flex-row md:items-center justify-between space-y-0 p-1">
             <div className="flex gap-4 text-base p-0 m-0 justify-between items-center">
           <MapTrifoldIcon className="h-10 md:h-12 w-10 md:w-12 bg-chart-2 text-gray-200 p-2 rounded-full" />
@@ -45,7 +45,7 @@ export function TotalTripsCard({ total, onFilterChange }: { total: number; onFil
 export function TripsInProgress({ total }: { total: number }) {
   return (
     <Card className="cursor-pointer hover:shadow-md transition group rounded-sm p-2 md:p-4 max-h-86 md:max-h-96">
-      <Link to="/admin/viagens">
+      <Link to="/app/admin/viagens">
             <CardHeader className="flex items-center justify-between space-y-0 p-0">
                   <MapTrifoldIcon className="h-10 md:h-12 w-10 md:w-12 bg-chart-2 text-gray-200 p-2 rounded-full " />
                   <CardTitle className="text-sm font-semibold text-center w-full ">

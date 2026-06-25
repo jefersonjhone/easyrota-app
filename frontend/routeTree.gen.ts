@@ -10,46 +10,41 @@
 
 import { Route as rootRouteImport } from './pages/__root'
 import { Route as App_rootRouteImport } from './pages/app/__root'
-import { Route as Admin_rootRouteImport } from './pages/admin/__root'
 import { Route as AppViagens_rootRouteImport } from './pages/app/viagens/__root'
-import { Route as VerificarRouteImport } from './pages/verificar'
+import { Route as AppAdmin_rootRouteImport } from './pages/app/admin/__root'
 import { Route as TermosDeUsoRouteImport } from './pages/termos-de-uso'
 import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
-import { Route as SignupRouteImport } from './pages/signup'
-import { Route as RecuperarRouteImport } from './pages/recuperar'
 import { Route as PoliticaDePrivacidadeRouteImport } from './pages/politica-de-privacidade'
-import { Route as LoginRouteImport } from './pages/login'
 import { Route as EquipeRouteImport } from './pages/equipe'
 import { Route as IndexRouteImport } from './pages/index'
 import { Route as AppIndexRouteImport } from './pages/app/index'
-import { Route as AdminIndexRouteImport } from './pages/admin/index'
+import { Route as AppVerificarRouteImport } from './pages/app/verificar'
+import { Route as AppSignupRouteImport } from './pages/app/signup'
+import { Route as AppRecuperarRouteImport } from './pages/app/recuperar'
 import { Route as AppPerfilRouteImport } from './pages/app/perfil'
-import { Route as AdminViagensRouteImport } from './pages/admin/viagens'
-import { Route as AdminRotasRouteImport } from './pages/admin/rotas'
-import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
-import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
+import { Route as AppLoginRouteImport } from './pages/app/login'
 import { Route as AppViagensIndexRouteImport } from './pages/app/viagens/index'
+import { Route as AppAdminIndexRouteImport } from './pages/app/admin/index'
 import { Route as AppViagensHistoricoRouteImport } from './pages/app/viagens/historico'
 import { Route as AppViagensAtualRouteImport } from './pages/app/viagens/atual'
 import { Route as AppPenalidadesHistoricoRouteImport } from './pages/app/penalidades/historico'
 import { Route as AppDriverViagensRouteImport } from './pages/app/driver/viagens'
+import { Route as AppAdminViagensRouteImport } from './pages/app/admin/viagens'
+import { Route as AppAdminRotasRouteImport } from './pages/app/admin/rotas'
+import { Route as AppAdminOnibusRouteImport } from './pages/app/admin/onibus'
+import { Route as AppAdminMotoristasRouteImport } from './pages/app/admin/motoristas'
 import { Route as AppDriverViagemTripIdRouteImport } from './pages/app/driver/viagem.$tripId'
 
 const App_rootRoute = App_rootRouteImport.update({
   id: '/app/__root',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Admin_rootRoute = Admin_rootRouteImport.update({
-  id: '/admin/__root',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppViagens_rootRoute = AppViagens_rootRouteImport.update({
   id: '/app/viagens/__root',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VerificarRoute = VerificarRouteImport.update({
-  id: '/verificar',
-  path: '/verificar',
+const AppAdmin_rootRoute = AppAdmin_rootRouteImport.update({
+  id: '/app/admin/__root',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermosDeUsoRoute = TermosDeUsoRouteImport.update({
@@ -62,24 +57,9 @@ const SobreProjetoRoute = SobreProjetoRouteImport.update({
   path: '/sobre-projeto',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecuperarRoute = RecuperarRouteImport.update({
-  id: '/recuperar',
-  path: '/recuperar',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
   id: '/politica-de-privacidade',
   path: '/politica-de-privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EquipeRoute = EquipeRouteImport.update({
@@ -97,9 +77,19 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/app/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
+const AppVerificarRoute = AppVerificarRouteImport.update({
+  id: '/app/verificar',
+  path: '/app/verificar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppSignupRoute = AppSignupRouteImport.update({
+  id: '/app/signup',
+  path: '/app/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRecuperarRoute = AppRecuperarRouteImport.update({
+  id: '/app/recuperar',
+  path: '/app/recuperar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppPerfilRoute = AppPerfilRouteImport.update({
@@ -107,29 +97,19 @@ const AppPerfilRoute = AppPerfilRouteImport.update({
   path: '/app/perfil',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminViagensRoute = AdminViagensRouteImport.update({
-  id: '/admin/viagens',
-  path: '/admin/viagens',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRotasRoute = AdminRotasRouteImport.update({
-  id: '/admin/rotas',
-  path: '/admin/rotas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminOnibusRoute = AdminOnibusRouteImport.update({
-  id: '/admin/onibus',
-  path: '/admin/onibus',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminMotoristasRoute = AdminMotoristasRouteImport.update({
-  id: '/admin/motoristas',
-  path: '/admin/motoristas',
+const AppLoginRoute = AppLoginRouteImport.update({
+  id: '/app/login',
+  path: '/app/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppViagensIndexRoute = AppViagensIndexRouteImport.update({
   id: '/app/viagens/',
   path: '/app/viagens/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/app/admin/',
+  path: '/app/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppViagensHistoricoRoute = AppViagensHistoricoRouteImport.update({
@@ -152,6 +132,26 @@ const AppDriverViagensRoute = AppDriverViagensRouteImport.update({
   path: '/app/driver/viagens',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppAdminViagensRoute = AppAdminViagensRouteImport.update({
+  id: '/app/admin/viagens',
+  path: '/app/admin/viagens',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAdminRotasRoute = AppAdminRotasRouteImport.update({
+  id: '/app/admin/rotas',
+  path: '/app/admin/rotas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAdminOnibusRoute = AppAdminOnibusRouteImport.update({
+  id: '/app/admin/onibus',
+  path: '/app/admin/onibus',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAdminMotoristasRoute = AppAdminMotoristasRouteImport.update({
+  id: '/app/admin/motoristas',
+  path: '/app/admin/motoristas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppDriverViagemTripIdRoute = AppDriverViagemTripIdRouteImport.update({
   id: '/app/driver/viagem/$tripId',
   path: '/app/driver/viagem/$tripId',
@@ -161,47 +161,47 @@ const AppDriverViagemTripIdRoute = AppDriverViagemTripIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
-  '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
-  '/recuperar': typeof RecuperarRoute
-  '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
-  '/verificar': typeof VerificarRoute
-  '/admin': typeof Admin_rootRoute
-  '/admin/motoristas': typeof AdminMotoristasRoute
-  '/admin/onibus': typeof AdminOnibusRoute
-  '/admin/rotas': typeof AdminRotasRoute
-  '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof App_rootRoute
+  '/app/login': typeof AppLoginRoute
   '/app/perfil': typeof AppPerfilRoute
-  '/admin/': typeof AdminIndexRoute
+  '/app/recuperar': typeof AppRecuperarRoute
+  '/app/signup': typeof AppSignupRoute
+  '/app/verificar': typeof AppVerificarRoute
   '/app/': typeof AppIndexRoute
+  '/app/admin': typeof AppAdmin_rootRoute
+  '/app/admin/motoristas': typeof AppAdminMotoristasRoute
+  '/app/admin/onibus': typeof AppAdminOnibusRoute
+  '/app/admin/rotas': typeof AppAdminRotasRoute
+  '/app/admin/viagens': typeof AppAdminViagensRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
   '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
+  '/app/admin/': typeof AppAdminIndexRoute
   '/app/viagens/': typeof AppViagensIndexRoute
   '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
-  '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
-  '/recuperar': typeof RecuperarRoute
-  '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
-  '/verificar': typeof VerificarRoute
-  '/admin': typeof AdminIndexRoute
-  '/admin/motoristas': typeof AdminMotoristasRoute
-  '/admin/onibus': typeof AdminOnibusRoute
-  '/admin/rotas': typeof AdminRotasRoute
-  '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof AppIndexRoute
+  '/app/login': typeof AppLoginRoute
   '/app/perfil': typeof AppPerfilRoute
+  '/app/recuperar': typeof AppRecuperarRoute
+  '/app/signup': typeof AppSignupRoute
+  '/app/verificar': typeof AppVerificarRoute
+  '/app/admin': typeof AppAdminIndexRoute
+  '/app/admin/motoristas': typeof AppAdminMotoristasRoute
+  '/app/admin/onibus': typeof AppAdminOnibusRoute
+  '/app/admin/rotas': typeof AppAdminRotasRoute
+  '/app/admin/viagens': typeof AppAdminViagensRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
   '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens': typeof AppViagensIndexRoute
@@ -213,27 +213,27 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/equipe': typeof EquipeRoute
-  '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
-  '/recuperar': typeof RecuperarRoute
-  '/signup': typeof SignupRoute
   '/sobre-projeto': typeof SobreProjetoRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
-  '/verificar': typeof VerificarRoute
-  '/admin/__root': typeof Admin_rootRoute
-  '/admin/motoristas': typeof AdminMotoristasRoute
-  '/admin/onibus': typeof AdminOnibusRoute
-  '/admin/rotas': typeof AdminRotasRoute
-  '/admin/viagens': typeof AdminViagensRoute
   '/app/__root': typeof App_rootRoute
+  '/app/login': typeof AppLoginRoute
   '/app/perfil': typeof AppPerfilRoute
-  '/admin/': typeof AdminIndexRoute
+  '/app/recuperar': typeof AppRecuperarRoute
+  '/app/signup': typeof AppSignupRoute
+  '/app/verificar': typeof AppVerificarRoute
   '/app/': typeof AppIndexRoute
+  '/app/admin/__root': typeof AppAdmin_rootRoute
+  '/app/admin/motoristas': typeof AppAdminMotoristasRoute
+  '/app/admin/onibus': typeof AppAdminOnibusRoute
+  '/app/admin/rotas': typeof AppAdminRotasRoute
+  '/app/admin/viagens': typeof AppAdminViagensRoute
   '/app/driver/viagens': typeof AppDriverViagensRoute
   '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
   '/app/viagens/__root': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
+  '/app/admin/': typeof AppAdminIndexRoute
   '/app/viagens/': typeof AppViagensIndexRoute
   '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
 }
@@ -242,47 +242,47 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/equipe'
-    | '/login'
     | '/politica-de-privacidade'
-    | '/recuperar'
-    | '/signup'
     | '/sobre-projeto'
     | '/termos-de-uso'
-    | '/verificar'
-    | '/admin'
-    | '/admin/motoristas'
-    | '/admin/onibus'
-    | '/admin/rotas'
-    | '/admin/viagens'
     | '/app'
+    | '/app/login'
     | '/app/perfil'
-    | '/admin/'
+    | '/app/recuperar'
+    | '/app/signup'
+    | '/app/verificar'
     | '/app/'
+    | '/app/admin'
+    | '/app/admin/motoristas'
+    | '/app/admin/onibus'
+    | '/app/admin/rotas'
+    | '/app/admin/viagens'
     | '/app/driver/viagens'
     | '/app/penalidades/historico'
     | '/app/viagens'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
+    | '/app/admin/'
     | '/app/viagens/'
     | '/app/driver/viagem/$tripId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/equipe'
-    | '/login'
     | '/politica-de-privacidade'
-    | '/recuperar'
-    | '/signup'
     | '/sobre-projeto'
     | '/termos-de-uso'
-    | '/verificar'
-    | '/admin'
-    | '/admin/motoristas'
-    | '/admin/onibus'
-    | '/admin/rotas'
-    | '/admin/viagens'
     | '/app'
+    | '/app/login'
     | '/app/perfil'
+    | '/app/recuperar'
+    | '/app/signup'
+    | '/app/verificar'
+    | '/app/admin'
+    | '/app/admin/motoristas'
+    | '/app/admin/onibus'
+    | '/app/admin/rotas'
+    | '/app/admin/viagens'
     | '/app/driver/viagens'
     | '/app/penalidades/historico'
     | '/app/viagens'
@@ -293,27 +293,27 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/equipe'
-    | '/login'
     | '/politica-de-privacidade'
-    | '/recuperar'
-    | '/signup'
     | '/sobre-projeto'
     | '/termos-de-uso'
-    | '/verificar'
-    | '/admin/__root'
-    | '/admin/motoristas'
-    | '/admin/onibus'
-    | '/admin/rotas'
-    | '/admin/viagens'
     | '/app/__root'
+    | '/app/login'
     | '/app/perfil'
-    | '/admin/'
+    | '/app/recuperar'
+    | '/app/signup'
+    | '/app/verificar'
     | '/app/'
+    | '/app/admin/__root'
+    | '/app/admin/motoristas'
+    | '/app/admin/onibus'
+    | '/app/admin/rotas'
+    | '/app/admin/viagens'
     | '/app/driver/viagens'
     | '/app/penalidades/historico'
     | '/app/viagens/__root'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
+    | '/app/admin/'
     | '/app/viagens/'
     | '/app/driver/viagem/$tripId'
   fileRoutesById: FileRoutesById
@@ -321,27 +321,27 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EquipeRoute: typeof EquipeRoute
-  LoginRoute: typeof LoginRoute
   PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
-  RecuperarRoute: typeof RecuperarRoute
-  SignupRoute: typeof SignupRoute
   SobreProjetoRoute: typeof SobreProjetoRoute
   TermosDeUsoRoute: typeof TermosDeUsoRoute
-  VerificarRoute: typeof VerificarRoute
-  Admin_rootRoute: typeof Admin_rootRoute
-  AdminMotoristasRoute: typeof AdminMotoristasRoute
-  AdminOnibusRoute: typeof AdminOnibusRoute
-  AdminRotasRoute: typeof AdminRotasRoute
-  AdminViagensRoute: typeof AdminViagensRoute
   App_rootRoute: typeof App_rootRoute
+  AppLoginRoute: typeof AppLoginRoute
   AppPerfilRoute: typeof AppPerfilRoute
-  AdminIndexRoute: typeof AdminIndexRoute
+  AppRecuperarRoute: typeof AppRecuperarRoute
+  AppSignupRoute: typeof AppSignupRoute
+  AppVerificarRoute: typeof AppVerificarRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAdmin_rootRoute: typeof AppAdmin_rootRoute
+  AppAdminMotoristasRoute: typeof AppAdminMotoristasRoute
+  AppAdminOnibusRoute: typeof AppAdminOnibusRoute
+  AppAdminRotasRoute: typeof AppAdminRotasRoute
+  AppAdminViagensRoute: typeof AppAdminViagensRoute
   AppDriverViagensRoute: typeof AppDriverViagensRoute
   AppPenalidadesHistoricoRoute: typeof AppPenalidadesHistoricoRoute
   AppViagens_rootRoute: typeof AppViagens_rootRoute
   AppViagensAtualRoute: typeof AppViagensAtualRoute
   AppViagensHistoricoRoute: typeof AppViagensHistoricoRoute
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
   AppViagensIndexRoute: typeof AppViagensIndexRoute
   AppDriverViagemTripIdRoute: typeof AppDriverViagemTripIdRoute
 }
@@ -355,13 +355,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof App_rootRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/__root': {
-      id: '/admin/__root'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof Admin_rootRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/app/viagens/__root': {
       id: '/app/viagens/__root'
       path: '/app/viagens'
@@ -369,11 +362,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppViagens_rootRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/verificar': {
-      id: '/verificar'
-      path: '/verificar'
-      fullPath: '/verificar'
-      preLoaderRoute: typeof VerificarRouteImport
+    '/app/admin/__root': {
+      id: '/app/admin/__root'
+      path: '/app/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdmin_rootRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/termos-de-uso': {
@@ -390,32 +383,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SobreProjetoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recuperar': {
-      id: '/recuperar'
-      path: '/recuperar'
-      fullPath: '/recuperar'
-      preLoaderRoute: typeof RecuperarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/politica-de-privacidade': {
       id: '/politica-de-privacidade'
       path: '/politica-de-privacidade'
       fullPath: '/politica-de-privacidade'
       preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/equipe': {
@@ -439,11 +411,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/': {
-      id: '/admin/'
-      path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
+    '/app/verificar': {
+      id: '/app/verificar'
+      path: '/app/verificar'
+      fullPath: '/app/verificar'
+      preLoaderRoute: typeof AppVerificarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/signup': {
+      id: '/app/signup'
+      path: '/app/signup'
+      fullPath: '/app/signup'
+      preLoaderRoute: typeof AppSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/recuperar': {
+      id: '/app/recuperar'
+      path: '/app/recuperar'
+      fullPath: '/app/recuperar'
+      preLoaderRoute: typeof AppRecuperarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/perfil': {
@@ -453,32 +439,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPerfilRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/viagens': {
-      id: '/admin/viagens'
-      path: '/admin/viagens'
-      fullPath: '/admin/viagens'
-      preLoaderRoute: typeof AdminViagensRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/rotas': {
-      id: '/admin/rotas'
-      path: '/admin/rotas'
-      fullPath: '/admin/rotas'
-      preLoaderRoute: typeof AdminRotasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/onibus': {
-      id: '/admin/onibus'
-      path: '/admin/onibus'
-      fullPath: '/admin/onibus'
-      preLoaderRoute: typeof AdminOnibusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/motoristas': {
-      id: '/admin/motoristas'
-      path: '/admin/motoristas'
-      fullPath: '/admin/motoristas'
-      preLoaderRoute: typeof AdminMotoristasRouteImport
+    '/app/login': {
+      id: '/app/login'
+      path: '/app/login'
+      fullPath: '/app/login'
+      preLoaderRoute: typeof AppLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/viagens/': {
@@ -486,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/app/viagens'
       fullPath: '/app/viagens/'
       preLoaderRoute: typeof AppViagensIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/admin/': {
+      id: '/app/admin/'
+      path: '/app/admin'
+      fullPath: '/app/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/viagens/historico': {
@@ -516,6 +488,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDriverViagensRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/admin/viagens': {
+      id: '/app/admin/viagens'
+      path: '/app/admin/viagens'
+      fullPath: '/app/admin/viagens'
+      preLoaderRoute: typeof AppAdminViagensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/admin/rotas': {
+      id: '/app/admin/rotas'
+      path: '/app/admin/rotas'
+      fullPath: '/app/admin/rotas'
+      preLoaderRoute: typeof AppAdminRotasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/admin/onibus': {
+      id: '/app/admin/onibus'
+      path: '/app/admin/onibus'
+      fullPath: '/app/admin/onibus'
+      preLoaderRoute: typeof AppAdminOnibusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/admin/motoristas': {
+      id: '/app/admin/motoristas'
+      path: '/app/admin/motoristas'
+      fullPath: '/app/admin/motoristas'
+      preLoaderRoute: typeof AppAdminMotoristasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/driver/viagem/$tripId': {
       id: '/app/driver/viagem/$tripId'
       path: '/app/driver/viagem/$tripId'
@@ -529,27 +529,27 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EquipeRoute: EquipeRoute,
-  LoginRoute: LoginRoute,
   PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
-  RecuperarRoute: RecuperarRoute,
-  SignupRoute: SignupRoute,
   SobreProjetoRoute: SobreProjetoRoute,
   TermosDeUsoRoute: TermosDeUsoRoute,
-  VerificarRoute: VerificarRoute,
-  Admin_rootRoute: Admin_rootRoute,
-  AdminMotoristasRoute: AdminMotoristasRoute,
-  AdminOnibusRoute: AdminOnibusRoute,
-  AdminRotasRoute: AdminRotasRoute,
-  AdminViagensRoute: AdminViagensRoute,
   App_rootRoute: App_rootRoute,
+  AppLoginRoute: AppLoginRoute,
   AppPerfilRoute: AppPerfilRoute,
-  AdminIndexRoute: AdminIndexRoute,
+  AppRecuperarRoute: AppRecuperarRoute,
+  AppSignupRoute: AppSignupRoute,
+  AppVerificarRoute: AppVerificarRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAdmin_rootRoute: AppAdmin_rootRoute,
+  AppAdminMotoristasRoute: AppAdminMotoristasRoute,
+  AppAdminOnibusRoute: AppAdminOnibusRoute,
+  AppAdminRotasRoute: AppAdminRotasRoute,
+  AppAdminViagensRoute: AppAdminViagensRoute,
   AppDriverViagensRoute: AppDriverViagensRoute,
   AppPenalidadesHistoricoRoute: AppPenalidadesHistoricoRoute,
   AppViagens_rootRoute: AppViagens_rootRoute,
   AppViagensAtualRoute: AppViagensAtualRoute,
   AppViagensHistoricoRoute: AppViagensHistoricoRoute,
+  AppAdminIndexRoute: AppAdminIndexRoute,
   AppViagensIndexRoute: AppViagensIndexRoute,
   AppDriverViagemTripIdRoute: AppDriverViagemTripIdRoute,
 }

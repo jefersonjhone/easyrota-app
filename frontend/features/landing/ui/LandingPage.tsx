@@ -22,7 +22,7 @@ export function LandingPage() {
         </div>
 
         <div className="right">
-          <a href="/login">
+          <a href="/app/login">
             <span>ENTRAR</span>
           </a>
         </div>
@@ -50,7 +50,7 @@ export function LandingPage() {
               </p>
 
               <div className="links">
-                <a href="/login">
+                <a href="/app/login">
                   <span>VIAJAR</span>
                 </a>
                 <a href="#como-funciona">
@@ -180,7 +180,7 @@ export function LandingPage() {
                   <li>Exclusiva para professores e servidores universitários</li>
                 </ul>
 
-                <a href="/login" className="route-button">
+                <a href="/app/login" className="route-button">
                   VIAJAR -&gt;
                 </a>
               </article>
@@ -293,7 +293,7 @@ export function LandingPage() {
               Acesse o app, confirme presença na rota e embarque sem preocupação,
               sem custo, sem WhatsApp.
             </p>
-            <a href="/login" className="cta-button">
+            <a href="/app/login" className="cta-button">
               VAMOS LÁ -&gt;
             </a>
           </div>

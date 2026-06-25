@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle } from '@ui/card'
 export function TotalDriversCard({ total }: { total: number }) {
   return (
       <Card className="cursor-pointer hover:shadow-md transition group rounded-sm p-2 md:p-4 md:max-h-72">
-        <Link to="/admin/motoristas">
+        <Link to="/app/admin/motoristas">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 ">
           <SteeringWheelIcon className="h-10 w-10 md:h-12 md:w-12 bg-chart-2 text-gray-200 p-2 rounded-full" />
           <CardTitle className="text-sm font-semibold text-center">

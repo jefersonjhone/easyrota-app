@@ -12,8 +12,8 @@ export class SignupPage {
   }
 
   async goto() {
-    await this.page.goto('/signup')
-    await this.page.waitForURL('/signup')
+    await this.page.goto('/app/signup')
+    await this.page.waitForURL('/app/signup')
   }
 
   get email(): Locator {

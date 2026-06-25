@@ -14,7 +14,7 @@ export function TotalUsersCard({ users_data, onFilterChange, isMobile }: { users
   return (
       <Card className="cursor-pointer hover:shadow-md transition group rounded-sm p-2 md:p-4 max-h-86 md:max-h-96">
         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between space-y-0 pb-2 p-2">
-          <Link to="/admin">
+          <Link to="/app/admin">
           <div className="flex gap-4 text-base p-0 m-0 justify-between items-center">
             <UsersIcon className="min-h-10 min-w-10 md:min-h-12 md:min-w-12  text-white bg-chart-4 p-2 rounded-full" />
               <CardTitle className="text-base md:font-semibold">

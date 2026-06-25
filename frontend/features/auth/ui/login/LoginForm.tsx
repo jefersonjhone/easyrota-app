@@ -11,10 +11,10 @@ import { useLoginMutation } from "@features/auth/hooks/useLogin"
 import { useReactivateAccountMutation } from "@features/auth/hooks/useDeleteAccount"
 
 // Routes
-import { Route as RecoveryRoute } from "@/pages/recuperar"
-import { Route as SignupRoute } from "@/pages/signup"
+import { Route as RecoveryRoute } from "@/pages/app/recuperar"
+import { Route as SignupRoute } from "@/pages/app/signup"
 import { Route as AppRoute } from "@/pages/app"
-import { Route as AdminRoute } from "@/pages/admin"
+import { Route as AdminRoute } from "@/pages/app/admin/index"
 
 // Components
 import HintInvalid from '@features/auth/ui/HintInvalid'
@@ -99,7 +99,7 @@ export function LoginForm() {
         const email = form.getValues("email")
         const response = await reactivateAccountMutation.mutateAsync(email)
         const token = (response as { token?: string }).token
-        navigate({ to: `/verificar?token=${token}&email=${email}&mode=reactivate` as never, replace: true })
+        navigate({ to: `/app/verificar?token=${token}&email=${email}&mode=reactivate` as never, replace: true })
     }
 
     return (
@@ -174,7 +174,7 @@ export function LoginForm() {
                                     onClick={() => {
                                         const email = form.getValues("email")
                                         if (type === "register"){
-                                            navigate({ to: `/verificar?email=${email}&mode=register` as never, replace: true })
+                                            navigate({ to: `/app/verificar?email=${email}&mode=register` as never, replace: true })
                                         } else {
                                             handleReactivateAccount()
                                         }
