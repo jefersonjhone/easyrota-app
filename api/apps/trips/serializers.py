@@ -110,7 +110,7 @@ class RouteSerializer(serializers.ModelSerializer):
             self.instance.destiny if self.instance else ""
         )
         buses = data.get("max_bus") or (
-            self.instane.max_bus if self.istance else -1
+            self.instane.max_bus if self.instance else -1
         )
 
         self._check_locations(origin, destiny)

@@ -112,7 +112,7 @@ export function RouteForm({
           const message = Array.isArray(errorData.max_bus)
             ? errorData.max_bus[0]
             : errorData.max_bus;
-          form.setError("origin", { type: "server", message });
+          form.setError("max_bus", { type: "server", message });
         }
       } else {
         console.error("Erro inesperado ao criar rota:", error);
@@ -182,6 +182,7 @@ export function RouteForm({
                 required
                 {...register("max_bus")}
               ></Input>
+              <HintInvalid for={state.errors.max_bus} />
             </section>
           </section>
         <Button
