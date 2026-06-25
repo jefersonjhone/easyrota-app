@@ -15,5 +15,5 @@ export function useAuthBootstrap() {
       refreshTokenIfNeeded().catch(() => {clearAuth();});
       return;
     }
-  }, )
+  }, [accessToken, clearAuth, user])
 }

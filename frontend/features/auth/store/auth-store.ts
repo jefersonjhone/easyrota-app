@@ -45,7 +45,7 @@ export const useAuthStore =
         name: "auth-storage",
 
         storage: createJSONStorage(
-          () => sessionStorage
+          () => localStorage
         ),
       }
     )
