@@ -13,6 +13,8 @@ from rest_framework.views import APIView
 
 from apps.reservations.services import process_trip_punishments
 
+User = get_user_model()
+
 from ..reservations.models import Reservation
 from ..reservations.serializers import ReservationSerializer
 from ..reservations.services import (
@@ -46,17 +48,17 @@ def generate_access_code(length=8):
     return ''.join(random.choice(letters_and_digits) for i in range(length))
 
 class TripRequestViewSet(viewsets.ModelViewSet):
-    queryset = TripRequest.objects.all().order_by("-created_at")
+    queryset = TripRequest.objects.select_related("requester__user", "trip").all().order_by("-created_at")
     serializer_class = TripRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, "admin_profile") or user.is_staff:
-            return TripRequest.objects.all().order_by("-created_at")
+            return TripRequest.objects.select_related("requester__user", "trip").all().order_by("-created_at")
         
         if hasattr(user, "civil_servant_profile"):
-            return TripRequest.objects.filter(requester=user.civil_servant_profile).order_by("-created_at")
+            return TripRequest.objects.select_related("requester__user", "trip").filter(requester=user.civil_servant_profile).order_by("-created_at")
         
         return TripRequest.objects.none()
 

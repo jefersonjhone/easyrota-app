@@ -21,6 +21,8 @@ export type Trip = {
   arrival_timestamp: string | null
   bus: number | null
   route: number
+  is_private?: boolean
+  access_code?: string
 }
 
 export type TripCheckedInPassenger = {
