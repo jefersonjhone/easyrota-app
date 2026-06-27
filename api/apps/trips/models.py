@@ -46,6 +46,34 @@ class Route(models.Model):
         return f"{self.origin} -> {self.destiny}"
 
 
+class TripRequest(models.Model):
+    """
+    Represents a request made by a professor/server for a field or municipal trip.
+    """
+    STATUS_CHOICES = (
+        ("PENDENTE", "Pendente"),
+        ("APROVADA", "Aprovada"),
+        ("RECUSADA", "Recusada"),
+    )
+
+    requester = models.ForeignKey(CivilServantProfile, on_delete=models.CASCADE)
+    origin_text = models.CharField(max_length=255)
+    destiny_text = models.CharField(max_length=255)
+    departure_date = models.DateField()
+    departure_time = models.TimeField()
+    return_time = models.TimeField(null=True, blank=True)
+    reason = models.TextField()
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDENTE")
+    feedback = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Request by {self.requester} from {self.origin_text} to {self.destiny_text}"
+
+
 class Trip(models.Model):
     """
     Represents a scheduled trip instance, linking a specific bus and route
@@ -75,6 +103,15 @@ class Trip(models.Model):
     route = models.ForeignKey(Route, on_delete=models.CASCADE)
     driver = models.ForeignKey(
         DriverProfile, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    is_private = models.BooleanField(default=False)
+    access_code = models.CharField(max_length=10, blank=True, null=True, unique=True)
+    manager = models.ForeignKey(
+        CivilServantProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name="managed_trips"
+    )
+    trip_request = models.OneToOneField(
+        TripRequest, on_delete=models.SET_NULL, null=True, blank=True
     )
 
     # for custom queryset methods
