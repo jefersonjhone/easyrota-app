@@ -102,7 +102,7 @@ class Trip(models.Model):
         return self.has_server
 
     def __str__(self):
-        return f"Trip on {self.trip_date} - ({self.route})"
+        return f"Trip on {self.trip_date} - ({self.route}) and has {self.seating_capacity} seats"
 
 
 class Occurrence(models.Model):

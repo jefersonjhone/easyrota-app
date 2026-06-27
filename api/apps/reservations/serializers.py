@@ -196,6 +196,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
     origin = serializers.CharField(source="route.origin", read_only=True)
     destiny = serializers.CharField(source="route.destiny", read_only=True)
     bus_brand = serializers.CharField(source="bus.brand", read_only=True)
+    route_capacity = serializers.IntegerField(source="route.seating_capacity", read_only=True)
     status_trip = serializers.SerializerMethodField()
     reserved_seats = serializers.SerializerMethodField()
     available_seats = serializers.SerializerMethodField()
@@ -241,7 +242,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         from .services import get_trip_occupancy
         
         total_occupied, server_occupied = get_trip_occupancy(obj)
-        seating_capacity = obj.bus.seating_capacity if obj.bus else 0
+        seating_capacity = obj.bus.seating_capacity if obj.bus else self.route_capacity
         
         user = self.context["request"].user
         if hasattr(user, "civil_servant_profile"):

@@ -116,7 +116,7 @@ class RouteSerializer(serializers.ModelSerializer):
         self._check_locations(origin, destiny)
         self._check_times(departure, arrival)
         self._check_max_bus(buses)
-
+        print("data: ", data)
         return data
 
 
