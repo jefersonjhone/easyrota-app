@@ -1,33 +1,114 @@
-// public/sw.js
-self.addEventListener('push', function(event) {
-    console.log('[Service Worker] Push Event received.');
-    let data = {};
-    try {
-        data = event.data ? event.data.json() : {};
-        console.log('[Service Worker] Push Data:', data);
-    } catch (e) {
-        console.error('[Service Worker] Error parsing push data:', e);
-        data = { body: event.data ? event.data.text() : 'No payload' };
+const VERSION = 'easyrota-app-v1.0.1'
+
+self.addEventListener('install', (event) => {
+  const toCache = [
+    '/app/',
+    '/manifest.webmanifest',
+    '/logo-colorful.svg',
+    '/icons/icon-192.png',
+    '/icons/icon-512.png',
+    '/icons/maskable-192.png',
+    '/icons/maskable-512.png',
+  ]
+
+  event.waitUntil(
+    caches.open(VERSION)
+      .then((cache) =>  cache.addAll(toCache))
+      .then(() => self.skipWaiting())
+  )
+})
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => Promise.all(
+      cacheNames
+        .filter((cacheName) => 
+          cacheName.startsWith('easyrota-') && cacheName !== VERSION)
+        .map((cacheName) => caches.delete(cacheName))
+    ))
+    .then(() => self.clients.claim())
+  )
+})
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  if (request.method !== 'GET' || url.origin !== self.location.origin) {
+    return;
+  }
+
+  if (url.pathname === '/' || url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  if (request.mode === 'navigate') {
+    if (!url.pathname.startsWith('/app')) {
+      return;
     }
 
-    const title = data.head || data.title || "EasyRota";
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const responseClone = response.clone()
+          caches.open(VERSION)
+            .then((cache) => {cache.put(request, responseClone)})
+          return response
+        })
+        .catch(async () => {
+            const cachedResponse = await caches.match(request);
+            return cachedResponse || caches.match('/app/');
+        })
+    )
+    return
+  }
+
+  if (
+    url.pathname.startsWith('/assets/') ||
+    url.pathname.startsWith('/icons/') ||
+    url.pathname === '/manifest.webmanifest' ||
+    url.pathname === '/logo-colorful.svg'
+  ) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        return cachedResponse || fetch(request).then((response) => {
+          const responseClone = response.clone()
+          caches.open(VERSION)
+            .then((cache) => {cache.put(request, responseClone)})
+          return response
+        })
+      })
+    )
+  }
+})
+
+self.addEventListener('push', (event) => {
+    console.log('[Service Worker] Push Event received.')
+    let data = {}
+    try {
+        data = event.data ? event.data.json() : {}
+        console.log('[Service Worker] Push Data:', data)
+    } catch (e) {
+        console.error('[Service Worker] Error parsing push data:', e)
+        data = { body: event.data ? event.data.text() : 'No payload' }
+    }
+
+    const title = data.head || data.title || "EasyRota"
     const options = {
         body: data.body || "Você tem uma nova atualização.",
-        icon: '/favicon.svg',
-        badge: '/favicon.svg',
-        data: { url: data.url || '/' }
-    };
+        icon: '/logo-colorful.svg',
+        badge: '/logo-colorful.svg',
+        data: { url: data.url || '/app/' }
+    }
 
     event.waitUntil(
         self.registration.showNotification(title, options)
             .then(() => console.log('[Service Worker] Notification displayed successfully.'))
             .catch(err => console.error('[Service Worker] Error displaying notification:', err))
-    );
-});
+    )
+})
 
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close();
-    event.waitUntil(
-        clients.openWindow(event.notification.data.url)
-    );
-});
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close()
+    event.waitUntil(clients.openWindow(event.notification.data.url))
+})
