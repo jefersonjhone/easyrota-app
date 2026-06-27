@@ -25,10 +25,12 @@ import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
 import { Route as AppPerfilRouteImport } from './pages/app/perfil'
 import { Route as AdminViagensRouteImport } from './pages/admin/viagens'
+import { Route as AdminSolicitacoesRouteImport } from './pages/admin/solicitacoes'
 import { Route as AdminRotasRouteImport } from './pages/admin/rotas'
 import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
 import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
 import { Route as AppViagensIndexRouteImport } from './pages/app/viagens/index'
+import { Route as AppViagensPrivadaRouteImport } from './pages/app/viagens/privada'
 import { Route as AppViagensHistoricoRouteImport } from './pages/app/viagens/historico'
 import { Route as AppViagensAtualRouteImport } from './pages/app/viagens/atual'
 import { Route as AppPenalidadesHistoricoRouteImport } from './pages/app/penalidades/historico'
@@ -112,6 +114,11 @@ const AdminViagensRoute = AdminViagensRouteImport.update({
   path: '/admin/viagens',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSolicitacoesRoute = AdminSolicitacoesRouteImport.update({
+  id: '/admin/solicitacoes',
+  path: '/admin/solicitacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRotasRoute = AdminRotasRouteImport.update({
   id: '/admin/rotas',
   path: '/admin/rotas',
@@ -130,6 +137,11 @@ const AdminMotoristasRoute = AdminMotoristasRouteImport.update({
 const AppViagensIndexRoute = AppViagensIndexRouteImport.update({
   id: '/app/viagens/',
   path: '/app/viagens/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppViagensPrivadaRoute = AppViagensPrivadaRouteImport.update({
+  id: '/app/viagens/privada',
+  path: '/app/viagens/privada',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppViagensHistoricoRoute = AppViagensHistoricoRouteImport.update({
@@ -172,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/admin/motoristas': typeof AdminMotoristasRoute
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/rotas': typeof AdminRotasRoute
+  '/admin/solicitacoes': typeof AdminSolicitacoesRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof App_rootRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -182,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/app/viagens': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
+  '/app/viagens/privada': typeof AppViagensPrivadaRoute
   '/app/viagens/': typeof AppViagensIndexRoute
   '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
 }
@@ -199,6 +213,7 @@ export interface FileRoutesByTo {
   '/admin/motoristas': typeof AdminMotoristasRoute
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/rotas': typeof AdminRotasRoute
+  '/admin/solicitacoes': typeof AdminSolicitacoesRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app': typeof AppIndexRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -207,6 +222,7 @@ export interface FileRoutesByTo {
   '/app/viagens': typeof AppViagensIndexRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
+  '/app/viagens/privada': typeof AppViagensPrivadaRoute
   '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
 }
 export interface FileRoutesById {
@@ -224,6 +240,7 @@ export interface FileRoutesById {
   '/admin/motoristas': typeof AdminMotoristasRoute
   '/admin/onibus': typeof AdminOnibusRoute
   '/admin/rotas': typeof AdminRotasRoute
+  '/admin/solicitacoes': typeof AdminSolicitacoesRoute
   '/admin/viagens': typeof AdminViagensRoute
   '/app/__root': typeof App_rootRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -234,6 +251,7 @@ export interface FileRoutesById {
   '/app/viagens/__root': typeof AppViagens_rootRoute
   '/app/viagens/atual': typeof AppViagensAtualRoute
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
+  '/app/viagens/privada': typeof AppViagensPrivadaRoute
   '/app/viagens/': typeof AppViagensIndexRoute
   '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
 }
@@ -253,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin/motoristas'
     | '/admin/onibus'
     | '/admin/rotas'
+    | '/admin/solicitacoes'
     | '/admin/viagens'
     | '/app'
     | '/app/perfil'
@@ -263,6 +282,7 @@ export interface FileRouteTypes {
     | '/app/viagens'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
+    | '/app/viagens/privada'
     | '/app/viagens/'
     | '/app/driver/viagem/$tripId'
   fileRoutesByTo: FileRoutesByTo
@@ -280,6 +300,7 @@ export interface FileRouteTypes {
     | '/admin/motoristas'
     | '/admin/onibus'
     | '/admin/rotas'
+    | '/admin/solicitacoes'
     | '/admin/viagens'
     | '/app'
     | '/app/perfil'
@@ -288,6 +309,7 @@ export interface FileRouteTypes {
     | '/app/viagens'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
+    | '/app/viagens/privada'
     | '/app/driver/viagem/$tripId'
   id:
     | '__root__'
@@ -304,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/motoristas'
     | '/admin/onibus'
     | '/admin/rotas'
+    | '/admin/solicitacoes'
     | '/admin/viagens'
     | '/app/__root'
     | '/app/perfil'
@@ -314,6 +337,7 @@ export interface FileRouteTypes {
     | '/app/viagens/__root'
     | '/app/viagens/atual'
     | '/app/viagens/historico'
+    | '/app/viagens/privada'
     | '/app/viagens/'
     | '/app/driver/viagem/$tripId'
   fileRoutesById: FileRoutesById
@@ -332,6 +356,7 @@ export interface RootRouteChildren {
   AdminMotoristasRoute: typeof AdminMotoristasRoute
   AdminOnibusRoute: typeof AdminOnibusRoute
   AdminRotasRoute: typeof AdminRotasRoute
+  AdminSolicitacoesRoute: typeof AdminSolicitacoesRoute
   AdminViagensRoute: typeof AdminViagensRoute
   App_rootRoute: typeof App_rootRoute
   AppPerfilRoute: typeof AppPerfilRoute
@@ -342,6 +367,7 @@ export interface RootRouteChildren {
   AppViagens_rootRoute: typeof AppViagens_rootRoute
   AppViagensAtualRoute: typeof AppViagensAtualRoute
   AppViagensHistoricoRoute: typeof AppViagensHistoricoRoute
+  AppViagensPrivadaRoute: typeof AppViagensPrivadaRoute
   AppViagensIndexRoute: typeof AppViagensIndexRoute
   AppDriverViagemTripIdRoute: typeof AppDriverViagemTripIdRoute
 }
@@ -460,6 +486,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminViagensRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/solicitacoes': {
+      id: '/admin/solicitacoes'
+      path: '/admin/solicitacoes'
+      fullPath: '/admin/solicitacoes'
+      preLoaderRoute: typeof AdminSolicitacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/rotas': {
       id: '/admin/rotas'
       path: '/admin/rotas'
@@ -486,6 +519,13 @@ declare module '@tanstack/react-router' {
       path: '/app/viagens'
       fullPath: '/app/viagens/'
       preLoaderRoute: typeof AppViagensIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/viagens/privada': {
+      id: '/app/viagens/privada'
+      path: '/app/viagens/privada'
+      fullPath: '/app/viagens/privada'
+      preLoaderRoute: typeof AppViagensPrivadaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/viagens/historico': {
@@ -540,6 +580,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMotoristasRoute: AdminMotoristasRoute,
   AdminOnibusRoute: AdminOnibusRoute,
   AdminRotasRoute: AdminRotasRoute,
+  AdminSolicitacoesRoute: AdminSolicitacoesRoute,
   AdminViagensRoute: AdminViagensRoute,
   App_rootRoute: App_rootRoute,
   AppPerfilRoute: AppPerfilRoute,
@@ -550,6 +591,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppViagens_rootRoute: AppViagens_rootRoute,
   AppViagensAtualRoute: AppViagensAtualRoute,
   AppViagensHistoricoRoute: AppViagensHistoricoRoute,
+  AppViagensPrivadaRoute: AppViagensPrivadaRoute,
   AppViagensIndexRoute: AppViagensIndexRoute,
   AppDriverViagemTripIdRoute: AppDriverViagemTripIdRoute,
 }

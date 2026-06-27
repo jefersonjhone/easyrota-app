@@ -14,7 +14,7 @@ import { BusIcon } from "@phosphor-icons/react"
 import { SteeringWheel } from "@phosphor-icons/react"
 import {MapTrifold} from "@phosphor-icons/react"
 import {  Path} from "@phosphor-icons/react"
-import { Gauge } from "@phosphor-icons/react"
+import { Gauge, EnvelopeOpen } from "@phosphor-icons/react"
 import { Link } from "@tanstack/react-router"
 import { NavUser } from "./navUser"
 import { useLocation } from "@tanstack/react-router"
@@ -31,6 +31,7 @@ export function AppSidebar() {
   const ViagensItems = [
     {title:"Gerenciar Viagens", icon:MapTrifold, url:"/admin/viagens"},
     {title:"Gerenciar Rotas", icon:Path, url:"/admin/rotas"},
+    {title:"Solicitações de Viagem", icon:EnvelopeOpen, url:"/admin/solicitacoes"},
   ]
 
   return (
