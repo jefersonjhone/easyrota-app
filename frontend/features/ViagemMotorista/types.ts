@@ -16,6 +16,10 @@ export type DriverTripDetail = {
   destiny: string
   departureDate: string
   departureTime: string
+  departureTimestamp: string | null
+  arrivalTimestamp: string | null
+  expectedDeparture: string | null
+  expectedArrival: string | null
   busPlate: string
   busId: string | null
   driverId: string | null
@@ -25,6 +29,7 @@ export type DriverTripDetail = {
   passengers: PassengerBoardItem[]
   status: string
   checkinStarted: string | null
+  activeReservations: number
 }
 
 export type ApiList<T> = T[] | { results?: T[] }
@@ -33,7 +38,11 @@ export type TripModel = {
   id: string
   origin?: string | null
   destiny?: string | null
+  trip_date?: string | null
   departure_timestamp?: string | null
+  arrival_timestamp?: string | null
+  expected_departure?: string | null
+  expected_arrival?: string | null
   departure_time?: string | null
   active_reservations?: number | null
   checked_in_count?: number | null

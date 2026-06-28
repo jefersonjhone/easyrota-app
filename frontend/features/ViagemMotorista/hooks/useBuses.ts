@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import type { DriverBusOption, DriverTripDetail } from '../types'
 import { getBusesFromApi, assignBusToTrip, unassignBusFromTrip } from '../api'
 
@@ -72,6 +73,7 @@ export function useBuses(
         busPlate: nextBus?.plate ?? trip.busPlate,
         associatedBuses: nextBusId ? Math.max(trip.associatedBuses, 1) : 0,
       })
+      toast.success(nextBusId ? `Ônibus ${nextBus?.plate} selecionado` : 'Ônibus removido')
     } catch (error) {
       console.warn('Nao foi possivel atualizar o onibus da viagem:', error)
       setSelectedBusId(previousBusId)

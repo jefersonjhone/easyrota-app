@@ -36,11 +36,11 @@ export function createPassengerPlaceholders(totalPassengers?: number | null): Pa
     typeof totalPassengers === 'number' && totalPassengers > 0 ? totalPassengers : 0
 
   return Array.from({ length: passengerCount }, (_, index) => {
-    const id = index + 1
+    const id = String(index + 1)
 
     return {
       id,
-      name: `Passageiro ${String(id).padStart(3, '0')}`,
+      name: `Passageiro ${id.padStart(3, '0')}`,
       source: 'Manual' as const,
     }
   })
@@ -64,7 +64,7 @@ export function normalizeCheckedInPassengers(trip: TripModel, capacity: number):
         const source = passenger.source === 'Manual' ? 'Manual' : 'QR'
 
         return {
-          id: reservationId ?? localPassengerId ?? fallbackId,
+          id: reservationId ?? localPassengerId ?? String(fallbackId),
           reservationId,
           localPassengerId,
           identifier: localPassengerId ? `local-${localPassengerId}` : undefined,
@@ -93,10 +93,16 @@ export function normalizeTripDetail(trip: TripModel) {
     destiny: trip.destiny ?? 'Destino',
     departureDate: trip.departure_timestamp
       ? new Date(trip.departure_timestamp).toLocaleDateString('pt-BR')
-      : trip.departure_time?.split(',')[0]?.trim() ?? '—',
+      : trip.trip_date
+        ? new Date(trip.trip_date + 'T12:00:00').toLocaleDateString('pt-BR')
+        : '—',
     departureTime: normalizeTripTime(
       trip.departure_time ?? trip.departure_timestamp,
     ),
+    departureTimestamp: trip.departure_timestamp ?? null,
+    arrivalTimestamp: trip.arrival_timestamp ?? null,
+    expectedDeparture: trip.expected_departure ?? null,
+    expectedArrival: trip.expected_arrival ?? null,
     busPlate: trip.bus_number_plate ?? '',
     busId: trip.bus ?? null,
     driverId,
@@ -105,6 +111,7 @@ export function normalizeTripDetail(trip: TripModel) {
     associatedBuses: trip.bus ? 1 : 0,
     status: trip.status ?? '',
     checkinStarted: trip.checkin_started ?? null,
+    activeReservations: trip.active_reservations ?? 0,
     passengers: normalizeCheckedInPassengers(trip, capacity),
   }
 }

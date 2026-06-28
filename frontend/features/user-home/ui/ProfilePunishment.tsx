@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/lib/ui/card";
 import { Warning } from "@phosphor-icons/react";
 import { usePunishmentsHistory } from "@/features/user-home/hooks/usePunishmentHistory";
-import { formatReservationCreatedAt } from '../config'
 
 interface Punishment {
   id: string;

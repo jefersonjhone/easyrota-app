@@ -95,8 +95,8 @@ export function UserHomeTripCard({
               </div>
             </div>
 
-            <Link to={`/app/reservas/$id`} params={{ id: currentTrip.id }}>
-              <Button size="sm">Ver detalhes da reserva</Button>
+            <Link to={`/app/viagens/$id`} params={{ id: currentTrip.id }}>
+              <Button size="sm">Ver detalhes da viagem</Button>
             </Link>
           </>
         ) : (

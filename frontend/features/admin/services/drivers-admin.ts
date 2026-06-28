@@ -2,7 +2,7 @@ import { apiFetch } from '@lib/api'
 import type { RecentTripEntry } from './buses-admin'
 
 export type DriverAdminDetail = {
-  id: number
+  id: string
   user_id: string
   full_name: string
   email: string
@@ -13,6 +13,6 @@ export type DriverAdminDetail = {
   recent_trips: RecentTripEntry[]
 }
 
-export function fetchDriverAdminDetail(id: number) {
+export function fetchDriverAdminDetail(id: string) {
   return apiFetch<DriverAdminDetail>(`/drivers/${id}/admin_detail/`)
 }

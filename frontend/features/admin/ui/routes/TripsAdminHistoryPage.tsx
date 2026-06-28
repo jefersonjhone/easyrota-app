@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import {
   useDeleteTrip,
   useTrips,
@@ -8,7 +9,7 @@ import { Button } from '@ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@ui/dialog'
 import { AdminLayout } from '@/features/admin/ui/Layout'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { MagnifyingGlassIcon, Printer } from '@phosphor-icons/react'
+import { MagnifyingGlassIcon, Printer, ClockCounterClockwise } from '@phosphor-icons/react'
 import { STATUS_CONFIG } from './StatusBadge'
 import { TripTable } from '@/features/admin/ui/TripTable'
 import { TripForm } from './TripForm'
@@ -53,7 +54,7 @@ export function TripsAdminHistoryPage() {
 
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null)
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const { data: trips, isLoading, error } = useTrips()
   const deleteMutation = useDeleteTrip()
@@ -123,7 +124,7 @@ export function TripsAdminHistoryPage() {
     setFilters({ weekdays: [...next].join(',') || undefined })
   }
 
-  function toggleSelect(id: number) {
+  function toggleSelect(id: string) {
     setSelectedIds(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -132,7 +133,7 @@ export function TripsAdminHistoryPage() {
     })
   }
 
-  function handleToggleAll(ids: number[], select: boolean) {
+  function handleToggleAll(ids: string[], select: boolean) {
     setSelectedIds(prev => {
       const next = new Set(prev)
       for (const id of ids) {
@@ -158,8 +159,11 @@ export function TripsAdminHistoryPage() {
     setIsEditOpen(true)
   }
 
-  function handleDelete(id: number) {
-    deleteMutation.mutate(id)
+  function handleDelete(id: string) {
+    deleteMutation.mutate(id, {
+      onSuccess: () => toast.success('Viagem removida com sucesso!'),
+      onError: () => toast.error('Erro ao remover viagem.'),
+    })
   }
 
   return (
@@ -170,9 +174,12 @@ export function TripsAdminHistoryPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Viagens e Rotas
             </p>
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              Histórico
-            </h1>
+            <div className="flex items-center gap-2">
+              <ClockCounterClockwise size={20} className="text-primary shrink-0" />
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                Histórico
+              </h1>
+            </div>
             <p className="text-muted-foreground">
               Viagens que já ocorreram.
             </p>
@@ -212,7 +219,7 @@ export function TripsAdminHistoryPage() {
                     placeholder="Origem ou destino..."
                     value={q}
                     onChange={(e) => setFilters({ q: e.target.value || undefined })}
-                    className="h-8 w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                    className="h-8 w-full md:w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
                   />
                 </div>
               </div>

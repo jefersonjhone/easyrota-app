@@ -11,6 +11,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/lib/ui/dialog"
 import { MagnifyingGlassIcon, PlusIcon, PencilSimpleIcon, TrashIcon, GraduationCap } from "@phosphor-icons/react"
+import { useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
 
 import { AdminLayout } from '@/features/admin/ui/Layout'
 import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } from '@/features/admin/hooks/useStudents'
@@ -42,6 +44,7 @@ type CreateData = z.infer<typeof createSchema>
 type UpdateData = z.infer<typeof updateSchema>
 
 export function EstudantesPage() {
+  const navigate = useNavigate()
 
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -72,6 +75,7 @@ export function EstudantesPage() {
   const onCreateSubmit = (data: CreateData) => {
     createMutation.mutate(data, {
       onSuccess: () => {
+        toast.success('Estudante cadastrado com sucesso!')
         createForm.reset({ full_name: "", student_id: "", email: "", password: "", passwordConfirmation: "" })
         setIsAddOpen(false)
       },
@@ -114,6 +118,7 @@ export function EstudantesPage() {
     }
     updateMutation.mutate({ id: editingStudent.id, data: payload }, {
       onSuccess: () => {
+        toast.success('Estudante atualizado com sucesso!')
         editForm.reset({ full_name: "", student_id: "", email: "", password: "", passwordConfirmation: "" })
         setEditingStudent(null)
         setIsEditOpen(false)
@@ -143,9 +148,12 @@ export function EstudantesPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Usuários e Reservas
             </p>
-            <h1 className="font-heading text-3xl font-semibold tracking-tight mt-1">
-              Estudantes
-            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <GraduationCap size={20} className="text-primary shrink-0" />
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                Estudantes
+              </h1>
+            </div>
             <p className="text-muted-foreground mt-1">
               Gerencie os estudantes cadastrados no sistema.
             </p>
@@ -164,35 +172,35 @@ export function EstudantesPage() {
               <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nome completo</Label>
-                  <Input {...createForm.register("full_name")} placeholder="Nome do estudante" className="h-8 text-xs" />
+                  <Input {...createForm.register("full_name")} placeholder="Nome do estudante" className="h-10 text-xs" />
                   {createForm.formState.errors.full_name && (
                     <p className="text-xs text-destructive">{createForm.formState.errors.full_name.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Matrícula</Label>
-                  <Input {...createForm.register("student_id")} placeholder="Número de matrícula" className="h-8 text-xs" />
+                  <Input {...createForm.register("student_id")} placeholder="Número de matrícula" className="h-10 text-xs" />
                   {createForm.formState.errors.student_id && (
                     <p className="text-xs text-destructive">{createForm.formState.errors.student_id.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Email</Label>
-                  <Input {...createForm.register("email")} type="email" placeholder="email@exemplo.com" className="h-8 text-xs" />
+                  <Input {...createForm.register("email")} type="email" placeholder="email@exemplo.com" className="h-10 text-xs" />
                   {createForm.formState.errors.email && (
                     <p className="text-xs text-destructive">{createForm.formState.errors.email.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Senha</Label>
-                  <Input {...createForm.register("password")} type="password" placeholder="Senha" className="h-8 text-xs" />
+                  <Input {...createForm.register("password")} type="password" placeholder="Senha" className="h-10 text-xs" />
                   {createForm.formState.errors.password && (
                     <p className="text-xs text-destructive">{createForm.formState.errors.password.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Confirmar senha</Label>
-                  <Input {...createForm.register("passwordConfirmation")} type="password" placeholder="Confirmar senha" className="h-8 text-xs" />
+                  <Input {...createForm.register("passwordConfirmation")} type="password" placeholder="Confirmar senha" className="h-10 text-xs" />
                   {createForm.formState.errors.passwordConfirmation && (
                     <p className="text-xs text-destructive">{createForm.formState.errors.passwordConfirmation.message}</p>
                   )}
@@ -220,7 +228,7 @@ export function EstudantesPage() {
                 placeholder="Nome ou matrícula..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 w-60 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                className="h-8 w-full md:w-60 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
               />
             </div>
           </div>
@@ -250,7 +258,8 @@ export function EstudantesPage() {
           </div>
         ) : !isError && students.length > 0 ? (
           <div className="rounded-lg border border-border/70 bg-card/90 overflow-hidden">
-            <div className="hidden md:grid md:grid-cols-[1fr_120px_1fr_80px] md:px-5 md:py-2 md:bg-muted/40 md:text-[11px] md:font-semibold md:tracking-wider md:text-muted-foreground md:uppercase md:border-b md:border-border/50">
+            <div className="hidden md:grid md:grid-cols-[80px_1fr_120px_1fr_80px] md:px-5 md:py-2 md:bg-muted/40 md:text-[11px] md:font-semibold md:tracking-wider md:text-muted-foreground md:uppercase md:border-b md:border-border/50">
+              <span>ID</span>
               <span>Nome</span>
               <span>Matrícula</span>
               <span>Email</span>
@@ -260,24 +269,36 @@ export function EstudantesPage() {
               {students.map((student) => (
                 <div
                   key={student.id}
-                  className="flex flex-col gap-2 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[1fr_120px_1fr_80px] md:items-center"
+                  className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[80px_1fr_120px_1fr_80px] md:items-center"
                 >
-                  <span className="font-medium truncate">{student.full_name}</span>
+                  <span
+                    className="font-mono text-xs text-muted-foreground underline underline-offset-2 decoration-dotted decoration-muted-foreground/40 hover:text-foreground hover:decoration-foreground/60 cursor-pointer truncate"
+                    onClick={() => navigate({ to: '/admin/estudantes/$id', params: { id: String(student.id) } })}
+                  >
+                    {student.id}
+                  </span>
+                  <span className="font-medium truncate flex items-center gap-2">
+                    <GraduationCap size={16} className="text-primary/60 shrink-0" />
+                    {student.full_name}
+                  </span>
                   <span className="font-mono text-xs text-muted-foreground">{student.student_id}</span>
                   <span className="text-muted-foreground text-xs md:text-sm truncate">{student.email}</span>
-                  <div className="flex items-center gap-1 justify-end -mr-1">
+                  <div className="flex items-center gap-1 w-full md:w-auto justify-end -mr-1 mt-1 md:mt-0">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="p-1.5 h-auto text-muted-foreground hover:text-foreground cursor-pointer"
+                      className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-foreground cursor-pointer"
                       onClick={() => handleEdit(student)}
                     >
                       <PencilSimpleIcon size={15} />
                     </Button>
                     <ConfirmDeleteDialog
-                      onConfirm={() => deleteMutation.mutate(student.id)}
+                      onConfirm={() => deleteMutation.mutate(student.id, {
+                        onSuccess: () => toast.success('Estudante removido com sucesso!'),
+                        onError: () => toast.error('Erro ao remover estudante.'),
+                      })}
                       trigger={
-                        <Button variant="ghost" size="sm" className="p-1.5 h-auto text-muted-foreground hover:text-destructive cursor-pointer">
+                        <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-destructive cursor-pointer">
                           <TrashIcon size={15} />
                         </Button>
                       }
@@ -299,21 +320,21 @@ export function EstudantesPage() {
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
               <div className="space-y-1.5">
                 <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nome completo</Label>
-                <Input {...editForm.register("full_name")} placeholder="Nome do estudante" className="h-8 text-xs" />
+                <Input {...editForm.register("full_name")} placeholder="Nome do estudante" className="h-10 text-xs" />
                 {editForm.formState.errors.full_name && (
                   <p className="text-xs text-destructive">{editForm.formState.errors.full_name.message}</p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Matrícula</Label>
-                <Input {...editForm.register("student_id")} placeholder="Número de matrícula" className="h-8 text-xs" />
+                <Input {...editForm.register("student_id")} placeholder="Número de matrícula" className="h-10 text-xs" />
                 {editForm.formState.errors.student_id && (
                   <p className="text-xs text-destructive">{editForm.formState.errors.student_id.message}</p>
                 )}
               </div>
               <div className="space-y-1.5">
                 <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Email</Label>
-                <Input {...editForm.register("email")} type="email" placeholder="email@exemplo.com" className="h-8 text-xs" />
+                <Input {...editForm.register("email")} type="email" placeholder="email@exemplo.com" className="h-10 text-xs" />
                 {editForm.formState.errors.email && (
                   <p className="text-xs text-destructive">{editForm.formState.errors.email.message}</p>
                 )}
@@ -322,14 +343,14 @@ export function EstudantesPage() {
                 <>
                   <div className="space-y-1.5">
                     <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nova senha</Label>
-                    <Input {...editForm.register("password")} type="password" placeholder="Nova senha" className="h-8 text-xs" />
+                    <Input {...editForm.register("password")} type="password" placeholder="Nova senha" className="h-10 text-xs" />
                     {editForm.formState.errors.password && (
                       <p className="text-xs text-destructive">{editForm.formState.errors.password.message}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Confirmar nova senha</Label>
-                    <Input {...editForm.register("passwordConfirmation")} type="password" placeholder="Confirmar nova senha" className="h-8 text-xs" />
+                    <Input {...editForm.register("passwordConfirmation")} type="password" placeholder="Confirmar nova senha" className="h-10 text-xs" />
                     {editForm.formState.errors.passwordConfirmation && (
                       <p className="text-xs text-destructive">{editForm.formState.errors.passwordConfirmation.message}</p>
                     )}

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@ui/button'
+import { toast } from 'sonner'
 import type { Bus } from './BusesPage'
 
 const editBusSchema = z.object({
@@ -59,6 +60,7 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
 
       onBusUpdated(response)
       onClose()
+      toast.success('Ônibus atualizado com sucesso!')
     } catch (err) {
       console.error(err)
       const errorData = err as { data?: { detail?: string, number_plate?: string[] } } | undefined
@@ -67,7 +69,9 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
       if (plateError) {
         setError("number_plate", { message: "A placa inserida já está cadastrada." })
       } else {
-        setError("root.serverError", { message: "Erro ao atualizar os dados do veículo." })
+        const msg = errorData?.data?.detail || 'Erro ao atualizar os dados do veículo.'
+        toast.error(msg)
+        setError("root.serverError", { message: msg })
       }
     }
   }

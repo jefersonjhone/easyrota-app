@@ -2,7 +2,7 @@ import { apiFetch } from '@lib/api'
 import type { TripStatus } from '@/features/trips/types'
 
 export type RecentTripEntry = {
-  id: number
+  id: string
   trip_date: string
   departure_time: string
   origin: string
@@ -11,7 +11,7 @@ export type RecentTripEntry = {
 }
 
 export type BusAdminDetail = {
-  id: number
+  id: string
   number_plate: string
   brand: string
   seating_capacity: number
@@ -20,6 +20,6 @@ export type BusAdminDetail = {
   recent_trips: RecentTripEntry[]
 }
 
-export function fetchBusAdminDetail(id: number) {
+export function fetchBusAdminDetail(id: string) {
   return apiFetch<BusAdminDetail>(`/buses/${id}/admin_detail/`)
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import {
   useCreateTrip,
   useUpdateTrip,
@@ -30,7 +31,7 @@ type Props = {
 export function TripForm({ onSuccess, tripValues }: Props) {
   const isEdit = !!tripValues
   const createTrip = useCreateTrip()
-  const updateTrip = useUpdateTrip(tripValues?.id ?? 0)
+  const updateTrip = useUpdateTrip(tripValues?.id ?? '')
   const { data: routes } = useRoutes()
   const { data: buses } = useBuses()
   const { data: drivers } = useDrivers()
@@ -76,7 +77,7 @@ export function TripForm({ onSuccess, tripValues }: Props) {
     }
 
     const payload: Record<string, unknown> = {
-      route: Number(route),
+      route,
       status,
     }
 
@@ -90,16 +91,20 @@ export function TripForm({ onSuccess, tripValues }: Props) {
     }
 
     if (!recurring) {
-      if (bus) payload.bus = Number(bus)
-      if (driver) payload.driver = Number(driver)
+      if (bus) payload.bus = bus
+      if (driver) payload.driver = driver
     }
 
     const mutation = isEdit
       ? updateTrip.mutateAsync(payload as Partial<Trip>)
       : createTrip.mutateAsync(payload as Partial<Trip>)
 
-    mutation.then(onSuccess).catch(() => {
-      setError(isEdit ? 'Erro ao atualizar viagem.' : 'Erro ao criar viagem.')
+    mutation.then(() => {
+      onSuccess()
+    }).catch(() => {
+      const msg = isEdit ? 'Erro ao atualizar viagem.' : 'Erro ao criar viagem.'
+      toast.error(msg)
+      setError(msg)
     })
   }
 

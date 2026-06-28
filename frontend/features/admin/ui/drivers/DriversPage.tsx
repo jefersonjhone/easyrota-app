@@ -12,9 +12,10 @@ import { ConfirmDeleteDialog } from '@/lib/ui/delete-alert'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/lib/ui/dialog"
-import { MagnifyingGlassIcon, PlusIcon, PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react"
+import { MagnifyingGlassIcon, PlusIcon, PencilSimpleIcon, TrashIcon, IdentificationCard } from "@phosphor-icons/react"
 
 import { apiFetch } from '@/lib/api'
+import { toast } from 'sonner'
 import { AdminLayout } from '@/features/admin/ui/Layout'
 
 const createDriverSchema = z.object({
@@ -91,6 +92,7 @@ export function ManageDriversPage() {
       queryClient.invalidateQueries({ queryKey: ['drivers'] })
       createForm.reset({ full_name: "", cnh: "", email: "", password: "", passwordConfirmation: "" })
       setIsAddModalOpen(false)
+      toast.success('Motorista cadastrado com sucesso!')
     },
     onError: (error) => {
       const err = error as {
@@ -114,6 +116,7 @@ export function ManageDriversPage() {
           createForm.setError("password", { type: "server", message })
         }
       } else {
+        toast.error('Erro inesperado ao criar motorista.')
         console.error("Erro inesperado ao criar motorista:", error)
       }
     }
@@ -131,6 +134,7 @@ export function ManageDriversPage() {
       editForm.reset({ full_name: "", cnh: "", email: "" })
       setEditingDriver(null)
       setIsEditModalOpen(false)
+      toast.success('Motorista atualizado com sucesso!')
     },
     onError: (error) => {
       const err = error as {
@@ -150,6 +154,7 @@ export function ManageDriversPage() {
           editForm.setError("email", { type: "server", message })
         }
       } else {
+        toast.error('Erro inesperado ao atualizar motorista.')
         console.error("Erro inesperado ao atualizar motorista:", error)
       }
     }
@@ -161,6 +166,10 @@ export function ManageDriversPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] })
+      toast.success('Motorista removido com sucesso!')
+    },
+    onError: () => {
+      toast.error('Erro ao remover motorista.')
     },
   })
 
@@ -199,9 +208,12 @@ export function ManageDriversPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Frota e Pessoal
             </p>
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              Motoristas
-            </h1>
+            <div className="flex items-center gap-2">
+              <IdentificationCard size={20} className="text-primary shrink-0" />
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                Motoristas
+              </h1>
+            </div>
           </div>
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
@@ -217,35 +229,35 @@ export function ManageDriversPage() {
               <form onSubmit={createForm.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="full_name" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nome</Label>
-                  <Input id="full_name" placeholder="Digite o nome" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("full_name")} />
+                  <Input id="full_name" placeholder="Digite o nome" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("full_name")} />
                   {createForm.formState.errors.full_name && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.full_name.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="cnh" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">CNH</Label>
-                  <Input id="cnh" placeholder="Digite o número da CNH" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("cnh")} />
+                  <Input id="cnh" placeholder="Digite o número da CNH" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("cnh")} />
                   {createForm.formState.errors.cnh && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.cnh.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Email</Label>
-                  <Input id="email" type="email" placeholder="Digite o email" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("email")} />
+                  <Input id="email" type="email" placeholder="Digite o email" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("email")} />
                   {createForm.formState.errors.email && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.email.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="password" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Senha</Label>
-                  <Input id="password" type="password" placeholder="Digite a senha" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("password")} />
+                  <Input id="password" type="password" placeholder="Digite a senha" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("password")} />
                   {createForm.formState.errors.password && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.password.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="passwordConfirmation" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Confirmar Senha</Label>
-                  <Input id="passwordConfirmation" type="password" placeholder="Confirme a senha" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("passwordConfirmation")} />
+                  <Input id="passwordConfirmation" type="password" placeholder="Confirme a senha" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("passwordConfirmation")} />
                   {createForm.formState.errors.passwordConfirmation && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.passwordConfirmation.message}</p>
                   )}
@@ -274,7 +286,7 @@ export function ManageDriversPage() {
                   placeholder="Nome, CPF ou email..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-8 w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                  className="h-8 w-full md:w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
                 />
               </div>
             </div>
@@ -306,32 +318,33 @@ export function ManageDriversPage() {
               {drivers.map((driver) => (
                   <div
                     key={driver.id}
-                    className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[80px_1fr_160px_1fr_70px] md:items-center"
+                    className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[80px_1fr_160px_1fr_70px] md:items-center"
                   >
-                    <Link to="/admin/motoristas/$id" params={{ id: String(driver.id) }} className="font-mono text-xs  hover:text-primary/80 transition-colors">
+                    <Link to="/admin/motoristas/$id" params={{ id: String(driver.id) }} className="font-mono text-xs  hover:text-primary/80 transition-colors truncate  ">
                       {driver.id}
                     </Link>
-                    <Link to="/admin/motoristas/$id" params={{ id: String(driver.id) }} className="font-medium underline hover:text-primary/80 transition-colors">
+                    <Link to="/admin/motoristas/$id" params={{ id: String(driver.id) }} className="font-medium underline hover:text-primary/80 transition-colors flex items-center gap-1.5">
+                      <IdentificationCard size={15} className="text-primary/60 shrink-0" />
                       {driver.full_name}
                     </Link>
                     <span className="font-mono text-xs md:text-sm">{driver.cnh}</span>
                     <span className="text-muted-foreground text-xs md:text-sm truncate">{driver.email}</span>
-                    <div className="flex items-center gap-1 justify-end">
+                    <div className="flex items-center gap-1 w-full md:w-auto justify-end mt-1 md:mt-0">
                       <button
                         type="button"
                         onClick={() => handleEditDriver(driver)}
-                        className="inline-flex items-center justify-center p-1.5 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] p-2 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                         title="Editar motorista"
                       >
                         <PencilSimpleIcon size={14} />
                       </button>
                       <ConfirmDeleteDialog
                         onConfirm={() => deleteDriverMutation.mutate(driver.id)}
-                        trigger={
-                          <Button variant="ghost" size="sm" className="p-1.5 h-auto text-muted-foreground hover:text-destructive">
-                            <TrashIcon size={14} />
-                          </Button>
-                        }
+                      trigger={
+                        <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-destructive">
+                          <TrashIcon size={14} />
+                        </Button>
+                      }
                       />
                     </div>
                   </div>
@@ -349,21 +362,21 @@ export function ManageDriversPage() {
               <form onSubmit={editForm.handleSubmit(handleSaveEdit)} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-name" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nome</Label>
-                  <Input id="edit-name" placeholder="Digite o nome" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("full_name")} />
+                  <Input id="edit-name" placeholder="Digite o nome" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("full_name")} />
                   {editForm.formState.errors.full_name && (
                     <p className="text-sm text-destructive">{editForm.formState.errors.full_name.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-cnh" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">CNH</Label>
-                  <Input id="edit-cnh" placeholder="Digite o número da CNH" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("cnh")} />
+                  <Input id="edit-cnh" placeholder="Digite o número da CNH" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("cnh")} />
                   {editForm.formState.errors.cnh && (
                     <p className="text-sm text-destructive">{editForm.formState.errors.cnh.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-email" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Email</Label>
-                  <Input id="edit-email" type="email" placeholder="Digite o email" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("email")} />
+                  <Input id="edit-email" type="email" placeholder="Digite o email" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("email")} />
                   {editForm.formState.errors.email && (
                     <p className="text-sm text-destructive">{editForm.formState.errors.email.message}</p>
                   )}
@@ -377,14 +390,14 @@ export function ManageDriversPage() {
                   <>
                     <div className="space-y-1.5">
                       <Label htmlFor="edit-password" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nova Senha</Label>
-                      <Input id="edit-password" type="password" placeholder="Digite a nova senha" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("password")} />
+                      <Input id="edit-password" type="password" placeholder="Digite a nova senha" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("password")} />
                       {editForm.formState.errors.password && (
                         <p className="text-sm text-destructive">{editForm.formState.errors.password.message}</p>
                       )}
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="edit-passwordConfirmation" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Confirmar Nova Senha</Label>
-                      <Input id="edit-passwordConfirmation" type="password" placeholder="Confirme a nova senha" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("passwordConfirmation")} />
+                      <Input id="edit-passwordConfirmation" type="password" placeholder="Confirme a nova senha" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("passwordConfirmation")} />
                       {editForm.formState.errors.passwordConfirmation && (
                         <p className="text-sm text-destructive">{editForm.formState.errors.passwordConfirmation.message}</p>
                       )}

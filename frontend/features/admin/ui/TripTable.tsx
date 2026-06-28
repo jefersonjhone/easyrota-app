@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react'
+import { PencilSimpleIcon, TrashIcon, MapPin } from '@phosphor-icons/react'
 import { Button } from '@ui/button'
 import { ConfirmDeleteDialog } from '@ui/delete-alert'
 import { STATUS_CONFIG } from '@/features/admin/ui/routes/StatusBadge'
@@ -29,11 +29,11 @@ export function TripTable({
   showDateColumn = false,
 }: {
   trips: Trip[]
-  selectedIds: Set<number>
-  onToggleSelect: (id: number) => void
-  onToggleAll: (ids: number[], select: boolean) => void
+  selectedIds: Set<string>
+  onToggleSelect: (id: string) => void
+  onToggleAll: (ids: string[], select: boolean) => void
   onEdit: (trip: Trip) => void
-  onDelete: (id: number) => void
+  onDelete: (id: string) => void
   showCheckboxes?: boolean
   showDateColumn?: boolean
 }) {
@@ -75,7 +75,7 @@ export function TripTable({
         {trips.map((trip) => (
           <div
             key={trip.id}
-            className="flex flex-col gap-2 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:items-center"
+            className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:items-center"
             style={{ gridTemplateColumns: gridCols }}
           >
             {showCheckboxes && (
@@ -94,7 +94,8 @@ export function TripTable({
               <span className="text-muted-foreground text-xs md:text-sm md:text-foreground font-mono font-semibold">
                 {trip.departure_time}
               </span>
-              <span className="font-medium truncate leading-tight hover:underline underline-offset-1">
+              <span className="font-medium truncate leading-tight hover:underline underline-offset-1 flex items-center gap-1.5">
+                <MapPin size={14} className="text-primary/60 shrink-0" />
                 {trip.origin} → {trip.destiny}
               </span>
               {showDateColumn && (
@@ -107,11 +108,11 @@ export function TripTable({
               </span>
               <OccupancyBar active={trip.active_reservations} capacity={trip.seating_capacity} />
             </Link>
-            <div className="flex items-center gap-1 justify-end -mr-1">
+            <div className="flex items-center gap-1 w-full md:w-auto justify-end -mr-1 mt-1 md:mt-0">
               <Button
                 variant="ghost"
                 size="sm"
-                className="p-1.5 h-auto text-muted-foreground hover:text-foreground"
+                className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-foreground"
                 onClick={() => onEdit(trip)}
               >
                 <PencilSimpleIcon size={15} />
@@ -119,7 +120,7 @@ export function TripTable({
               <ConfirmDeleteDialog
                 onConfirm={() => onDelete(trip.id)}
                 trigger={
-                  <Button variant="ghost" size="sm" className="p-1.5 h-auto text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-destructive">
                     <TrashIcon size={15} />
                   </Button>
                 }

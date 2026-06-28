@@ -6,6 +6,8 @@ import { NativeSelect, NativeSelectOption } from '@ui/native-select'
 import { useAuthStore } from '@features/auth/store/auth-store'
 import { apiFetch } from '@lib/api'
 import { getStatusTone } from '@/features/user-home/config'
+import { toast } from 'sonner'
+import { getApiErrorMessage } from './utils'
 import {
   ArrowLeftIcon,
   PlayCircleIcon,
@@ -26,12 +28,16 @@ import {
   getTripFromApi,
   assignDriverToTrip,
   startCheckin,
+  getTripReservationsFromApi,
 } from './api'
 import type {
   ViagemMotoristaProps,
   DriverTripDetail,
 } from './types'
 import { normalizeTripStatus } from './utils'
+
+const CHECKIN_BUFFER_MIN = 30
+const CHECKIN_BUFFER_MS = CHECKIN_BUFFER_MIN * 60 * 1000
 
 function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
@@ -53,6 +59,17 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return ''
+  const totalSeconds = Math.ceil(ms / 1000)
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
+  if (h > 0) return `${h}h ${m}m ${s}s`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
+}
+
 export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const navigate = useNavigate()
   const [actionError, setActionError] = useState<string | null>(null)
@@ -62,10 +79,17 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const [tripError, setTripError] = useState<string | null>(null)
   const [isDriverAssociating, setIsDriverAssociating] = useState(false)
   const [isCheckinStarting, setIsCheckinStarting] = useState(false)
+  const [reservationCount, setReservationCount] = useState(0)
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
 
   const authDriverId = useAuthStore((s) => s.user?.driver_profile?.id)
   const [profileDriverId, setProfileDriverId] = useState<string | null>(null)
-
+  
   useEffect(() => {
     if (!authDriverId) {
       apiFetch<{ driver_profile?: { id: string } }>('/profile/')
@@ -77,6 +101,16 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const currentDriverId = authDriverId ?? profileDriverId
   const isDriverAssociated = currentDriverId != null && trip?.driverId === currentDriverId
   const isCheckinActive = trip?.checkinStarted != null || normalizeTripStatus(trip?.status) === 'EM ANDAMENTO' || normalizeTripStatus(trip?.status).startsWith('CONCLUI')
+
+  const departureMs = trip?.expectedDeparture ? new Date(trip.expectedDeparture).getTime() : null
+  const checkinAvailableAt = departureMs ? departureMs - CHECKIN_BUFFER_MS : null
+  const startAvailableAt = departureMs ?? null
+
+  const isCheckinTimeReached = checkinAvailableAt ? now >= checkinAvailableAt : true
+  const isStartTimeReached = startAvailableAt ? now >= startAvailableAt : true
+
+  const checkinCountdown = checkinAvailableAt && !isCheckinTimeReached ? checkinAvailableAt - now : 0
+  const startCountdown = startAvailableAt && !isStartTimeReached ? startAvailableAt - now : 0
 
   useEffect(() => {
     let isMounted = true
@@ -97,6 +131,9 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
         const tripDetail = await getTripFromApi(tripId)
         if (!isMounted) return
         setTrip(tripDetail)
+        getTripReservationsFromApi(tripId)
+          .then((data) => { if (isMounted) setReservationCount(data.length) })
+          .catch(() => { if (isMounted) setReservationCount(0) })
       } catch (error) {
         console.warn('Nao foi possivel carregar a viagem selecionada:', error)
         if (!isMounted) return
@@ -112,7 +149,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   }, [tripId])
 
   const { busOptions, selectedBusId, isBusActionLoading, handleBusSelection } = useBuses(trip, setTrip, setActionError)
-  const { isConfirmationLoading, handleConfirmBack, handleStartTrip, handleFinishTrip } = useConfirmation(trip, setTrip, setActionError)
+  const { isConfirmationLoading, handleConfirmBack, handleStartTrip, handleFinishTrip } = useConfirmation(trip, setTrip, setActionError, currentDriverId)
 
   const selectedBus = busOptions.find((b) => b.id === selectedBusId) ?? null
   const activeCapacity = selectedBus?.capacity ?? trip?.capacity ?? 46
@@ -122,7 +159,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const normalizedTripStatus = normalizeTripStatus(trip?.status)
   const isTripInProgress = normalizedTripStatus === 'EM ANDAMENTO'
   const isTripFinished = normalizedTripStatus.startsWith('CONCLUI')
-  const isStartTripDisabled = isConfirmationLoading || isTripInProgress || isTripFinished || !isDriverAssociated || !isCheckinActive
+  const isStartTripDisabled = isConfirmationLoading || isTripInProgress || isTripFinished || !isDriverAssociated || !isCheckinActive || !isStartTimeReached
   const isFinishTripDisabled = !isTripInProgress || isConfirmationLoading || isTripFinished
   const whatsappAlertUrl = `https://wa.me/?text=${encodeURIComponent(
     `Estou com problema no onibus ${selectedBusPlate} na viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
@@ -153,10 +190,12 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
     setActionError(null)
     try {
       await startCheckin(trip.id)
+      toast.success('Check-in iniciado com sucesso!')
       navigate({ to: '/app/motorista/checkin/$tripId', params: { tripId: trip.id } })
     } catch (error) {
-      console.warn('Erro ao iniciar check-in:', error)
-      setActionError('Nao foi possivel iniciar o check-in.')
+      const msg = getApiErrorMessage(error, 'Nao foi possivel iniciar o check-in.')
+      toast.error(msg)
+      setActionError(msg)
       setIsCheckinStarting(false)
     }
   }
@@ -309,6 +348,10 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
                     />
                   </div>
                 </div>
+                <div className="mt-2 flex items-baseline justify-between border-t border-border pt-2 text-xs text-muted-foreground">
+                  <span>Reservas</span>
+                  <span className="font-semibold text-foreground">{reservationCount}</span>
+                </div>
               </div>
             ) : null}
 
@@ -335,17 +378,33 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
                 {/* Check-in init */}
                 {!isCheckinActive && !isTripInProgress && !isTripFinished ? (
                   <div className="rounded-xl bg-primary/5 border border-primary/20 px-5 py-4 text-center">
-                    <p className="mb-3 text-xs font-medium text-muted-foreground">
-                      Para realizar o embarque dos passageiros, acesse o controle de embarque.
-                    </p>
-                    <Button
-                      type="button"
-                      className="min-h-11 w-full rounded-xl font-bold text-sm"
-                      onClick={() => void handleStartCheckin()}
-                      disabled={isCheckinStarting}
-                    >
-                      {isCheckinStarting ? 'A iniciar...' : 'Abrir check-in'}
-                    </Button>
+                    {isCheckinTimeReached ? (
+                      <>
+                        <p className="mb-3 text-xs font-medium text-muted-foreground">
+                          Para realizar o embarque dos passageiros, acesse o controle de embarque.
+                        </p>
+                        <Button
+                          type="button"
+                          className="min-h-11 w-full rounded-xl font-bold text-sm"
+                          onClick={() => void handleStartCheckin()}
+                          disabled={isCheckinStarting}
+                        >
+                          {isCheckinStarting ? 'A iniciar...' : 'Abrir check-in'}
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mb-2 text-xs font-medium text-muted-foreground">
+                          Check-in disponível a partir de {CHECKIN_BUFFER_MIN} minutos antes da partida
+                        </p>
+                        <div className="flex items-center justify-center gap-2 rounded-lg bg-muted/40 px-4 py-3">
+                          <ClockIcon weight="fill" className="size-4 text-muted-foreground" />
+                          <span className="font-mono text-sm font-bold tabular-nums text-foreground">
+                            {formatCountdown(checkinCountdown)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : null}
 
@@ -364,15 +423,29 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
                 {/* Main CTA row */}
                 <div className="grid gap-2">
                   {!isTripInProgress && !isTripFinished ? (
-                    <Button
-                      type="button"
-                      className="min-h-12 w-full rounded-xl font-bold text-base"
-                      onClick={() => setConfirmation('start')}
-                      disabled={isStartTripDisabled}
-                    >
-                      <PlayCircleIcon weight="bold" className="size-5" />
-                      Iniciar viagem
-                    </Button>
+                    isStartTimeReached ? (
+                      <Button
+                        type="button"
+                        className="min-h-12 w-full rounded-xl font-bold text-base"
+                        onClick={() => setConfirmation('start')}
+                        disabled={isStartTripDisabled}
+                      >
+                        <PlayCircleIcon weight="bold" className="size-5" />
+                        Iniciar viagem
+                      </Button>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-muted-foreground/30 px-5 py-4 text-center">
+                        <p className="mb-2 text-xs font-medium text-muted-foreground">
+                          Viagem pode ser iniciada apenas a partir do horário de partida
+                        </p>
+                        <div className="flex items-center justify-center gap-2">
+                          <ClockIcon weight="fill" className="size-4 text-muted-foreground" />
+                          <span className="font-mono text-sm font-bold tabular-nums text-foreground">
+                            {formatCountdown(startCountdown)}
+                          </span>
+                        </div>
+                      </div>
+                    )
                   ) : null}
                   {isTripInProgress ? (
                     <Button

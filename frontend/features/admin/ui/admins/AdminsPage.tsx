@@ -4,6 +4,7 @@ import { Button } from '@ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@ui/dialog'
 import { ConfirmDeleteDialog } from '@ui/delete-alert'
 import { MagnifyingGlassIcon, PencilSimpleIcon, PlusIcon, TrashIcon, ShieldCheckIcon } from '@phosphor-icons/react'
+import { toast } from 'sonner'
 import { useAdmins, useCreateAdmin, useUpdateAdmin, useDeleteAdmin } from '../../hooks/useAdmins'
 import type { Admin, CreateAdminPayload, UpdateAdminPayload } from '../../services/admins'
 
@@ -52,7 +53,14 @@ function AdminForm({
       if (Object.keys(payload).length === 0) { onSuccess(); return }
       updateMutation.mutate(
         { userId: initial.user_id, data: payload },
-        { onSuccess, onError: (err: any) => setError(err?.data?.email?.[0] ?? err?.data?.detail ?? 'Erro ao atualizar') },
+        {
+          onSuccess: () => { toast.success('Administrador atualizado com sucesso!'); onSuccess() },
+          onError: (err: any) => {
+            const msg = err?.data?.email?.[0] ?? err?.data?.detail ?? 'Erro ao atualizar'
+            setError(msg)
+            toast.error(msg)
+          },
+        },
       )
     } else {
       if (!fullName || !email || !password || !role) {
@@ -65,8 +73,12 @@ function AdminForm({
       }
       const payload: CreateAdminPayload = { full_name: fullName, email, password, role }
       createMutation.mutate(payload, {
-        onSuccess,
-        onError: (err: any) => setError(err?.data?.email?.[0] ?? err?.data?.detail ?? 'Erro ao criar'),
+        onSuccess: () => { toast.success('Administrador criado com sucesso!'); onSuccess() },
+        onError: (err: any) => {
+          const msg = err?.data?.email?.[0] ?? err?.data?.detail ?? 'Erro ao criar'
+          setError(msg)
+          toast.error(msg)
+        },
       })
     }
   }
@@ -80,7 +92,7 @@ function AdminForm({
           type="text"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className="h-8 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="h-10 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
           required={!initial}
         />
       </div>
@@ -90,7 +102,7 @@ function AdminForm({
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="h-8 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="h-10 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
           required={!initial}
         />
       </div>
@@ -113,7 +125,7 @@ function AdminForm({
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-8 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+              className="h-10 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
               required={!initial}
             />
           </div>
@@ -123,7 +135,7 @@ function AdminForm({
               type="password"
               value={passwordConfirmation}
               onChange={(e) => setPasswordConfirmation(e.target.value)}
-              className="h-8 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+              className="h-10 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
               required={!initial}
             />
           </div>
@@ -145,7 +157,7 @@ function AdminForm({
           value={role}
           onChange={(e) => setRole(e.target.value)}
           placeholder="Ex: Secretário, Administrador..."
-          className="h-8 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+          className="h-10 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
           required={!initial}
         />
       </div>
@@ -155,7 +167,7 @@ function AdminForm({
           <select
             value={level}
             onChange={(e) => setLevel(e.target.value as "superadmin" | "subadmin")}
-            className="h-8 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+            className="h-10 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
           >
             <option value="subadmin">Subadmin</option>
             <option value="superadmin">Superadmin</option>
@@ -194,7 +206,10 @@ export function AdminsPage() {
   }
 
   function handleDelete(admin: Admin) {
-    deleteMutation.mutate(admin.user_id)
+    deleteMutation.mutate(admin.user_id, {
+      onSuccess: () => toast.success('Administrador removido com sucesso!'),
+      onError: () => toast.error('Erro ao remover administrador.'),
+    })
   }
 
   return (
@@ -205,9 +220,12 @@ export function AdminsPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Frota e Pessoal
             </p>
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              Administradores
-            </h1>
+            <div className="flex items-center gap-2">
+              <ShieldCheckIcon size={20} className="text-primary shrink-0" />
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                Administradores
+              </h1>
+            </div>
             <p className="text-muted-foreground mt-1">
               Gerencie os administradores do sistema.
             </p>
@@ -238,7 +256,7 @@ export function AdminsPage() {
                 placeholder="Nome ou email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 w-60 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                className="h-8 w-full md:w-60 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
               />
             </div>
           </div>
@@ -279,11 +297,14 @@ export function AdminsPage() {
               {sortedAdmins.map((admin) => (
                 <div
                   key={admin.id}
-                  className="flex flex-col gap-2 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[1fr_1fr_100px_140px_80px] md:items-center"
+                  className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[1fr_1fr_100px_140px_80px] md:items-center"
                 >
-                  <span className="font-medium truncate leading-tight">{admin.full_name}</span>
+                  <span className="font-medium truncate leading-tight flex items-center gap-2">
+                    <ShieldCheckIcon size={16} className="text-primary/60 shrink-0" />
+                    {admin.full_name}
+                  </span>
                   <span className="text-muted-foreground text-xs md:text-sm md:text-foreground truncate">{admin.email}</span>
-                  <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide w-fit ${
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide w-fit ${
                     admin.level === 'superadmin'
                       ? 'bg-amber-100 text-amber-800'
                       : 'bg-blue-100 text-blue-800'
@@ -291,11 +312,11 @@ export function AdminsPage() {
                     {LEVEL_LABELS[admin.level]}
                   </span>
                   <span className="text-muted-foreground text-xs truncate">{admin.created_by_name ?? '—'}</span>
-                  <div className="flex items-center gap-1 justify-end -mr-1">
+                  <div className="flex items-center gap-1 w-full md:w-auto justify-end -mr-1 mt-1 md:mt-0">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="p-1.5 h-auto text-muted-foreground hover:text-foreground cursor-pointer"
+                      className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-foreground cursor-pointer"
                       onClick={() => openEdit(admin)}
                     >
                       <PencilSimpleIcon size={15} />
@@ -303,7 +324,7 @@ export function AdminsPage() {
                     <ConfirmDeleteDialog
                       onConfirm={() => handleDelete(admin)}
                       trigger={
-                        <Button variant="ghost" size="sm" className="p-1.5 h-auto text-muted-foreground hover:text-destructive cursor-pointer">
+                        <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-destructive cursor-pointer">
                           <TrashIcon size={15} />
                         </Button>
                       }

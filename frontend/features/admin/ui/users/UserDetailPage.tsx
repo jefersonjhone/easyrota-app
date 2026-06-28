@@ -63,7 +63,7 @@ export function UserDetailPage({ profileType, profileId }: Props) {
       <section className="mx-auto w-full max-w-5xl px-4 py-6 space-y-8">
         <button
           type="button"
-          onClick={() => navigate({ to: profileType === 'STUDENT' ? '/admin/estudantes' : '/admin/servidores' })}
+          onClick={() => window.history.back()}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           <ArrowLeft size={14} />
@@ -158,7 +158,7 @@ export function UserDetailPage({ profileType, profileId }: Props) {
                 {trips.map((trip) => (
                   <div
                     key={trip.id}
-                    className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[60px_120px_70px_1fr_100px_100px] md:items-center"
+                    className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[60px_120px_70px_1fr_100px_100px] md:items-center"
                   >
                     <span
                       className="font-mono text-xs text-muted-foreground underline underline-offset-2 decoration-dotted decoration-muted-foreground/40 hover:text-foreground hover:decoration-foreground/60 cursor-pointer"

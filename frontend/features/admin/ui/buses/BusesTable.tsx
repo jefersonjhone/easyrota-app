@@ -1,7 +1,7 @@
 import type { Bus } from './BusesPage'
 import { Link } from '@tanstack/react-router'
 import { ConfirmDeleteDialog } from '@/lib/ui/delete-alert'
-import { PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react"
+import { PencilSimpleIcon, TrashIcon, Bus as BusIcon } from "@phosphor-icons/react"
 import { Button } from "@ui/button"
 
 interface BusesTableProps {
@@ -32,25 +32,26 @@ export const BusesTable = ({ buses, onDeleteBus, onEditBus }: BusesTableProps) =
         {buses.map((bus) => (
           <div
             key={bus.id}
-            className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[1fr_1fr_100px_130px_70px] md:items-center"
+            className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[1fr_1fr_100px_130px_70px] md:items-center"
           >
-            <Link to="/admin/onibus/$id" params={{ id: String(bus.id) }} className="font-mono font-bold underline hover:text-primary/80 transition-colors">
+            <Link to="/admin/onibus/$id" params={{ id: String(bus.id) }} className="font-mono font-bold underline hover:text-primary/80 transition-colors flex items-center gap-1.5">
+              <BusIcon size={14} className="text-primary/60 shrink-0" />
               {bus.number_plate}
             </Link>
             <span className="text-muted-foreground text-xs md:text-sm md:text-foreground">{bus.brand}</span>
-            <span className="text-center text-muted-foreground text-xs md:text-sm">{bus.seating_capacity} assentos</span>
-            <span className={`inline-flex items-center justify-center mx-auto rounded-full px-2.5 py-0.5 text-xs font-medium border w-fit ${
+            <span className="text-muted-foreground text-xs md:text-sm">{bus.seating_capacity} assentos</span>
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border w-fit ${
               bus.status === 'ATIVO'
                 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                 : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
             }`}>
               {bus.status === 'ATIVO' ? 'Ativo' : 'Manutenção'}
             </span>
-            <div className="flex items-center gap-1 justify-end">
+            <div className="flex items-center gap-1 w-full md:w-auto justify-end mt-1 md:mt-0">
               <button
                 type="button"
                 onClick={() => onEditBus(bus)}
-                className="inline-flex items-center justify-center p-1.5 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] p-2 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                 title="Editar veículo"
               >
                 <PencilSimpleIcon size={14} />
@@ -58,7 +59,7 @@ export const BusesTable = ({ buses, onDeleteBus, onEditBus }: BusesTableProps) =
               <ConfirmDeleteDialog
                 onConfirm={() => onDeleteBus(bus.id)}
                 trigger={
-                  <Button variant="ghost" size="sm" className="p-1.5 h-auto text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-destructive">
                     <TrashIcon size={14} />
                   </Button>
                 }

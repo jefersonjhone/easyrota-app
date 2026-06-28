@@ -12,6 +12,7 @@ import {
 } from "@/lib/ui/dialog"
 import { MagnifyingGlassIcon, PlusIcon, PencilSimpleIcon, TrashIcon, UserCircleCheck } from "@phosphor-icons/react"
 import { useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
 
 import { AdminLayout } from '@/features/admin/ui/Layout'
 import { useCivilServants, useCreateCivilServant, useUpdateCivilServant, useDeleteCivilServant } from '@/features/admin/hooks/useCivilServants'
@@ -69,6 +70,7 @@ export function ServidoresPage() {
   const onCreateSubmit = (data: CreateData) => {
     createMutation.mutate(data, {
       onSuccess: () => {
+        toast.success('Servidor cadastrado com sucesso!')
         createForm.reset({ full_name: "", civil_servant_id: "", email: "", password: "", passwordConfirmation: "" })
         setIsAddOpen(false)
       },
@@ -111,6 +113,7 @@ export function ServidoresPage() {
     }
     updateMutation.mutate({ id: editing.id, data: payload }, {
       onSuccess: () => {
+        toast.success('Servidor atualizado com sucesso!')
         editForm.reset({ full_name: "", civil_servant_id: "", email: "", password: "", passwordConfirmation: "" })
         setEditing(null)
         setIsEditOpen(false)
@@ -140,9 +143,12 @@ export function ServidoresPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Usuários e Reservas
             </p>
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              Servidores
-            </h1>
+            <div className="flex items-center gap-2">
+              <UserCircleCheck size={20} className="text-primary shrink-0" />
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                Servidores
+              </h1>
+            </div>
           </div>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
@@ -158,35 +164,35 @@ export function ServidoresPage() {
               <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="full_name" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nome</Label>
-                  <Input id="full_name" placeholder="Digite o nome" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("full_name")} />
+                  <Input id="full_name" placeholder="Digite o nome" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("full_name")} />
                   {createForm.formState.errors.full_name && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.full_name.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="civil_servant_id" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Matrícula ODS</Label>
-                  <Input id="civil_servant_id" placeholder="Digite a matrícula" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("civil_servant_id")} />
+                  <Input id="civil_servant_id" placeholder="Digite a matrícula" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("civil_servant_id")} />
                   {createForm.formState.errors.civil_servant_id && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.civil_servant_id.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Email</Label>
-                  <Input id="email" type="email" placeholder="Digite o email" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("email")} />
+                  <Input id="email" type="email" placeholder="Digite o email" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("email")} />
                   {createForm.formState.errors.email && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.email.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="password" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Senha</Label>
-                  <Input id="password" type="password" placeholder="Digite a senha" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("password")} />
+                  <Input id="password" type="password" placeholder="Digite a senha" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("password")} />
                   {createForm.formState.errors.password && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.password.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="passwordConfirmation" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Confirmar Senha</Label>
-                  <Input id="passwordConfirmation" type="password" placeholder="Confirme a senha" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("passwordConfirmation")} />
+                  <Input id="passwordConfirmation" type="password" placeholder="Confirme a senha" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...createForm.register("passwordConfirmation")} />
                   {createForm.formState.errors.passwordConfirmation && (
                     <p className="text-sm text-destructive">{createForm.formState.errors.passwordConfirmation.message}</p>
                   )}
@@ -215,7 +221,7 @@ export function ServidoresPage() {
                   placeholder="Nome, email ou matrícula..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-8 w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                  className="h-8 w-full md:w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
                 />
               </div>
             </div>
@@ -240,7 +246,7 @@ export function ServidoresPage() {
             <div className="hidden md:grid md:grid-cols-[80px_1fr_160px_1fr_70px] md:px-5 md:py-2 md:bg-muted/40 md:text-[11px] md:font-semibold md:tracking-wider md:text-muted-foreground md:uppercase md:border-b md:border-border/50">
               <span>ID</span>
               <span>Nome</span>
-              <span>Matrícula ODS</span>
+              <span>Matrícula </span>
               <span>Email</span>
               <span className="text-right">Ações</span>
             </div>
@@ -248,30 +254,36 @@ export function ServidoresPage() {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[80px_1fr_160px_1fr_70px] md:items-center"
+                  className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[80px_1fr_160px_1fr_70px] md:items-center"
                 >
                   <span
-                    className="font-mono text-xs text-muted-foreground underline underline-offset-2 decoration-dotted decoration-muted-foreground/40 hover:text-foreground hover:decoration-foreground/60 cursor-pointer"
+                    className="font-mono truncate text-xs text-muted-foreground underline underline-offset-2 decoration-dotted decoration-muted-foreground/40 hover:text-foreground hover:decoration-foreground/60 cursor-pointer"
                     onClick={() => navigate({ to: '/admin/servidores/$id', params: { id: String(item.id) } })}
                   >
                     {item.id}
                   </span>
-                  <span className="font-medium">{item.full_name}</span>
+                  <span className="font-medium flex items-center gap-2">
+                    <UserCircleCheck size={16} className="text-primary/60 shrink-0" />
+                    {item.full_name}
+                  </span>
                   <span className="font-mono text-xs md:text-sm">{item.civil_servant_id}</span>
                   <span className="text-muted-foreground text-xs md:text-sm truncate">{item.email}</span>
-                  <div className="flex items-center gap-1 justify-end">
+                  <div className="flex items-center gap-1 w-full md:w-auto justify-end mt-1 md:mt-0">
                     <button
                       type="button"
                       onClick={() => handleEdit(item)}
-                      className="inline-flex items-center justify-center p-1.5 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                      className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] p-2 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                       title="Editar servidor"
                     >
                       <PencilSimpleIcon size={14} />
                     </button>
                     <ConfirmDeleteDialog
-                      onConfirm={() => deleteMutation.mutate(item.id)}
+                      onConfirm={() => deleteMutation.mutate(item.id, {
+                        onSuccess: () => toast.success('Servidor removido com sucesso!'),
+                        onError: () => toast.error('Erro ao remover servidor.'),
+                      })}
                       trigger={
-                        <Button variant="ghost" size="sm" className="p-1.5 h-auto text-muted-foreground hover:text-destructive">
+                        <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-destructive">
                           <TrashIcon size={14} />
                         </Button>
                       }
@@ -292,21 +304,21 @@ export function ServidoresPage() {
               <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-name" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nome</Label>
-                  <Input id="edit-name" placeholder="Digite o nome" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("full_name")} />
+                  <Input id="edit-name" placeholder="Digite o nome" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("full_name")} />
                   {editForm.formState.errors.full_name && (
                     <p className="text-sm text-destructive">{editForm.formState.errors.full_name.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-civil_servant_id" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Matrícula ODS</Label>
-                  <Input id="edit-civil_servant_id" placeholder="Digite a matrícula" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("civil_servant_id")} />
+                  <Input id="edit-civil_servant_id" placeholder="Digite a matrícula" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("civil_servant_id")} />
                   {editForm.formState.errors.civil_servant_id && (
                     <p className="text-sm text-destructive">{editForm.formState.errors.civil_servant_id.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-email" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Email</Label>
-                  <Input id="edit-email" type="email" placeholder="Digite o email" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("email")} />
+                  <Input id="edit-email" type="email" placeholder="Digite o email" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("email")} />
                   {editForm.formState.errors.email && (
                     <p className="text-sm text-destructive">{editForm.formState.errors.email.message}</p>
                   )}
@@ -320,14 +332,14 @@ export function ServidoresPage() {
                   <>
                     <div className="space-y-1.5">
                       <Label htmlFor="edit-password" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Nova Senha</Label>
-                      <Input id="edit-password" type="password" placeholder="Digite a nova senha" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("password")} />
+                      <Input id="edit-password" type="password" placeholder="Digite a nova senha" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("password")} />
                       {editForm.formState.errors.password && (
                         <p className="text-sm text-destructive">{editForm.formState.errors.password.message}</p>
                       )}
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="edit-passwordConfirmation" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Confirmar Nova Senha</Label>
-                      <Input id="edit-passwordConfirmation" type="password" placeholder="Confirme a nova senha" className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("passwordConfirmation")} />
+                      <Input id="edit-passwordConfirmation" type="password" placeholder="Confirme a nova senha" className="h-10 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2" {...editForm.register("passwordConfirmation")} />
                       {editForm.formState.errors.passwordConfirmation && (
                         <p className="text-sm text-destructive">{editForm.formState.errors.passwordConfirmation.message}</p>
                       )}

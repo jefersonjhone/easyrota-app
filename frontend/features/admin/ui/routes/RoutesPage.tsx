@@ -5,7 +5,7 @@ import { RouteForm } from "./RoutesForm";
 import { Button } from "@/lib/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@ui/dialog'
 import { useState, useMemo } from "react";
-import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, PlusIcon, MapPin } from "@phosphor-icons/react";
 
 export default function RoutesPage() {
   const { data, refetch } = useShowRoutes();
@@ -29,9 +29,12 @@ export default function RoutesPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Viagens e Rotas
             </p>
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              Rotas
-            </h1>
+            <div className="flex items-center gap-2">
+              <MapPin size={20} className="text-primary shrink-0" />
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                Rotas
+              </h1>
+            </div>
           </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
@@ -59,7 +62,7 @@ export default function RoutesPage() {
                 placeholder="Origem ou destino..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                className="h-8 w-full md:w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
               />
             </div>
           </div>

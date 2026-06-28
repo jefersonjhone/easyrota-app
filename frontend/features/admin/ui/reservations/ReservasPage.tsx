@@ -4,7 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Button } from "@/lib/ui/button"
 import { ConfirmDeleteDialog } from '@/lib/ui/delete-alert'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@ui/dialog'
-import { Check, X, Minus, MagnifyingGlassIcon, TrashIcon, CalendarCheck, CaretDown, CaretRight, PencilSimpleIcon } from "@phosphor-icons/react"
+import { Check, X, Minus, MagnifyingGlassIcon, TrashIcon, CalendarCheck, CaretDown, CaretRight, PencilSimpleIcon, UserCircle } from "@phosphor-icons/react"
 
 import { AdminLayout } from '@/features/admin/ui/Layout'
 import { useReservationsGrouped, useUpdateReservation, useDeleteReservation } from '@/features/admin/hooks/useReservations'
@@ -151,9 +151,12 @@ export function ReservasPage() {
           <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
             Usuários e Reservas
           </p>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight mt-1">
-            Reservas
-          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <CalendarCheck size={20} className="text-primary shrink-0" />
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              Reservas
+            </h1>
+          </div>
         </header>
 
         {!isLoading && !isError && (
@@ -168,7 +171,7 @@ export function ReservasPage() {
                     placeholder="Nome do passageiro ou rota..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="h-8 w-48 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                    className="h-8 w-full md:w-48 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
                   />
                 </div>
               </div>
@@ -218,7 +221,7 @@ export function ReservasPage() {
                     key={idx}
                     type="button"
                     onClick={() => toggleWeekday(idx)}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-md border transition-all cursor-pointer ${
+                    className={`px-3 py-2 min-h-[44px] min-w-[44px] text-xs font-bold rounded-md border transition-all cursor-pointer ${
                       weekdays.has(idx)
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : 'bg-card text-muted-foreground border-border hover:border-ring hover:text-foreground hover:shadow-sm'
@@ -286,12 +289,12 @@ export function ReservasPage() {
                     {group.trips.map((trip) => (
                       <div key={trip.trip_id}>
                         <div
-                          className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[70px_80px_1fr_80px_120px_50px] md:items-center cursor-pointer"
+                          className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[70px_80px_1fr_80px_120px_50px] md:items-center cursor-pointer"
                           onClick={() => setExpandedIds(prev => { const next = new Set(prev); if (next.has(trip.trip_id)) next.delete(trip.trip_id); else next.add(trip.trip_id); return next })}
                         >
                           <span className="font-mono text-xs text-muted-foreground">{trip.departure_time}</span>
                           <span
-                            className="font-mono text-xs text-muted-foreground underline underline-offset-2 decoration-dotted decoration-muted-foreground/40 hover:text-foreground hover:decoration-foreground/60 text-center cursor-pointer"
+                            className="font-mono text-xs text-muted-foreground truncate underline underline-offset-2 decoration-dotted decoration-muted-foreground/40 hover:text-foreground hover:decoration-foreground/60 text-center cursor-pointer"
                             onClick={(e) => { e.stopPropagation(); navigate({ to: '/admin/viagens/$id', params: { id: String(trip.trip_id) } }) }}
                           >
                             {trip.trip_id}
@@ -320,7 +323,7 @@ export function ReservasPage() {
                                 Nenhuma reserva para esta viagem com os filtros atuais.
                               </div>
                             ) : (
-                              <div className="divide-y divide-border/50">
+                              <div className="divide-y divide-border/50 mx-8 bg-gray-50/50 shadow-inner">
                                 <div className="hidden md:grid md:grid-cols-[60px_1fr_100px_90px_100px_70px_70px] md:px-8 md:py-1.5 md:text-[10px] md:font-semibold md:tracking-wider md:text-muted-foreground md:uppercase">
                                   <span>ID</span>
                                   <span>Passageiro</span>
@@ -333,10 +336,11 @@ export function ReservasPage() {
                                 {trip.reservations.map((item) => (
                                   <div
                                     key={item.id}
-                                    className="flex flex-col gap-1 px-8 py-2.5 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[60px_1fr_100px_90px_100px_70px_70px] md:items-center"
+                                    className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-8 py-2.5 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[60px_1fr_100px_90px_100px_70px_70px] md:items-center"
                                   >
-                                    <span className="font-mono text-xs text-muted-foreground">{item.id}</span>
+                                    <span className="font-mono text-xs text-muted-foreground truncate">{item.id}</span>
                                     <div className="flex items-center gap-2">
+                                      <UserCircle size={15} className="text-primary/60 shrink-0" />
                                       <span className="font-medium truncate">{item.passenger_name}</span>
                                       {passengerBadge(item.passenger_type)}
                                     </div>
@@ -362,11 +366,11 @@ export function ReservasPage() {
                                         </span>
                                       )}
                                     </span>
-                                    <div className="flex items-center justify-end gap-1">
+                                    <div className="flex items-center justify-end gap-1 w-full md:w-auto mt-1 md:mt-0">
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="p-1.5 h-auto text-muted-foreground hover:text-primary"
+                                        className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-primary"
                                         onClick={() => setEditReservation(item)}
                                       >
                                         <PencilSimpleIcon size={14} />
@@ -374,7 +378,7 @@ export function ReservasPage() {
                                       <ConfirmDeleteDialog
                                         onConfirm={() => deleteMutation.mutate(item.id)}
                                         trigger={
-                                          <Button variant="ghost" size="sm" className="p-1.5 h-auto text-muted-foreground hover:text-destructive">
+                                          <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-destructive">
                                             <TrashIcon size={14} />
                                           </Button>
                                         }

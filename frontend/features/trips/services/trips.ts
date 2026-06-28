@@ -40,18 +40,14 @@ export function deleteTrip(id: string) {
   return apiFetch<void>(`/trips/${id}/`, { method: 'DELETE' })
 }
 
-<<<<<<< HEAD
-export function bulkDeleteTrips(ids: number[]) {
+export function bulkDeleteTrips(ids: string[]) {
   return apiFetch<{ deleted: number }>('/trips/bulk-delete/', {
     method: 'POST',
     body: JSON.stringify({ ids }),
   })
 }
 
-export function checkInTripPassenger(tripId: number | string, passengerIdentifier: string) {
-=======
 export function checkInTripPassenger(tripId: string, passengerIdentifier: string) {
->>>>>>> ux-adjust
   return apiFetch<TripPassengerCheckInResponse>(`/trips/${tripId}/check-in/`, {
     method: 'POST',
     body: JSON.stringify({ passenger_identifier: passengerIdentifier }),

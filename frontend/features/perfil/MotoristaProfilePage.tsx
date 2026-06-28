@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { User, Envelope, IdentificationBadge, SignOut } from '@phosphor-icons/react'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import MotoristaLayout from '@layout/motorista-layout'
@@ -18,17 +19,32 @@ export function MotoristaProfilePage() {
   return (
     <MotoristaLayout>
       <section className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="flex flex-col items-center gap-8">
-          <div className="flex flex-col items-center gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col items-center gap-8"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
+            className="flex flex-col items-center gap-4"
+          >
             <span className="flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
               <User size={40} weight="fill" />
             </span>
             <h1 className="text-2xl font-heading font-semibold text-foreground text-center">
               {user?.full_name || 'Motorista'}
             </h1>
-          </div>
+          </motion.div>
 
-          <div className="w-full max-w-md space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+            className="w-full max-w-md space-y-4"
+          >
             <div className="rounded-4xl border border-border/70 bg-card/95 px-4 md:px-6 py-4 shadow-sm">
               <div className="flex items-center gap-3 py-3">
                 <Envelope size={20} className="text-muted-foreground shrink-0" />
@@ -57,8 +73,8 @@ export function MotoristaProfilePage() {
               <SignOut size={18} />
               {logoutMutation.isPending ? 'Saindo...' : 'Sair da conta'}
             </Button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
     </MotoristaLayout>
   )

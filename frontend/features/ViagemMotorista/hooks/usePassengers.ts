@@ -12,13 +12,14 @@ import { getApiErrorMessage } from '../utils'
 type Options = {
   setActionError: (msg: string | null) => void
   setQrFeedback: (f: QrFeedback | null) => void
+  onCheckinChange?: () => void
 }
 
 export function usePassengers(
   trip: DriverTripDetail | null,
   setTrip: (t: DriverTripDetail | null) => void,
   setBoardedPassengers: (p: PassengerBoardItem[]) => void,
-  { setActionError, setQrFeedback }: Options,
+  { setActionError, setQrFeedback, onCheckinChange }: Options,
 ) {
   const [isPassengerMenuOpen, setIsPassengerMenuOpen] = useState(false)
   const [isRemovePassengerMenuOpen, setIsRemovePassengerMenuOpen] = useState(false)
@@ -133,6 +134,7 @@ export function usePassengers(
       setIsPassengerMenuOpen(false)
 
       setQrFeedback(evictedNames ? { kind: 'info', message: `${registeredName} cadastrado. Retire do onibus: ${evictedNames}.` } : { kind: 'success', message: `${registeredName} cadastrado no embarque.` })
+      onCheckinChange?.()
     } catch (error) {
       console.warn('Nao foi possivel cadastrar passageiro local:', error)
       setActionError(getApiErrorMessage(error, 'Nao foi possivel cadastrar passageiro.'))
@@ -162,6 +164,7 @@ export function usePassengers(
       setSelectedPassengerToRemove(null)
       setIsRemovePassengerMenuOpen(false)
       setQrFeedback({ kind: 'success', message: `${removedName} removido do embarque.` })
+      onCheckinChange?.()
     } catch (error) {
       console.warn('Nao foi possivel remover passageiro:', error)
       setActionError(getApiErrorMessage(error, 'Nao foi possivel remover passageiro.'))

@@ -1,6 +1,7 @@
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/lib/ui/field";
 import { Button } from "@ui/button";
 import { Input } from "@/lib/ui/input";
+import { toast } from 'sonner'
 import {
   useCreateRouteMutation,
   type RouteValues,
@@ -67,6 +68,8 @@ export function RouteForm({
       if (onCreate) {
         onCreate();
       }
+
+      toast.success('Rota criada com sucesso!');
     } catch (error) {
       const err = error as {
         data?: Record<string, string | string[]>;
@@ -99,6 +102,7 @@ export function RouteForm({
           form.setError("origin", { type: "server", message });
         }
       } else {
+        toast.error('Erro inesperado ao criar rota.');
         console.error("Erro inesperado ao criar rota:", error);
       }
     }

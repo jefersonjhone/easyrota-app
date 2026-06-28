@@ -4,8 +4,11 @@ import MotoristaLayout from '@layout/motorista-layout'
 import { Button } from '@ui/button'
 import {
   ArrowLeftIcon,
+  Briefcase,
   CheckCircleIcon,
+  GraduationCap,
   MapPinLine,
+  UserCircle,
   UserMinusIcon,
   UserPlusIcon,
   UsersIcon,
@@ -19,6 +22,7 @@ import { QrCodeScanner } from './QrCodeScanner'
 import { usePassengers } from './hooks/usePassengers'
 import { useQrScanner } from './hooks/useQrScanner'
 import { getTripFromApi, getTripReservationsFromApi } from './api'
+import { getStatusTone } from '@/features/user-home/config'
 import type { DriverTripDetail, PassengerBoardItem, QrFeedback, ReservationItem } from './types'
 
 type ScannerOverlay =
@@ -67,7 +71,14 @@ export function CheckinPage({ tripId }: Props) {
     return () => { isMounted = false }
   }, [trip])
 
-  const passengers = usePassengers(trip, setTrip, setBoardedPassengers, { setActionError, setQrFeedback })
+  const refreshReservations = useCallback(() => {
+    if (!trip) return
+    getTripReservationsFromApi(trip.id)
+      .then(setReservations)
+      .catch(() => setReservations([]))
+  }, [trip])
+
+  const passengers = usePassengers(trip, setTrip, setBoardedPassengers, { setActionError, setQrFeedback, onCheckinChange: refreshReservations })
 
   const handleScanComplete = useCallback((result: { success: boolean; passengerName?: string }) => {
     if (result.success && result.passengerName) {
@@ -90,6 +101,7 @@ export function CheckinPage({ tripId }: Props) {
     setActionError,
     setQrFeedback,
     onScanComplete: handleScanComplete,
+    onCheckinChange: refreshReservations,
   })
 
   const handleScanEvent = useCallback(async (text: string) => {
@@ -129,6 +141,22 @@ export function CheckinPage({ tripId }: Props) {
     void handleRegisterPassenger()
   }
 
+  const KindIcon = ({ kind }: { kind?: string | null }) => {
+    switch (kind) {
+      case 'Servidor': return <Briefcase weight="fill" className="size-3 shrink-0" />
+      case 'Aluno': return <GraduationCap weight="fill" className="size-3 shrink-0" />
+      default: return <UserCircle weight="fill" className="size-3 shrink-0" />
+    }
+  }
+
+  const statusColor = (status?: string | null) => {
+    const map: Record<string, string> = {
+      CONFIRMADA: 'text-blue-600',
+      PENDENTE: 'text-amber-600',
+    }
+    return map[status ?? ''] ?? 'text-muted-foreground'
+  }
+
   const enrichedBoarded = useMemo(() => {
     return [...boardedPassengers]
       .map((bp) => {
@@ -137,18 +165,26 @@ export function CheckinPage({ tripId }: Props) {
           ...bp,
           kind: bp.kind ?? res?.kind ?? 'Servidor',
           checkinDate: res?.checkin_date ?? null,
+          status: res?.status,
+          createdAt: res?.created_at,
         }
       })
       .sort((a, b) => {
-        if (a.checkinDate && b.checkinDate) return b.checkinDate.localeCompare(a.checkinDate)
-        if (a.checkinDate) return -1
-        if (b.checkinDate) return 1
+        if (a.kind !== b.kind) return a.kind === 'Servidor' ? -1 : 1
+        if (a.createdAt && b.createdAt) return a.createdAt.localeCompare(b.createdAt)
+        if (a.createdAt) return -1
+        if (b.createdAt) return 1
         return 0
       })
   }, [boardedPassengers, reservations])
 
   const pendingReservations = useMemo(() => {
-    return reservations.filter((r) => !r.check_in)
+    return reservations
+      .filter((r) => !r.check_in)
+      .sort((a, b) => {
+        if (a.kind !== b.kind) return a.kind === 'Servidor' ? -1 : 1
+        return a.created_at.localeCompare(b.created_at)
+      })
   }, [reservations])
 
   const capacity = trip?.capacity ?? 46
@@ -194,7 +230,7 @@ export function CheckinPage({ tripId }: Props) {
           <button
             type="button"
             className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => navigate({ to: '/app/motorista/viagem/$tripId', params: { tripId } })}
+            onClick={() => window.history.back()}
           >
             <ArrowLeftIcon weight="bold" className="size-5" />
             Voltar
@@ -391,7 +427,11 @@ export function CheckinPage({ tripId }: Props) {
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
-                      <p className="text-[10px] font-medium text-muted-foreground">{item.kind}</p>
+                      <p className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                        <KindIcon kind={item.kind} />
+                        {item.kind}
+                        {item.status ? <span className={statusColor(item.status)}> · {item.status}</span> : null}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
                       {item.source === 'QR' ? (
@@ -432,7 +472,7 @@ export function CheckinPage({ tripId }: Props) {
                 onClick={() => setShowPending(!showPending)}
                 className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground"
               >
-                <span>Pendentes ({pendingReservations.length})</span>
+                <span>Aguardando check-in ({pendingReservations.length})</span>
                 <svg
                   className={`size-3.5 transition-transform duration-200 ${showPending ? 'rotate-180' : ''}`}
                   viewBox="0 0 24 24"
@@ -452,9 +492,16 @@ export function CheckinPage({ tripId }: Props) {
                       key={res.id}
                       className="flex items-center justify-between rounded-xl bg-background/50 px-3 py-2"
                     >
-                      <p className="truncate text-sm font-medium text-foreground/70">{res.passenger_name}</p>
-                      <span className="shrink-0 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                        Pendente
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground/70">{res.passenger_name}</p>
+                        <p className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                          <KindIcon kind={res.kind} />
+                          {res.kind ?? ''}
+                          {res.created_at ? ` · ${new Date(res.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : null}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ${getStatusTone(res.status)}`}>
+                        {res.status}
                       </span>
                     </div>
                   ))}

@@ -8,6 +8,7 @@ type Options = {
   setActionError: (msg: string | null) => void
   setQrFeedback: (f: QrFeedback | null) => void
   onScanComplete?: (result: { success: boolean; passengerName?: string }) => void
+  onCheckinChange?: () => void
 }
 
 export function useQrScanner(
@@ -15,7 +16,7 @@ export function useQrScanner(
   setTrip: (t: DriverTripDetail | null) => void,
   boardedPassengers: PassengerBoardItem[],
   setBoardedPassengers: (p: PassengerBoardItem[]) => void,
-  { setActionError, setQrFeedback, onScanComplete }: Options,
+  { setActionError, setQrFeedback, onScanComplete, onCheckinChange }: Options,
 ) {
   const [isQrCheckInLoading, setIsQrCheckInLoading] = useState(false)
 
@@ -63,7 +64,7 @@ export function useQrScanner(
           return
         }
         const passengerFromQr: PassengerBoardItem = {
-          id: reservationId ?? boardedPassengers.length + 1,
+          id: reservationId ?? String(boardedPassengers.length + 1),
           reservationId,
           identifier: decodedText,
           name: passengerName,
@@ -91,6 +92,7 @@ export function useQrScanner(
           ? `Check-in realizado para ${passengerName}. Retire do onibus: ${evictedNames}.`
           : response.status ?? `Check-in realizado para ${passengerName}.`,
       })
+      onCheckinChange?.()
       onScanComplete?.({ success: true, passengerName })
     } catch (error) {
       setQrFeedback({ kind: 'error', message: getApiErrorMessage(error, 'Nao foi possivel confirmar o check-in.') })
@@ -99,7 +101,7 @@ export function useQrScanner(
     } finally {
       setIsQrCheckInLoading(false)
     }
-  }, [trip, boardedPassengers, setBoardedPassengers, setQrFeedback, setTrip, setActionError, onScanComplete])
+  }, [trip, boardedPassengers, setBoardedPassengers, setQrFeedback, setTrip, setActionError, onScanComplete, onCheckinChange])
 
   const handleRetryQrScan = useCallback(() => {
     setQrFeedback({ kind: 'info', message: 'Aguardando nova leitura do QR Code.' })

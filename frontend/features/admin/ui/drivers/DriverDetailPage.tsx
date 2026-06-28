@@ -7,7 +7,7 @@ import { ArrowLeft, User } from '@phosphor-icons/react'
 export function DriverDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams({ from: '/admin/motoristas/$id' })
-  const { data: driver, isLoading, error } = useDriverAdminDetail(Number(id))
+  const { data: driver, isLoading, error } = useDriverAdminDetail(id)
 
   if (isLoading) {
     return (
@@ -38,7 +38,7 @@ export function DriverDetailPage() {
       <section className="mx-auto w-full max-w-5xl px-4 py-6 space-y-8">
         <button
           type="button"
-          onClick={() => navigate({ to: '/admin/motoristas' })}
+          onClick={() => window.history.back()}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           <ArrowLeft size={14} />
@@ -110,7 +110,7 @@ export function DriverDetailPage() {
                 {driver.recent_trips.map((t) => (
                   <div
                     key={t.id}
-                    className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[70px_1fr_120px_120px] md:items-center"
+                    className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[70px_1fr_120px_120px] md:items-center"
                   >
                     <span className="font-mono text-xs text-muted-foreground">{t.departure_time}</span>
                     <span

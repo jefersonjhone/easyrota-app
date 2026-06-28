@@ -7,7 +7,7 @@ import { ArrowLeft, Bus } from '@phosphor-icons/react'
 export function BusDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams({ from: '/admin/onibus/$id' })
-  const { data: bus, isLoading, error } = useBusAdminDetail(Number(id))
+  const { data: bus, isLoading, error } = useBusAdminDetail(id)
 
   if (isLoading) {
     return (
@@ -38,7 +38,7 @@ export function BusDetailPage() {
       <section className="mx-auto w-full max-w-5xl px-4 py-6 space-y-8">
         <button
           type="button"
-          onClick={() => navigate({ to: '/admin/onibus' })}
+          onClick={() => window.history.back()}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
           <ArrowLeft size={14} />
@@ -108,7 +108,7 @@ export function BusDetailPage() {
                 {bus.recent_trips.map((t) => (
                   <div
                     key={t.id}
-                    className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[70px_1fr_120px_120px] md:items-center"
+                    className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[70px_1fr_120px_120px] md:items-center"
                   >
                     <span className="font-mono text-xs text-muted-foreground">{t.departure_time}</span>
                     <span

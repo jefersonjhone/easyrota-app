@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/api'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 import { AdminLayout } from '@features/admin/ui/Layout'
 import { CreateBusForm } from '@features/admin/ui/buses/CreateForm'
@@ -7,7 +8,7 @@ import { BusesTable } from '@features/admin/ui/buses/BusesTable'
 import { EditBusModal } from '@features/admin/ui/buses/EditBusModal'
 import { Button } from '@ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@ui/dialog'
-import { MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react'
+import { MagnifyingGlassIcon, PlusIcon, Bus } from '@phosphor-icons/react'
 
 export interface Bus {
   id: string
@@ -33,8 +34,10 @@ export function BusesPage() {
       setBuses((prev) =>
         prev.filter((bus) => bus.id !== idBus)
       )
+      toast.success('Ônibus removido com sucesso!')
     } catch (err) {
       console.error(err)
+      toast.error('Erro ao remover o ônibus.')
     }
   }
 
@@ -78,9 +81,12 @@ export function BusesPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Frota e Pessoal
             </p>
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              Frota de Veículos
-            </h1>
+            <div className="flex items-center gap-2">
+              <Bus size={20} className="text-primary shrink-0" />
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                Frota de Veículos
+              </h1>
+            </div>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>

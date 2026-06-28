@@ -47,8 +47,8 @@ export function useCreateTrip() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<Trip>) => createTrip(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tripsKeys.all })
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: tripsKeys.all })
       toast.success('Viagem criada com sucesso')
     },
     onError: () => {
@@ -61,9 +61,11 @@ export function useUpdateTrip(id: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<Trip>) => updateTrip(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tripsKeys.all })
-      queryClient.invalidateQueries({ queryKey: tripsKeys.detail(id) })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: tripsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: tripsKeys.detail(id) }),
+      ])
       toast.success('Viagem atualizada com sucesso')
     },
     onError: () => {
@@ -75,8 +77,7 @@ export function useUpdateTrip(id: string) {
 export function useDeleteTrip() {
   const queryClient = useQueryClient()
   return useMutation({
-<<<<<<< HEAD
-    mutationFn: (id: number) => deleteTrip(id),
+    mutationFn: (id: string) => deleteTrip(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tripsKeys.all })
       toast.success('Viagem excluída com sucesso')
@@ -90,7 +91,7 @@ export function useDeleteTrip() {
 export function useBulkDeleteTrips() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (ids: number[]) => bulkDeleteTrips(ids),
+    mutationFn: (ids: string[]) => bulkDeleteTrips(ids),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tripsKeys.all })
       toast.success('Viagens excluídas com sucesso')
@@ -98,10 +99,7 @@ export function useBulkDeleteTrips() {
     onError: () => {
       toast.error('Erro ao excluir viagens')
     },
-=======
-    mutationFn: (id: string) => deleteTrip(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: tripsKeys.all }),
->>>>>>> ux-adjust
+
   })
 }
 

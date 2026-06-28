@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import AppLayout from '@/lib/layout/app-layout'
 import ProfileHeader from '@/features/user-home/ui/ProfileHeader'
 import { ProfileStats } from '@/features/user-home/ui/ProfileStats'
@@ -6,6 +7,13 @@ import { PunishmentsHistoryCard } from '@/features/user-home/ui/ProfilePunishmen
 import { GuestHistoryCard } from '@/features/user-home/ui/GuestHistoryCard'
 
 import { useProfileUser } from '@/features/user-home/hooks/useProfileUser'
+
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+  transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+};
 
 export function ProfilePage() {
   const { data: profileUser, isPending, isError } = useProfileUser()
@@ -39,12 +47,25 @@ export function ProfilePage() {
   return (
     <AppLayout>
       <section className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 mt-8">
-        <ProfileHeader user={profileUser} />
-        <ProfileStats user={profileUser} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6 mb-8">
+        <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0 }}>
+          <ProfileHeader user={profileUser} />
+        </motion.div>
+
+        <motion.div
+          {...fadeUp}
+          transition={{ ...fadeUp.transition, delay: 0.1 }}
+        >
+          <ProfileStats user={profileUser} />
+        </motion.div>
+
+        <motion.div
+          {...fadeUp}
+          transition={{ ...fadeUp.transition, delay: 0.15 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6 mb-8"
+        >
           <TripsHistoryCard />
           {isCivilServant ? <GuestHistoryCard /> : <PunishmentsHistoryCard />}
-        </div>
+        </motion.div>
       </section>
     </AppLayout>
   )

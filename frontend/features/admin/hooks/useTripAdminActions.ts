@@ -8,10 +8,10 @@ import {
 } from '../services/trip-admin-actions'
 import { tripAdminKeys } from './useTripAdminDetail'
 
-export function useAdminAssignDriver(tripId: number) {
+export function useAdminAssignDriver(tripId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (driverId: number) => adminAssignDriver(tripId, driverId),
+    mutationFn: (driverId: string) => adminAssignDriver(tripId, driverId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tripAdminKeys.detail(tripId) })
       toast.success('Motorista atribuído com sucesso')
@@ -20,7 +20,7 @@ export function useAdminAssignDriver(tripId: number) {
   })
 }
 
-export function useAdminUnassignDriver(tripId: number) {
+export function useAdminUnassignDriver(tripId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: () => adminUnassignDriver(tripId),
@@ -32,10 +32,10 @@ export function useAdminUnassignDriver(tripId: number) {
   })
 }
 
-export function useAdminAssignBus(tripId: number) {
+export function useAdminAssignBus(tripId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (busId: number) => adminAssignBus(tripId, busId),
+    mutationFn: (busId: string) => adminAssignBus(tripId, busId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tripAdminKeys.detail(tripId) })
       toast.success('Ônibus atribuído com sucesso')
@@ -44,7 +44,7 @@ export function useAdminAssignBus(tripId: number) {
   })
 }
 
-export function useAdminUnassignBus(tripId: number) {
+export function useAdminUnassignBus(tripId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: () => adminUnassignBus(tripId),

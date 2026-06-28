@@ -23,6 +23,10 @@ const scannerConfig: Html5QrcodeCameraScanConfig = {
     return { width: qrboxSize, height: qrboxSize }
   },
   aspectRatio: 1,
+  videoConstraints: {
+    width: { min: 640, ideal: 1280 },
+    height: { min: 480, ideal: 720 },
+  },
 }
 
 function isScannerActive(scanner: Html5Qrcode) {
@@ -32,7 +36,10 @@ function isScannerActive(scanner: Html5Qrcode) {
 
 async function stopScanner(scanner: Html5Qrcode) {
   try {
-    if (isScannerActive(scanner)) await scanner.stop()
+    if (isScannerActive(scanner)) {
+      console.debug('[QrCodeScanner] stopping scanner')
+      await scanner.stop()
+    }
   } catch { /* camera may already be stopped */ }
   try { scanner.clear() } catch { /* internal element may be empty */ }
 }
@@ -66,15 +73,29 @@ export function QrCodeScanner({
     const scanner = new Html5Qrcode(elementId, {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
       verbose: false,
+      useBarCodeDetectorIfSupported: true,
     })
     scannerRef.current = scanner
+    console.debug('[QrCodeScanner] BarcodeDetector supported:', 'BarcodeDetector' in window)
 
     const handleSuccess = (decodedText: string) => {
-      if (!enabledRef.current) return
+      if (!enabledRef.current) {
+        console.debug('[QrCodeScanner] scan ignored — scanner disabled')
+        return
+      }
       const now = Date.now()
-      if (now - lastScanRef.current < 2000) return
+      if (now - lastScanRef.current < 2000) {
+        console.debug('[QrCodeScanner] scan ignored — cooldown')
+        return
+      }
       lastScanRef.current = now
-      onScanRef.current(decodedText.trim())
+      const trimmed = decodedText.trim()
+      console.debug('[QrCodeScanner] QR decoded:', trimmed.slice(0, 80))
+      onScanRef.current(trimmed)
+    }
+
+    const handleDecodeError = (error: string) => {
+      console.warn('[QrCodeScanner] decode error:', error)
     }
 
     const startTask = stopPromiseRef.current
@@ -84,24 +105,36 @@ export function QrCodeScanner({
         onStatusChangeRef.current?.('loading')
         document.getElementById(elementId)?.replaceChildren()
         try {
+          console.debug('[QrCodeScanner] starting camera')
           await scanner.start(
             { facingMode: 'environment' },
             scannerConfig,
             handleSuccess,
-            () => undefined,
+            handleDecodeError,
           )
-          if (!cancelled) onStatusChangeRef.current?.('ready')
+          if (!cancelled) {
+            const v = document.querySelector(`#${elementId} video`) as HTMLVideoElement | null
+            console.debug('[QrCodeScanner] camera started, video:', v?.videoWidth, 'x', v?.videoHeight)
+            onStatusChangeRef.current?.('ready')
+          }
         } catch {
           await stopScanner(scanner)
           document.getElementById(elementId)?.replaceChildren()
           const cameras = await Html5Qrcode.getCameras()
+          console.debug('[QrCodeScanner] cameras found:', cameras.length, cameras.map((c) => ({ id: c.id, label: c.label })))
           const fallback = cameras[0]
           if (!fallback) throw new Error('Nenhuma camera encontrada.')
-          await scanner.start(fallback.id, scannerConfig, handleSuccess, () => undefined)
-          if (!cancelled) onStatusChangeRef.current?.('ready')
+          console.debug('[QrCodeScanner] starting with fallback camera:', fallback.id)
+          await scanner.start(fallback.id, scannerConfig, handleSuccess, handleDecodeError)
+          if (!cancelled) {
+            const v = document.querySelector(`#${elementId} video`) as HTMLVideoElement | null
+            console.debug('[QrCodeScanner] camera started, video:', v?.videoWidth, 'x', v?.videoHeight)
+            onStatusChangeRef.current?.('ready')
+          }
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn('[QrCodeScanner] camera failed:', err)
         if (!cancelled) {
           onStatusChangeRef.current?.('error')
           onCameraErrorRef.current('Nao foi possivel abrir a camera para ler o QR Code.')
@@ -122,9 +155,11 @@ export function QrCodeScanner({
     if (!scanner) return
     const state = scanner.getState()
     if (enabled && state === Html5QrcodeScannerState.PAUSED) {
+      console.debug('[QrCodeScanner] resuming')
       scanner.resume()
     }
     if (!enabled && state === Html5QrcodeScannerState.SCANNING) {
+      console.debug('[QrCodeScanner] pausing')
       scanner.pause(true)
     }
   }, [enabled])
@@ -132,7 +167,7 @@ export function QrCodeScanner({
   return (
     <div
       id={elementId}
-      className="aspect-[3/4] w-full bg-black [&_video]:!h-full [&_video]:!w-full [&_video]:object-cover"
+      className="w-full bg-black [&_video]:!h-full [&_video]:!w-full [&_video]:object-contain"
     />
   )
 }

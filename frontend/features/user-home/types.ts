@@ -101,7 +101,11 @@ export interface AvailableTrip {
   bus_brand: string
   status_trip: string
   available_seats: number
+  reserved_seats: number
+  server_reserved_seats: number
   is_reservable: boolean
+  is_full: boolean
   quorum_met?: boolean
   reservation_deadline?: string
+  user_is_reserved?: boolean
 }

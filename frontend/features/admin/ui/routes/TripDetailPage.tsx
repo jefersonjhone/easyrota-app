@@ -1,6 +1,7 @@
 import { useState, Fragment } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { useTripAdminDetail } from '@/features/admin/hooks/useTripAdminDetail'
 import {
   useAdminAssignDriver,
@@ -71,7 +72,7 @@ function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string
   )
 }
 
-async function downloadExport(tripId: number, _format: 'csv' | 'xlsx') {
+async function downloadExport(tripId: string, _format: 'csv' | 'xlsx') {
   const token = useAuthStore.getState().accessToken
   const response = await fetch(`${API_URL}/trips/${tripId}/export_passengers`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -88,13 +89,12 @@ async function downloadExport(tripId: number, _format: 'csv' | 'xlsx') {
 
 export function TripDetailPage() {
   const { id } = useParams({ from: '/admin/viagens/$id' })
-  const { data: trip, isLoading, error } = useTripAdminDetail(Number(id))
+  const { data: trip, isLoading, error } = useTripAdminDetail(id)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingDriver, setEditingDriver] = useState(false)
   const [editingBus, setEditingBus] = useState(false)
-  const [selectedDriverId, setSelectedDriverId] = useState<number | ''>('')
-  const [selectedBusId, setSelectedBusId] = useState<number | ''>('')
-
+  const [selectedDriverId, setSelectedDriverId] = useState<string>('')
+  const [selectedBusId, setSelectedBusId] = useState<string>('')
   const editable = !!(trip && trip.status !== 'EM ANDAMENTO' && trip.status !== 'CANCELADA')
 
   const { data: drivers } = useQuery({
@@ -109,10 +109,10 @@ export function TripDetailPage() {
     enabled: editable,
   })
 
-  const assignDriver = useAdminAssignDriver(Number(id))
-  const unassignDriver = useAdminUnassignDriver(Number(id))
-  const assignBus = useAdminAssignBus(Number(id))
-  const unassignBus = useAdminUnassignBus(Number(id))
+  const assignDriver = useAdminAssignDriver(id)
+  const unassignDriver = useAdminUnassignDriver(id)
+  const assignBus = useAdminAssignBus(id)
+  const unassignBus = useAdminUnassignBus(id)
 
   if (isLoading) {
     return (
@@ -200,7 +200,7 @@ export function TripDetailPage() {
                 <div className="space-y-2">
                   <select
                     value={selectedDriverId}
-                    onChange={(e) => setSelectedDriverId(Number(e.target.value) || '')}
+                    onChange={(e) => setSelectedDriverId(e.target.value)}
                     className="h-8 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   >
                     <option value="">Nenhum</option>
@@ -215,9 +215,15 @@ export function TripDetailPage() {
                       type="button"
                       onClick={() => {
                         if (selectedDriverId === '') {
-                          unassignDriver.mutate(undefined, { onSuccess: () => setEditingDriver(false) })
+                          unassignDriver.mutate(undefined, {
+                            onSuccess: () => { toast.success('Motorista removido da viagem!'); setEditingDriver(false) },
+                            onError: () => toast.error('Erro ao remover motorista.'),
+                          })
                         } else {
-                          assignDriver.mutate(Number(selectedDriverId), { onSuccess: () => setEditingDriver(false) })
+                          assignDriver.mutate(selectedDriverId, {
+                            onSuccess: () => { toast.success('Motorista atribuído com sucesso!'); setEditingDriver(false) },
+                            onError: () => toast.error('Erro ao atribuir motorista.'),
+                          })
                         }
                       }}
                       className="text-xs font-semibold text-primary hover:text-primary/80 underline underline-offset-2 cursor-pointer"
@@ -280,7 +286,7 @@ export function TripDetailPage() {
                 <div className="space-y-2">
                   <select
                     value={selectedBusId}
-                    onChange={(e) => setSelectedBusId(Number(e.target.value) || '')}
+                    onChange={(e) => setSelectedBusId(e.target.value)}
                     className="h-8 w-full rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   >
                     <option value="">Nenhum</option>
@@ -295,9 +301,15 @@ export function TripDetailPage() {
                       type="button"
                       onClick={() => {
                         if (selectedBusId === '') {
-                          unassignBus.mutate(undefined, { onSuccess: () => setEditingBus(false) })
+                          unassignBus.mutate(undefined, {
+                            onSuccess: () => { toast.success('Ônibus removido da viagem!'); setEditingBus(false) },
+                            onError: () => toast.error('Erro ao remover ônibus.'),
+                          })
                         } else {
-                          assignBus.mutate(Number(selectedBusId), { onSuccess: () => setEditingBus(false) })
+                          assignBus.mutate(selectedBusId, {
+                            onSuccess: () => { toast.success('Ônibus atribuído com sucesso!'); setEditingBus(false) },
+                            onError: () => toast.error('Erro ao atribuir ônibus.'),
+                          })
                         }
                       }}
                       className="text-xs font-semibold text-primary hover:text-primary/80 underline underline-offset-2 cursor-pointer"
@@ -461,9 +473,9 @@ export function TripDetailPage() {
                         <Link
                           to={linkTarget}
                           params={{ id: String(p.profile_id) }}
-                          className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[50px_1fr_100px_100px_80px_50px] md:items-center"
+                          className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[50px_1fr_100px_100px_80px_50px] md:items-center"
                         >
-                          <span className="font-mono text-xs text-muted-foreground">{p.id}</span>
+                          <span className="font-mono text-xs text-muted-foreground truncate">{p.id}</span>
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="font-medium truncate">{p.passenger_name}</span>
                             {passengerBadge(p.passenger_type)}
@@ -492,7 +504,7 @@ export function TripDetailPage() {
                           <span />
                         </Link>
                       ) : (
-                        <div className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[50px_1fr_100px_100px_80px_50px] md:items-center">
+                        <div className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[50px_1fr_100px_100px_80px_50px] md:items-center">
                           <span className="font-mono text-xs text-muted-foreground">{p.id}</span>
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="font-medium truncate">{p.passenger_name}</span>

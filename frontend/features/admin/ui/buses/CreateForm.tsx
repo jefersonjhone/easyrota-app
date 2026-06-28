@@ -5,7 +5,7 @@ import { Input } from '@ui/input'
 import { useForm } from 'react-hook-form'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from 'react'
+import { toast } from 'sonner'
 import type { Bus } from './BusesPage'
 
 const busSchema = z.object({
@@ -31,11 +31,8 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
     },
     mode: "onChange",
   });
-  const [success, setSuccess] = useState<string | null>(null)
 
   const onSubmit = async (data: BusData) => {
-    setSuccess(null)
-
     try {
       const response = await apiFetch('/buses/', {
         method: "POST",
@@ -43,8 +40,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
       }) as Bus
 
       onBusCreated(response)
-
-      setSuccess("Ônibus cadastrado com sucesso!")
+      toast.success('Ônibus cadastrado com sucesso!')
     } catch (err){
       console.error (err);
 
@@ -68,6 +64,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
           : detail)
         || 'Erro ao criar ônibus.'
 
+        toast.error(message)
         setError("root.serverError", {message: message})
       }
     }
@@ -78,12 +75,6 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
       {errors.root?.serverError && (
         <FieldDescription className="mb-4 rounded-md bg-red-50 p-3 text-red-700">
           {errors.root.serverError.message}
-        </FieldDescription>
-      )}
-      
-      {success && (
-        <FieldDescription className="mb-4 rounded-md bg-green-50 p-3 text-green-700">
-          {success}
         </FieldDescription>
       )}
 

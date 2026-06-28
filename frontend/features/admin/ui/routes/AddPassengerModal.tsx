@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 import { Button } from "@/lib/ui/button"
 import { Label } from "@/lib/ui/label"
@@ -26,7 +27,7 @@ const TYPE_OPTIONS: { value: PassengerType; label: string }[] = [
 ]
 
 interface Props {
-  tripId: number
+  tripId: string
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -85,9 +86,14 @@ export function AddPassengerModal({ tripId, open, onOpenChange }: Props) {
       payload.profile_id = selected.id
     }
 
-    await createMutation.mutateAsync(payload)
-    queryClient.invalidateQueries({ queryKey: tripAdminKeys.detail(tripId) })
-    onOpenChange(false)
+    try {
+      await createMutation.mutateAsync(payload)
+      queryClient.invalidateQueries({ queryKey: tripAdminKeys.detail(tripId) })
+      toast.success('Passageiro adicionado com sucesso!')
+      onOpenChange(false)
+    } catch {
+      toast.error('Erro ao adicionar passageiro.')
+    }
   }
 
   const isValid =

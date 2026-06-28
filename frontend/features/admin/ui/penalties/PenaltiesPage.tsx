@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 
 import { Button } from "@/lib/ui/button"
 import { ConfirmDeleteDialog } from '@/lib/ui/delete-alert'
-import { TrashIcon, ArrowsClockwise, CalendarCheck, CaretDown, CaretRight } from "@phosphor-icons/react"
+import { TrashIcon, ArrowsClockwise, CalendarCheck, CaretDown, CaretRight, WarningCircle } from "@phosphor-icons/react"
 
 import { AdminLayout } from '@/features/admin/ui/Layout'
 import { usePenaltiesGrouped, useUpdatePenalty, useDeletePenalty } from '@/features/admin/hooks/usePenalties'
@@ -111,9 +111,12 @@ export function PenaltiesPage() {
           <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
             Gestão
           </p>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight mt-1">
-            Penalidades
-          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <WarningCircle size={20} className="text-primary shrink-0" />
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              Penalidades
+            </h1>
+          </div>
           <p className="text-muted-foreground mt-1">
             Gerencie as penalidades aplicadas aos estudantes.
           </p>
@@ -129,7 +132,7 @@ export function PenaltiesPage() {
                   placeholder="Nome, matrícula ou descrição..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-8 w-60 rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                  className="h-8 w-full md:w-60 rounded-md border border-border bg-card px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
                 />
               </div>
               <div className="space-y-1.5">
@@ -166,7 +169,7 @@ export function PenaltiesPage() {
                     key={idx}
                     type="button"
                     onClick={() => toggleWeekday(idx)}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-md border transition-all cursor-pointer ${
+                      className={`px-3 py-2 min-h-[44px] min-w-[44px] text-xs font-bold rounded-md border transition-all cursor-pointer ${
                       weekdays.has(idx)
                         ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                         : 'bg-card text-muted-foreground border-border hover:border-ring hover:text-foreground hover:shadow-sm'
@@ -226,12 +229,12 @@ export function PenaltiesPage() {
                     {group.trips.map((trip) => (
                       <div key={trip.trip_id}>
                         <div
-                          className="flex flex-col gap-1 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[70px_80px_1fr_80px] md:items-center cursor-pointer"
+                          className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-5 py-3 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[70px_80px_1fr_80px] md:items-center cursor-pointer"
                           onClick={() => setExpandedTripId(expandedTripId === trip.trip_id ? null : trip.trip_id)}
                         >
                           <span className="font-mono text-xs text-muted-foreground">{trip.departure_time}</span>
                           <span
-                            className="font-mono text-xs text-muted-foreground underline underline-offset-2 decoration-dotted decoration-muted-foreground/40 hover:text-foreground hover:decoration-foreground/60 text-center cursor-pointer"
+                            className="font-mono truncate text-xs text-muted-foreground underline underline-offset-2 decoration-dotted decoration-muted-foreground/40 hover:text-foreground hover:decoration-foreground/60 text-center cursor-pointer"
                             onClick={(e) => { e.stopPropagation(); navigate({ to: '/admin/viagens/$id', params: { id: String(trip.trip_id) } }) }}
                           >
                             {trip.trip_id}
@@ -263,10 +266,13 @@ export function PenaltiesPage() {
                                 {trip.punishments.map((item) => (
                                   <div
                                     key={item.id}
-                                    className="flex flex-col gap-1 px-8 py-2.5 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[50px_1fr_90px_1fr_90px_70px_60px] md:items-center"
+                                    className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1.5 px-8 py-2.5 text-sm transition-colors hover:bg-muted/30 md:grid md:grid-cols-[50px_1fr_90px_1fr_90px_70px_60px] md:items-center"
                                   >
-                                    <span className="font-mono text-xs text-muted-foreground">{item.id}</span>
-                                    <span className="font-medium truncate">{item.student_name}</span>
+                                    <span className="font-mono text-xs text-muted-foreground truncate">{item.id}</span>
+                                    <span className="font-medium truncate flex items-center gap-1.5">
+                                      <WarningCircle size={14} className="text-destructive/60 shrink-0" />
+                                      {item.student_name}
+                                    </span>
                                     <span className="font-mono text-xs text-muted-foreground">{item.student_id_display}</span>
                                     <span className="text-muted-foreground text-xs md:text-sm truncate">{item.description}</span>
                                     <span className="text-xs text-muted-foreground">
@@ -281,12 +287,12 @@ export function PenaltiesPage() {
                                         {item.is_active ? 'Ativa' : 'Cumprida'}
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-1 justify-end">
+                                    <div className="flex items-center gap-1 w-full md:w-auto justify-end mt-1 md:mt-0">
                                       <button
                                         type="button"
                                         onClick={() => handleToggle(item)}
                                         disabled={updateMutation.isPending}
-                                        className="inline-flex items-center justify-center p-1.5 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
+                                        className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] p-2 rounded-md border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
                                         title={item.is_active ? 'Marcar como cumprida' : 'Reativar penalidade'}
                                       >
                                         <ArrowsClockwise size={14} />
@@ -294,7 +300,7 @@ export function PenaltiesPage() {
                                       <ConfirmDeleteDialog
                                         onConfirm={() => deleteMutation.mutate(item.id)}
                                         trigger={
-                                          <Button variant="ghost" size="sm" className="p-1.5 h-auto text-muted-foreground hover:text-destructive">
+                                          <Button variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] p-2 text-muted-foreground hover:text-destructive">
                                             <TrashIcon size={14} />
                                           </Button>
                                         }

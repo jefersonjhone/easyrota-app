@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import {
   useBulkDeleteTrips,
   useDeleteTrip,
@@ -10,7 +11,7 @@ import { ConfirmDeleteDialog } from '@ui/delete-alert'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@ui/dialog'
 import { AdminLayout } from '@/features/admin/ui/Layout'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { MagnifyingGlassIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react'
+import { MagnifyingGlassIcon, PlusIcon, TrashIcon, CalendarBlank } from '@phosphor-icons/react'
 import { STATUS_CONFIG } from './StatusBadge'
 import { TripTable } from '@/features/admin/ui/TripTable'
 import { TripForm } from './TripForm'
@@ -50,7 +51,7 @@ export function TripsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null)
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const { data: trips, isLoading, error } = useTrips()
   const deleteMutation = useDeleteTrip()
@@ -119,7 +120,7 @@ export function TripsPage() {
       })
   }, [filteredTrips, todayStr])
 
-  function toggleSelect(id: number) {
+  function toggleSelect(id: string) {
     setSelectedIds(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -128,7 +129,7 @@ export function TripsPage() {
     })
   }
 
-  function handleToggleAll(ids: number[], select: boolean) {
+  function handleToggleAll(ids: string[], select: boolean) {
     setSelectedIds(prev => {
       const next = new Set(prev)
       for (const id of ids) {
@@ -145,7 +146,7 @@ export function TripsPage() {
 
   function handleBatchDelete() {
     bulkDeleteMutation.mutate([...selectedIds], {
-      onSuccess: () => clearSelection(),
+      onSuccess: () => { toast.success('Viagens removidas com sucesso!'); clearSelection() },
     })
   }
 
@@ -155,7 +156,10 @@ export function TripsPage() {
   }
 
   function handleDelete(id: string) {
-    deleteMutation.mutate(id)
+    deleteMutation.mutate(id, {
+      onSuccess: () => toast.success('Viagem removida com sucesso!'),
+      onError: () => toast.error('Erro ao remover viagem.'),
+    })
   }
 
   return (
@@ -166,9 +170,12 @@ export function TripsPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Viagens e Rotas
             </p>
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">
-              Viagens
-            </h1>
+            <div className="flex items-center gap-2">
+              <CalendarBlank size={20} className="text-primary shrink-0" />
+              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+                Viagens
+              </h1>
+            </div>
             <p className="text-muted-foreground">
               Acompanhe e gerencie todas as viagens.
             </p>
@@ -202,7 +209,7 @@ export function TripsPage() {
                   placeholder="Origem ou destino..."
                   value={q}
                   onChange={(e) => setFilters({ q: e.target.value || undefined })}
-                  className="h-8 w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+                  className="h-8 w-full md:w-40 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
                 />
               </div>
             </div>
