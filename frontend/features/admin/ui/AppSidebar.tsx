@@ -11,7 +11,7 @@ import {
   SidebarTrigger,
 } from "@/lib/ui/sidebar"
 import { Bus, WarningCircle, ClockCounterClockwise, GraduationCap } from "@phosphor-icons/react"
-import { SteeringWheel, MapTrifold, Path, Gauge, CalendarCheck, ShieldCheck, UserCircleCheck } from "@phosphor-icons/react"
+import { SteeringWheel, MapTrifold, Path, Gauge, CalendarCheck, ShieldCheck, UserCircleCheck, EnvelopeOpen} from "@phosphor-icons/react"
 import { Link, useLocation } from "@tanstack/react-router"
 import { NavUser } from "./navUser"
 
@@ -28,6 +28,7 @@ export function AppSidebar() {
     { title:"Gerenciar Viagens", icon:MapTrifold, url:"/admin/viagens", exact: true },
     { title:"Historico de Viagens", icon:ClockCounterClockwise, url:"/admin/viagens/historico" },
     { title:"Gerenciar Rotas", icon:Path, url:"/admin/rotas" },
+    {title:"Solicitações de Viagem", icon:EnvelopeOpen, url:"/admin/solicitacoes"},
   ]
   const UsersItems = [
     { title:"Gerenciar Estudantes", icon:GraduationCap, url:"/admin/estudantes" },

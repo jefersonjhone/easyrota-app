@@ -14,5 +14,5 @@ export function useAuthBootstrap() {
     if (!accessToken || isTokenExpired(accessToken)) {
       refreshTokenIfNeeded().catch(() => { clearAuth(); });
     }
-  }, [user, accessToken, clearAuth])
+  }, [accessToken, clearAuth, user])
 }

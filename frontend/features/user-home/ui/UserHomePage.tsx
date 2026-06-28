@@ -6,6 +6,7 @@ import { useUserHomeDashboard } from '../hooks/useUserHomeDashboard'
 import { UserHomeHero } from './UserHomeHero'
 import { UserHomeHistoryCard } from './UserHomeHistoryCard'
 import { UserHomeTripCard } from './UserHomeTripCard'
+import { UserTripRequestsCard } from './UserTripRequestsCard'
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -44,11 +45,14 @@ export function UserHomePage() {
             {...fadeUp}
             transition={{ ...fadeUp.transition, delay: 0.1 }}
           >
+          <div className="flex flex-col gap-6">
             <UserHomeTripCard
               currentTrip={currentTrip}
               isLoading={isLoading}
               error={tripError}
             />
+            {user?.profile_type === 'CIVIL-SERVANT' ? <UserTripRequestsCard /> : null}
+          </div>
           </motion.div>
 
           <motion.div

@@ -1,0 +1,93 @@
+{
+  "name": "EasyRota",
+  "short_name": "EasyRota",
+  "description": "Acompanhe suas viagens e reservas da EasyRota.",
+  "id": "/",
+  "start_url": "/app/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "background_color": "#fefae0",
+  "theme_color": "#BB4D00",
+  "orientation": "portrait-primary",
+  "shortcuts": [
+    {
+      "name": "Reservar viagem",
+      "short_name": "Reservar",
+      "description": "Veja viagens disponiveis e faca uma reserva.",
+      "url": "/app/viagens/",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Viagem atual",
+      "short_name": "Atual",
+      "description": "Acompanhe sua viagem em andamento.",
+      "url": "/app/viagens/atual",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Historico de viagens",
+      "short_name": "Historico",
+      "description": "Consulte suas reservas e viagens anteriores.",
+      "url": "/app/viagens/historico",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Perfil",
+      "short_name": "Perfil",
+      "description": "Abra seus dados de perfil.",
+      "url": "/app/perfil",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

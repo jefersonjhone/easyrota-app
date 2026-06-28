@@ -14,11 +14,24 @@ from .services.reservation_service import ReservationService
 
 class ReservationSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
+    access_code = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Reservation
-        fields = ["id", "trip", "status", "created_at"]
+        fields = ["id", "trip", "status", "created_at", "access_code"]
         read_only_fields = ["id", "status", "created_at"]
+
+    def validate(self, attrs):
+        trip = attrs.get("trip")
+        access_code = attrs.get("access_code")
+
+        if trip.is_private:
+            if not access_code:
+                raise serializers.ValidationError({"access_code": "Esta é uma viagem privada. Um código de acesso é necessário."})
+            if trip.access_code != access_code:
+                raise serializers.ValidationError({"access_code": "Código de acesso inválido para esta viagem."})
+
+        return attrs
 
     def validate_trip(self, trip):
         request = self.context["request"]

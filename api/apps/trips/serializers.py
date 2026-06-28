@@ -8,8 +8,24 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from ..reservations.models import Reservation
-from .models import Bus, GuestPassenger, Route, Trip, TripPassenger
+from .models import Bus, GuestPassenger, Route, Trip, TripPassenger, TripRequest
 from .services.trip_service import TripService
+
+
+class TripRequestSerializer(serializers.ModelSerializer):
+    requester_name = serializers.CharField(source="requester.user.full_name", read_only=True)
+    access_code = serializers.CharField(source="trip.access_code", read_only=True)
+    
+    class Meta:
+        model = TripRequest
+        fields = "__all__"
+        read_only_fields = [
+            "requester",
+            "status", 
+            "feedback", 
+            "created_at", 
+            "updated_at",
+        ]
 
 
 class BusSerializer(serializers.ModelSerializer):

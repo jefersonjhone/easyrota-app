@@ -21,6 +21,8 @@ export type Trip = {
   arrival_timestamp: string | null
   bus: string | null
   route: string
+  is_private?: boolean
+  access_code?: string
 }
 
 export type TripCheckedInPassenger = {
@@ -116,4 +118,39 @@ export type RemoveTripPassengerResponse = {
     local_passenger_id?: string
   }
   checked_in_count: number
+}
+
+export type TripRequestStatus = 'PENDENTE' | 'APROVADA' | 'RECUSADA'
+
+export type TripRequest = {
+  id: number
+  requester: number
+  requester_name: string
+  origin_text: string
+  destiny_text: string
+  departure_date: string
+  departure_time: string
+  return_time: string | null
+  reason: string
+  status: TripRequestStatus
+  feedback: string | null
+  created_at: string
+}
+
+export type CreateTripRequestPayload = {
+  origin_text: string
+  destiny_text: string
+  departure_date: string
+  departure_time: string
+  return_time?: string
+  reason: string
+}
+
+export type ApproveTripRequestPayload = {
+  bus_id: number
+  route_id: number
+}
+
+export type RejectTripRequestPayload = {
+  feedback: string
 }

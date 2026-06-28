@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import { routeTree } from './routeTree.gen'
+import { registerServiceWorker } from './lib/service-worker'
 import './index.css'
 
 const router = createRouter({ routeTree })
@@ -30,3 +31,5 @@ root.render(
     </QueryClientProvider>
   </StrictMode>,
 )
+
+registerServiceWorker()
