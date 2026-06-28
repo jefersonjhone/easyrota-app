@@ -27,6 +27,7 @@
     "html5-qrcode": "^2.3.8",
     "input-otp": "1.4.2",
     "jwt-decode": "4.0.0",
+    "motion": "^12.41.0",
     "qrcode.react": "^4.2.0",
     "radix-ui": "1.4.3",
     "react": "19.2.4",

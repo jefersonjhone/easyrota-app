@@ -58,7 +58,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.reservations.models import Punishment, Reservation
-from apps.reservations.services import sync_trip_status
+from apps.trips.services.trip_status_service import TripStatusService
 from apps.trips.models import Bus, GuestPassenger, Occurrence, Route, Trip, TripPassenger
 from apps.users.models import AllowedStaff
 from apps.users.models.profiles import (
@@ -285,7 +285,7 @@ with transaction.atomic():
                 administrator=superadmin.admin_profile,
             )
 
-        sync_trip_status(trip)
+        TripStatusService.sync_trip_status(trip)
         if spec["status"] == "EM ANDAMENTO":
             demo_trip = trip
 
