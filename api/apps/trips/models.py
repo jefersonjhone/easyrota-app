@@ -37,6 +37,7 @@ class Route(models.Model):
     destiny = models.CharField(max_length=50)
     departure_time = models.TimeField()
     arrival_time = models.TimeField()
+    max_bus = models.IntegerField(default=1)
 
     administrator = models.ForeignKey(
         "users.AdministratorProfile", on_delete=models.CASCADE
@@ -138,7 +139,7 @@ class Trip(models.Model):
         return self.has_server
 
     def __str__(self):
-        return f"Trip on {self.trip_date} - ({self.route})"
+        return f"Trip on {self.trip_date} - ({self.route}) and has {self.seating_capacity} seats"
 
 
 class Occurrence(models.Model):

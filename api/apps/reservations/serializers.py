@@ -254,7 +254,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         from .services import get_trip_occupancy
         
         total_occupied, server_occupied = get_trip_occupancy(obj)
-        seating_capacity = obj.bus.seating_capacity if obj.bus else 0
+        seating_capacity = obj.bus.seating_capacity if obj.bus else obj.seating_capacity
         
         user = self.context["request"].user
         if hasattr(user, "civil_servant_profile"):

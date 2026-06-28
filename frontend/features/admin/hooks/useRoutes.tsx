@@ -11,6 +11,7 @@ export type RouteValues = {
   departure_time: string;
   arrival_time: string;
   administrator: number;
+  max_bus: number;
 };
 
 export type RoutesResponse = RouteValues[];

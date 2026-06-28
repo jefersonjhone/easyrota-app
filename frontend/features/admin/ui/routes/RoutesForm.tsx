@@ -17,6 +17,7 @@ const schema = z.object({
   destiny: z.string().nonempty("Informe o destino"),
   departure_time: z.string().nonempty("Informe o horário de saída"),
   arrival_time: z.string().nonempty("Informe o horário de saída"),
+  max_bus: z.string().nonempty("Informe a quantidade de onibus disponiveis"),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -47,26 +48,32 @@ export function RouteForm({
       destiny: routeValues ? routeValues.destiny : "",
       departure_time: routeValues ? routeValues.departure_time : "",
       arrival_time: routeValues ? routeValues.arrival_time : "",
+      max_bus: routeValues ? routeValues.max_bus.toString() : '1',
     },
   });
 
   const { register, handleSubmit, formState: state } = form;
   const isSubmitting = state.isSubmitting || createRouteMutation.isPending;
 
-  const onSubmit = async (data: Schema) => {
+  const submitForm = async (data: Schema) => {
+    console.log("submitting....");
     try {
-      if (onSend) {
+        const max_bus = /^[0-9]+$/.test(data.max_bus) ? Number(data.max_bus) : 0
         const values: CreateRouteValues = {
           origin: data.origin,
           destiny: data.destiny,
           departure_time: data.departure_time,
           arrival_time: data.arrival_time,
+          max_bus: max_bus,
         };
+      if (onSend) {
+        console.log("trying to send");
         onSend(values);
       } else {
-        await createRouteMutation.mutateAsync(data);
+        console.log("using mutation to create route")
+        await createRouteMutation.mutateAsync(values);
       }
-      
+
       if (onCreate) {
         onCreate();
       }
@@ -82,24 +89,30 @@ export function RouteForm({
 
       if (errorData) {
         if (errorData.destiny) {
-          const message = Array.isArray(errorData.destiny) 
-            ? errorData.destiny[0] 
+          const message = Array.isArray(errorData.destiny)
+            ? errorData.destiny[0]
             : errorData.destiny;
           form.setError("destiny", { type: "server", message });
         }
 
         if (errorData.arrival_time) {
-          const message = Array.isArray(errorData.arrival_time) 
-            ? errorData.arrival_time[0] 
+          const message = Array.isArray(errorData.arrival_time)
+            ? errorData.arrival_time[0]
             : errorData.arrival_time;
           form.setError("arrival_time", { type: "server", message });
         }
-        
+
         if (errorData.origin) {
-          const message = Array.isArray(errorData.origin) 
-            ? errorData.origin[0] 
+          const message = Array.isArray(errorData.origin)
+            ? errorData.origin[0]
             : errorData.origin;
           form.setError("origin", { type: "server", message });
+        }
+        if (errorData.max_bus) {
+          const message = Array.isArray(errorData.max_bus)
+            ? errorData.max_bus[0]
+            : errorData.max_bus;
+          form.setError("max_bus", { type: "server", message });
         }
       } else {
         console.error("Erro inesperado ao criar rota:", error);
@@ -114,7 +127,7 @@ export function RouteForm({
       </h1>
       <Separator className="max-w-xl mx-auto " />
       <Field className="px-4 text-2xl">
-        <form id="createRoute" onSubmit={handleSubmit(onSubmit)}>
+        <form id="createRoute" onSubmit={handleSubmit(submitForm)}>
           <section>
             <FieldLabel>PONTO DE PARTIDA</FieldLabel>
             <Input
@@ -125,17 +138,19 @@ export function RouteForm({
             ></Input>
             <HintInvalid for={state.errors.origin} />
           </section>
-          <FieldLabel>DESTINO</FieldLabel>
-          <Input
-            id="destiny"
-            placeholder="Local de chegada"
-            required
-            {...register("destiny")}
-          ></Input>
-          <HintInvalid for={state.errors.destiny} />
-          <section className="grid  grid-cols-2 gap-2">
+          <section>
+            <FieldLabel>DESTINO</FieldLabel>
+            <Input
+              id="destiny"
+              placeholder="Local de chegada"
+              required
+              {...register("destiny")}
+            ></Input>
+            <HintInvalid for={state.errors.destiny} />
+          </section>
+          <section className="grid  grid-cols-3 gap-2">
             <section>
-              <FieldLabel>HORÁRIO DE SAIDA (HORAS:MINUTOS)</FieldLabel>
+              <FieldLabel>HORÁRIO DE SAIDA</FieldLabel>
               <Input
                 id="departure_time"
                 type="time"
@@ -147,7 +162,7 @@ export function RouteForm({
               <HintInvalid for={state.errors.departure_time} />
             </section>
             <section>
-              <FieldLabel>HORÁRIO DE CHEGADA (HORAS:MINUTOS)</FieldLabel>
+              <FieldLabel>HORÁRIO DE CHEGADA</FieldLabel>
               <Input
                 id="arrival_time"
                 type="time"
@@ -159,10 +174,18 @@ export function RouteForm({
               ></Input>
               <HintInvalid for={state.errors.arrival_time} />
             </section>
+            <section>
+              <FieldLabel>ÔNIBUS DISPONÍVEIS</FieldLabel>
+              <Input
+                id="max_bus"
+                type="number"
+                required
+                {...register("max_bus")}
+              ></Input>
+              <HintInvalid for={state.errors.max_bus} />
+            </section>
           </section>
-        </form>
         <Button
-          form="createRoute"
           type="submit"
           className="w-full cursor-pointer"
           disabled={isSubmitting}
@@ -175,6 +198,7 @@ export function RouteForm({
               ? buttonCaption
               : "PUBLICAR ROTA NO SISTEMA"}
         </Button>
+        </form>
       </Field>
     </>
   );
