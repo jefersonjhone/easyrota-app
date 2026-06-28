@@ -1,15 +1,17 @@
-import pytest
 from datetime import time, timedelta
+
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-from apps.trips.models import TripRequest, Trip, Bus, Route
+
+from apps.trips.models import Bus, Route, Trip, TripRequest
 from apps.users.models import CustomUser
 from apps.users.models.profiles import (
     AdministratorProfile,
-    StudentProfile,
     CivilServantProfile,
+    StudentProfile,
 )
+
 
 class TripRequestAPITestCase(APITestCase):
     def setUp(self):
@@ -153,6 +155,7 @@ class TripRequestAPITestCase(APITestCase):
         trip_req = TripRequest.objects.get(id=request_id)
         self.assertEqual(trip_req.status, "RECUSADA")
         self.assertEqual(trip_req.feedback, "Não temos ônibus disponíveis.")
+
 
 class PrivateTripAPITestCase(APITestCase):
     def setUp(self):

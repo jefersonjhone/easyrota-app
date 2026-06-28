@@ -1,6 +1,7 @@
+import random
+import string
 from datetime import date, timedelta
 
-from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -30,8 +31,8 @@ from .serializers import (
     GuestPassengerSerializer,
     RouteSerializer,
     TripCurrentScreenSerializer,
-    TripSerializer,
     TripRequestSerializer,
+    TripSerializer,
 )
 from .services.checkin_service import CheckinService
 from .services.trip_service import (
@@ -40,8 +41,6 @@ from .services.trip_service import (
     TripService,
     export_trip_passengers,
 )
-import string
-import random
 
 
 def generate_access_code(length=8):
