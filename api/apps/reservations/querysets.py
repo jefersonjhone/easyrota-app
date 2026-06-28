@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class ReservationQuerySet(models.QuerySet):
@@ -14,8 +15,8 @@ class ReservationQuerySet(models.QuerySet):
 
     def waitlisted(self):
         """Reservations on the secondary waitlist."""
-        return self.filter(status="LISTA SECUND\u00c1RIA")
-
+        return self.filter(status="LISTA SECUNDÁRIA")
+    
     def checked_in(self):
         """Reservations that have completed check-in."""
         return self.filter(check_in=True)
@@ -23,6 +24,10 @@ class ReservationQuerySet(models.QuerySet):
     def not_checked_in(self):
         """Reservations that have NOT completed check-in."""
         return self.filter(check_in=False)
+
+    def exclude_past(self):
+        """Exclude reservations that have already passed the trip date."""
+        return self.filter(trip__date__gte=timezone.now())
 
     def for_user(self, user):
         """Reservations belonging to a user (student or civil servant)."""

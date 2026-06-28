@@ -1,15 +1,15 @@
 from django.utils import timezone
 
 from apps.reservations.models import Reservation
-from apps.reservations.services import (
+from apps.reservations.services.constants import (
     ACTIVE_RESERVATION_STATUSES,
     WAITLIST_STATUS,
-    evict_lowest_priority_active_reservation,
-    get_reservation_passenger_name,
-    sync_trip_status,
-    trip_has_capacity,
 )
+from apps.reservations.services.priority_service import PriorityService
+from apps.reservations.services.reservation_service import ReservationService
 from apps.trips.models import TripPassenger
+from apps.trips.services.trip_service import TripService
+from apps.trips.services.trip_status_service import TripStatusService
 
 
 class CheckedInCount:
@@ -29,7 +29,7 @@ class PassengerSerializer:
     @staticmethod
     def evicted_reservation(reservation):
         return {
-            "name": get_reservation_passenger_name(reservation),
+            "name": ReservationService.get_passenger_name(reservation),
             "reservation_id": reservation.id,
         }
 
@@ -57,7 +57,7 @@ class PassengerSerializer:
         return {
             "reservation_id": reservation.id,
             "passenger_type": "RESERVATION",
-            "name": get_reservation_passenger_name(reservation),
+            "name": ReservationService.get_passenger_name(reservation),
         }
 
 
@@ -81,8 +81,8 @@ class LocalPassengerService:
     @staticmethod
     def _ensure_capacity_or_evict(trip, evicted_passengers):
         """Try to free a seat via eviction. Raises CapacityError if impossible."""
-        if trip.bus and not trip_has_capacity(trip):
-            evicted = evict_lowest_priority_active_reservation(trip)
+        if trip.bus and not TripService.trip_has_capacity(trip):
+            evicted = PriorityService.evict_lowest_priority_active(trip)
             if evicted is None:
                 raise LocalPassengerService.CapacityError(
                     "Nao ha vaga disponivel para cadastrar o passageiro."
@@ -217,7 +217,7 @@ class LocalPassengerService:
             )
         payload = PassengerSerializer.local_passenger(passenger)
         passenger.delete()
-        sync_trip_status(trip)
+        TripStatusService.sync_trip_status(trip)
         return payload
 
     @staticmethod
@@ -235,9 +235,9 @@ class LocalPassengerService:
                 "Reserva embarcada nao encontrada nesta viagem."
             )
 
-        name = get_reservation_passenger_name(reservation)
+        name = ReservationService.get_passenger_name(reservation)
         reservation.check_in = False
         reservation.checkin_date = None
         reservation.save(update_fields=["check_in", "checkin_date"])
-        sync_trip_status(trip)
+        TripStatusService.sync_trip_status(trip)
         return name, reservation.id

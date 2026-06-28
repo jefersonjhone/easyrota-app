@@ -246,4 +246,30 @@ class EmailService:
                 html_message=html_message,
             )
         except Exception:
-            logger.exception("Erro ao enviar código OTP para %s", email)
+            logger.exception("Erro ao enviar email para %s", email)
+
+    @staticmethod
+    def send_to_users(users, payload: dict) -> bool:
+        """Send an email to a list of users."""
+        from django.core.mail import (
+            send_mail,  # noqa: F401 — re-exported for test mocking
+        )
+        
+        subject = payload.get("subject")
+        message = payload.get("message")
+        html_message = payload.get("html_message")
+        
+        for user in users:
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                    html_message=html_message,
+                )
+            except Exception:
+                logger.exception("Erro ao enviar email para %s", user.email)
+        return True
+

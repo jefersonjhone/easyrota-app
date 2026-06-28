@@ -1,17 +1,14 @@
+import csv
 import logging
 from datetime import datetime, timedelta
-
-
-import csv
 
 from django.db import transaction
 from django.http import HttpResponse
 from django.utils import timezone
 
-from apps.trips.models import Bus, Trip, TripPassenger
-
 from apps.notifications.services.notification_service import NotificationService
 from apps.reservations.models import Reservation
+from apps.trips.models import Bus, Trip, TripPassenger
 
 logger = logging.getLogger("api")
 
@@ -19,6 +16,7 @@ logger = logging.getLogger("api")
 MAX_RECURRING_MONTHS = 3
 MAX_RECURRING_DAYS = MAX_RECURRING_MONTHS * 31
 RESERVATION_LIMIT_MINUTES = 30
+RESERVATION_LIMIT_DAYS = 30
 QUORUM_MIN_SERVERS = 1
 ACTIVE_RESERVATION_STATUSES = ("CONFIRMADA", "PENDENTE")
 
@@ -30,37 +28,86 @@ class TripService:
     # Lifecycle
     # ------------------------------------------------------------------
 
-    @staticmethod
     @transaction.atomic
+    @staticmethod
     def create_recurring_trips(date_start, date_end, weekdays, route, status):
         trips = []
         current = date_start
         while current <= date_end:
             if current.weekday() in weekdays:
-                trips.append(
-                    Trip(trip_date=current, route=route, status=status)
-                )
+                trips.append(Trip(trip_date=current, route=route, status=status))
             current += timedelta(days=1)
         return Trip.objects.bulk_create(trips)
-    
+
     @staticmethod
     def start_trip(trip):
         """Mark a trip as in-progress and record the departure timestamp."""
+
+        if trip.departure_timestamp:
+            return
+
+        dep = TripService._departure_datetime(trip)
+        if timezone.now() < dep:
+            from rest_framework import serializers
+
+            raise serializers.ValidationError(
+                "Viagem não pode ser iniciada antes do horário de partida."
+            )
+
         Trip.objects.filter(id=trip.id).update(
             status="EM ANDAMENTO",
             departure_timestamp=timezone.now(),
         )
         NotificationService.notify_trip_users(trip, {"message": "A viagem começou!"})
-        from apps.reservations.services import process_trip_punishments
-
-        process_trip_punishments(trip)
 
     @staticmethod
     def finish_trip(trip):
-        """Mark a trip as concluded and record the arrival timestamp."""
+        """Mark a trip as concluded and record the arrival timestamp.
+        Only allowed up to 30 min before the scheduled arrival time.
+        """
+        arr = TripService._arrival_datetime(trip)
+        if timezone.now() < arr - timedelta(minutes=30):
+            from rest_framework import serializers
+
+            msg = (
+                "Viagem só pode ser finalizada a partir de"
+                " 30 minutos antes do horário previsto de término."
+            )
+            raise serializers.ValidationError(msg)
+
+        from apps.reservations.services.punishment_service import (
+            process_trip_punishments,
+        )
+
         Trip.objects.filter(id=trip.id).update(
-            status="CONCLU\u00cdDA",
+            status="CONCLUÍDA",
             arrival_timestamp=timezone.now(),
+        )
+        process_trip_punishments(trip)
+
+    @staticmethod
+    def start_checkin(trip):
+        """Open check-in for the trip. Only allowed up to 30 min before departure."""
+        dep = TripService._departure_datetime(trip)
+        if timezone.now() < dep - timedelta(minutes=30):
+            from rest_framework import serializers
+
+            msg = (
+                "Check-in só pode ser iniciado a partir de"
+                " 30 minutos antes do horário de partida."
+            )
+            raise serializers.ValidationError(msg)
+
+        trip.checkin_started = timezone.now()
+        trip.save(update_fields=["checkin_started"])
+        NotificationService.notify_trip_users(
+            trip,
+            {
+                "message": (
+                    f"o check-in para a viagem {trip.origin}"
+                    f" - {trip.destination} foi iniciado!"
+                )
+            },
         )
 
     # ------------------------------------------------------------------
@@ -110,6 +157,11 @@ class TripService:
     @staticmethod
     def can_assign_bus(trip, driver):
         """Check whether the driver can assign a bus to this trip."""
+        return trip.driver and trip.driver == driver
+
+    @staticmethod
+    def can_unassign_bus(trip, driver):
+        """Check whether the driver can unassign a bus from this trip."""
         return trip.driver and trip.driver == driver
 
     # ------------------------------------------------------------------
@@ -175,7 +227,7 @@ class TripService:
     def trip_has_capacity(trip):
         """Check if there's at least one free seat."""
         if not trip.bus:
-            return 46
+            return True
         occupied = (
             TripService._get_active_reservations_queryset(trip).count()
             + trip.trip_passengers.count()
@@ -185,8 +237,7 @@ class TripService:
     @staticmethod
     def trip_has_quorum(trip):
         """Check if the minimum number of servers is met."""
-        _passengers, servers = TripService.get_trip_occupancy(trip)
-        return servers >= QUORUM_MIN_SERVERS
+        return trip.has_minimum_quorum
 
     # ------------------------------------------------------------------
     # Validation (from TripSerializer)
@@ -267,7 +318,9 @@ class TripService:
         # --- bus overlap check ---
         if bus and trip_date and route:
             overlapping_trips = Trip.objects.with_overlap(
-                bus, trip_date, route,
+                bus,
+                trip_date,
+                route,
                 exclude_id=instance.id if instance else None,
             )
 
@@ -313,7 +366,7 @@ class TripService:
 
 def has_available_bus(trip_date, route):
     """
-    Checks if there is at least one active bus in the fleet that is not 
+    Checks if there is at least one active bus in the fleet that is not
     allocated to a trip during the specified trip_date and route time.
     """
     active_buses = Bus.objects.filter(status="ATIVO")
@@ -326,15 +379,15 @@ def has_available_bus(trip_date, route):
         trip_date,
         trip_date + timedelta(days=1),
     ]
-    overlapping_trips = Trip.objects.filter(
-        trip_date__in=date_range
-        ).exclude(bus__isnull=True)
-    
+    overlapping_trips = Trip.objects.filter(trip_date__in=date_range).exclude(
+        bus__isnull=True
+    )
+
     tz = timezone.get_current_timezone()
     new_start = timezone.make_aware(
-        datetime.combine(trip_date, route.departure_time), tz)
-    new_end = timezone.make_aware(
-        datetime.combine(trip_date, route.arrival_time), tz)
+        datetime.combine(trip_date, route.departure_time), tz
+    )
+    new_end = timezone.make_aware(datetime.combine(trip_date, route.arrival_time), tz)
 
     if new_end <= new_start:
         new_end += timedelta(days=1)
@@ -344,21 +397,21 @@ def has_available_bus(trip_date, route):
         ex_start = timezone.make_aware(
             datetime.combine(
                 existing_trip.trip_date, existing_trip.route.departure_time
-                ), tz
+            ),
+            tz,
         )
         ex_end = timezone.make_aware(
-            datetime.combine(
-                existing_trip.trip_date, existing_trip.route.arrival_time
-                ), tz
+            datetime.combine(existing_trip.trip_date, existing_trip.route.arrival_time),
+            tz,
         )
-        
+
         if ex_end <= ex_start:
             ex_end += timedelta(days=1)
 
         # Check for time intersection
         if new_start < ex_end and new_end > ex_start:
             busy_bus_ids.add(existing_trip.bus_id)
-            
+
     # If there is any active bus that is not in the set of busy buses, return True
     return active_buses.exclude(id__in=busy_bus_ids).exists()
 
@@ -402,7 +455,10 @@ def export_trip_passengers(trip, fmt="csv"):
         })
 
     for tp in trip_passengers:
-        if tp.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER and tp.allowed_staff:
+        if (
+            tp.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER
+            and tp.allowed_staff
+        ):
             rows.append({
                 "ID": tp.id,
                 "Passageiro": tp.allowed_staff.name,
@@ -431,7 +487,9 @@ def export_trip_passengers(trip, fmt="csv"):
 
 def _build_csv_response(trip_id, rows, fieldnames):
     response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = f'attachment; filename="viagem_{trip_id}_passageiros.csv"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="viagem_{trip_id}_passageiros.csv"'
+    )
     writer = csv.DictWriter(response, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(rows)
@@ -440,7 +498,7 @@ def _build_csv_response(trip_id, rows, fieldnames):
 
 def _build_xlsx_response(trip_id, rows, fieldnames):
     from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
 
     wb = Workbook()
@@ -469,6 +527,8 @@ def _build_xlsx_response(trip_id, rows, fieldnames):
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response["Content-Disposition"] = f'attachment; filename="viagem_{trip_id}_passageiros.xlsx"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="viagem_{trip_id}_passageiros.xlsx"'
+    )
     wb.save(response)
     return response

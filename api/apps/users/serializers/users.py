@@ -256,7 +256,7 @@ class DriverSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_data = validated_data.pop("user")
         password = validated_data.pop("password")
-        
+
         with transaction.atomic():
             user = CustomUser.objects.create_user(
                 full_name=user_data["full_name"],
@@ -264,7 +264,7 @@ class DriverSerializer(serializers.ModelSerializer):
                 password=password,
             )
             driver_profile = DriverProfile.objects.create(user=user, **validated_data)
-            
+
         return driver_profile
 
     def update(self, instance, validated_data):
@@ -355,7 +355,9 @@ class CivilServantSerializer(serializers.ModelSerializer):
             user.set_password(password)
         user.save()
 
-        instance.civil_servant_id = validated_data.get("civil_servant_id", instance.civil_servant_id)
+        instance.civil_servant_id = validated_data.get(
+            "civil_servant_id", instance.civil_servant_id
+        )
 
         instance.save()
 
@@ -473,16 +475,25 @@ class DriverAdminDetailSerializer(serializers.ModelSerializer):
 
     def get_trip_count(self, obj):
         from apps.trips.models import Trip
+
         return Trip.objects.filter(driver=obj).count()
 
     def get_recent_trips(self, obj):
         from apps.trips.models import Trip
-        trips = Trip.objects.filter(driver=obj).select_related("route").order_by("-trip_date")[:50]
+
+        trips = (
+            Trip.objects
+            .filter(driver=obj)
+            .select_related("route")
+            .order_by("-trip_date")[:50]
+        )
         return [
             {
                 "id": t.id,
                 "trip_date": t.trip_date,
-                "departure_time": t.route.departure_time.strftime("%H:%M") if t.route else None,
+                "departure_time": t.route.departure_time.strftime("%H:%M")
+                if t.route
+                else None,
                 "origin": t.route.origin if t.route else None,
                 "destiny": t.route.destiny if t.route else None,
                 "status": t.status,

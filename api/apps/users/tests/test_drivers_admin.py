@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from apps.users.models import CustomUser
-from apps.users.models.profiles import AdministratorProfile, DriverProfile
+from apps.users.models.profiles import DriverProfile
 
 User = CustomUser
 

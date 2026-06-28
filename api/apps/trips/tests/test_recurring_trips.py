@@ -8,10 +8,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from apps.trips.models import Route, Trip
-from apps.trips.services import (
-    MAX_RECURRING_DAYS,
-    create_recurring_trips,
-)
+from apps.trips.services.trip_service import MAX_RECURRING_DAYS, TripService
 from apps.users.models import CustomUser
 from apps.users.models.profiles import AdministratorProfile, DriverProfile
 
@@ -22,7 +19,6 @@ class RecurringTripServiceTestCase(TestCase):
     """Unit tests for create_recurring_trips service function."""
 
     def setUp(self):
-        today = timezone.now().date()
         self.admin_user = CustomUser.objects.create_superuser(
             email="admin-recurring@easyrota.com",
             password="password123",
@@ -45,7 +41,7 @@ class RecurringTripServiceTestCase(TestCase):
     def test_creates_trips_only_on_selected_weekdays(self):
         """Segunda(0), Quarta(2), Sexta(4) over 7 days → 3 trips."""
         base = date(2026, 7, 6)  # Monday
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base + timedelta(days=6),
             weekdays=[0, 2, 4],
@@ -54,15 +50,15 @@ class RecurringTripServiceTestCase(TestCase):
         )
         self.assertEqual(len(trips), 3)
         created_dates = {t.trip_date for t in trips}
-        self.assertIn(base, created_dates)         # Seg
-        self.assertIn(base + timedelta(days=2), created_dates)   # Qua
-        self.assertIn(base + timedelta(days=4), created_dates)   # Sex
+        self.assertIn(base, created_dates)  # Seg
+        self.assertIn(base + timedelta(days=2), created_dates)  # Qua
+        self.assertIn(base + timedelta(days=4), created_dates)  # Sex
 
     def test_date_range_boundaries(self):
         """Range 10-Jun (Qua) to 12-Jun (Sex), weekdays=[3,4] (Qui, Sex)
         → trips on 11 (Qui) and 12 (Sex), not 10 (Qua)."""
         base = date(2026, 6, 10)  # Wednesday
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base + timedelta(days=2),
             weekdays=[3, 4],
@@ -71,14 +67,14 @@ class RecurringTripServiceTestCase(TestCase):
         )
         self.assertEqual(len(trips), 2)
         dates = {t.trip_date for t in trips}
-        self.assertNotIn(base, dates)          # Qua (weekday 2)
-        self.assertIn(base + timedelta(days=1), dates)   # Qui (weekday 3)
-        self.assertIn(base + timedelta(days=2), dates)   # Sex (weekday 4)
+        self.assertNotIn(base, dates)  # Qua (weekday 2)
+        self.assertIn(base + timedelta(days=1), dates)  # Qui (weekday 3)
+        self.assertIn(base + timedelta(days=2), dates)  # Sex (weekday 4)
 
     def test_no_trips_when_no_weekday_in_range(self):
         """weekdays=[5,6] (Sáb, Dom) over Seg-Sex → 0 trips."""
         base = date(2026, 7, 6)  # Monday
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base + timedelta(days=4),  # até Sexta
             weekdays=[5, 6],
@@ -90,7 +86,7 @@ class RecurringTripServiceTestCase(TestCase):
     def test_single_day_match(self):
         """date_start == date_end and weekday matches → 1 trip."""
         base = date(2026, 7, 6)  # Monday
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base,
             weekdays=[0],
@@ -103,7 +99,7 @@ class RecurringTripServiceTestCase(TestCase):
     def test_single_day_no_match(self):
         """date_start == date_end but weekday does NOT match → 0 trips."""
         base = date(2026, 7, 6)  # Monday
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base,
             weekdays=[1],  # Tuesday
@@ -117,7 +113,7 @@ class RecurringTripServiceTestCase(TestCase):
     def test_bus_and_driver_are_null(self):
         """All created trips have bus=None and driver=None."""
         base = date(2026, 7, 6)  # Monday
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base + timedelta(days=6),
             weekdays=[0, 2, 4],
@@ -133,7 +129,7 @@ class RecurringTripServiceTestCase(TestCase):
     def test_all_trips_have_correct_route_and_status(self):
         """route and status match the arguments."""
         base = date(2026, 7, 6)
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base + timedelta(days=13),
             weekdays=[0],
@@ -147,7 +143,7 @@ class RecurringTripServiceTestCase(TestCase):
     def test_returns_correct_count(self):
         """2 Mondays in 14 days → 2 trips."""
         base = date(2026, 7, 6)  # Monday
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base + timedelta(days=13),
             weekdays=[0],
@@ -161,7 +157,7 @@ class RecurringTripServiceTestCase(TestCase):
     def test_range_within_limit_succeeds(self):
         """Service accepts range up to MAX_RECURRING_DAYS."""
         base = date(2026, 7, 6)
-        trips = create_recurring_trips(
+        trips = TripService.create_recurring_trips(
             date_start=base,
             date_end=base + timedelta(days=MAX_RECURRING_DAYS),
             weekdays=[0],
@@ -381,7 +377,7 @@ class RecurringTripAPITestCase(APITestCase):
             "weekdays": [0],
             "date_start": self.tomorrow.isoformat(),
             "date_end": (self.tomorrow + timedelta(days=6)).isoformat(),
-            "route": 99999,
+            "route": "00000000-0000-0000-0000-000000000000",
         }
         response = self.client.post(self.trip_list_url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -396,7 +392,9 @@ class RecurringTripAPITestCase(APITestCase):
             "recurring": True,
             "weekdays": [0],
             "date_start": self.tomorrow.isoformat(),
-            "date_end": (self.tomorrow + timedelta(days=MAX_RECURRING_DAYS + 1)).isoformat(),
+            "date_end": (
+                self.tomorrow + timedelta(days=MAX_RECURRING_DAYS + 1)
+            ).isoformat(),
             "route": self.route.id,
         }
         response = self.client.post(self.trip_list_url, payload, format="json")
@@ -410,7 +408,9 @@ class RecurringTripAPITestCase(APITestCase):
             "recurring": True,
             "weekdays": [0],
             "date_start": self.tomorrow.isoformat(),
-            "date_end": (self.tomorrow + timedelta(days=MAX_RECURRING_DAYS)).isoformat(),
+            "date_end": (
+                self.tomorrow + timedelta(days=MAX_RECURRING_DAYS)
+            ).isoformat(),
             "route": self.route.id,
         }
         response = self.client.post(self.trip_list_url, payload, format="json")

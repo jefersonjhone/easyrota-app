@@ -41,9 +41,7 @@ class TestStudentAdmin(APITestCase):
     def test_admin_can_list_students(self):
         self.client.force_authenticate(user=self.admin)
         # Create a student first
-        self.client.post(
-            reverse("students-list"), self.create_payload, format="json"
-        )
+        self.client.post(reverse("students-list"), self.create_payload, format="json")
 
         response = self.client.get(reverse("students-list"))
 
@@ -56,13 +54,9 @@ class TestStudentAdmin(APITestCase):
 
     def test_search_students_by_name(self):
         self.client.force_authenticate(user=self.admin)
-        self.client.post(
-            reverse("students-list"), self.create_payload, format="json"
-        )
+        self.client.post(reverse("students-list"), self.create_payload, format="json")
 
-        response = self.client.get(
-            reverse("students-list"), {"q": "Aluno Teste"}
-        )
+        response = self.client.get(reverse("students-list"), {"q": "Aluno Teste"})
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 1
@@ -70,35 +64,25 @@ class TestStudentAdmin(APITestCase):
 
     def test_search_students_by_email(self):
         self.client.force_authenticate(user=self.admin)
-        self.client.post(
-            reverse("students-list"), self.create_payload, format="json"
-        )
+        self.client.post(reverse("students-list"), self.create_payload, format="json")
 
-        response = self.client.get(
-            reverse("students-list"), {"q": "aluno@teste.com"}
-        )
+        response = self.client.get(reverse("students-list"), {"q": "aluno@teste.com"})
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 1
 
     def test_search_students_by_student_id(self):
         self.client.force_authenticate(user=self.admin)
-        self.client.post(
-            reverse("students-list"), self.create_payload, format="json"
-        )
+        self.client.post(reverse("students-list"), self.create_payload, format="json")
 
-        response = self.client.get(
-            reverse("students-list"), {"q": "2024001"}
-        )
+        response = self.client.get(reverse("students-list"), {"q": "2024001"})
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 1
 
     def test_search_students_no_match(self):
         self.client.force_authenticate(user=self.admin)
-        response = self.client.get(
-            reverse("students-list"), {"q": "inexistente"}
-        )
+        response = self.client.get(reverse("students-list"), {"q": "inexistente"})
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 0
@@ -137,9 +121,7 @@ class TestStudentAdmin(APITestCase):
         payload = dict(self.create_payload)
         del payload["password"]
 
-        response = self.client.post(
-            reverse("students-list"), payload, format="json"
-        )
+        response = self.client.post(reverse("students-list"), payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "password" in response.data
@@ -147,16 +129,12 @@ class TestStudentAdmin(APITestCase):
     def test_create_student_fails_with_duplicate_email(self):
         self.client.force_authenticate(user=self.admin)
         # Create first
-        self.client.post(
-            reverse("students-list"), self.create_payload, format="json"
-        )
+        self.client.post(reverse("students-list"), self.create_payload, format="json")
         # Try duplicate
         payload = dict(self.create_payload)
         payload["student_id"] = "2024002"
 
-        response = self.client.post(
-            reverse("students-list"), payload, format="json"
-        )
+        response = self.client.post(reverse("students-list"), payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -204,9 +182,7 @@ class TestStudentAdmin(APITestCase):
         )
         student_id = create_resp.data["id"]
 
-        response = self.client.delete(
-            reverse("students-detail", args=[student_id])
-        )
+        response = self.client.delete(reverse("students-detail", args=[student_id]))
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert not StudentProfile.objects.filter(id=student_id).exists()
@@ -220,9 +196,7 @@ class TestStudentAdmin(APITestCase):
             ),
             student_id="8888888",
         )
-        response = self.client.delete(
-            reverse("students-detail", args=[profile.id])
-        )
+        response = self.client.delete(reverse("students-detail", args=[profile.id]))
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     # ── User detail ───────────────────────────────────────
@@ -234,15 +208,15 @@ class TestStudentAdmin(APITestCase):
         )
         student_id = create_resp.data["id"]
 
-        response = self.client.get(
-            reverse("students-user-detail", args=[student_id])
-        )
+        response = self.client.get(reverse("students-user-detail", args=[student_id]))
 
         assert response.status_code == status.HTTP_200_OK
         # Structure from _build_user_detail_response
         assert "user" in response.data
         assert response.data["user"]["email"] == self.create_payload["email"]
-        assert response.data["profile"]["student_id"] == self.create_payload["student_id"]
+        assert (
+            response.data["profile"]["student_id"] == self.create_payload["student_id"]
+        )
         assert "stats" in response.data
         assert "trips" in response.data
 
@@ -255,7 +229,5 @@ class TestStudentAdmin(APITestCase):
             ),
             student_id="7777777",
         )
-        response = self.client.get(
-            reverse("students-user-detail", args=[profile.id])
-        )
+        response = self.client.get(reverse("students-user-detail", args=[profile.id]))
         assert response.status_code == status.HTTP_401_UNAUTHORIZED

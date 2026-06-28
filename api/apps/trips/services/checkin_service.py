@@ -18,6 +18,7 @@ class CheckinService:
 
     class Error(Exception):
         """Domain-level check-in error carrying an HTTP status code."""
+
         def __init__(self, detail, status_code=400):
             self.detail = detail
             self.status_code = status_code
@@ -34,16 +35,14 @@ class CheckinService:
         Raises CheckinService.Error on failure.
         """
         # --- lazy imports to avoid circular dependency ---
-        from apps.reservations.services import (
+        from apps.reservations.services.constants import (
             ACTIVE_RESERVATION_STATUSES as _ACTIVE_RESERVATION_STATUSES,
         )
-        from apps.reservations.services import (
+        from apps.reservations.services.constants import (
             WAITLIST_STATUS as _WAITLIST_STATUS,
         )
-        from apps.reservations.services import (
-            evict_lowest_priority_active_reservation,
-            get_reservation_passenger_name,
-        )
+        from apps.reservations.services.priority_service import PriorityService
+        from apps.reservations.services.reservation_service import ReservationService
 
         evicted_passenger = None
         priority_check_in = bool(
@@ -57,14 +56,14 @@ class CheckinService:
                 )
 
             if not TripService.trip_has_capacity(reservation.trip):
-                evicted = evict_lowest_priority_active_reservation(reservation.trip)
+                evicted = PriorityService.evict_lowest_priority_active(reservation.trip)
                 if evicted is None:
                     raise CheckinService.Error(
                         "Nao ha vaga disponivel para priorizar o passageiro.", 409
                     )
 
                 evicted_passenger = {
-                    "name": get_reservation_passenger_name(evicted),
+                    "name": ReservationService.get_passenger_name(evicted),
                     "reservation_id": evicted.id,
                 }
 
@@ -140,31 +139,38 @@ class CheckinService:
         except (TypeError, ValueError):
             raise CheckinService.Error("QR Code invalido.", 400)
 
-        reservation = Reservation.objects.select_related(
-            "student__user", "civil_servant__user", "guest_passenger"
-        ).filter(id=reservation_id).first()
+        reservation = (
+            Reservation.objects
+            .select_related("student__user", "civil_servant__user", "guest_passenger")
+            .filter(id=reservation_id)
+            .first()
+        )
 
         if not reservation:
             raise CheckinService.Error("QR Code invalido.", 400)
 
         if reservation.student_id and str(reservation.student.user.id) == user_id_str:
             return reservation.student.user
-        if reservation.civil_servant_id and str(reservation.civil_servant.user.id) == user_id_str:
+        if (
+            reservation.civil_servant_id
+            and str(reservation.civil_servant.user.id) == user_id_str
+        ):
             return reservation.civil_servant.user
-        if reservation.guest_passenger_id and str(reservation.guest_passenger_id) == user_id_str:
+        if (
+            reservation.guest_passenger_id
+            and str(reservation.guest_passenger_id) == user_id_str
+        ):
             return reservation.guest_passenger
 
-        raise CheckinService.Error(
-            "QR Code invalido ou usuario inexistente.", 400
-        )
+        raise CheckinService.Error("QR Code invalido ou usuario inexistente.", 400)
 
     @staticmethod
     def _find_reservation(passenger, trip):
         """Find active/waitlisted reservation for a passenger on a trip."""
-        from apps.reservations.services import (
+        from apps.reservations.services.constants import (
             ACTIVE_RESERVATION_STATUSES as _ACTIVE_RESERVATION_STATUSES,
         )
-        from apps.reservations.services import (
+        from apps.reservations.services.constants import (
             WAITLIST_STATUS as _WAITLIST_STATUS,
         )
 
@@ -176,9 +182,8 @@ class CheckinService:
             )
 
         reservation = (
-            Reservation.objects.select_related(
-                "student__user", "civil_servant__user", "guest_passenger"
-            )
+            Reservation.objects
+            .select_related("student__user", "civil_servant__user", "guest_passenger")
             .filter(
                 passenger_filter,
                 trip=trip,
@@ -188,8 +193,6 @@ class CheckinService:
         )
 
         if reservation is None:
-            raise CheckinService.Error(
-                "Passageiro sem reserva nesta viagem.", 404
-            )
+            raise CheckinService.Error("Passageiro sem reserva nesta viagem.", 404)
 
         return reservation

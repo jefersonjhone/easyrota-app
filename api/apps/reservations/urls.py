@@ -53,7 +53,7 @@ urlpatterns = [
         name="admin-punishment-list",
     ),
     path(
-        "reservations/punishments/manage/<int:pk>/",
+        "reservations/punishments/manage/<uuid:pk>/",
         PunishmentManageViewSet.as_view({
             "patch": "partial_update",
             "delete": "destroy",

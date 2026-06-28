@@ -12,27 +12,32 @@ from rest_framework.views import APIView
 
 from apps.reservations.models import Reservation
 from apps.reservations.serializers import ReservationSerializer
-from apps.reservations.services import sync_trip_status
+from apps.trips.services.trip_status_service import TripStatusService
+from apps.users.models.profiles import DriverProfile
 from apps.users.permissions import (
     IsAdminOrReadOnly,
     IsDriver,
     IsDriverReadOnly,
 )
-from .filters import FilterTripViewSet
-from apps.users.models.profiles import DriverProfile
-from .models import Bus, GuestPassenger, Route, Trip
-from .services.trip_service import TripService
-from .services.checkin_service import CheckinService
-from .services.trip_status_service import TripStatusService
 
+from .filters import FilterTripViewSet
+from .models import Bus, GuestPassenger, Route, Trip
 from .serializers import (
     AdminTripDetailSerializer,
+    AvailableTripSerializer,
     BusSerializer,
     GuestHistorySerializer,
     GuestPassengerSerializer,
     RouteSerializer,
     TripCurrentScreenSerializer,
     TripSerializer,
+)
+from .services.checkin_service import CheckinService
+from .services.trip_service import (
+    MAX_RECURRING_DAYS,
+    MAX_RECURRING_MONTHS,
+    TripService,
+    export_trip_passengers,
 )
 
 User = get_user_model()
@@ -64,6 +69,7 @@ class BusViewSet(viewsets.ModelViewSet):
     def admin_detail(self, request, pk=None):
         bus = self.get_object()
         from .serializers import BusAdminDetailSerializer
+
         serializer = BusAdminDetailSerializer(bus, context={"request": request})
         return Response(serializer.data)
 
@@ -87,9 +93,44 @@ class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class TripViewSet(viewsets.ModelViewSet):
-    queryset = Trip.objects.all().order_by('trip_date', 'route__departure_time')
+    queryset = Trip.objects.all().order_by("trip_date", "route__departure_time")
     serializer_class = TripSerializer
     filter_backends = [FilterTripViewSet]
+
+    def get_queryset(self):
+
+        if hasattr(self.request.user, "admin_profile"):
+            return self.queryset
+        elif hasattr(self.request.user, "driver_profile"):
+            return Trip.objects.joinable_by_driver(self.request.user)
+        elif hasattr(self.request.user, "student_profile") or hasattr(
+            self.request.user, "civil_servant_profile"
+        ):
+            return Trip.objects.joinable_by_user(self.request.user)
+
+        return Trip.objects.none()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if hasattr(request.user, "admin_profile"):
+            serializer = self.serializer_class
+        elif hasattr(request.user, "driver_profile"):
+            serializer = self.serializer_class
+        else:
+            serializer = AvailableTripSerializer
+
+        serializer = serializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        if hasattr(request.user, "admin_profile"):
+            serializer = self.serializer_class
+        elif hasattr(request.user, "driver_profile"):
+            serializer = self.serializer_class
+        else:
+            serializer = AvailableTripSerializer
+        serializer = serializer(self.get_object(), context={"request": request})
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         if request.data.get("recurring"):
@@ -127,7 +168,12 @@ class TripViewSet(viewsets.ModelViewSet):
 
             if (date_end_parsed - date_start_parsed).days > MAX_RECURRING_DAYS:
                 return Response(
-                    {"date": [f"O intervalo não pode exceder {MAX_RECURRING_MONTHS} meses."]},
+                    {
+                        "date": [
+                            f"O intervalo não pode exceder"
+                            f" {MAX_RECURRING_MONTHS} meses."
+                        ]
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -141,7 +187,7 @@ class TripViewSet(viewsets.ModelViewSet):
 
             # Converte JS weekday (0=Dom…6=Sáb) → Python weekday (0=Seg…6=Dom)
             py_weekdays = [(wd - 1) % 7 for wd in weekdays]
-            create_recurring_trips(
+            TripService.create_recurring_trips(
                 date_start=date_start_parsed,
                 date_end=date_end_parsed,
                 weekdays=py_weekdays,
@@ -171,21 +217,32 @@ class TripViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def start_checkin(self, request, pk=None):
         trip = self.get_object()
-        from django.utils import timezone
+        TripService.start_checkin(trip)
 
-        from apps.notifications.services import NotificationService
+        from apps.notifications.services.notification_service import NotificationService
 
-        trip.checkin_started = timezone.now()
-        trip.save(update_fields=["checkin_started"])
-
-        NotificationService.notify_trip_users(trip, {
-            "head": "Check-in iniciado",
-            "body": (
-                f"O motorista iniciou o check-in para a viagem "
-                f"de {trip.route.origin} para {trip.route.destiny}."
-            ),
-            "url": f"/app/driver/viagem/{trip.id}",
-        })
+        NotificationService.notify_trip_users(
+            trip,
+            {
+                "head": "Check-in iniciado",
+                "body": (
+                    f"O motorista iniciou o check-in para a viagem "
+                    f"de {trip.route.origin} para {trip.route.destiny}."
+                ),
+                "url": f"/app/driver/viagem/{trip.id}",
+            },
+        )
+        NotificationService.notify_route_admin(
+            trip,
+            {
+                "head": "Check-in iniciado",
+                "body": (
+                    f"O motorista iniciou o check-in para a viagem "
+                    f"de {trip.route.origin} para {trip.route.destiny}."
+                ),
+                "url": f"/app/admin/viagem/{trip.id}",
+            },
+        )
 
         serializer = TripSerializer(trip, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -193,6 +250,11 @@ class TripViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def finish_trip(self, request, pk=None):
         trip = self.get_object()
+        if trip.driver != request.user.driver_profile:
+            return Response(
+                {"error": "Você não é o motorista desta viagem."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         TripService.finish_trip(trip)
         return Response("trip concluída com sucesso", status.HTTP_200_OK)
 
@@ -217,13 +279,14 @@ class TripViewSet(viewsets.ModelViewSet):
             passenger_name = "Passageiro"
             kind = None
 
-            if hasattr(res, "student_id"):
+            if res.student_id:
+                print(res.student_id)
                 passenger_name = res.student.user.full_name
                 kind = "Aluno"
-            elif hasattr(res, "civil_servant_id"):
+            elif res.civil_servant_id:
                 passenger_name = res.civil_servant.user.full_name
                 kind = "Servidor"
-            elif hasattr(res, "guest_passenger_id"):
+            elif res.guest_passenger_id:
                 passenger_name = res.guest_passenger.full_name or "Convidado"
                 kind = "Convidado"
 
@@ -338,7 +401,7 @@ class TripViewSet(viewsets.ModelViewSet):
         trip = Trip.objects.get(id=pk)
         driver = request.user.driver_profile
 
-        if not TripService.can_assign_bus(trip, driver):
+        if not TripService.can_unassign_bus(trip, driver):
             return Response(
                 {"error": "Você não é o motorista desta viagem."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -368,7 +431,12 @@ class TripViewSet(viewsets.ModelViewSet):
         trip = self.get_object()
         if trip.status in ["EM ANDAMENTO", "CANCELADA"]:
             return Response(
-                {"error": "Não é possível alterar o motorista de uma viagem em andamento ou cancelada."},
+                {
+                    "error": (
+                        "Não é possível alterar o motorista de"
+                        " uma viagem em andamento ou cancelada."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         trip.driver = driver
@@ -380,7 +448,12 @@ class TripViewSet(viewsets.ModelViewSet):
         trip = self.get_object()
         if trip.status in ["EM ANDAMENTO", "CANCELADA"]:
             return Response(
-                {"error": "Não é possível remover o motorista de uma viagem em andamento ou cancelada."},
+                {
+                    "error": (
+                        "Não é possível remover o motorista de"
+                        " uma viagem em andamento ou cancelada."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         trip.driver = None
@@ -405,7 +478,12 @@ class TripViewSet(viewsets.ModelViewSet):
         trip = self.get_object()
         if trip.status in ["EM ANDAMENTO", "CANCELADA"]:
             return Response(
-                {"error": "Não é possível alterar o ônibus de uma viagem em andamento ou cancelada."},
+                {
+                    "error": (
+                        "Não é possível alterar o ônibus de"
+                        " uma viagem em andamento ou cancelada."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         trip.bus = bus
@@ -418,20 +496,27 @@ class TripViewSet(viewsets.ModelViewSet):
         trip = self.get_object()
         if trip.status in ["EM ANDAMENTO", "CANCELADA"]:
             return Response(
-                {"error": "Não é possível remover o ônibus de uma viagem em andamento ou cancelada."},
+                {
+                    "error": (
+                        "Não é possível remover o ônibus de"
+                        " uma viagem em andamento ou cancelada."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         trip.bus = None
         trip.save()
         return Response({"status": "Ônibus removido com sucesso."})
 
-    @action(detail=False, methods=['post'], url_path='bulk-delete')
+    @action(detail=False, methods=["post"], url_path="bulk-delete")
     def bulk_delete(self, request):
-        ids = request.data.get('ids', [])
+        ids = request.data.get("ids", [])
         if not ids or not isinstance(ids, list):
-            return Response({'detail': 'Lista de IDs inválida.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Lista de IDs inválida."}, status=status.HTTP_400_BAD_REQUEST
+            )
         deleted, _ = Trip.objects.filter(id__in=ids).delete()
-        return Response({'deleted': deleted}, status=status.HTTP_200_OK)
+        return Response({"deleted": deleted}, status=status.HTTP_200_OK)
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -492,14 +577,16 @@ class MyNextTripView(APIView):
             )
 
             base_running_query = (
-                Trip.objects.filter(user_trip_filter)
+                Trip.objects
+                .filter(user_trip_filter)
                 .running()
                 .by_date_gte(yesterday)
                 .distinct()
             )
 
             base_next_query = (
-                Trip.objects.filter(user_trip_filter)
+                Trip.objects
+                .filter(user_trip_filter)
                 .upcoming()
                 .by_date_gte(today)
                 .distinct()
@@ -566,7 +653,7 @@ class GuestPassengerView(APIView):
         serializer = GuestPassengerSerializer(passenger)
         reservetionSerializer = ReservationSerializer()
         reservetionSerializer.reserveToGuest(passenger, trip)
-        sync_trip_status(trip)
+        TripStatusService.sync_trip_status(trip)
         return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)
 
 
@@ -580,9 +667,12 @@ class GuestHistoryView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        guests = GuestPassenger.objects.filter(
-            recorded_by=request.user.civil_servant_profile
-        ).select_related("trip__route").order_by("-trip__trip_date")
+        guests = (
+            GuestPassenger.objects
+            .filter(recorded_by=request.user.civil_servant_profile)
+            .select_related("trip__route")
+            .order_by("-trip__trip_date")
+        )
 
         serializer = GuestHistorySerializer(guests, many=True)
         return Response(serializer.data)

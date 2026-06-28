@@ -1,23 +1,24 @@
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from rest_framework import generics, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.reservations.models import Punishment, Reservation
-from apps.reservations.services import (
-    evict_lowest_priority_active_reservation,
-    sync_trip_status,
-    trip_has_capacity,
-)
+from apps.reservations.services.priority_service import PriorityService
+from apps.trips.services.trip_service import TripService
+from apps.trips.services.trip_status_service import TripStatusService
 
 from ...trips.models import GuestPassenger, Trip, TripPassenger
 from ..models.auth import AllowedStaff
-from ..models.profiles import AdministratorProfile, CivilServantProfile, DriverProfile, StudentProfile
-from ..models.user import CustomUser
+from ..models.profiles import (
+    AdministratorProfile,
+    CivilServantProfile,
+    DriverProfile,
+    StudentProfile,
+)
 from ..permissions import IsDriver, IsSuperAdmin
 from ..serializers.auth import (
     AllowedStaffSearchSerializer,
@@ -156,9 +157,7 @@ class AdminDetailView(generics.GenericAPIView):
 
     def patch(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = AdminUpdateSerializer(
-            instance, data=request.data, partial=True
-        )
+        serializer = AdminUpdateSerializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         updated = serializer.save()
         return Response(AdminListSerializer(updated).data)
@@ -231,7 +230,8 @@ def _build_user_detail_response(profile, profile_type):
 
     if profile_type == "CIVIL-SERVANT":
         guest_qs = (
-            GuestPassenger.objects.filter(recorded_by=profile)
+            GuestPassenger.objects
+            .filter(recorded_by=profile)
             .select_related("trip", "trip__route")
             .order_by("-trip__trip_date")
         )
@@ -258,7 +258,9 @@ def _build_user_detail_response(profile, profile_type):
         },
         "profile": {
             "student_id": profile.student_id if profile_type == "STUDENT" else None,
-            "civil_servant_id": profile.civil_servant_id if profile_type == "CIVIL-SERVANT" else None,
+            "civil_servant_id": profile.civil_servant_id
+            if profile_type == "CIVIL-SERVANT"
+            else None,
         },
         "stats": {
             "total_trips": total_reservations,
@@ -358,7 +360,7 @@ class DriverTripPassengerView(views.APIView):
         ).first()
 
         if existing_reservation:
-            if trip.bus and not trip_has_capacity(trip):
+            if trip.bus and not TripService.trip_has_capacity(trip):
                 return Response(
                     {"detail": "Não há vaga disponível para priorizar o servidor."},
                     status=status.HTTP_409_CONFLICT,
@@ -366,15 +368,15 @@ class DriverTripPassengerView(views.APIView):
 
             existing_reservation.status = "CONFIRMADA"
             existing_reservation.save(update_fields=["status"])
-            sync_trip_status(existing_reservation.trip)
+            TripStatusService.sync_trip_status(existing_reservation.trip)
 
             return Response(
                 {"reservation_id": existing_reservation.id},
                 status=status.HTTP_200_OK,
             )
 
-        if trip.bus and not trip_has_capacity(trip):
-            evicted = evict_lowest_priority_active_reservation(trip)
+        if trip.bus and not TripService.trip_has_capacity(trip):
+            evicted = PriorityService.evict_lowest_priority_active(trip)
             if evicted is None:
                 return Response(
                     {"detail": "Não há vaga disponível para priorizar o servidor."},
@@ -386,7 +388,7 @@ class DriverTripPassengerView(views.APIView):
             allowed_staff=allowed_staff,
             recorded_by=request.user.driver_profile,
         )
-        sync_trip_status(trip)
+        TripStatusService.sync_trip_status(trip)
 
         return Response({"id": passenger.id}, status=status.HTTP_201_CREATED)
 
@@ -504,7 +506,7 @@ class LocalDriverTripPassengerView(views.APIView):
                         trip, allowed_staff, driver, evicted_passengers
                     )
                 )
-                sync_trip_status(trip)
+                TripStatusService.sync_trip_status(trip)
 
                 if fallback is not None:
                     return self._build_response(
@@ -513,37 +515,38 @@ class LocalDriverTripPassengerView(views.APIView):
                                 PassengerSerializer.reservation_passenger(fallback)
                             )
                         },
-                        evicted_passengers, trip, status.HTTP_200_OK,
+                        evicted_passengers,
+                        trip,
+                        status.HTTP_200_OK,
                     )
                 return self._build_response(
                     {"passenger": PassengerSerializer.local_passenger(passenger)},
-                    evicted_passengers, trip,
+                    evicted_passengers,
+                    trip,
                     status.HTTP_201_CREATED if created else status.HTTP_200_OK,
                 )
 
             # --- local guest ---
             associated_staff = serializer.validated_data["associated_staff"]
-            server_passenger, _, fallback = (
-                LocalPassengerService.ensure_local_server(
-                    trip, associated_staff, driver, evicted_passengers
-                )
+            server_passenger, _, fallback = LocalPassengerService.ensure_local_server(
+                trip, associated_staff, driver, evicted_passengers
             )
-            sync_trip_status(trip)
+            TripStatusService.sync_trip_status(trip)
 
             passenger = LocalPassengerService.register_local_guest(
-                trip, associated_staff,
+                trip,
+                associated_staff,
                 serializer.validated_data["cpf"],
                 serializer.validated_data["full_name"],
-                driver, evicted_passengers,
+                driver,
+                evicted_passengers,
             )
-            sync_trip_status(trip)
+            TripStatusService.sync_trip_status(trip)
 
-            payload = {
-                "passenger": PassengerSerializer.local_passenger(passenger)
-            }
+            payload = {"passenger": PassengerSerializer.local_passenger(passenger)}
             if server_passenger is not None:
-                payload["associated_server"] = (
-                    PassengerSerializer.local_passenger(server_passenger)
+                payload["associated_server"] = PassengerSerializer.local_passenger(
+                    server_passenger
                 )
             elif fallback is not None:
                 payload["associated_server"] = (
@@ -551,7 +554,9 @@ class LocalDriverTripPassengerView(views.APIView):
                 )
 
             return self._build_response(
-                payload, evicted_passengers, trip,
+                payload,
+                evicted_passengers,
+                trip,
                 status.HTTP_201_CREATED,
             )
 

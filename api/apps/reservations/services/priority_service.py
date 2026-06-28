@@ -55,5 +55,6 @@ class PriorityService:
         lowest = sorted(
             removable, key=PriorityService.get_priority_tuple, reverse=True
         )[0]
-        lowest.delete()
+        lowest.status = "LISTA SECUNDÁRIA"
+        lowest.save(update_fields=["status"])
         return lowest

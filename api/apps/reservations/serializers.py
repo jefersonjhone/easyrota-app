@@ -3,13 +3,12 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from ..trips.models import GuestPassenger, Trip
+from ..trips.services.trip_service import TripService
+from ..trips.services.trip_status_service import TripStatusService
 from ..users.models.profiles import CivilServantProfile, StudentProfile
 from .models import Punishment, Reservation
-from .services import (
-    is_reservation_open,
-    reservation_cutoff,
-    trip_has_quorum,
-)
+from .services.notification_service import send_admin_leftover_server_alert
+from .services.priority_service import PriorityService
 from .services.reservation_service import ReservationService
 
 
@@ -33,18 +32,8 @@ class ReservationSerializer(serializers.ModelSerializer):
         if trip.status == "CANCELADA":
             raise serializers.ValidationError("Esta viagem foi cancelada.")
 
-        if not is_reservation_open(trip):
+        if not TripService.is_reservation_open(trip):
             raise serializers.ValidationError("Prazo de reserva encerrado.")
-
-        if hasattr(user, "civil_servant_profile"):
-            current_date = timezone.localdate()
-            if (
-                trip.trip_date.isocalendar().week != current_date.isocalendar().week
-                or trip.trip_date.isocalendar().year != current_date.isocalendar().year
-            ):
-                raise serializers.ValidationError(
-                    "Servidor só pode reservar durante a semana vigente."
-                )
 
         if (
             hasattr(user, "student_profile")
@@ -76,16 +65,11 @@ class ReservationSerializer(serializers.ModelSerializer):
         elif hasattr(user, "civil_servant_profile"):
             reservation.civil_servant = user.civil_servant_profile
 
-        if trip_has_capacity(trip):
-            reservation.status = get_reservation_status_for_user(user, trip)
+        if TripService.trip_has_capacity(trip):
+            reservation.status = ReservationService.get_status_for_user(user)
         elif hasattr(user, "civil_servant_profile"):
             # If full, try to evict a student to accommodate the civil servant
-            from .services import (
-                evict_lowest_priority_active_reservation,
-                send_admin_leftover_server_alert,
-            )
-
-            evicted = evict_lowest_priority_active_reservation(trip)
+            evicted = PriorityService.evict_lowest_priority_active(trip)
             if evicted:
                 reservation.status = "CONFIRMADA"
             else:
@@ -178,18 +162,16 @@ class ActiveReservationSerializer(serializers.ModelSerializer):
         return "—"
 
     def get_can_cancel(self, obj):
-        return is_reservation_open(obj.trip) and obj.trip.status not in {
+        return TripService.is_reservation_open(obj.trip) and obj.trip.status not in {
             "CANCELADA",
             "CONCLUÍDA",
         }
 
     def get_quorum_met(self, obj):
-        return trip_has_quorum(obj.trip)
+        return TripService.trip_has_quorum(obj.trip)
 
     def _get_trip_metrics(self, obj):
         from datetime import datetime, timedelta
-
-        from django.utils import timezone
 
         time_zone = timezone.get_current_timezone()
         trip = obj.trip
@@ -213,7 +195,6 @@ class ActiveReservationSerializer(serializers.ModelSerializer):
         return trip.departure_timestamp, total_duration
 
     def get_percentage_complete(self, obj):
-        from django.utils import timezone
 
         trip = obj.trip
 
@@ -249,8 +230,6 @@ class ActiveReservationSerializer(serializers.ModelSerializer):
 
     def get_minutes_remaining(self, obj):
         from datetime import timedelta
-
-        from django.utils import timezone
 
         trip = obj.trip
 
@@ -322,8 +301,9 @@ class ActiveReservationSerializer(serializers.ModelSerializer):
         guests = obj.trip.guestpassenger_set.all()
         guest_ids = [g.id for g in guests]
         res_ids = dict(
-            Reservation.objects.filter(guest_passenger_id__in=guest_ids, trip=obj.trip)
-            .values_list("guest_passenger_id", "id")
+            Reservation.objects.filter(
+                guest_passenger_id__in=guest_ids, trip=obj.trip
+            ).values_list("guest_passenger_id", "id")
         )
         return [
             {
@@ -397,13 +377,13 @@ class ReservationHistorySerializer(serializers.ModelSerializer):
         return "PENDENTE"
 
     def get_can_cancel(self, obj):
-        return is_reservation_open(obj.trip) and obj.trip.status not in {
+        return TripService.is_reservation_open(obj.trip) and obj.trip.status not in {
             "CANCELADA",
             "CONCLUÍDA",
         }
 
     def get_quorum_met(self, obj):
-        return trip_has_quorum(obj.trip)
+        return TripService.trip_has_quorum(obj.trip)
 
     def get_total_trips(self, obj):
         """Returns the total number of trips the user has booked."""
@@ -461,11 +441,9 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         ).count()
 
     def get_available_seats(self, obj):
-        from .services import get_trip_occupancy
-        
-        total_occupied, server_occupied = get_trip_occupancy(obj)
+        total_occupied, server_occupied = TripService.get_trip_occupancy(obj)
         seating_capacity = obj.bus.seating_capacity if obj.bus else 0
-        
+
         user = self.context["request"].user
         if hasattr(user, "civil_servant_profile"):
             # For servers, show capacity minus other servers
@@ -475,40 +453,45 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         return max(seating_capacity - total_occupied, 0)
 
     def get_is_full(self, obj):
-        return self.get_available_seats(obj) == 0   
+        return self.get_available_seats(obj) == 0
 
     def get_is_reservable(self, obj):
-        base_reservable = obj.status != "CANCELADA" and is_reservation_open(obj)
+        base_reservable = obj.status != "CANCELADA" and TripService.is_reservation_open(
+            obj
+        )
         if not base_reservable:
             return False
 
         if self.get_available_seats(obj) > 0:
             return True
 
-        # Special case: Civil servants can reserve 
+        # Special case: Civil servants can reserve
         # if full but an unallocated bus is available
         user = self.context["request"].user
         if hasattr(user, "civil_servant_profile"):
-            from ..trips.services import has_available_bus
+            from ..trips.services.trip_service import has_available_bus
+
             return has_available_bus(obj.trip_date, obj.route)
 
         return False
 
     def get_quorum_met(self, obj):
-        return trip_has_quorum(obj)
+        return TripService.trip_has_quorum(obj)
 
     def get_reservation_deadline(self, obj):
-        return reservation_cutoff(obj)
+        return TripService.reservation_cutoff(obj)
 
 
 class AdminReservationListSerializer(serializers.ModelSerializer):
     passenger_name = serializers.SerializerMethodField()
     passenger_type = serializers.SerializerMethodField()
     passenger_id_display = serializers.SerializerMethodField()
-    trip_id = serializers.IntegerField(source="trip.id")
+    trip_id = serializers.UUIDField(source="trip.id")
     trip_date = serializers.DateField(source="trip.trip_date")
     route = serializers.SerializerMethodField()
-    departure_time = serializers.TimeField(source="trip.route.departure_time", format="%H:%M")
+    departure_time = serializers.TimeField(
+        source="trip.route.departure_time", format="%H:%M"
+    )
     trip_status = serializers.CharField(source="trip.status")
 
     class Meta:
@@ -561,8 +544,10 @@ class AdminReservationListSerializer(serializers.ModelSerializer):
 
 class AdminCreateReservationSerializer(serializers.Serializer):
     trip = serializers.PrimaryKeyRelatedField(queryset=Trip.objects.all())
-    passenger_type = serializers.ChoiceField(choices=["ESTUDANTE", "SERVIDOR", "CONVIDADO"])
-    profile_id = serializers.IntegerField(required=False, allow_null=True, default=None)
+    passenger_type = serializers.ChoiceField(
+        choices=["ESTUDANTE", "SERVIDOR", "CONVIDADO"]
+    )
+    profile_id = serializers.UUIDField(required=False, allow_null=True, default=None)
     guest_name = serializers.CharField(required=False, allow_blank=True, default="")
     guest_cpf = serializers.CharField(required=False, allow_blank=True, default="")
 
@@ -579,17 +564,17 @@ class AdminCreateReservationSerializer(serializers.Serializer):
         if passenger_type in ("ESTUDANTE", "SERVIDOR"):
             profile_id = data.get("profile_id")
             if not profile_id:
-                raise serializers.ValidationError(
-                    {"profile_id": "Campo obrigatório para estudante/servidor."}
-                )
+                raise serializers.ValidationError({
+                    "profile_id": "Campo obrigatório para estudante/servidor."
+                })
 
             if passenger_type == "ESTUDANTE":
                 try:
                     profile = StudentProfile.objects.get(id=profile_id)
                 except StudentProfile.DoesNotExist:
-                    raise serializers.ValidationError(
-                        {"profile_id": "Estudante não encontrado."}
-                    )
+                    raise serializers.ValidationError({
+                        "profile_id": "Estudante não encontrado."
+                    })
                 if Reservation.objects.filter(trip=trip, student=profile).exists():
                     raise serializers.ValidationError(
                         "Estudante já possui reserva nesta viagem."
@@ -600,10 +585,12 @@ class AdminCreateReservationSerializer(serializers.Serializer):
                 try:
                     profile = CivilServantProfile.objects.get(id=profile_id)
                 except CivilServantProfile.DoesNotExist:
-                    raise serializers.ValidationError(
-                        {"profile_id": "Servidor não encontrado."}
-                    )
-                if Reservation.objects.filter(trip=trip, civil_servant=profile).exists():
+                    raise serializers.ValidationError({
+                        "profile_id": "Servidor não encontrado."
+                    })
+                if Reservation.objects.filter(
+                    trip=trip, civil_servant=profile
+                ).exists():
                     raise serializers.ValidationError(
                         "Servidor já possui reserva nesta viagem."
                     )
@@ -613,9 +600,9 @@ class AdminCreateReservationSerializer(serializers.Serializer):
             guest_name = data.get("guest_name", "").strip()
             guest_cpf = data.get("guest_cpf", "").strip()
             if not guest_name or not guest_cpf:
-                raise serializers.ValidationError(
-                    {"guest_name": "Nome e CPF obrigatórios para convidado."}
-                )
+                raise serializers.ValidationError({
+                    "guest_name": "Nome e CPF obrigatórios para convidado."
+                })
 
             guest = GuestPassenger.objects.filter(cpf=guest_cpf, trip=trip).first()
             if guest:
@@ -643,15 +630,10 @@ class AdminCreateReservationSerializer(serializers.Serializer):
             reservation.guest_passenger = guest
 
         with transaction.atomic():
-            from .services import (
-                evict_lowest_priority_active_reservation,
-                send_admin_leftover_server_alert,
-            )
-
-            if trip_has_capacity(trip):
+            if TripService.trip_has_capacity(trip):
                 reservation.status = "CONFIRMADA"
             elif validated_data.get("civil_servant"):
-                evicted = evict_lowest_priority_active_reservation(trip)
+                evicted = PriorityService.evict_lowest_priority_active(trip)
                 if evicted:
                     reservation.status = "CONFIRMADA"
                 else:
@@ -664,8 +646,7 @@ class AdminCreateReservationSerializer(serializers.Serializer):
 
             reservation.save()
 
-        from .services import sync_trip_status
-        sync_trip_status(trip)
+        TripStatusService.sync_trip_status(trip)
 
         return reservation
 
@@ -677,7 +658,7 @@ class ManageReservationSerializer(serializers.ModelSerializer):
 
 
 class AdminTripReservationsGroupSerializer(serializers.Serializer):
-    trip_id = serializers.IntegerField()
+    trip_id = serializers.UUIDField()
     trip_date = serializers.DateField()
     departure_time = serializers.TimeField(format="%H:%M")
     route = serializers.CharField()
@@ -699,7 +680,9 @@ class AdminPunishmentListSerializer(serializers.ModelSerializer):
     student_id_display = serializers.SerializerMethodField()
     trip_date = serializers.DateField(source="reservation.trip.trip_date")
     route = serializers.SerializerMethodField()
-    departure_time = serializers.TimeField(source="reservation.trip.route.departure_time", format="%H:%M")
+    departure_time = serializers.TimeField(
+        source="reservation.trip.route.departure_time", format="%H:%M"
+    )
     reservation_id = serializers.IntegerField(source="reservation.id")
 
     class Meta:
@@ -724,11 +707,13 @@ class AdminPunishmentListSerializer(serializers.ModelSerializer):
         return obj.student.student_id
 
     def get_route(self, obj):
-        return f"{obj.reservation.trip.route.origin} → {obj.reservation.trip.route.destiny}"
+        origin = obj.reservation.trip.route.origin
+        destiny = obj.reservation.trip.route.destiny
+        return f"{origin} → {destiny}"
 
 
 class AdminTripPunishmentsGroupSerializer(serializers.Serializer):
-    trip_id = serializers.IntegerField()
+    trip_id = serializers.UUIDField()
     trip_date = serializers.DateField()
     departure_time = serializers.TimeField(format="%H:%M")
     route = serializers.CharField()

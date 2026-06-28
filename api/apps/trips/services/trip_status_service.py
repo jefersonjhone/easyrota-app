@@ -6,6 +6,7 @@ from django.utils import timezone
 logger = logging.getLogger("api")
 
 QUORUM_MIN_SERVERS = 1
+QUORUM_WARNING_THRESHOLD = 0.75
 
 
 class TripStatusService:
@@ -23,13 +24,13 @@ class TripStatusService:
         to determine the correct operational status.
         Persists the change if different from current.
         """
-        if trip.status in ["CONCLU\u00cdDA", "CANCELADA"]:
+        if trip.status in ["CONCLUÍDA", "CANCELADA"]:
             return trip
 
         now = timezone.now()
 
         if trip.arrival_timestamp:
-            real_status = "CONCLU\u00cdDA"
+            real_status = "CONCLUÍDA"
         elif trip.departure_timestamp:
             real_status = "EM ANDAMENTO"
         else:
@@ -78,15 +79,15 @@ class TripStatusService:
         Recalculate and persist trip status based on occupancy and quorum.
         Also manages quorum-related push notifications.
         """
-        if trip.status in {"CANCELADA", "CONCLU\u00cdDA", "EM ANDAMENTO"}:
+        if trip.status in {"CANCELADA", "CONCLUÍDA", "EM ANDAMENTO"}:
             return trip
 
-        from apps.notifications.services import NotificationService
+        from apps.notifications.services.notification_service import NotificationService
 
         from .trip_service import TripService
 
         _passengers, servers = TripService.get_trip_occupancy(trip)
-        trip.reserved_seats = servers
+        trip.reserved_seats = _passengers
         trip.save(update_fields=["reserved_seats"])
 
         # Determine desired status
@@ -98,6 +99,19 @@ class TripStatusService:
             desired_status = "RISCO DE CANCELAMENTO"
         else:
             desired_status = "RISCO DE CANCELAMENTO"
+
+        if servers / trip.seating_capacity > QUORUM_WARNING_THRESHOLD:
+            origin = trip.origin
+            dest = trip.destination
+            payload = {
+                "message": (
+                    f"A viagem {origin} para {dest} {trip.date} está com "
+                    f"{servers} reservas de servidores, pode ser"
+                    "necessário alocar um mais um veículo."
+                ),
+                "subject": f"Alerta: viagem {origin}→{dest} {trip.date}",
+            }
+            NotificationService.notify_admin(trip, payload)
 
         if trip.status != desired_status:
             trip.status = desired_status
@@ -123,21 +137,25 @@ class TripStatusService:
 
     @staticmethod
     def _notification_users(trip):
-        from apps.notifications.services import NotificationService
+        from apps.notifications.services.notification_service import NotificationService
+
         return NotificationService._trip_notification_users(trip)
 
     @staticmethod
     def _send_push(trip, payload):
-        from apps.notifications.services import PushService
+        from apps.notifications.services.push_service import PushService
+
         recipients = TripStatusService._notification_users(trip)
         return PushService.send_to_users(recipients, payload)
 
     @staticmethod
     def _send_quorum_met_notification(trip):
-        from apps.notifications.services import NotificationService
+        from apps.notifications.services.notification_service import NotificationService
+
         return NotificationService.notify_quorum_met(trip)
 
     @staticmethod
     def send_quorum_warning_notification(trip):
-        from apps.notifications.services import NotificationService
+        from apps.notifications.services.notification_service import NotificationService
+
         return NotificationService.notify_quorum_warning(trip)

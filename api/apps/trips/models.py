@@ -124,7 +124,9 @@ class Occurrence(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     event_date = models.DateField()
-    status = models.CharField(max_length=30, choices=STATUS_OCCURRENCE, default="")
+    status = models.CharField(
+        max_length=30, choices=STATUS_OCCURRENCE, default="CANCELADO"
+    )
 
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
     administrator = models.ForeignKey(
@@ -179,7 +181,8 @@ class TripPassenger(models.Model):
         if self.passenger_type == self.PassengerType.LOCAL_GUEST:
             return f"{self.full_name} on {self.trip}"
 
-        return f"{self.allowed_staff} on {self.trip}"
+        name = self.allowed_staff.name if self.allowed_staff_id else "Servidor local"
+        return f"{name} on {self.trip}"
 
 
 class GuestPassengerManager(models.Manager):
@@ -208,7 +211,7 @@ class GuestPassenger(models.Model):
         to=CivilServantProfile, on_delete=models.SET_NULL, null=True
     )
     full_name = models.CharField(max_length=255)
-    
+
     objects = GuestPassengerManager()
 
     class Meta:

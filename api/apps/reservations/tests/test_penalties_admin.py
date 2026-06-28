@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+from uuid import uuid4
 
 from django.urls import reverse
 from django.utils import timezone
@@ -158,8 +159,8 @@ class AdminPunishmentGroupedByTripTest(BaseReservationTestCase):
         response = self.client.get(self.url, format="json")
         data = response.data
 
-        trip1_group = next(g for g in data if g["trip_id"] == self.trip1.id)
-        trip2_group = next(g for g in data if g["trip_id"] == self.trip2.id)
+        trip1_group = next(g for g in data if str(g["trip_id"]) == str(self.trip1.id))
+        trip2_group = next(g for g in data if str(g["trip_id"]) == str(self.trip2.id))
 
         self.assertEqual(trip1_group["punishment_count"], 2)
         self.assertEqual(trip2_group["punishment_count"], 1)
@@ -324,7 +325,7 @@ class AdminPunishmentToggleTest(BaseReservationTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_toggle_nonexistent_punishment_returns_404(self):
-        url = reverse("admin-punishment-detail", args=[99999])
+        url = reverse("admin-punishment-detail", args=[uuid4()])
         self.client.force_authenticate(user=self.admin_user)
 
         response = self.client.patch(url, {"is_active": False}, format="json")
@@ -386,7 +387,7 @@ class AdminPunishmentDeleteTest(BaseReservationTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_nonexistent_punishment_returns_404(self):
-        url = reverse("admin-punishment-detail", args=[99999])
+        url = reverse("admin-punishment-detail", args=[uuid4()])
         self.client.force_authenticate(user=self.admin_user)
 
         response = self.client.delete(url, format="json")

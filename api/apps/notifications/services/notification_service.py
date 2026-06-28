@@ -22,6 +22,21 @@ class NotificationService:
     # ------------------------------------------------------------------
     # Trip notifications
     # ------------------------------------------------------------------
+    @staticmethod
+    def notify_route_admin(trip, payload: dict) -> bool:
+        """Send push to the trip admin."""
+        admin = trip.route.administrator
+        if not admin:
+            return False
+        return PushService.send_to_users([admin.user], payload) > 0
+
+    @staticmethod
+    def notify_admin(trip, payload: dict) -> bool:
+        """Send email to the trip admin."""
+        admin = trip.route.administrator
+        if not admin:
+            return False
+        return EmailService.send_to_users([admin.user], payload) > 0
 
     @staticmethod
     def notify_trip_users(trip, payload: dict) -> bool:

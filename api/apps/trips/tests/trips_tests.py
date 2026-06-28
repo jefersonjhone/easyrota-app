@@ -175,7 +175,7 @@ class TripAPITestCase(APITestCase):
 
         list_response = self.client.get(self.trip_list_url)
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertNotIn(trip.id, [item["id"] for item in list_response.data])
+        self.assertNotIn(str(trip.id), [item["id"] for item in list_response.data])
 
         detail_response = self.client.get(
             reverse("trip-detail", kwargs={"pk": trip.id})
@@ -203,9 +203,7 @@ class TripAPITestCase(APITestCase):
             "trip_date" in error_fields or "route" in error_fields,
             f"Expected trip_date or route error, got {error_fields}",
         )
-        error_text = str(
-            response.data.get("trip_date", response.data.get("route", ""))
-        )
+        error_text = str(response.data.get("trip_date", response.data.get("route", "")))
         expected_sub = (
             "não pode estar no passado"
             if "trip_date" in error_fields
@@ -217,14 +215,14 @@ class TripAPITestCase(APITestCase):
         )
 
     def test_cannot_create_trip_for_past_time_today(self):
-        """It ensures that the system blocks trips for times 
+        """It ensures that the system blocks trips for times
         that already passed today.
         """
 
         self.client.force_authenticate(user=self.admin_user)
 
         now = timezone.localtime()
-        # If it's before 2 AM, we can't easily test a "past time today" 
+        # If it's before 2 AM, we can't easily test a "past time today"
         # that exceeds the 1-hour grace period.
         if now.hour < 2:
             return
@@ -264,10 +262,10 @@ class TripAPITestCase(APITestCase):
                 response = self.client.post(self.trip_list_url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("route", response.data)
+        self.assertIn("trip_date", response.data)
         self.assertIn(
-            "Não é possível agendar uma viagem para um horário que já passou hoje.",
-            response.data["route"],
+            "A data da viagem não pode estar no passado.",
+            response.data["trip_date"],
         )
 
     def test_double_booking_standard(self):
@@ -676,14 +674,17 @@ class TripCheckInAPITests(APITestCase):
     def test_check_in_rejects_passenger_without_trip_reservation(self):
         self.client.force_authenticate(user=self.driver_user)
 
+        pid = f"{self.reservation.id}@{self.passenger_without_reservation.id}"
         response = self.client.post(
             self.url,
-            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_without_reservation.id}"},
+            {"passenger_identifier": pid},
             format="json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["error"], "QR Code invalido ou usuario inexistente.")
+        self.assertEqual(
+            response.data["error"], "QR Code invalido ou usuario inexistente."
+        )
 
     def test_check_in_rejects_driver_not_associated_with_trip(self):
         self.client.force_authenticate(user=self.other_driver_user)

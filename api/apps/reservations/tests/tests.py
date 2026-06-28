@@ -6,20 +6,17 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from apps.reservations.models import Punishment, Reservation
+from apps.reservations.services.priority_service import PriorityService
+from apps.reservations.services.punishment_service import process_trip_punishments
 from apps.trips.models import Bus, Route, Trip
+from apps.trips.services.trip_service import TripService
 from apps.users.models import (
     AdministratorProfile,
     CivilServantProfile,
     CustomUser,
     DriverProfile,
     StudentProfile,
-)
-from apps.reservations.models import Punishment, Reservation
-from apps.reservations.services import (
-    get_priority_tuple,
-    process_trip_punishments,
-    trip_has_capacity,
-    trip_has_quorum,
 )
 
 
@@ -134,7 +131,9 @@ class ReservationTest(BaseReservationTestCase):
             timezone.get_current_timezone(),
         ) + timedelta(minutes=31)
 
-        with patch("apps.reservations.services.timezone.now", return_value=cutoff_time):
+        with patch(
+            "apps.trips.services.trip_service.timezone.now", return_value=cutoff_time
+        ):
             response = self.client.post(
                 self.url,
                 data={"trip": trip.id},
@@ -252,11 +251,11 @@ class AvailableTripsTest(BaseReservationTestCase):
 
     def test_trip_has_quorum_counts_driver_registered_server(self):
         trip = self.create_trip(days_ahead=1)
-        self.assertFalse(trip_has_quorum(trip))
+        self.assertFalse(TripService.trip_has_quorum(trip))
 
     def test_trip_capacity_counts_trip_passengers(self):
         trip = self.create_trip(days_ahead=1)
-        self.assertTrue(trip_has_capacity(trip))
+        self.assertTrue(TripService.trip_has_capacity(trip))
 
 
 class PunishmentSystemTestCase(BaseReservationTestCase):
@@ -346,7 +345,7 @@ class PunishmentSystemTestCase(BaseReservationTestCase):
 
         new_reservation = self.create_reservation(trip=self.trip, student=clean_profile)
 
-        priority, _ = get_priority_tuple(new_reservation)
+        priority, _ = PriorityService.get_priority_tuple(new_reservation)
         self.assertEqual(priority, 1)
 
         old_trip_1 = self.create_trip(days_ahead=-1)
@@ -358,7 +357,7 @@ class PunishmentSystemTestCase(BaseReservationTestCase):
             description="Primeira Falta",
         )
 
-        priority, _ = get_priority_tuple(new_reservation)
+        priority, _ = PriorityService.get_priority_tuple(new_reservation)
         self.assertEqual(priority, 2)
 
         old_trip_2 = self.create_trip(days_ahead=-2)
@@ -370,7 +369,7 @@ class PunishmentSystemTestCase(BaseReservationTestCase):
             description="Segunda Falta",
         )
 
-        priority, _ = get_priority_tuple(new_reservation)
+        priority, _ = PriorityService.get_priority_tuple(new_reservation)
         self.assertEqual(priority, 3)
 
     def test_forgive_only_one_punishment_on_presence(self):

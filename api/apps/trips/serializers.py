@@ -46,20 +46,37 @@ class BusAdminDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Bus
-        fields = ["id", "number_plate", "brand", "seating_capacity", "status", "trip_count", "recent_trips"]
+        fields = [
+            "id",
+            "number_plate",
+            "brand",
+            "seating_capacity",
+            "status",
+            "trip_count",
+            "recent_trips",
+        ]
 
     def get_trip_count(self, obj):
         from .models import Trip
+
         return Trip.objects.filter(bus=obj).count()
 
     def get_recent_trips(self, obj):
         from .models import Trip
-        trips = Trip.objects.filter(bus=obj).select_related("route").order_by("-trip_date")[:50]
+
+        trips = (
+            Trip.objects
+            .filter(bus=obj)
+            .select_related("route")
+            .order_by("-trip_date")[:50]
+        )
         return [
             {
                 "id": t.id,
                 "trip_date": t.trip_date,
-                "departure_time": t.route.departure_time.strftime("%H:%M") if t.route else None,
+                "departure_time": t.route.departure_time.strftime("%H:%M")
+                if t.route
+                else None,
                 "origin": t.route.origin if t.route else None,
                 "destiny": t.route.destiny if t.route else None,
                 "status": t.status,
@@ -149,6 +166,8 @@ class TripSerializer(serializers.ModelSerializer):
     arrival_time = serializers.TimeField(
         source="route.arrival_time", format="%H:%M", read_only=True
     )
+    expected_departure = serializers.SerializerMethodField(read_only=True)
+    expected_arrival = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Trip
@@ -228,6 +247,24 @@ class TripSerializer(serializers.ModelSerializer):
 
         return passengers
 
+    def get_expected_departure(self, obj) -> str | None:
+        from apps.trips.services.trip_service import TripService
+
+        try:
+            dep = TripService._departure_datetime(obj)
+            return dep.isoformat()
+        except AttributeError:
+            return None
+
+    def get_expected_arrival(self, obj) -> str | None:
+        from apps.trips.services.trip_service import TripService
+
+        try:
+            arr = TripService._arrival_datetime(obj)
+            return arr.isoformat()
+        except AttributeError:
+            return None
+
     def get_bus_plate(self, obj):
         if obj.bus_id:
             return obj.bus.number_plate
@@ -237,9 +274,7 @@ class TripSerializer(serializers.ModelSerializer):
         return Reservation.objects.filter(trip=obj, student__isnull=False).count()
 
     def get_servants_count(self, obj):
-        return Reservation.objects.filter(
-            trip=obj, civil_servant__isnull=False
-        ).count()
+        return Reservation.objects.filter(trip=obj, civil_servant__isnull=False).count()
 
     def validate_trip_date(self, value):
         today = timezone.localtime().date()
@@ -252,6 +287,96 @@ class TripSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Delegate all business rule validation to TripService."""
         return TripService.validate_trip(data, instance=self.instance)
+
+
+class AvailableTripSerializer(serializers.ModelSerializer):
+    trip_date = serializers.DateField(format="%d/%m/%Y", read_only=True)
+    departure_time = serializers.TimeField(
+        source="route.departure_time", format="%H:%M", read_only=True
+    )
+    origin = serializers.CharField(source="route.origin", read_only=True)
+    destiny = serializers.CharField(source="route.destiny", read_only=True)
+    bus_brand = serializers.CharField(source="bus.brand", read_only=True)
+    status_trip = serializers.SerializerMethodField()
+    reserved_seats = serializers.SerializerMethodField()
+    available_seats = serializers.SerializerMethodField()
+    server_reserved_seats = serializers.SerializerMethodField()
+    is_full = serializers.SerializerMethodField()
+    is_reservable = serializers.SerializerMethodField()
+    quorum_met = serializers.SerializerMethodField()
+    reservation_deadline = serializers.SerializerMethodField()
+    user_is_reserved = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Trip
+        fields = [
+            "id",
+            "trip_date",
+            "origin",
+            "destiny",
+            "departure_time",
+            "bus_brand",
+            "status_trip",
+            "available_seats",
+            "reserved_seats",
+            "server_reserved_seats",
+            "is_full",
+            "is_reservable",
+            "quorum_met",
+            "reservation_deadline",
+            "user_is_reserved",
+        ]
+
+    def get_status_trip(self, obj):
+        return obj.get_status_display()
+
+    def get_reserved_seats(self, obj):
+        return Reservation.objects.filter(trip=obj).count()
+
+    def get_server_reserved_seats(self, obj):
+        return Reservation.objects.filter(
+            trip=obj, civil_servant__isnull=False, status__in=["CONFIRMADA", "PENDENTE"]
+        ).count()
+
+    def get_available_seats(self, obj):
+        total_occupied, server_occupied = TripService.get_trip_occupancy(obj)
+        seating_capacity = obj.bus.seating_capacity if obj.bus else 46
+        user = self.context["request"].user
+        if hasattr(user, "civil_servant_profile"):
+            # For servers, show capacity minus other servers
+            return max(seating_capacity - server_occupied, 0)
+
+        # For students and others, show total occupied
+        return max(seating_capacity - total_occupied, 0)
+
+    def get_is_full(self, obj):
+        return self.get_available_seats(obj) == 0
+
+    def get_is_reservable(self, obj):
+        base_reservable = obj.status != "CANCELADA" and TripService.is_reservation_open(
+            obj
+        )
+        if not base_reservable:
+            return False
+
+        if self.get_available_seats(obj) > 0:
+            return True
+
+        # Special case: Civil servants can reserve
+        # if full but an unallocated bus is available
+        user = self.context["request"].user
+        if hasattr(user, "civil_servant_profile"):
+            from ..trips.services.trip_service import has_available_bus
+
+            return has_available_bus(obj.trip_date, obj.route)
+
+        return False
+
+    def get_quorum_met(self, obj):
+        return TripService.trip_has_quorum(obj)
+
+    def get_reservation_deadline(self, obj):
+        return TripService.reservation_cutoff(obj)
 
 
 class TripCurrentScreenSerializer(serializers.ModelSerializer):
@@ -462,7 +587,9 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
 class AdminTripDetailSerializer(serializers.ModelSerializer):
     origin = serializers.CharField(source="route.origin")
     destiny = serializers.CharField(source="route.destiny")
-    departure_time = serializers.TimeField(source="route.departure_time", format="%H:%M")
+    departure_time = serializers.TimeField(
+        source="route.departure_time", format="%H:%M"
+    )
     arrival_time = serializers.TimeField(source="route.arrival_time", format="%H:%M")
     trip_departure_time = serializers.SerializerMethodField()
     trip_arrival_time = serializers.SerializerMethodField()
@@ -480,13 +607,25 @@ class AdminTripDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trip
         fields = [
-            "id", "trip_date", "status",
-            "origin", "destiny", "departure_time", "arrival_time",
-            "trip_departure_time", "trip_arrival_time",
-            "driver_name", "driver_cnh", "driver_id",
-            "bus_plate", "bus_brand", "bus_capacity", "bus_id",
+            "id",
+            "trip_date",
+            "status",
+            "origin",
+            "destiny",
+            "departure_time",
+            "arrival_time",
+            "trip_departure_time",
+            "trip_arrival_time",
+            "driver_name",
+            "driver_cnh",
+            "driver_id",
+            "bus_plate",
+            "bus_brand",
+            "bus_capacity",
+            "bus_id",
             "seating_capacity",
-            "active_reservations", "checked_in_count",
+            "active_reservations",
+            "checked_in_count",
             "passengers",
         ]
 
@@ -523,10 +662,12 @@ class AdminTripDetailSerializer(serializers.ModelSerializer):
 
     def get_active_reservations(self, obj):
         from ..reservations.models import Reservation
+
         return Reservation.objects.filter(trip=obj).count()
 
     def get_checked_in_count(self, obj):
         from ..reservations.models import Reservation
+
         return (
             Reservation.objects.filter(trip=obj, check_in=True).count()
             + obj.trip_passengers.count()
@@ -534,6 +675,7 @@ class AdminTripDetailSerializer(serializers.ModelSerializer):
 
     def get_passengers(self, obj):
         from ..reservations.models import Reservation
+
         reservations = Reservation.objects.filter(trip=obj).select_related(
             "student__user", "civil_servant__user", "guest_passenger"
         )
@@ -563,14 +705,19 @@ class AdminTripDetailSerializer(serializers.ModelSerializer):
                 "passenger_name": name,
                 "passenger_type": ptype,
                 "passenger_id_display": pid,
-                "profile_id": r.student.id if r.student else (r.civil_servant.id if r.civil_servant else None),
+                "profile_id": r.student.id
+                if r.student
+                else (r.civil_servant.id if r.civil_servant else None),
                 "reservation_status": r.status,
                 "check_in": r.check_in,
                 "checkin_date": r.checkin_date,
             })
 
         for tp in trip_passengers:
-            if tp.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER and tp.allowed_staff:
+            if (
+                tp.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER
+                and tp.allowed_staff
+            ):
                 name = tp.allowed_staff.name
                 pid = tp.allowed_staff.registration_number
                 ptype = "SERVIDOR LOCAL"
@@ -595,7 +742,7 @@ class AdminTripDetailSerializer(serializers.ModelSerializer):
         passengers.sort(key=lambda p: p["id"], reverse=True)
         return passengers
 
-        
+
 class GuestHistorySerializer(serializers.ModelSerializer):
     """Serializes a guest with trip context for history display."""
 
@@ -606,4 +753,11 @@ class GuestHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GuestPassenger
-        fields = ("id", "full_name", "trip_id", "trip_origin", "trip_destiny", "trip_date")
+        fields = (
+            "id",
+            "full_name",
+            "trip_id",
+            "trip_origin",
+            "trip_destiny",
+            "trip_date",
+        )

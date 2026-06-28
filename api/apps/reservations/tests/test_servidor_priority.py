@@ -4,8 +4,9 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from apps.reservations.models import Reservation
-from apps.reservations.services import trip_has_capacity
 from apps.trips.models import Bus, Route, Trip
+from apps.trips.services.trip_service import TripService
+from apps.trips.services.trip_status_service import TripStatusService
 from apps.users.models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
@@ -73,7 +74,6 @@ def server_user(db):
 
 @pytest.mark.django_db
 def test_civil_servant_displaces_student(trip, student_user, server_user):
-    from apps.reservations.services import sync_trip_status
     # Fill trip with students (capacity is 2)
     s2_user = User.objects.create_user(
         email="student2@test.com", password="password123", full_name="Student Two"
@@ -86,9 +86,9 @@ def test_civil_servant_displaces_student(trip, student_user, server_user):
     Reservation.objects.create(
         trip=trip, student=s2_user.student_profile, status="CONFIRMADA"
         )
-    sync_trip_status(trip)
+    TripStatusService.sync_trip_status(trip)
     
-    assert not trip_has_capacity(trip)
+    assert not TripService.trip_has_capacity(trip)
     
     # Civil servant attempts to reserve
     from rest_framework.test import APIRequestFactory
@@ -119,7 +119,6 @@ def test_civil_servant_displaces_student(trip, student_user, server_user):
 
 @pytest.mark.django_db
 def test_civil_servant_to_waitlist_when_only_servers(trip, server_user, superadmin):
-    from apps.reservations.services import sync_trip_status
     # Fill trip with civil servants
     s2_user = User.objects.create_user(
         email="server2@test.com", password="password123", full_name="Server Two"
@@ -132,9 +131,9 @@ def test_civil_servant_to_waitlist_when_only_servers(trip, server_user, superadm
     Reservation.objects.create(
         trip=trip, civil_servant=s2_user.civil_servant_profile, status="CONFIRMADA"
         )
-    sync_trip_status(trip)
+    TripStatusService.sync_trip_status(trip)
     
-    assert not trip_has_capacity(trip)
+    assert not TripService.trip_has_capacity(trip)
     
     # Third civil servant attempts to reserve
     s3_user = User.objects.create_user(
@@ -172,7 +171,7 @@ def test_civil_servant_to_waitlist_when_only_servers(trip, server_user, superadm
 
 @pytest.mark.django_db
 def test_is_reservable_for_server_with_available_bus(trip, server_user, superadmin):
-    from apps.reservations.services import sync_trip_status
+    
     # Fill trip
     Reservation.objects.create(
         trip=trip, status="CONFIRMADA", civil_servant=server_user.civil_servant_profile
@@ -184,7 +183,7 @@ def test_is_reservable_for_server_with_available_bus(trip, server_user, superadm
     Reservation.objects.create(
         trip=trip, status="CONFIRMADA", civil_servant=s2_user.civil_servant_profile
         )
-    sync_trip_status(trip)
+    TripStatusService.sync_trip_status(trip)
     
     from rest_framework.test import APIRequestFactory
 
@@ -212,13 +211,13 @@ def test_is_reservable_for_server_with_available_bus(trip, server_user, superadm
 
 @pytest.mark.django_db
 def test_role_based_available_seats(trip, student_user, server_user):
-    from apps.reservations.services import sync_trip_status
+    
     # Trip capacity is 2. 
     # 1 student reserved.
     Reservation.objects.create(
         trip=trip, student=student_user.student_profile, status="CONFIRMADA"
         )
-    sync_trip_status(trip)
+    TripStatusService.sync_trip_status(trip)
     
     from rest_framework.test import APIRequestFactory
 
@@ -243,7 +242,7 @@ def test_role_based_available_seats(trip, student_user, server_user):
     Reservation.objects.create(
         trip=trip, civil_servant=server_user.civil_servant_profile, status="CONFIRMADA"
         )
-    sync_trip_status(trip)
+    TripStatusService.sync_trip_status(trip)
     
     # Student sees 0 seats left (1 student + 1 server = 2)
     ser_student = AvailableTripSerializer(trip, context={'request': req_student})

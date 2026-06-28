@@ -3,8 +3,8 @@ from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 
 from apps.reservations.models import Reservation
-from apps.reservations.services import sync_trip_status
 from apps.trips.models import Bus, Route, Trip
+from apps.trips.services.trip_status_service import TripStatusService
 from apps.users.models.profiles import (
     AdministratorProfile,
     CivilServantProfile,
@@ -111,7 +111,7 @@ class Command(BaseCommand):
                 trip.quorum_met_notified_at = None
                 trip.save(update_fields=["quorum_met_notified_at"])
 
-            sync_trip_status(trip)
+            TripStatusService.sync_trip_status(trip)
 
             push_count = student_user.webpush_info.count()
             if push_count == 0:

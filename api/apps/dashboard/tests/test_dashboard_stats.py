@@ -257,7 +257,9 @@ class UsersDistributionViewTests(DashboardStatsBaseTest):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["total_users"], 3)
-        profile_map = {item["label"]: item["value"] for item in response.data["profiles"]}
+        profile_map = {
+            item["label"]: item["value"] for item in response.data["profiles"]
+        }
         self.assertEqual(profile_map["Estudantes"], 2)
         self.assertEqual(profile_map["Servidores"], 1)
 
@@ -393,7 +395,9 @@ class ReservationsByStatusViewTests(DashboardStatsBaseTest):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("statuses", response.data)
-        status_map = {item["label"]: item["value"] for item in response.data["statuses"]}
+        status_map = {
+            item["label"]: item["value"] for item in response.data["statuses"]
+        }
         self.assertEqual(status_map["CONFIRMADA"], 2)
         self.assertEqual(status_map["PENDENTE"], 1)
         self.assertEqual(status_map["LISTA SECUNDÁRIA"], 1)
@@ -538,5 +542,8 @@ class DashboardAuthEnforcementTests(DashboardStatsBaseTest):
                 self.assertEqual(
                     response.status_code,
                     status.HTTP_200_OK,
-                    f"Endpoint {endpoint} did not return 200; got {response.status_code}",
+                    (
+                        f"Endpoint {endpoint} did not return 200; "
+                        f"got {response.status_code}"
+                    ),
                 )

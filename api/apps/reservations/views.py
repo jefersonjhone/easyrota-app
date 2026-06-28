@@ -1,37 +1,38 @@
 from django.db import transaction
 from django.db.models import Count, Exists, OuterRef, Q
-from django.utils import timezone
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.trips.services.checkin_service import CheckinService
+from apps.trips.services.trip_status_service import TripStatusService
 
 from ..trips.models import Trip
 from ..users.permissions import IsDriver, IsSuperAdmin
 from .models import Punishment, Reservation
-from rest_framework import mixins
-
 from .serializers import (
+    ActiveReservationSerializer,
     AdminCreateReservationSerializer,
     AdminPunishmentListSerializer,
     AdminPunishmentUpdateSerializer,
+    AdminReservationListSerializer,
     AdminTripPunishmentsGroupSerializer,
     AdminTripReservationsGroupSerializer,
-    AdminReservationListSerializer,
-    ActiveReservationSerializer,
     AvailableTripSerializer,
     ManageReservationSerializer,
     PunishmentHistorySerializer,
     ReservationHistorySerializer,
     ReservationSerializer,
 )
-from .services import (
-    promote_next_waitlisted_reservation,
-    sync_trip_status,
-)
+from .services.constants import ACTIVE_RESERVATION_STATUSES
+from .services.reservation_service import ReservationService
+
+
+class ReservationRetrieveView(generics.RetrieveAPIView):
+    serializer_class = ReservationSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class ReservationCreateView(generics.ListCreateAPIView):
@@ -49,7 +50,9 @@ class ReservationCreateView(generics.ListCreateAPIView):
         else:
             return Reservation.objects.none()
 
-        return qs.exclude(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("-created_at")
+        return qs.exclude(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by(
+            "-created_at"
+        )
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -58,7 +61,7 @@ class ReservationCreateView(generics.ListCreateAPIView):
             civil_servant=getattr(user, "civil_servant_profile", None),
         )
 
-        sync_trip_status(reservation.trip)
+        TripStatusService.sync_trip_status(reservation.trip)
 
 
 class ActiveReservationListView(generics.ListAPIView):
@@ -80,7 +83,9 @@ class ActiveReservationListView(generics.ListAPIView):
         else:
             return Reservation.objects.none()
 
-        return qs.exclude(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("trip__trip_date", "trip__route__departure_time")
+        return qs.exclude(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by(
+            "trip__trip_date", "trip__route__departure_time"
+        )
 
 
 class ReservationHistoryView(generics.ListAPIView):
@@ -100,7 +105,9 @@ class ReservationHistoryView(generics.ListAPIView):
         else:
             return Reservation.objects.none()
 
-        return qs.filter(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by("-created_at")
+        return qs.filter(trip__status__in=["CANCELADA", "CONCLUÍDA"]).order_by(
+            "-created_at"
+        )
 
 
 class AvailableTripListView(generics.ListAPIView):
@@ -112,7 +119,8 @@ class AvailableTripListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         available_trips = (
-            Trip.objects.filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
+            Trip.objects
+            .filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
             .select_related("route", "bus")
             .annotate(
                 active_reservation_seats=Count(
@@ -127,8 +135,8 @@ class AvailableTripListView(generics.ListAPIView):
                         student=getattr(user, "student_profile", None),
                         civil_servant=getattr(user, "civil_servant_profile", None),
                     )
-                    if hasattr(user, "student_profile") or hasattr(user, 
-                                                                   "civil_servant_profile")
+                    if hasattr(user, "student_profile")
+                    or hasattr(user, "civil_servant_profile")
                     else Reservation.objects.none()
                 ),
             )
@@ -183,20 +191,25 @@ class ReservationViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "admin_create":
             return AdminCreateReservationSerializer
-        if self.action in ("list", "retrieve"):
+        if self.action in ("list"):
             return AdminReservationListSerializer
+        elif self.action == "retrieve":
+            if self.request.user.is_superuser:
+                return AdminReservationListSerializer
+            return ActiveReservationSerializer
         return ManageReservationSerializer
 
     def get_permissions(self):
         if self.action == "cancel":
             return [IsAuthenticated()]
-
-        if self.action == "checkin":
+        elif self.action == "checkin":
             return [IsDriver(), IsSuperAdmin()]
-
-        if self.action in ("create", "update", "partial_update", "destroy"):
+        elif self.action == "retrieve":
+            return [IsAuthenticated()]
+        elif self.action in ("create", "update", "partial_update", "destroy"):
             return [IsAdminUser()]
-
+        else:
+            return [IsAuthenticated()]
         return super().get_permissions()
 
     @action(detail=False, methods=["get"], url_path="grouped-by-trip")
@@ -255,14 +268,13 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
         trip = reservation.trip
         reservation.delete()
-        promote_next_waitlisted_reservation(trip)
-        sync_trip_status(trip)
+        ReservationService.promote_next_waitlisted(trip)
+        TripStatusService.sync_trip_status(trip)
 
         return Response(
             {"status": "Reserva cancelada com sucesso."},
             status=status.HTTP_200_OK,
         )
-
 
     @action(detail=False, methods=["post"])
     def admin_create(self, request):
@@ -346,7 +358,10 @@ class PunishmentManageViewSet(
                     "trip_id": tid,
                     "trip_date": p.reservation.trip.trip_date,
                     "departure_time": p.reservation.trip.route.departure_time,
-                    "route": f"{p.reservation.trip.route.origin} → {p.reservation.trip.route.destiny}",
+                    "route": (
+                        f"{p.reservation.trip.route.origin}"
+                        f" → {p.reservation.trip.route.destiny}"
+                    ),
                     "punishments": [],
                 }
             trip_data[tid]["punishments"].append(p)

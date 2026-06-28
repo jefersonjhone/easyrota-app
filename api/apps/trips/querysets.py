@@ -1,6 +1,7 @@
-from django.db import models
+from datetime import timedelta
 
-from ..users.models.profiles import DriverProfile
+from django.db import models
+from django.utils import timezone
 
 
 class TripQuerySet(models.QuerySet):
@@ -9,27 +10,41 @@ class TripQuerySet(models.QuerySet):
     def joinable_by_driver(self, user):
         """Return trips that a driver can open from the driver trips list."""
 
-        is_driver = DriverProfile.objects.filter(user=user).exists()
-
-        if not is_driver:
-            return self
-
-        return self.exclude(status="CONCLU\u00cdDA").filter(
-            models.Q(status="EM ANDAMENTO", driver__user=user)
-            | ~models.Q(status="EM ANDAMENTO")
+        return self.upcoming().by_date(timezone.localdate()).filter(
+            models.Q(driver__user=user) | models.Q(driver__isnull=True)
         )
 
+    def joinable_by_user(self, user):
+        """Return trips that a student user can join from the available trips list."""
+        
+        return (
+            self.available_for_reservation()
+            .with_route_details()
+            .with_bus_details()
+            .order_by_trip_date()
+            .with_already_reserved_info(user)
+        )
+          
     def running(self):
         """Trips currently in progress."""
         return self.filter(status="EM ANDAMENTO")
 
     def upcoming(self):
         """Future trips that are not concluded or canceled."""
-        return self.exclude(status__in=["CONCLU\u00cdDA", "CANCELADA"])
+        return self.exclude(status__in=["CONCLUÍDA", "CANCELADA"])
 
     def available_for_reservation(self):
         """Trips open for passenger reservation."""
-        return self.filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"])
+        
+        from apps.trips.services.trip_service import RESERVATION_LIMIT_DAYS
+        
+        today = timezone.localdate()
+        date_limit = today + timedelta(days=RESERVATION_LIMIT_DAYS)
+        return self.filter(
+            status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"]
+        ).by_date_gte(today).by_date_lte(
+            date_limit
+        )
 
     def by_date(self, date):
         """Filter trips by exact trip_date."""
@@ -38,6 +53,10 @@ class TripQuerySet(models.QuerySet):
     def by_date_gte(self, date):
         """Trips on or after the given date."""
         return self.filter(trip_date__gte=date)
+
+    def by_date_lte(self, date):
+        """Trips on or before the given date."""
+        return self.filter(trip_date__lte=date)
 
     def for_user(self, user):
         """Trips associated with a user (as driver, student, or civil servant)."""
@@ -52,12 +71,11 @@ class TripQuerySet(models.QuerySet):
         Find trips that overlap in time with the given bus on dates
         around trip_date. Optionally exclude a trip by id.
         """
-        import datetime
 
         date_range = [
-            trip_date - datetime.timedelta(days=1),
+            trip_date - timedelta(days=1),
             trip_date,
-            trip_date + datetime.timedelta(days=1),
+            trip_date + timedelta(days=1),
         ]
         qs = self.filter(bus=bus, trip_date__in=date_range)
         if exclude_id is not None:
@@ -83,7 +101,7 @@ class TripQuerySet(models.QuerySet):
         """
         from django.db.models import Count, Q
 
-        from apps.reservations.services import ACTIVE_RESERVATION_STATUSES
+        from apps.reservations.services.constants import ACTIVE_RESERVATION_STATUSES
 
         return self.select_related("route", "bus").annotate(
             active_reservation_seats=Count(
@@ -93,6 +111,33 @@ class TripQuerySet(models.QuerySet):
             ),
             passenger_seats=Count("trip_passengers", distinct=True),
         )
+        
+    # mover para service de reservation
+    def with_already_reserved_info(self, user):
+        """Return trips that the user has already reserved."""
+        from django.db.models import Exists, OuterRef
+
+        from apps.reservations.models import Reservation
+
+        return (
+            self
+            .annotate(
+                user_is_reserved=Exists(
+                    Reservation.objects.filter(
+                        trip=OuterRef("pk"),
+                        student=getattr(user, "student_profile", None),
+                        civil_servant=getattr(user, "civil_servant_profile", None),
+                    )
+                    if hasattr(user, "student_profile") or
+                    hasattr(user, "civil_servant_profile")
+                    else Reservation.objects.none()
+                ),
+            )
+        )
+
+    def order_by_trip_date(self):
+        """Order by trip date and route departure time."""
+        return self.order_by("trip_date", "route__departure_time")
 
 
 class BusQuerySet(models.QuerySet):
@@ -104,7 +149,7 @@ class BusQuerySet(models.QuerySet):
 
     def in_maintenance(self):
         """Buses currently under maintenance."""
-        return self.filter(status="MANUTEN\u00c7\u00c3O")
+        return self.filter(status="MANUTENÇÃO")
 
 
 class RouteQuerySet(models.QuerySet):

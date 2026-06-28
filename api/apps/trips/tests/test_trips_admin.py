@@ -6,13 +6,11 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.reservations.models import Reservation
 from apps.trips.models import Bus, Route, Trip
 from apps.users.models import CustomUser
 from apps.users.models.profiles import (
     AdministratorProfile,
     DriverProfile,
-    StudentProfile,
 )
 
 User = get_user_model()
@@ -80,9 +78,7 @@ class TripAdminBulkDeleteTests(APITestCase):
 
     def test_bulk_delete_fails_without_authentication(self):
         """Unauthenticated request to bulk delete returns 401."""
-        response = self.client.post(
-            self.url, {"ids": [self.trip1.id]}, format="json"
-        )
+        response = self.client.post(self.url, {"ids": [self.trip1.id]}, format="json")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_bulk_delete_with_empty_ids_returns_400(self):
@@ -94,9 +90,7 @@ class TripAdminBulkDeleteTests(APITestCase):
     def test_non_admin_user_cannot_bulk_delete(self):
         """Regular users cannot bulk delete trips."""
         self.client.force_authenticate(user=self.regular_user)
-        response = self.client.post(
-            self.url, {"ids": [self.trip1.id]}, format="json"
-        )
+        response = self.client.post(self.url, {"ids": [self.trip1.id]}, format="json")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -157,26 +151,28 @@ class TripAdminDetailTests(APITestCase):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.get(self.url, format="json")
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["id"] == self.trip.id
+        assert str(response.data["id"]) == str(self.trip.id)
         assert response.data["trip_date"] == self.tomorrow.isoformat()
         assert response.data["origin"] == "Salvador"
         assert response.data["destiny"] == "Feira"
         assert "driver_name" in response.data
         assert response.data["driver_name"] == "João Motorista"
         assert response.data["driver_cnh"] == "12345678901"
-        assert response.data["driver_id"] == self.driver_profile.id
+        assert str(response.data["driver_id"]) == str(self.driver_profile.id)
         assert response.data["bus_plate"] == "XYZ-9876"
         assert response.data["bus_brand"] == "Volvo"
         assert response.data["bus_capacity"] == 50
-        assert response.data["bus_id"] == self.bus.id
+        assert str(response.data["bus_id"]) == str(self.bus.id)
         assert "passengers" in response.data
         assert "active_reservations" in response.data
         assert "checked_in_count" in response.data
 
-    def test_admin_detail_returns_404_for_non_existent_trip(self):
+    def test_admin_detail_returns_404_for_nonexistent_trip(self):
         """Admin detail returns 404 when trip does not exist."""
         self.client.force_authenticate(user=self.admin_user)
-        invalid_url = reverse("trip-admin-detail", args=[99999])
+        invalid_url = reverse(
+            "trip-admin-detail", args=["00000000-0000-0000-0000-000000000000"]
+        )
         response = self.client.get(invalid_url, format="json")
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -273,7 +269,9 @@ class TripAdminAssignDriverTests(APITestCase):
         """Assign with non-existent driver_id returns 404."""
         self.client.force_authenticate(user=self.admin_user)
         url = reverse("trip-admin-assign-driver", args=[self.trip.id])
-        response = self.client.post(url, {"driver_id": 99999}, format="json")
+        response = self.client.post(
+            url, {"driver_id": "00000000-0000-0000-0000-000000000000"}, format="json"
+        )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_admin_assign_driver_without_driver_id_returns_400(self):
@@ -401,9 +399,7 @@ class TripAdminAssignBusTests(APITestCase):
         """Admin can assign a bus to a trip."""
         self.client.force_authenticate(user=self.admin_user)
         url = reverse("trip-admin-assign-bus", args=[self.trip.id])
-        response = self.client.post(
-            url, {"bus_id": self.bus1.id}, format="json"
-        )
+        response = self.client.post(url, {"bus_id": self.bus1.id}, format="json")
         assert response.status_code == status.HTTP_200_OK
         self.trip.refresh_from_db()
         assert self.trip.bus == self.bus1
@@ -417,9 +413,7 @@ class TripAdminAssignBusTests(APITestCase):
 
         self.client.force_authenticate(user=self.admin_user)
         url = reverse("trip-admin-assign-bus", args=[self.trip.id])
-        response = self.client.post(
-            url, {"bus_id": self.bus2.id}, format="json"
-        )
+        response = self.client.post(url, {"bus_id": self.bus2.id}, format="json")
         assert response.status_code == status.HTTP_200_OK
         self.trip.refresh_from_db()
         assert self.trip.bus == self.bus2
@@ -428,16 +422,16 @@ class TripAdminAssignBusTests(APITestCase):
     def test_admin_assign_bus_fails_without_authentication(self):
         """Unauthenticated request returns 401."""
         url = reverse("trip-admin-assign-bus", args=[self.trip.id])
-        response = self.client.post(
-            url, {"bus_id": self.bus1.id}, format="json"
-        )
+        response = self.client.post(url, {"bus_id": self.bus1.id}, format="json")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_admin_assign_bus_with_invalid_bus_id_returns_404(self):
         """Assign with non-existent bus_id returns 404."""
         self.client.force_authenticate(user=self.admin_user)
         url = reverse("trip-admin-assign-bus", args=[self.trip.id])
-        response = self.client.post(url, {"bus_id": 99999}, format="json")
+        response = self.client.post(
+            url, {"bus_id": "00000000-0000-0000-0000-000000000000"}, format="json"
+        )
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_admin_assign_bus_without_bus_id_returns_400(self):
