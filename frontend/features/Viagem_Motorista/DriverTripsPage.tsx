@@ -26,8 +26,9 @@ type TripModel = {
   destiny?: string
   departure_time?: string | null
   departure_timestamp?: string | null
-  available_seats?: number
-  is_full?: boolean
+  active_reservations?: number | null
+  is_current_driver?: boolean
+  is_occupied_by_other_driver?: boolean
 }
 
 type DriverTrip = {
@@ -39,7 +40,9 @@ type DriverTrip = {
   departureTime: string
   status: TripModelStatus
   statusLabel: string
-  availableSeats: number | null
+  reservationCount: number | null
+  isCurrentDriver: boolean
+  isOccupiedByOtherDriver: boolean
 }
 
 const statusLabels: Record<string, string> = {
@@ -77,6 +80,15 @@ function formatDateLabel(date: string) {
   return date
 }
 
+function getTodayIso() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
 function toStatusLabel(status: TripModelStatus) {
   const statusText = String(status)
   return statusLabels[statusText] ?? statusText.toLowerCase()
@@ -91,8 +103,11 @@ function normalizeTripFromModel(
     trip.departure_time ?? trip.departure_timestamp,
   )
 
-  const availableSeats =
-    typeof trip.available_seats === 'number' ? Math.max(trip.available_seats, 0) : null
+  const reservationCount =
+    typeof trip.active_reservations === 'number'
+      ? Math.max(trip.active_reservations, 0)
+      : null
+
   return {
     id: trip.id,
     tripDate: normalizeDateToIso(trip.trip_date),
@@ -102,7 +117,9 @@ function normalizeTripFromModel(
     departureTime,
     status: trip.status,
     statusLabel: toStatusLabel(trip.status),
-    availableSeats,
+    reservationCount,
+    isCurrentDriver: trip.is_current_driver === true,
+    isOccupiedByOtherDriver: trip.is_occupied_by_other_driver === true,
   }
 }
 
@@ -111,8 +128,11 @@ async function getTripsFromApi() {
   try {
     const response = await apiFetch(`/trips/`)
     const data = response as TripModel[]
+    const todayIso = getTodayIso()
+
     return data
       .map((trip) => normalizeTripFromModel(trip))
+      .filter((trip) => trip.tripDate === todayIso)
       .sort((first, second) => first.departureTime.localeCompare(second.departureTime))
   } catch (error) {
     throw new Error(`Falha ao carregar ${error}`)
@@ -128,29 +148,32 @@ function getStatusCard(trip: DriverTrip) {
     }
   }
 
-  if (trip.status === 'EM ANDAMENTO') {
+  if (trip.isOccupiedByOtherDriver) {
     return {
-      modifier: 'in-progress',
-      label: 'Em andamento',
-      description: 'retomar viagem',
+      modifier: 'occupied',
+      label: 'Viagem ocupada',
+      description: 'outro motorista',
     }
   }
 
 
-  if (trip.availableSeats !== null) {
-    const seatLabel = trip.availableSeats === 1 ? '1 vaga' : `${trip.availableSeats} vagas`
+  if (trip.reservationCount !== null) {
+    const reservationLabel =
+      trip.reservationCount === 1
+        ? '1 reserva'
+        : `${trip.reservationCount} reservas`
 
     return {
       modifier: 'available',
-      label: seatLabel,
-      description: 'reservadas',
+      label: reservationLabel,
+      description: 'ativas',
     }
   }
 
   return {
     modifier: 'available',
-    label: 'Vagas',
-    description: 'disponíveis',
+    label: 'Reservas',
+    description: 'ativas',
   }
 }
 
@@ -216,7 +239,9 @@ export function DriverTripsPage() {
             {trips.map((trip) => {
               const statusCard = getStatusCard(trip)
               const isCanceled = trip.status === 'CANCELADA'
-              const isInProgress = trip.status === 'EM ANDAMENTO'
+              const isOccupied = trip.isOccupiedByOtherDriver
+              const canOpenTrip = !isCanceled && !isOccupied
+              const isReturnTrip = trip.isCurrentDriver
               const cardContent = (
                 <>
                   <div className="driver-trip-card__details">
@@ -249,24 +274,32 @@ export function DriverTripsPage() {
                   </div>
 
                   <span
-                    className={`driver-trip-card__action${isCanceled ? ' driver-trip-card__action--disabled' : ''}`}
+                    className={`driver-trip-card__action${!canOpenTrip ? ' driver-trip-card__action--disabled' : ''}${isReturnTrip ? ' driver-trip-card__action--return' : ''}`}
                   >
                     <span className="driver-trip-card__action-label">
-                      {isCanceled ? 'Indisponível' : isInProgress ? 'Retomar' : 'Selecionar'}
+                      {isCanceled
+                        ? 'Indisponível'
+                        : isOccupied
+                          ? 'Viagem ocupada'
+                          : isReturnTrip
+                            ? 'Retornar'
+                            : 'Selecionar'}
                     </span>
                     <span className="driver-trip-card__action-description">
                       {isCanceled
                         ? 'Viagem cancelada'
-                        : isInProgress
-                          ? 'Voltar para viagem'
-                          : 'Abrir viagem'}
-                      {isCanceled ? null : <ArrowRightIcon aria-hidden="true" weight="bold" />}
+                        : isOccupied
+                          ? 'Outro motorista associado'
+                          : isReturnTrip
+                            ? 'Voltar para viagem'
+                            : 'Abrir viagem'}
+                      {canOpenTrip ? <ArrowRightIcon aria-hidden="true" weight="bold" /> : null}
                     </span>
                   </span>
                 </>
               )
 
-              return isCanceled ? (
+              return !canOpenTrip ? (
                 <article key={trip.id} className="driver-trip-card">
                   {cardContent}
                 </article>

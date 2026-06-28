@@ -19,6 +19,8 @@ export type Trip = {
   status: TripStatus
   departure_timestamp: string | null
   arrival_timestamp: string | null
+  is_current_driver?: boolean
+  is_occupied_by_other_driver?: boolean
   bus: number | null
   route: number
   is_private?: boolean

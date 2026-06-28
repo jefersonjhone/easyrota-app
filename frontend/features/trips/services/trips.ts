@@ -8,10 +8,30 @@ import type {
   RemoveTripPassengerResponse,
   Trip,
   TripPassengerCheckInResponse,
+  TripStatus,
 } from '../types'
 
-export function fetchTrips() {
-  return apiFetch<Trip[]>('/trips/')
+export type TripDateOrder = 'recent' | 'distant'
+
+export type TripFilters = {
+  status?: TripStatus
+  dateOrder?: TripDateOrder
+}
+
+export function fetchTrips(filters: TripFilters = {}) {
+  const params = new URLSearchParams()
+
+  if (filters.status) {
+    params.set('status', filters.status)
+  }
+
+  if (filters.dateOrder) {
+    params.set('date_order', filters.dateOrder)
+  }
+
+  const query = params.toString()
+
+  return apiFetch<Trip[]>(`/trips/${query ? `?${query}` : ''}`)
 }
 
 export function fetchTrip(id: number) {
