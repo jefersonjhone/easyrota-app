@@ -90,6 +90,8 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+api/e2e.sqlite3
+api/e2e.sqlite3-journal
 
 # Flask stuff:
 instance/
