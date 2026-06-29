@@ -35,6 +35,7 @@ import { Route as AppViagensHistoricoRouteImport } from './pages/app/viagens/his
 import { Route as AppViagensAtualRouteImport } from './pages/app/viagens/atual'
 import { Route as AppPenalidadesHistoricoRouteImport } from './pages/app/penalidades/historico'
 import { Route as AppDriverViagensRouteImport } from './pages/app/driver/viagens'
+import { Route as AppViagensConvidadosGuest_idRouteImport } from './pages/app/viagens/convidados.$guest_id'
 import { Route as AppDriverViagemTripIdRouteImport } from './pages/app/driver/viagem.$tripId'
 
 const App_rootRoute = App_rootRouteImport.update({
@@ -164,6 +165,12 @@ const AppDriverViagensRoute = AppDriverViagensRouteImport.update({
   path: '/app/driver/viagens',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppViagensConvidadosGuest_idRoute =
+  AppViagensConvidadosGuest_idRouteImport.update({
+    id: '/app/viagens/convidados/$guest_id',
+    path: '/app/viagens/convidados/$guest_id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AppDriverViagemTripIdRoute = AppDriverViagemTripIdRouteImport.update({
   id: '/app/driver/viagem/$tripId',
   path: '/app/driver/viagem/$tripId',
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/app/viagens/privada': typeof AppViagensPrivadaRoute
   '/app/viagens/': typeof AppViagensIndexRoute
   '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
+  '/app/viagens/convidados/$guest_id': typeof AppViagensConvidadosGuest_idRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -224,6 +232,7 @@ export interface FileRoutesByTo {
   '/app/viagens/historico': typeof AppViagensHistoricoRoute
   '/app/viagens/privada': typeof AppViagensPrivadaRoute
   '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
+  '/app/viagens/convidados/$guest_id': typeof AppViagensConvidadosGuest_idRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -254,6 +263,7 @@ export interface FileRoutesById {
   '/app/viagens/privada': typeof AppViagensPrivadaRoute
   '/app/viagens/': typeof AppViagensIndexRoute
   '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
+  '/app/viagens/convidados/$guest_id': typeof AppViagensConvidadosGuest_idRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/app/viagens/privada'
     | '/app/viagens/'
     | '/app/driver/viagem/$tripId'
+    | '/app/viagens/convidados/$guest_id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/app/viagens/historico'
     | '/app/viagens/privada'
     | '/app/driver/viagem/$tripId'
+    | '/app/viagens/convidados/$guest_id'
   id:
     | '__root__'
     | '/'
@@ -340,6 +352,7 @@ export interface FileRouteTypes {
     | '/app/viagens/privada'
     | '/app/viagens/'
     | '/app/driver/viagem/$tripId'
+    | '/app/viagens/convidados/$guest_id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -370,6 +383,7 @@ export interface RootRouteChildren {
   AppViagensPrivadaRoute: typeof AppViagensPrivadaRoute
   AppViagensIndexRoute: typeof AppViagensIndexRoute
   AppDriverViagemTripIdRoute: typeof AppDriverViagemTripIdRoute
+  AppViagensConvidadosGuest_idRoute: typeof AppViagensConvidadosGuest_idRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -556,6 +570,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDriverViagensRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/viagens/convidados/$guest_id': {
+      id: '/app/viagens/convidados/$guest_id'
+      path: '/app/viagens/convidados/$guest_id'
+      fullPath: '/app/viagens/convidados/$guest_id'
+      preLoaderRoute: typeof AppViagensConvidadosGuest_idRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/driver/viagem/$tripId': {
       id: '/app/driver/viagem/$tripId'
       path: '/app/driver/viagem/$tripId'
@@ -594,6 +615,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppViagensPrivadaRoute: AppViagensPrivadaRoute,
   AppViagensIndexRoute: AppViagensIndexRoute,
   AppDriverViagemTripIdRoute: AppDriverViagemTripIdRoute,
+  AppViagensConvidadosGuest_idRoute: AppViagensConvidadosGuest_idRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

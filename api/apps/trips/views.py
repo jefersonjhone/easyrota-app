@@ -587,6 +587,7 @@ class MyNextTripView(APIView):
 class GuestPassengerView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = GuestPassengerSerializer
+    #queryset = GuestPassenger.objects.all()
 
     def post(self, request):
         trip_id = request.data.get("trip")
@@ -625,9 +626,17 @@ class GuestPassengerView(APIView):
         reservetionSerializer.reserveToGuest(passenger, trip)
         sync_trip_status(trip)
 
-        appLink = "https://easyrota-app.vercel.app/" if os.environ['STATE'] != "DEV" else "http://localhost:5173"
+        appLink = "https://easyrota-app.vercel.app/" if os.environ['STATE'] != "DEV" else "http://localhost:5173/"
 
-        send_qr_code_email(email, appLink+"app/viagens/convidado/"+passenger.id)
+        send_qr_code_email(email, appLink+"app/viagens/convidados/"+str(passenger.id))
         return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)
 
 
+class GuestPassengerDetailView(APIView):
+    def get(self, request, guest_id):
+        try:
+            guest = GuestPassenger.objects.get(id=guest_id)
+            serializer = GuestPassengerSerializer(guest)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except GuestPassenger.DoesNotExist:
+            return Response({"error": "Convidado não encontrado"}, status=status.HTTP_404_NOT_FOUND)
