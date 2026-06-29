@@ -236,6 +236,7 @@ class GuestPassengerManager(BaseUserManager):
 class GuestPassenger(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cpf = models.CharField(max_length=11)
+    email = models.EmailField(null=True)
     trip = models.ForeignKey(to=Trip, on_delete=models.CASCADE)
     recorded_by = models.ForeignKey(
         to=CivilServantProfile, on_delete=models.SET_NULL, null=True
