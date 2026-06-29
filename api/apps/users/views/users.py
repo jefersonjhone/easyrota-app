@@ -465,15 +465,21 @@ class LocalDriverTripPassengerView(views.APIView):
             )
 
         associated_staff = serializer.validated_data["associated_staff"]
-        server_passenger, _, fallback = self._ensure_local_server(
-            trip,
-            associated_staff,
-            driver,
-            evicted_passengers,
+        guest_without_server = serializer.validated_data.get(
+            "guest_without_server", False
         )
-        if isinstance(fallback, Response):
-            transaction.set_rollback(True)
-            return fallback
+        server_passenger = None
+        fallback = None
+        if not guest_without_server:
+            server_passenger, _, fallback = self._ensure_local_server(
+                trip,
+                associated_staff,
+                driver,
+                evicted_passengers,
+            )
+            if isinstance(fallback, Response):
+                transaction.set_rollback(True)
+                return fallback
 
         existing_guest = (
             TripPassenger.objects

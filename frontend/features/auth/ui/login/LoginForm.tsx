@@ -22,6 +22,7 @@ import { Button } from "@ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@ui/card"
 import { Field, FieldGroup, FieldLabel } from '@ui/field'
 import { Input } from "@ui/input"
+import { PasswordInput } from "@features/auth/ui/PasswordInput"
 
 const schema = z.object({
     email: z
@@ -129,13 +130,13 @@ export function LoginForm() {
                         <Field className="grid gap-2">
                             <div className="flex items-center">
                                 <FieldLabel htmlFor="password">Senha</FieldLabel>
-                            <Link to={RecoveryRoute.to} className="ml-auto" tabIndex={3}>
+                            <Link to={RecoveryRoute.to} className="ml-auto" tabIndex={4}>
                                 <Button variant="link" className="text-black/50 cursor-pointer">
                                     Esqueceu sua senha?
                                   </Button>
                             </Link>
                         </div>
-                        <Input id="password" type="password" required tabIndex={2} onKeyDown={handlePasswordKeyDown} {...register("password")}/>
+                        <PasswordInput id="password" required tabIndex={2} toggleTabIndex={3} onKeyDown={handlePasswordKeyDown} {...register("password")}/>
               <HintInvalid for={state.errors.password} />
                         </Field>
                     </FieldGroup>
@@ -148,7 +149,7 @@ export function LoginForm() {
                 )}
             </CardContent>
       <CardFooter className="flex-col">
-        <Button form="login" type="submit" className="w-full cursor-pointer" disabled={isSubmitting} tabIndex={4}>
+        <Button form="login" type="submit" className="w-full cursor-pointer" disabled={isSubmitting} tabIndex={5}>
           {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
       </CardFooter>

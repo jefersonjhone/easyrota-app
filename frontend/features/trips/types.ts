@@ -79,6 +79,7 @@ export type LocalTripPassengerPayload = {
   passenger_type: 'LOCAL_SERVER' | 'LOCAL_GUEST'
   allowed_staff_id?: number
   associated_staff_id?: number
+  guest_without_server?: boolean
   full_name?: string
   cpf?: string
 }

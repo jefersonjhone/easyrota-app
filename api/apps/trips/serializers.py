@@ -135,6 +135,8 @@ class RouteSerializer(serializers.ModelSerializer):
 class TripSerializer(serializers.ModelSerializer):
     origin = serializers.CharField(source="route.origin", read_only=True)
     destiny = serializers.CharField(source="route.destiny", read_only=True)
+    route_max_bus = serializers.IntegerField(source="route.max_bus", read_only=True)
+    same_route_trips_count = serializers.SerializerMethodField(read_only=True)
     active_reservations = serializers.SerializerMethodField(read_only=True)
     checked_in_count = serializers.SerializerMethodField(read_only=True)
     checked_in_passengers = serializers.SerializerMethodField(read_only=True)
@@ -154,6 +156,12 @@ class TripSerializer(serializers.ModelSerializer):
         """filter reservations by especific trip"""
         reservations = Reservation.objects.filter(trip=obj).count()
         return reservations
+
+    def get_same_route_trips_count(self, obj) -> int:
+        return Trip.objects.filter(
+            route=obj.route,
+            trip_date=obj.trip_date,
+        ).count()
 
     def _get_request_driver(self):
         request = self.context.get("request")

@@ -17,6 +17,7 @@ import { Button } from "@ui/button"
 import { Checkbox } from "@ui/checkbox"
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@ui/field"
 import { Input } from "@ui/input"
+import { PasswordInput } from "@features/auth/ui/PasswordInput"
 
 
 const signupSchema = z.object({
@@ -168,9 +169,8 @@ export default function SignupForm(props: Props) {
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Senha</FieldLabel>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             required
             {...register("password")}
           />
@@ -182,9 +182,8 @@ export default function SignupForm(props: Props) {
         </Field>
         <Field>
           <FieldLabel htmlFor="confirmPassword">Confirmar Senha</FieldLabel>
-          <Input
+          <PasswordInput
             id="confirmPassword"
-            type="password"
             required
             {...register("confirmPassword")}
           />
