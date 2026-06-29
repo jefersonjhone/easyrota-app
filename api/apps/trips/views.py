@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from uuid import UUID
+import os
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -12,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.reservations.services import process_trip_punishments
+from apps.users.views.auth import send_qr_code_email
 
 User = get_user_model()
 
@@ -622,4 +624,10 @@ class GuestPassengerView(APIView):
         reservetionSerializer = ReservationSerializer()
         reservetionSerializer.reserveToGuest(passenger, trip)
         sync_trip_status(trip)
+
+        appLink = "https://easyrota-app.vercel.app/" if os.environ['STATE'] != "DEV" else "http://localhost:5173"
+
+        send_qr_code_email(email, appLink+"app/viagens/convidado/"+passenger.id)
         return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)
+
+

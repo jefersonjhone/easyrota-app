@@ -246,7 +246,7 @@ class GuestPassenger(models.Model):
     objects = GuestPassengerManager()
 
     USERNAME_FIELD = "cpf"
-    REQUIRED_FIELDS = ("full_name",)
+    REQUIRED_FIELDS = ("full_name", "email",)
 
     class Meta:
         unique_together = (("cpf", "trip"),)
