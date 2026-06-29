@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, views, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +22,7 @@ from ..models.profiles import (
 )
 from ..permissions import IsDriver, IsSuperAdmin
 from ..serializers.auth import (
+    AllowedStaffListSerializer,
     AllowedStaffSearchSerializer,
     CivilServantAllowedStaffSerializer,
     LocalTripPassengerSerializer,
@@ -563,3 +565,38 @@ class LocalDriverTripPassengerView(views.APIView):
         except LocalPassengerService.CapacityError as exc:
             transaction.set_rollback(True)
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
+
+
+class AllowedStaffPagination(PageNumberPagination):
+    page_size = 15
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
+class AllowedStaffListView(generics.ListAPIView):
+    permission_classes = [IsAdminUser]
+    serializer_class = AllowedStaffListSerializer
+    pagination_class = AllowedStaffPagination
+
+    def get_queryset(self):
+        from django.db.models import Exists, OuterRef, Q
+
+        q = self.request.query_params.get("q", "").strip()
+        has_account = self.request.query_params.get("has_account")
+
+        qs = AllowedStaff.objects.annotate(
+            has_account=Exists(
+                CivilServantProfile.objects.filter(
+                    civil_servant_id=OuterRef("registration_number")
+                )
+            )
+        )
+
+        if has_account is not None:
+            qs = qs.filter(has_account=has_account.lower() == "true")
+
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) | Q(registration_number__icontains=q)
+            )
+        return qs.order_by("name")

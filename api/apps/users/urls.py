@@ -20,6 +20,7 @@ from .views.auth import (
 from .views.users import (
     AdminDelegationView,
     AdminDetailView,
+    AllowedStaffListView,
     AllowedStaffSearchView,
     CivilServantViewSet,
     DriverViewSet,
@@ -73,6 +74,7 @@ urlpatterns = [
     path("auth/refresh", RefreshTokenView.as_view(), name="refresh-token"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
     path("auth/delete-account/", DeleteOwnAccountView.as_view(), name="delete-account"),
+    path("staff/", AllowedStaffListView.as_view(), name="allowed-staff-list"),
     path(
         "staff/search/",
         AllowedStaffSearchView.as_view(),

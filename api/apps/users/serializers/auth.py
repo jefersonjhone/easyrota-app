@@ -333,6 +333,14 @@ class AllowedStaffSearchSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "registration_number")
 
 
+class AllowedStaffListSerializer(serializers.ModelSerializer):
+    has_account = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = AllowedStaff
+        fields = ("id", "name", "registration_number", "has_account")
+
+
 class RegistrationResponseSerializer(serializers.Serializer):
     user = UserSummarySerializer()
     profile_type = serializers.CharField()
