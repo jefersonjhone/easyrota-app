@@ -1,3 +1,5 @@
+import random
+import string
 from datetime import date, datetime, timedelta
 from uuid import UUID
 
@@ -12,8 +14,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.reservations.services import process_trip_punishments
-
-User = get_user_model()
 
 from ..reservations.models import Reservation
 from ..reservations.serializers import ReservationSerializer
@@ -37,28 +37,34 @@ from .serializers import (
     GuestPassengerSerializer,
     RouteSerializer,
     TripCurrentScreenSerializer,
-    TripSerializer,
     TripRequestSerializer,
+    TripSerializer,
 )
-import string
-import random
+
+User = get_user_model()
+
 
 def generate_access_code(length=8):
     letters_and_digits = string.ascii_uppercase + string.digits
     return ''.join(random.choice(letters_and_digits) for i in range(length))
 
+
 class TripRequestViewSet(viewsets.ModelViewSet):
-    queryset = TripRequest.objects.select_related("requester__user", "trip").all().order_by("-created_at")
+    queryset = TripRequest.objects.select_related(
+        "requester__user", "trip").all().order_by("-created_at")
     serializer_class = TripRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, "admin_profile") or user.is_staff:
-            return TripRequest.objects.select_related("requester__user", "trip").all().order_by("-created_at")
+            return TripRequest.objects.select_related(
+                "requester__user", "trip").all().order_by("-created_at")
         
         if hasattr(user, "civil_servant_profile"):
-            return TripRequest.objects.select_related("requester__user", "trip").filter(requester=user.civil_servant_profile).order_by("-created_at")
+            return TripRequest.objects.select_related(
+                "requester__user", "trip").filter(
+                    requester=user.civil_servant_profile).order_by("-created_at")
         
         return TripRequest.objects.none()
 
@@ -75,19 +81,25 @@ class TripRequestViewSet(viewsets.ModelViewSet):
         trip_request = self.get_object()
         
         if trip_request.status != "PENDENTE":
-            return Response({"error": "Apenas solicitações pendentes podem ser aprovadas."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Apenas solicitações pendentes podem ser aprovadas."}, 
+                status=status.HTTP_400_BAD_REQUEST)
 
         bus_id = request.data.get("bus_id")
         route_id = request.data.get("route_id")
         
         if not bus_id or not route_id:
-            return Response({"error": "Aprovação exige bus_id e route_id."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Aprovação exige bus_id e route_id."}, 
+                status=status.HTTP_400_BAD_REQUEST)
         
         try:
             bus = Bus.objects.get(id=bus_id)
             route = Route.objects.get(id=route_id)
         except (Bus.DoesNotExist, Route.DoesNotExist):
-            return Response({"error": "Ônibus ou Rota não encontrados."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Ônibus ou Rota não encontrados."}, 
+                status=status.HTTP_404_NOT_FOUND)
         
         # Create the private trip
         access_code = generate_access_code()
@@ -106,24 +118,33 @@ class TripRequestViewSet(viewsets.ModelViewSet):
         trip_request.status = "APROVADA"
         trip_request.save()
         
-        return Response({"status": "Viagem aprovada e criada.", "access_code": access_code, "trip_id": trip.id}, status=status.HTTP_200_OK)
+        return Response(
+            {"status": "Viagem aprovada e criada.", 
+             "access_code": access_code, 
+             "trip_id": trip.id}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
     def reject(self, request, pk=None):
         trip_request = self.get_object()
         
         if trip_request.status != "PENDENTE":
-            return Response({"error": "Apenas solicitações pendentes podem ser recusadas."}, status=status.HTTP_400_BAD_REQUEST)
-            
+            return Response(
+                {"error": "Apenas solicitações pendentes podem ser recusadas."}, 
+                status=status.HTTP_400_BAD_REQUEST)
+
         feedback = request.data.get("feedback")
         if not feedback:
-            return Response({"error": "Feedback é obrigatório para recusar."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Feedback é obrigatório para recusar."}, 
+                status=status.HTTP_400_BAD_REQUEST)
             
         trip_request.status = "RECUSADA"
         trip_request.feedback = feedback
         trip_request.save()
         
-        return Response({"status": "Solicitação recusada com sucesso."}, status=status.HTTP_200_OK)
+        return Response(
+            {"status": "Solicitação recusada com sucesso."}, 
+            status=status.HTTP_200_OK)
 
 
 class PrivateTripDetailView(APIView):
@@ -132,7 +153,9 @@ class PrivateTripDetailView(APIView):
     def get(self, request):
         code = request.query_params.get("code")
         if not code:
-            return Response({"error": "Código de acesso é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Código de acesso é obrigatório."}, 
+                status=status.HTTP_400_BAD_REQUEST)
             
         try:
             trip = Trip.objects.get(access_code=code, is_private=True)
@@ -141,7 +164,10 @@ class PrivateTripDetailView(APIView):
             serializer = AvailableTripSerializer(trip, context={'request': request})
             return Response(serializer.data)
         except Trip.DoesNotExist:
-            return Response({"error": "Viagem privada não encontrada ou código inválido."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Viagem privada não encontrada ou código inválido."}, 
+                status=status.HTTP_404_NOT_FOUND)
+
 
 class BusViewSet(viewsets.ModelViewSet):
     """This view handles all CRUD operations, depending on the user type:

@@ -10,14 +10,18 @@ from rest_framework import serializers
 from ..reservations.models import Reservation
 from .models import Bus, GuestPassenger, Route, Trip, TripPassenger, TripRequest
 
+
 class TripRequestSerializer(serializers.ModelSerializer):
-    requester_name = serializers.CharField(source="requester.user.full_name", read_only=True)
+    requester_name = serializers.CharField(
+        source="requester.user.full_name", read_only=True)
     access_code = serializers.CharField(source="trip.access_code", read_only=True)
     
     class Meta:
         model = TripRequest
         fields = "__all__"
-        read_only_fields = ["requester", "status", "feedback", "created_at", "updated_at"]
+        read_only_fields = ["requester", "status", 
+                            "feedback", "created_at", "updated_at"]
+
 
 class BusSerializer(serializers.ModelSerializer):
     """Validates bus data"""
