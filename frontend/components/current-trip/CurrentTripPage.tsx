@@ -287,7 +287,7 @@ export function CurrentTripPage() {
             </Card>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button>Adicionar Convidado</Button>
+                          <Button className="w-full" onClick={() => {setAddedGuest(false)}}>Adicionar Convidado</Button>
                         </DialogTrigger>
                         <DialogContent>
 {!addedGuest && (<GuestForm tripId={trip.id} onGuestAdded={() => {setAddedGuest(true)}} />)}

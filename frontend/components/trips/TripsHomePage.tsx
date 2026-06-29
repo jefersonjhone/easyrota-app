@@ -166,7 +166,7 @@ export function TripsHomePage() {
                       </Button>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button>Adicionar Convidado</Button>
+                          <Button onClick={() => {setAddedGuest(false)}}>Adicionar Convidado</Button>
                         </DialogTrigger>
                         <DialogContent>
 {!addedGuest && (<GuestForm tripId={trip.id} onGuestAdded={() => {setAddedGuest(true)}} />)}
