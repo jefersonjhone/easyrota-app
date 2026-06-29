@@ -6,6 +6,7 @@ import { Button } from "@ui/button";
 import { apiFetch } from "@/lib/api";
 import { GuestForm } from "./GuestForm";
 import { Dialog, DialogContent, DialogTrigger } from "@/lib/ui/dialog";
+import { Textarea } from "@/lib/ui/textarea";
 
 type AvailableTrip = {
   id: number;
@@ -25,6 +26,7 @@ type AvailableTrip = {
 export function TripsHomePage() {
   const [trips, setTrips] = useState<AvailableTrip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [addedGuest, setAddedGuest] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savingTripId, setSavingTripId] = useState<number | null>(null);
   const [reservedTripIds, setReservedTripIds] = useState<number[]>([]);
@@ -167,7 +169,8 @@ export function TripsHomePage() {
                           <Button>Adicionar Convidado</Button>
                         </DialogTrigger>
                         <DialogContent>
-                          <GuestForm tripId={trip.id} onGuestAdded={() => { }} />
+{!addedGuest && (<GuestForm tripId={trip.id} onGuestAdded={() => {setAddedGuest(true)}} />)}
+{addedGuest && (<Textarea className="color-green text-center">Convidado Adicionado!</Textarea>)}
                         </DialogContent>
                       </Dialog>
                     </div>

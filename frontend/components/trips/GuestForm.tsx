@@ -60,7 +60,6 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
     },
     onSuccess: () => {
       onGuestAdded();
-      return (<>Convidado Adicionado Com sucesso</>)
     },
     onError: (error) => {
       const errorData = error as { data?: { cpf?: string[] } };
