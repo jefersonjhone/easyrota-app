@@ -95,7 +95,7 @@ export function TripRequestsPage() {
                 )}
                 {req.status === 'APROVADA' && (
                   <div className="bg-green-50 text-green-700 p-2 text-sm rounded">
-                    <strong>Código de Acesso (Privada):</strong> {(req as any).access_code || '---'}
+                    <strong>Código de Acesso (Privada):</strong> {req.access_code || '---'}
                   </div>
                 )}
               </CardContent>
@@ -117,7 +117,7 @@ export function TripRequestsPage() {
               <FieldLabel>Selecione o Ônibus</FieldLabel>
               <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" value={selectedBus} onChange={e => setSelectedBus(e.target.value)}>
                 <option value="">Selecione...</option>
-                {buses?.map((bus: any) => (
+                {buses?.map(bus => (
                   <option key={bus.id} value={String(bus.id)}>{bus.number_plate} - {bus.brand} ({bus.seating_capacity} vagas)</option>
                 ))}
               </select>
@@ -126,7 +126,7 @@ export function TripRequestsPage() {
               <FieldLabel>Selecione a Rota Oficial</FieldLabel>
               <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background" value={selectedRoute} onChange={e => setSelectedRoute(e.target.value)}>
                 <option value="">Selecione...</option>
-                {routes?.map((route: any) => (
+                {routes?.map(route => (
                   <option key={route.id} value={String(route.id)}>{route.origin} → {route.destiny} ({route.departure_time})</option>
                 ))}
               </select>

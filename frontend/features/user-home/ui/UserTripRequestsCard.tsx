@@ -125,9 +125,9 @@ export function UserTripRequestsCard() {
                   <div className="mt-2 text-sm bg-muted/50 p-3 rounded flex flex-col gap-2">
                     <p className="text-xs font-semibold text-primary">Aprovada! Compartilhe com os alunos:</p>
                     <div className="flex items-center gap-2">
-                      <Input readOnly value={`${window.location.origin}/app/viagens/privada?code=${(req as any).access_code || '---'}`} className="h-8 text-xs font-mono" />
+                      <Input readOnly value={`${window.location.origin}/app/viagens/privada?code=${req.access_code || '---'}`} className="h-8 text-xs font-mono" />
                       <Button size="sm" variant="secondary" onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/app/viagens/privada?code=${(req as any).access_code}`)
+                        navigator.clipboard.writeText(`${window.location.origin}/app/viagens/privada?code=${req.access_code}`)
                         alert('Copiado!')
                       }}>
                         Copiar

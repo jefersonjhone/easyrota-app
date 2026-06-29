@@ -137,6 +137,7 @@ export type TripRequest = {
   reason: string
   status: TripRequestStatus
   feedback: string | null
+  access_code: string | null
   created_at: string
 }
 
