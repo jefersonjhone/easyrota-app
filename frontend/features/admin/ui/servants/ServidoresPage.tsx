@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -10,12 +10,13 @@ import { ConfirmDeleteDialog } from '@/lib/ui/delete-alert'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/lib/ui/dialog"
-import { MagnifyingGlassIcon, PlusIcon, PencilSimpleIcon, TrashIcon, UserCircleCheck } from "@phosphor-icons/react"
+import { MagnifyingGlassIcon, PlusIcon, PencilSimpleIcon, TrashIcon, UserCircleCheck, CaretDoubleLeft, CaretDoubleRight, CaretLeft, CaretRight } from "@phosphor-icons/react"
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
 import { AdminLayout } from '@/features/admin/ui/Layout'
 import { useCivilServants, useCreateCivilServant, useUpdateCivilServant, useDeleteCivilServant } from '@/features/admin/hooks/useCivilServants'
+import { useAllowedStaff } from '@/features/admin/hooks/useAllowedStaff'
 import type { CivilServant } from '@/features/admin/services/civil-servants'
 
 const createSchema = z.object({
@@ -295,6 +296,10 @@ export function ServidoresPage() {
           </div>
         )}
 
+        <AllowedStaffSection />
+      </section>
+
+      <section className="mx-auto w-full max-w-5xl px-4">        
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="rounded-lg">
             <DialogHeader>
@@ -363,5 +368,106 @@ export function ServidoresPage() {
         </Dialog>
       </section>
     </AdminLayout>
+  )
+}
+
+function AllowedStaffSection() {
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+
+  const { data, isLoading } = useAllowedStaff({ q: search || undefined, page, has_account: false })
+
+  useEffect(() => {
+    setPage(1)
+  }, [search])
+
+  const totalPages = data ? Math.ceil(data.count / 15) : 0
+
+  return (
+    <div className="rounded-lg border border-border/70 bg-card/90 overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-border/50">
+        <div className="flex items-center gap-2">
+          <UserCircleCheck size={18} className="text-muted-foreground" />
+          <h3 className="text-sm font-semibold">
+            Relação de Servidores com embarque permitido
+          </h3>
+          <span className="inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+            {data?.count ?? '…'}
+          </span>
+        </div>
+        <div className="relative">
+          <MagnifyingGlassIcon size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar por nome ou matrícula..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 w-full md:w-56 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
+          />
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="p-6 text-center text-sm text-muted-foreground">Carregando…</div>
+      ) : !data || data.results.length === 0 ? (
+        <div className="p-6 text-center text-sm text-muted-foreground">
+          {search ? 'Nenhum funcionário encontrado.' : 'Todos os funcionários do ODS já possuem conta.'}
+        </div>
+      ) : (
+        <>
+          <div className="divide-y divide-border/50">
+            {data.results.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-row flex-wrap items-center gap-x-3 gap-y-1 px-5 py-2.5 text-sm hover:bg-muted/30 md:grid md:grid-cols-[1fr_160px]"
+              >
+                <span className="font-medium truncate">{item.name}</span>
+                <span className="font-mono text-xs text-muted-foreground">{item.registration_number}</span>
+              </div>
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-2 border-t border-border/50 px-5 py-3 text-xs text-muted-foreground">
+              <span>
+                Página {page} de {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage(1)}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded border border-border bg-card hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                >
+                  <CaretDoubleLeft size={12} />
+                </button>
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded border border-border bg-card hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                >
+                  <CaretLeft size={12} />
+                </button>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded border border-border bg-card hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                >
+                  <CaretRight size={12} />
+                </button>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(totalPages)}
+                  className="inline-flex items-center justify-center h-7 w-7 rounded border border-border bg-card hover:bg-muted disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                >
+                  <CaretDoubleRight size={12} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   )
 }

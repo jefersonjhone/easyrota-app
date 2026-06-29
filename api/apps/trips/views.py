@@ -200,6 +200,15 @@ class TripViewSet(viewsets.ModelViewSet):
     filter_backends = [FilterTripViewSet]
 
     def get_queryset(self):
+        if self.action == 'retrieve':
+            if hasattr(self.request.user, "admin_profile"):
+                return Trip.objects.all()
+            elif hasattr(self.request.user, "driver_profile"):
+                return Trip.objects.filter(driver=self.request.user.driver_profile)
+            elif hasattr(self.request.user, "student_profile") or hasattr(
+                self.request.user, "civil_servant_profile"):
+                return Trip.objects.all()
+            return Trip.objects.none()
 
         if hasattr(self.request.user, "admin_profile"):
             return Trip.objects.all().order_by("trip_date", "route__departure_time")

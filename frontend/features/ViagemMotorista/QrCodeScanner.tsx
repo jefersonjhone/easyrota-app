@@ -104,33 +104,24 @@ export function QrCodeScanner({
         if (cancelled) return
         onStatusChangeRef.current?.('loading')
         document.getElementById(elementId)?.replaceChildren()
-        try {
-          console.debug('[QrCodeScanner] starting camera')
-          await scanner.start(
-            { facingMode: 'environment' },
-            scannerConfig,
-            handleSuccess,
-            handleDecodeError,
-          )
-          if (!cancelled) {
-            const v = document.querySelector(`#${elementId} video`) as HTMLVideoElement | null
-            console.debug('[QrCodeScanner] camera started, video:', v?.videoWidth, 'x', v?.videoHeight)
-            onStatusChangeRef.current?.('ready')
-          }
-        } catch {
-          await stopScanner(scanner)
-          document.getElementById(elementId)?.replaceChildren()
-          const cameras = await Html5Qrcode.getCameras()
-          console.debug('[QrCodeScanner] cameras found:', cameras.length, cameras.map((c) => ({ id: c.id, label: c.label })))
-          const fallback = cameras[0]
-          if (!fallback) throw new Error('Nenhuma camera encontrada.')
-          console.debug('[QrCodeScanner] starting with fallback camera:', fallback.id)
-          await scanner.start(fallback.id, scannerConfig, handleSuccess, handleDecodeError)
-          if (!cancelled) {
-            const v = document.querySelector(`#${elementId} video`) as HTMLVideoElement | null
-            console.debug('[QrCodeScanner] camera started, video:', v?.videoWidth, 'x', v?.videoHeight)
-            onStatusChangeRef.current?.('ready')
-          }
+
+        const cameras = await Html5Qrcode.getCameras()
+        console.debug('[QrCodeScanner] cameras found:', cameras.length, cameras.map((c) => ({ id: c.id, label: c.label })))
+
+        const rearCamera = cameras.find(
+          (c) => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment')
+        )
+        const selected = rearCamera ?? cameras[cameras.length - 1] ?? cameras[0]
+        if (!selected) throw new Error('Nenhuma camera encontrada.')
+
+        const cameraId = selected.id
+        console.debug('[QrCodeScanner] starting with camera:', cameraId, selected.label)
+
+        await scanner.start(cameraId, scannerConfig, handleSuccess, handleDecodeError)
+        if (!cancelled) {
+          const v = document.querySelector(`#${elementId} video`) as HTMLVideoElement | null
+          console.debug('[QrCodeScanner] camera started, video:', v?.videoWidth, 'x', v?.videoHeight)
+          onStatusChangeRef.current?.('ready')
         }
       })
       .catch((err) => {
