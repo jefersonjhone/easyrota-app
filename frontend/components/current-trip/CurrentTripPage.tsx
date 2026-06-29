@@ -17,6 +17,7 @@ import PassengerQRCode from "@/lib/ui/qr-code";
 import { GuestForm } from "@/components/utils/GuestForm";
 import { Dialog, DialogContent, DialogTrigger } from "@/lib/ui/dialog";
 import { Textarea } from "@/lib/ui/textarea";
+import { Button } from "@/lib/ui/button";
 
 type PassengerGuest = {
   id: string;
