@@ -6,14 +6,15 @@ export class LoginPage {
   async goto() {
     await this.page.goto('/login')
     await this.page.waitForURL('/login')
+    await this.email.waitFor({ state: 'visible' })
   }
 
   get email(): Locator {
-    return this.page.getByRole('textbox', { name: 'Email Institucional' })
+    return this.page.getByLabel('Email Institucional')
   }
 
   get password(): Locator {
-    return this.page.getByRole('textbox', { name: 'Senha', exact: true })
+    return this.page.getByLabel('Senha', { exact: true })
   }
 
   get submitButton(): Locator {

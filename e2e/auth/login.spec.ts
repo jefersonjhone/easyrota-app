@@ -1,26 +1,26 @@
 import { test, expect } from '@playwright/test'
 import { LoginPage } from '../pages/login'
-import { signupAsCivilServant, signupAsStudent } from '../utils/auth'
+import { loginCredentials } from '../utils/auth'
 
 test.describe('Login Page', () => {
 
   test('Can login as servant with valid credentials', async ({ page }) => {
-    const credentials = await signupAsCivilServant(page, '12345678')
     const loginPage = new LoginPage(page)
+    await loginPage.goto()
 
-    await loginPage.email.fill(credentials.email)
-    await loginPage.password.fill(credentials.password)
+    await loginPage.email.fill(loginCredentials.civilServant.email)
+    await loginPage.password.fill(loginCredentials.civilServant.password)
     await loginPage.submitButton.click()
   
     await expect(page).toHaveURL('/app')
   })
 
   test('Can login as student with valid credentials', async ({ page }) => {
-    const credentials = await signupAsStudent(page, '12345678')
     const loginPage = new LoginPage(page)
+    await loginPage.goto()
 
-    await loginPage.email.fill(credentials.email)
-    await loginPage.password.fill(credentials.password)
+    await loginPage.email.fill(loginCredentials.student.email)
+    await loginPage.password.fill(loginCredentials.student.password)
     await loginPage.submitButton.click()
   
     await expect(page).toHaveURL('/app')
