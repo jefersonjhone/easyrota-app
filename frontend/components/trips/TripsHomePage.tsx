@@ -1,75 +1,86 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
-import AppLayout from '@layout/app-layout'
-import { FieldDescription } from '@ui/field'
-import { Button } from '@ui/button'
-import { apiFetch } from '@/lib/api'
+import AppLayout from "@layout/app-layout";
+import { FieldDescription } from "@ui/field";
+import { Button } from "@ui/button";
+import { apiFetch } from "@/lib/api";
+import { GuestForm } from "@/components/utils/GuestForm";
+import { Dialog, DialogContent, DialogTrigger } from "@/lib/ui/dialog";
+import { Textarea } from "@/lib/ui/textarea";
 
 type AvailableTrip = {
-  id: number
-  trip_date: string
-  origin: string
-  destiny: string
-  departure_time: string
-  bus_brand: string
-  status_trip: string
-  available_seats: number
-  is_reservable: boolean
-  quorum_met?: boolean
-  reservation_deadline?: string
-  user_is_reserved?: boolean
-}
+  id: number;
+  trip_date: string;
+  origin: string;
+  destiny: string;
+  departure_time: string;
+  bus_brand: string;
+  status_trip: string;
+  available_seats: number;
+  is_reservable: boolean;
+  quorum_met?: boolean;
+  reservation_deadline?: string;
+  user_is_reserved?: boolean;
+};
 
 export function TripsHomePage() {
-  const [trips, setTrips] = useState<AvailableTrip[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [savingTripId, setSavingTripId] = useState<number | null>(null)
-  const [reservedTripIds, setReservedTripIds] = useState<number[]>([])
+  const [trips, setTrips] = useState<AvailableTrip[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [addedGuest, setAddedGuest] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [savingTripId, setSavingTripId] = useState<number | null>(null);
+  const [reservedTripIds, setReservedTripIds] = useState<number[]>([]);
 
   useEffect(() => {
     const loadTrips = async () => {
-      setError(null)
-      setIsLoading(true)
+      setError(null);
+      setIsLoading(true);
 
       try {
-        const data = await apiFetch<AvailableTrip[]>('/reservations/available-trips/')
-        setTrips(data)
+        const data = await apiFetch<AvailableTrip[]>(
+          "/reservations/available-trips/",
+        );
+        setTrips(data);
       } catch (err) {
-        console.error('Erro ao carregar viagens disponíveis:', err)
+        console.error("Erro ao carregar viagens disponíveis:", err);
 
-        const errorData = err as { data?: { detail?: string } } | undefined
-        const detail = errorData?.data?.detail
-        const message = detail || 'Não foi possível carregar as viagens no momento.'
-        setError(message)
+        const errorData = err as { data?: { detail?: string } } | undefined;
+        const detail = errorData?.data?.detail;
+        const message =
+          detail || "Não foi possível carregar as viagens no momento.";
+        setError(message);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadTrips()
-  }, [])
+    loadTrips();
+  }, []);
 
   const handleReserve = async (tripId: number) => {
-    setSavingTripId(tripId)
-    setError(null)
+    setSavingTripId(tripId);
+    setError(null);
 
     try {
-      await apiFetch('/reservations/', {
-        method: 'POST',
+      await apiFetch("/reservations/", {
+        method: "POST",
         body: JSON.stringify({ trip: tripId }),
-      })
-      setReservedTripIds((prev) => [...prev, tripId])
-      
-      const data = await apiFetch<AvailableTrip[]>('/reservations/available-trips/')
-      setTrips(data)
+      });
+      setReservedTripIds((prev) => [...prev, tripId]);
+
+      const data = await apiFetch<AvailableTrip[]>(
+        "/reservations/available-trips/",
+      );
+      setTrips(data);
     } catch (err) {
-      const errorData = err as { data?: { detail?: string } } | undefined
-      setError(errorData?.data?.detail || 'Não foi possível reservar esta viagem.')
+      const errorData = err as { data?: { detail?: string } } | undefined;
+      setError(
+        errorData?.data?.detail || "Não foi possível reservar esta viagem.",
+      );
     } finally {
-      setSavingTripId(null)
+      setSavingTripId(null);
     }
-  }
+  };
 
   return (
     <AppLayout>
@@ -103,7 +114,8 @@ export function TripsHomePage() {
         ) : (
           <div className="space-y-4">
             {trips.map((trip) => {
-              const isAlreadyReserved = trip.user_is_reserved || reservedTripIds.includes(trip.id)
+              const isAlreadyReserved =
+                trip.user_is_reserved || reservedTripIds.includes(trip.id);
 
               return (
                 <article
@@ -116,7 +128,8 @@ export function TripsHomePage() {
                         {trip.origin} &#8594; {trip.destiny}
                       </h2>
                       <p className="mt-2 text-sm text-muted-foreground">
-                        {trip.trip_date} &#8226; {trip.departure_time} &#8226; {trip.bus_brand}
+                        {trip.trip_date} &#8226; {trip.departure_time} &#8226;{" "}
+                        {trip.bus_brand}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
                         Status da viagem: {trip.status_trip}
@@ -131,45 +144,61 @@ export function TripsHomePage() {
                       <Button
                         variant="default"
                         size="sm"
-                        disabled={!trip.is_reservable || savingTripId === trip.id || isAlreadyReserved}
+                        disabled={
+                          !trip.is_reservable ||
+                          savingTripId === trip.id ||
+                          isAlreadyReserved
+                        }
                         onClick={() => handleReserve(trip.id)}
                         className={
-                          isAlreadyReserved 
-                            ? "bg-teal-600 text-white disabled:opacity-100 disabled:bg-teal-600" 
+                          isAlreadyReserved
+                            ? "bg-teal-600 text-white disabled:opacity-100 disabled:bg-teal-600"
                             : ""
                         }
                       >
                         {isAlreadyReserved
-                          ? 'Reservado'
+                          ? "Reservado"
                           : !trip.is_reservable
-                            ? 'Indisponível'
+                            ? "Indisponível"
                             : savingTripId === trip.id
-                              ? 'Reservando...'
-                              : 'Reservar'}
+                              ? "Reservando..."
+                              : "Reservar"}
                       </Button>
-
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button onClick={() => {setAddedGuest(false)}}>Adicionar Convidado</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+{!addedGuest && (<GuestForm tripId={trip.id} onGuestAdded={() => {setAddedGuest(true)}} />)}
+{addedGuest && (<Textarea className="color-green text-center">Convidado Adicionado!</Textarea>)}
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span className="rounded-full bg-muted px-3 py-1">
-                      Quórum: {trip.quorum_met ? 'atingido' : 'pendente'}
+                      Quórum: {trip.quorum_met ? "atingido" : "pendente"}
                     </span>
                     {trip.reservation_deadline ? (
                       <span className="rounded-full bg-muted px-3 py-1">
-                        Limite: {new Date(trip.reservation_deadline).toLocaleString('pt-BR')}
+                        Limite:{" "}
+                        {new Date(trip.reservation_deadline).toLocaleString(
+                          "pt-BR",
+                        )}
                       </span>
                     ) : null}
                   </div>
                 </article>
-              )
+              );
             })}
           </div>
         )}
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          As viagens exibidas respeitam o prazo de reserva e a disponibilidade de vagas no ônibus.
+          As viagens exibidas respeitam o prazo de reserva e a disponibilidade
+          de vagas no ônibus.
         </p>
       </section>
     </AppLayout>
-  )
+  );
 }

@@ -14,8 +14,9 @@ import { Separator } from "@/lib/ui/separator";
 import { apiFetch } from "@/lib/api";
 import { formatTripDate } from "@/features/user-home/config";
 import PassengerQRCode from "@/lib/ui/qr-code";
-import { GuestForm } from "./GuestForm";
-import { useAuthStore } from "@/features/auth/store/auth-store";
+import { GuestForm } from "@/components/utils/GuestForm";
+import { Dialog, DialogContent, DialogTrigger } from "@/lib/ui/dialog";
+import { Textarea } from "@/lib/ui/textarea";
 
 type PassengerGuest = {
   id: string;
@@ -63,10 +64,10 @@ function getErrorMessage(detail?: string) {
 export function CurrentTripPage() {
   const [trip, setTrip] = useState<CurrentTripData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [addedGuest, setAddedGuest] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const showMinutesCard = trip !== null && trip.minutes_remaining !== null;
-  const user = useAuthStore((state) => state.user);
   const isTripInProgress = trip?.status_trip?.toLowerCase() === "em andamento";
   const percentage = Math.min(
     100,
@@ -299,9 +300,15 @@ export function CurrentTripPage() {
                 </div>
               </CardContent>
             </Card>
-            {!isTripInProgress && user?.profile_type === "CIVIL-SERVANT" && (
-              <GuestForm tripId={trip.id} onGuestAdded={() => setRefreshKey((old) => old + 1)} />
-            )}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button className="w-full" onClick={() => {setAddedGuest(false)}}>Adicionar Convidado</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+{!addedGuest && (<GuestForm tripId={trip.id} onGuestAdded={() => {setAddedGuest(true)}} />)}
+{addedGuest && (<Textarea className="color-green text-center">Convidado Adicionado!</Textarea>)}
+                        </DialogContent>
+                      </Dialog>
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-600">

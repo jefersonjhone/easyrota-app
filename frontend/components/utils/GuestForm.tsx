@@ -4,7 +4,6 @@ import { FieldLabel } from "@/lib/ui/field";
 import { Input } from "@/lib/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -20,11 +19,12 @@ const normalizeCpf = (value: string | undefined) => {
 
 const guestSchema = z.object({
   full_name: z.string().nonempty("Informe o nome completo"),
+  email: z.email("Informe um Email válidgo"),
   cpf: z
     .string()
     .refine(
       (val) => val.replace(/\D/g, "").length === 11,
-      "CPF deve ter exatamente 11 números."
+      "CPF deve ter exatamente 11 números.",
     ),
   trip: z.number(),
 });
@@ -37,7 +37,6 @@ type Props = {
 };
 
 export function GuestForm({ tripId, onGuestAdded }: Props) {
-  const [isAdding, setIsAdding] = useState(false);
 
   const guestForm = useForm<GuestSchema>({
     resolver: zodResolver(guestSchema),
@@ -46,6 +45,7 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
       trip: tripId,
       full_name: "",
       cpf: "",
+      email: "",
     },
   });
 
@@ -59,8 +59,6 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
       });
     },
     onSuccess: () => {
-      guestForm.reset();
-      setIsAdding(false);
       onGuestAdded();
     },
     onError: (error) => {
@@ -77,31 +75,24 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
   const onSubmit = (data: GuestSchema) => {
     const payload = {
       ...data,
-      cpf: data.cpf.replace(/\D/g, ""), 
+      cpf: data.cpf.replace(/\D/g, ""),
     };
     addGuestMutation.mutate(payload);
   };
 
   return (
     <>
-      {!isAdding && (
-        <Button className="w-full" onClick={() => setIsAdding(true)}>
-          Adicionar Convidado
-        </Button>
-      )}
-      {isAdding && (
         <form
           className="p-4 shadow-md rounded-4xl border space-y-4"
           onSubmit={guestForm.handleSubmit(onSubmit)}
           onReset={() => {
-            setIsAdding(false);
             guestForm.reset();
           }}
         >
           <h1 className="text-center text-3xl sm:text-4xl font-heading font-medium">
             Informações do Convidado
           </h1>
-          
+
           <div className="space-y-1">
             <FieldLabel>Nome do convidado:</FieldLabel>
             <Input
@@ -114,35 +105,49 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
               </p>
             )}
           </div>
-          
-          <div className="space-y-1">
-            <FieldLabel>CPF do convidado:</FieldLabel>
-            <Input 
-              placeholder="000.000.000-00" 
-              maxLength={14}
-              {...cpfRest}
-              onChange={(e) => {
-                e.target.value = normalizeCpf(e.target.value);
-                formOnChange(e); 
-              }}
-            />
-            {guestForm.formState.errors.cpf && (
-              <p className="text-red-500 text-sm font-medium">
-                {guestForm.formState.errors.cpf.message}
-              </p>
-            )}
-          </div>
-          
+
+          <section className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <FieldLabel>CPF do convidado:</FieldLabel>
+              <Input
+                placeholder="000.000.000-00"
+                maxLength={14}
+                {...cpfRest}
+                onChange={(e) => {
+                  e.target.value = normalizeCpf(e.target.value);
+                  formOnChange(e);
+                }}
+              />
+              {guestForm.formState.errors.cpf && (
+                <p className="text-red-500 text-sm font-medium">
+                  {guestForm.formState.errors.cpf.message}
+                </p>
+              )}
+            </div>
+            <div>
+              <FieldLabel>Email do Convidado</FieldLabel>
+              <Input placeholder="fulano@gmail.com" {...guestForm.register("email")}/>
+              {guestForm.formState.errors.email && (
+                <p className="text-red-500 text-sm font-medium">
+                  {guestForm.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+          </section>
+
           <div className="grid gap-2 grid-cols-2 pt-2">
             <Button className="w-full" variant="ghost" type="reset">
               Cancelar
             </Button>
-            <Button className="w-full" type="submit" disabled={addGuestMutation.isPending}>
+            <Button
+              className="w-full"
+              type="submit"
+              disabled={addGuestMutation.isPending}
+            >
               {addGuestMutation.isPending ? "Adicionando..." : "Adicionar"}
             </Button>
           </div>
         </form>
-      )}
     </>
   );
 }

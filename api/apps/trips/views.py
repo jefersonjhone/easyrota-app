@@ -620,6 +620,8 @@ class GuestPassengerView(APIView):
     def post(self, request):
         trip_id = request.data.get("trip")
         cpf = request.data.get("cpf")
+        email = request.data.get("email")
+
         if not trip_id:
             return Response(
                 {"trip": ["This field is required."]},
@@ -632,9 +634,16 @@ class GuestPassengerView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if not email:
+            return Response(
+                {"email": ["This field is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         passenger = GuestPassenger.objects.create(
             cpf=cpf,
             trip_id=trip_id,
+            email=email,
             recorded_by=request.user.civil_servant_profile,
             full_name=request.data.get("full_name"),
         )
