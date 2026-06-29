@@ -4,7 +4,7 @@ import AppLayout from "@layout/app-layout";
 import { FieldDescription } from "@ui/field";
 import { Button } from "@ui/button";
 import { apiFetch } from "@/lib/api";
-import { GuestForm } from "./GuestForm";
+import { GuestForm } from "@/components/utils/GuestForm";
 import { Dialog, DialogContent, DialogTrigger } from "@/lib/ui/dialog";
 import { Textarea } from "@/lib/ui/textarea";
 
