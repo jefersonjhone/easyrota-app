@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { toast } from 'sonner'
 import {
   useCreateTrip,
   useUpdateTrip,
@@ -95,17 +94,11 @@ export function TripForm({ onSuccess, tripValues }: Props) {
       if (driver) payload.driver = driver
     }
 
-    const mutation = isEdit
-      ? updateTrip.mutateAsync(payload as Partial<Trip>)
-      : createTrip.mutateAsync(payload as Partial<Trip>)
-
-    mutation.then(() => {
-      onSuccess()
-    }).catch(() => {
-      const msg = isEdit ? 'Erro ao atualizar viagem.' : 'Erro ao criar viagem.'
-      toast.error(msg)
-      setError(msg)
-    })
+    if (isEdit) {
+      updateTrip.mutate(payload as Partial<Trip>, { onSuccess: () => onSuccess() })
+    } else {
+      createTrip.mutate(payload as Partial<Trip>, { onSuccess: () => onSuccess() })
+    }
   }
 
   return (

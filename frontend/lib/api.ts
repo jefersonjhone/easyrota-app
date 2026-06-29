@@ -60,6 +60,7 @@ export async function apiFetch<T>(
     const accessToken = useAuthStore.getState().accessToken;
     return fetch(`${API_URL}${input}`, {
     ...rest,
+    cache: 'no-cache',
     credentials: "include",
     headers: {
       "Content-Type": "application/json",

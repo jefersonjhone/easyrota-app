@@ -103,8 +103,8 @@ export function TripTable({
                   {formatDate(trip.trip_date)}
                 </span>
               )}
-              <span className={`inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-tight ${STATUS_CONFIG[trip.status].className} truncate`}>
-                {STATUS_CONFIG[trip.status].label}
+              <span className={`inline-flex items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-tight ${(STATUS_CONFIG[trip.status as keyof typeof STATUS_CONFIG] ?? { label: trip.status, className: 'bg-muted text-muted-foreground' }).className} truncate`}>
+                {(STATUS_CONFIG[trip.status as keyof typeof STATUS_CONFIG] ?? { label: trip.status, className: 'bg-muted text-muted-foreground' }).label}
               </span>
               <OccupancyBar active={trip.active_reservations} capacity={trip.seating_capacity} />
             </Link>

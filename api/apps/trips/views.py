@@ -202,7 +202,7 @@ class TripViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
 
         if hasattr(self.request.user, "admin_profile"):
-            return self.queryset
+            return Trip.objects.all().order_by("trip_date", "route__departure_time")
         elif hasattr(self.request.user, "driver_profile"):
             return Trip.objects.joinable_by_driver(self.request.user)
         elif hasattr(self.request.user, "student_profile") or hasattr(

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import {
   useDeleteTrip,
   useTrips,
@@ -160,10 +159,7 @@ export function TripsAdminHistoryPage() {
   }
 
   function handleDelete(id: string) {
-    deleteMutation.mutate(id, {
-      onSuccess: () => toast.success('Viagem removida com sucesso!'),
-      onError: () => toast.error('Erro ao remover viagem.'),
-    })
+    deleteMutation.mutate(id)
   }
 
   return (

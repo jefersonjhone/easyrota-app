@@ -47,8 +47,8 @@ export function useCreateTrip() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<Trip>) => createTrip(data),
-    onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: tripsKeys.all })
+    onSuccess: () => {
+      queryClient.refetchQueries({ queryKey: tripsKeys.all, type: 'all' })
       toast.success('Viagem criada com sucesso')
     },
     onError: () => {
@@ -61,11 +61,8 @@ export function useUpdateTrip(id: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<Trip>) => updateTrip(id, data),
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.refetchQueries({ queryKey: tripsKeys.all }),
-        queryClient.invalidateQueries({ queryKey: tripsKeys.detail(id) }),
-      ])
+    onSuccess: () => {
+      queryClient.refetchQueries({ queryKey: tripsKeys.all, type: 'all' })
       toast.success('Viagem atualizada com sucesso')
     },
     onError: () => {
@@ -79,7 +76,7 @@ export function useDeleteTrip() {
   return useMutation({
     mutationFn: (id: string) => deleteTrip(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tripsKeys.all })
+      queryClient.refetchQueries({ queryKey: tripsKeys.all, type: 'all' })
       toast.success('Viagem excluída com sucesso')
     },
     onError: () => {
@@ -93,7 +90,7 @@ export function useBulkDeleteTrips() {
   return useMutation({
     mutationFn: (ids: string[]) => bulkDeleteTrips(ids),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tripsKeys.all })
+      queryClient.refetchQueries({ queryKey: tripsKeys.all, type: 'all' })
       toast.success('Viagens excluídas com sucesso')
     },
     onError: () => {

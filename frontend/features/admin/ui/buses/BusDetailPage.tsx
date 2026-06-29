@@ -118,8 +118,8 @@ export function BusDetailPage() {
                       {t.origin} → {t.destiny}
                     </span>
                     <span className="text-muted-foreground text-xs">{new Date(t.trip_date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border inline-block w-fit text-center justify-self-center ${STATUS_CONFIG[t.status].className}`}>
-                      {STATUS_CONFIG[t.status].label}
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border inline-block w-fit text-center justify-self-center ${(STATUS_CONFIG[t.status as keyof typeof STATUS_CONFIG] ?? { label: t.status, className: 'bg-muted text-muted-foreground' }).className}`}>
+                      {(STATUS_CONFIG[t.status as keyof typeof STATUS_CONFIG] ?? { label: t.status, className: 'bg-muted text-muted-foreground' }).label}
                     </span>
                   </div>
                 ))}
