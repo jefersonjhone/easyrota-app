@@ -161,6 +161,12 @@
   color: var(--destructive);
 }
 
+.driver-trip-card__side--occupied {
+  border-color: color-mix(in oklch, var(--muted-foreground) 28%, var(--border));
+  background: color-mix(in oklch, var(--muted) 76%, white);
+  color: var(--muted-foreground);
+}
+
 .driver-trip-card__side--full {
   border-color: color-mix(in oklch, var(--muted-foreground) 22%, var(--border));
   background: color-mix(in oklch, var(--muted) 70%, white);
@@ -202,6 +208,16 @@
 .driver-trip-card__action:hover {
   background: color-mix(in oklch, var(--primary) 84%, black);
   transform: translateY(-1px);
+}
+
+.driver-trip-card__action--return {
+  border-color: #16a34a;
+  background: #16a34a;
+  color: white;
+}
+
+.driver-trip-card__action--return:hover {
+  background: #15803d;
 }
 
 .driver-trip-card__action--disabled {

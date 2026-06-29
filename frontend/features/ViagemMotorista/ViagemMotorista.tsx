@@ -21,6 +21,7 @@ import { normalizeTripTime } from '@features/trips/utils/time'
 import { apiFetch } from '@lib/api'
 import MotoraLayout from '@layout/Motora-layout'
 import { Button } from '@ui/button'
+import { Checkbox } from '@ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -58,7 +59,8 @@ type DriverTripDetail = {
   driverId: number | null
   isDriverAssociated: boolean
   capacity: number
-  associatedBuses: number
+  routeMaxBus: number
+  sameRouteTripsCount: number
   passengers: PassengerBoardItem[]
   status: string
 }
@@ -78,6 +80,8 @@ type TripModel = {
   bus?: number | null
   driver?: number | null
   bus_number_plate?: string | null
+  route_max_bus?: number | null
+  same_route_trips_count?: number | null
   status?: string | null
 }
 
@@ -138,6 +142,14 @@ function normalizeSearchText(value: string) {
 
 function normalizeCapacity(capacity?: number | null) {
   return typeof capacity === 'number' && capacity > 0 ? capacity : 46
+}
+
+function normalizePositiveInteger(value?: number | null, fallback = 1) {
+  return typeof value === 'number' && value > 0 ? value : fallback
+}
+
+function normalizeNonNegativeInteger(value?: number | null, fallback = 0) {
+  return typeof value === 'number' && value >= 0 ? value : fallback
 }
 
 function createPassengerPlaceholders(totalPassengers?: number | null): PassengerBoardItem[] {
@@ -208,7 +220,11 @@ function normalizeTripDetail(trip: TripModel) {
     driverId,
     isDriverAssociated: driverId !== null,
     capacity,
-    associatedBuses: trip.bus ? 1 : 0,
+    routeMaxBus: normalizePositiveInteger(trip.route_max_bus),
+    sameRouteTripsCount: normalizeNonNegativeInteger(
+      trip.same_route_trips_count,
+      trip.bus ? 1 : 0,
+    ),
     status: trip.status ?? '',
     passengers: normalizeCheckedInPassengers(trip, capacity),
   }
@@ -307,10 +323,12 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const [isTripLoading, setIsTripLoading] = useState(true)
   const [tripError, setTripError] = useState<string | null>(null)
   const [boardedPassengers, setBoardedPassengers] = useState<PassengerBoardItem[]>([])
-  const [confirmation, setConfirmation] = useState<'back' | 'bus' | 'start' | 'finish' | null>(null)
+  const [confirmation, setConfirmation] =
+    useState<'back' | 'bus-limit' | 'start' | 'finish' | null>(null)
   const [busOptions, setBusOptions] = useState<DriverBusOption[]>([])
   const [selectedBusId, setSelectedBusId] = useState<number | null>(null)
   const [isBusActionLoading, setIsBusActionLoading] = useState(false)
+  const [isBusRequestChecking, setIsBusRequestChecking] = useState(false)
   const [isConfirmationLoading, setIsConfirmationLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [isPassengerMenuOpen, setIsPassengerMenuOpen] = useState(false)
@@ -318,6 +336,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const [passengerName, setPassengerName] = useState('')
   const [passengerCpf, setPassengerCpf] = useState('')
   const [passengerKind, setPassengerKind] = useState<PassengerKind>('Servidor')
+  const [guestWithoutServer, setGuestWithoutServer] = useState(false)
   const [passengerStaffQuery, setPassengerStaffQuery] = useState('')
   const [staffOptions, setStaffOptions] = useState<AllowedStaffOption[]>([])
   const [selectedStaff, setSelectedStaff] = useState<AllowedStaffOption | null>(null)
@@ -340,7 +359,6 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
   const qrCount = boardedPassengers.filter((passenger) => passenger.source === 'QR').length
   const manualCount = boardedPassengers.filter((passenger) => passenger.source === 'Manual').length
   const occupancyPercent = Math.min((embarkedCount / activeCapacity) * 100, 100)
-  const shouldWarnBeforeRequestingBus = (trip?.associatedBuses ?? 0) >= 2
   const selectedBusPlate = selectedBus?.plate ?? trip?.busPlate ?? 'Sem onibus'
   const normalizedTripStatus = normalizeTripStatus(trip?.status)
   const isTripInProgress = normalizedTripStatus === 'EM ANDAMENTO'
@@ -366,9 +384,6 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
     : null
   const whatsappAlertUrl = `https://wa.me/557599744054?text=${encodeURIComponent(
     `Estou com problema no onibus ${selectedBusPlate} na viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
-  )}`
-  const whatsappRequestUrl = `https://wa.me/557599744054?text=${encodeURIComponent(
-    `Solicito novo onibus para a viagem de ${trip?.origin ?? 'Origem'} para ${trip?.destiny ?? 'Destino'}`,
   )}`
 
   useEffect(() => {
@@ -539,6 +554,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
     setPassengerName('')
     setPassengerCpf('')
     setPassengerKind('Servidor')
+    setGuestWithoutServer(false)
     setPassengerStaffQuery('')
     setStaffOptions([])
     setSelectedStaff(null)
@@ -567,6 +583,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
         passenger_type: isGuestPassenger ? 'LOCAL_GUEST' : 'LOCAL_SERVER',
         allowed_staff_id: !isGuestPassenger ? selectedStaff.id : undefined,
         associated_staff_id: isGuestPassenger ? selectedStaff.id : undefined,
+        guest_without_server: isGuestPassenger && guestWithoutServer,
         full_name: isGuestPassenger ? passengerName.trim() : undefined,
         cpf: isGuestPassenger ? passengerCpf.trim() : undefined,
       })
@@ -584,6 +601,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
       setPassengerName('')
       setPassengerCpf('')
       setPassengerKind('Servidor')
+      setGuestWithoutServer(false)
       setPassengerStaffQuery('')
       setStaffOptions([])
       setSelectedStaff(null)
@@ -666,7 +684,6 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
               busId: nextBusId,
               busPlate: nextBus?.plate ?? currentTrip.busPlate,
               isDriverAssociated: nextBusId ? true : currentTrip.isDriverAssociated,
-              associatedBuses: nextBusId ? Math.max(currentTrip.associatedBuses, 1) : 0,
             }
           : currentTrip,
       )
@@ -862,6 +879,41 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
     void handleRegisterPassenger()
   }
 
+  const handleRequestNewBus = async () => {
+    if (!trip) {
+      return
+    }
+
+    setIsBusRequestChecking(true)
+    setActionError(null)
+
+    try {
+      const refreshedTrip = await getTripFromApi(trip.id)
+      const nextTrip = {
+        ...refreshedTrip,
+        isDriverAssociated: trip.isDriverAssociated,
+      }
+
+      setTrip(nextTrip)
+
+      if (nextTrip.sameRouteTripsCount < nextTrip.routeMaxBus) {
+        const requestUrl = `https://wa.me/557599744054?text=${encodeURIComponent(
+          `Solicito novo onibus para a viagem de ${nextTrip.origin} para ${nextTrip.destiny}`,
+        )}`
+
+        window.open(requestUrl, '_blank', 'noreferrer')
+        return
+      }
+
+      setConfirmation('bus-limit')
+    } catch (error) {
+      console.warn('Nao foi possivel verificar a disponibilidade de onibus:', error)
+      setActionError('Nao foi possivel verificar a disponibilidade de onibus da rota.')
+    } finally {
+      setIsBusRequestChecking(false)
+    }
+  }
+
   const confirmationTitle =
     confirmation === 'back'
       ? 'Atencao ao voltar'
@@ -869,7 +921,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
         ? 'Iniciar viagem'
         : confirmation === 'finish'
           ? 'Finalizar viagem'
-          : 'Solicitar novo onibus'
+          : 'Limite de onibus atingido'
   const confirmationDescription =
     confirmation === 'back'
       ? isTripInProgress
@@ -879,7 +931,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
         ? 'Deseja iniciar esta viagem? Esta acao marcara a viagem como em andamento.'
         : confirmation === 'finish'
           ? 'Deseja finalizar esta viagem? Esta acao marcara a viagem como concluida.'
-          : 'Ja existem 2 onibus associados a essa viagem, deseja solicitar mais?'
+          : 'Ja existe o maximo de onibus nesta rota para hoje.'
 
   if (isTripLoading) {
     return (
@@ -1048,16 +1100,11 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
                   type="button"
                   variant="outline"
                   className="min-h-12 rounded-lg font-bold"
-                  onClick={() => {
-                    if (shouldWarnBeforeRequestingBus) {
-                      setConfirmation('bus')
-                    } else {
-                      window.open(whatsappRequestUrl, '_blank', 'noreferrer')
-                    }
-                  }}
+                  onClick={() => void handleRequestNewBus()}
+                  disabled={isBusRequestChecking}
                 >
                   <BusIcon aria-hidden="true" weight="bold" />
-                  Solicitar novo onibus
+                  {isBusRequestChecking ? 'Verificando...' : 'Solicitar novo onibus'}
                 </Button>
               </div>
             </section>
@@ -1169,6 +1216,7 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
                     setPassengerKind(event.target.value as PassengerKind)
                     setPassengerName('')
                     setPassengerCpf('')
+                    setGuestWithoutServer(false)
                   }}
                   className="w-full"
                 >
@@ -1259,6 +1307,24 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
               </div>
               {isGuestPassenger ? (
                 <>
+                  <div className="grid gap-1">
+                    <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                      <Checkbox
+                        id="driver-guest-without-server"
+                        checked={guestWithoutServer}
+                        onCheckedChange={(checked) => setGuestWithoutServer(checked === true)}
+                      />
+                      <Label
+                        htmlFor="driver-guest-without-server"
+                        className="text-sm font-semibold leading-5"
+                      >
+                        este convidado vai viajar sem servidor
+                      </Label>
+                    </div>
+                    <p className="pl-7 text-xs font-bold text-red-700">
+                      Necessário autorização da Uninfra
+                    </p>
+                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="driver-passenger-name">Nome do convidado</Label>
                     <Input
@@ -1510,10 +1576,13 @@ export function ViagemMotorista({ tripId }: ViagemMotoristaProps) {
                   OK
                 </Button>
               ) : (
-                <Button asChild className="rounded-lg">
-                  <a href={whatsappRequestUrl} target="_blank" rel="noreferrer">
-                    OK
-                  </a>
+                <Button
+                  type="button"
+                  className="rounded-lg"
+                  onClick={() => setConfirmation(null)}
+                  disabled={isConfirmationLoading}
+                >
+                  OK
                 </Button>
               )}
             </DialogFooter>

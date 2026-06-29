@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { BusIcon } from "@phosphor-icons/react";
+import { BusIcon, InfoIcon } from "@phosphor-icons/react";
 
 import AppLayout from "@/lib/layout/app-layout";
-import { Button } from "@/lib/ui/button";
 import {
   Card,
   CardContent,
@@ -75,14 +74,10 @@ export function CurrentTripPage() {
     Math.max(0, trip?.percentage_complete ?? 0)
   );
 
-  const [showQrCodes, setShowQrCodes] = useState(false);
-
   const [refreshKey, setRefreshKey] = useState(0);
-
-  useEffect(() => {
-    setShowQrCodes(false);
-  }, [trip?.id]);
-
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const isAtRisk = trip?.status_trip?.toLowerCase().includes("risco de cancelamento");
+  
   useEffect(() => {
     if (!isTripInProgress) return;
 
@@ -142,55 +137,46 @@ export function CurrentTripPage() {
           <div className="space-y-6">
 
             {!isTripInProgress && (
-              <div className="flex justify-center sm:justify-start">
-                <Button 
-                  className="w-full sm:w-auto font-semibold"
-                  onClick={() => setShowQrCodes(!showQrCodes)}
-                >
-                  {showQrCodes ? "Ocultar QR Codes" : "Mostrar QR Codes"}
-                </Button>
-              </div>
-            )}
+              <>
+                <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
+                  <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
+                    <PassengerQRCode identifier={trip.passenger_identifier} />
 
-            {!isTripInProgress && showQrCodes && (
-              <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
-                  <PassengerQRCode identifier={trip.passenger_identifier} />
+                    {trip.has_checked_in ? (
+                      <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-semibold border border-green-200 flex items-center gap-2">
+                        Check-in Realizado
+                      </span>
+                    ) : (
+                      <span className="px-4 py-1.5 rounded-full bg-amber-100 text-amber-800 text-sm font-semibold border border-amber-200 flex items-center gap-2">
+                        Check-in Pendente
+                      </span>
+                    )}
+                  </CardContent>
+                </Card>
 
-                  {trip.has_checked_in ? (
-                    <span className="px-4 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-semibold border border-green-200 flex items-center gap-2">
-                      Check-in Realizado
-                    </span>
-                  ) : (
-                    <span className="px-4 py-1.5 rounded-full bg-amber-100 text-amber-800 text-sm font-semibold border border-amber-200 flex items-center gap-2">
-                      Check-in Pendente
-                    </span>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {!isTripInProgress && showQrCodes && trip.passenger_guests.length > 0 && (
-              <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
-                <div 
-                  className={`grid grid-cols-1 ${
-                    trip.passenger_guests.length === 1 
-                      ? "" 
-                      : "sm:grid-cols-2 sm:divide-y-0 sm:divide-x"
-                  } divide-y`}
-                >
-                  {trip.passenger_guests.map((guest: PassengerGuest) => (
-                    <div key={guest.id} className="flex flex-col items-center justify-center p-6 gap-4">
-                      <PassengerQRCode identifier={guest.id} />
-                      
-                      <div className="text-center space-y-1">
-                        <FieldLabel className="text-base text-center w-full block">{guest.full_name}</FieldLabel>
-                        <p className="text-sm text-slate-500 font-medium text-center w-full">{guest.cpf}</p>
-                      </div>
+                {trip.passenger_guests.length > 0 && (
+                  <Card className="rounded-xl border overflow-hidden bg-white shadow-sm">
+                    <div 
+                      className={`grid grid-cols-1 ${
+                        trip.passenger_guests.length === 1 
+                          ? "" 
+                          : "sm:grid-cols-2 sm:divide-y-0 sm:divide-x"
+                      } divide-y`}
+                    >
+                      {trip.passenger_guests.map((guest: PassengerGuest) => (
+                        <div key={guest.id} className="flex flex-col items-center justify-center p-6 gap-4">
+                          <PassengerQRCode identifier={guest.id} />
+                          
+                          <div className="text-center space-y-1">
+                            <FieldLabel className="text-base text-center w-full block">{guest.full_name}</FieldLabel>
+                            <p className="text-sm text-slate-500 font-medium text-center w-full">{guest.cpf}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </Card>
+                  </Card>
+                )}
+              </>
             )}
 
             <Card className="rounded-xl border">
@@ -223,7 +209,36 @@ export function CurrentTripPage() {
 
                   <div className="space-y-3 rounded-lg bg-slate-50 p-4">
                     <p className="text-sm text-slate-500">Status da viagem</p>
-                    <p className="text-lg font-semibold">{trip.status_trip}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-semibold">{trip.status_trip}</p>
+                      {isAtRisk && (
+                        <button 
+                          type="button" 
+                          className="group relative flex cursor-pointer items-center focus:outline-none"
+                          onClick={() => setIsTooltipOpen((prev) => !prev)}
+                          onBlur={() => setIsTooltipOpen(false)}
+                          onMouseLeave={() => setIsTooltipOpen(false)}
+                        >
+                          <InfoIcon 
+                            weight="fill" 
+                            className="size-6 grid place-items-center rounded-full border border-orange-200 bg-white text-orange-500 shadow-sm drop-shadow" 
+                            />
+                          
+                          <div 
+                            className={`absolute bottom-full -right-4 z-50 mb-2 w-[160px] rounded-md bg-slate-800 px-3 py-2 text-center text-xs font-medium leading-snug text-white shadow-lg sm:right-auto sm:left-1/2 sm:-translate-x-1/2 ${
+                              isTooltipOpen ? "block" : "hidden sm:group-hover:block"
+                            }`}
+                          >
+                            Quórum insuficiente,
+                            <br />
+                            Falta 1 servidor.
+                            <span 
+                              className="absolute right-6 top-full border-[5px] border-transparent border-t-slate-800 sm:left-1/2 sm:right-auto sm:-translate-x-1/2" 
+                              />
+                          </div>
+                        </button>
+                      )}
+                    </div>
 
                     <p className="text-sm text-slate-500">Ônibus</p>
                     <p className="text-lg font-semibold">
