@@ -121,8 +121,13 @@ class RouteSerializer(serializers.ModelSerializer):
         destiny = data.get("destiny") or (
             self.instance.destiny if self.instance else ""
         )
-        buses = data.get("max_bus") or (
-            self.instane.max_bus if self.instance else -1
+        # ``get`` distinguishes an omitted value from 0, which must reach
+        # ``_check_max_bus`` and be rejected instead of replaced as falsy.
+        buses = data.get(
+            "max_bus",
+            self.instance.max_bus
+            if self.instance
+            else Route._meta.get_field("max_bus").get_default(),
         )
 
         self._check_locations(origin, destiny)
