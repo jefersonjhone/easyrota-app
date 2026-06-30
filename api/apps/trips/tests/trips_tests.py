@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+from this import s
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -202,9 +203,9 @@ class TripAPITestCase(APITestCase):
         response = self.client.get(self.trip_list_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        trip_ids = [item["id"] for item in response.data]
-        self.assertIn(today_trip.id, trip_ids)
-        self.assertNotIn(tomorrow_trip.id, trip_ids)
+        trip_ids = [str(item["id"]) for item in response.data]
+        self.assertIn(str(today_trip.id), trip_ids)
+        self.assertNotIn(str(tomorrow_trip.id), trip_ids)
 
     def test_admin_can_filter_trips_by_status_and_recent_date(self):
         """Admins can filter by trip status and order by latest date."""
@@ -236,8 +237,8 @@ class TripAPITestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            [item["id"] for item in response.data],
-            [newer_confirmed.id, older_confirmed.id],
+            [str(item["id"]) for item in response.data],
+            [str(newer_confirmed.id), str(older_confirmed.id)],
         )
 
     def test_cannot_create_trip_in_previous_days(self):

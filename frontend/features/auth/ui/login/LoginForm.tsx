@@ -15,6 +15,7 @@ import { Route as RecoveryRoute } from "@/pages/recuperar"
 import { Route as SignupRoute } from "@/pages/signup"
 import { Route as AppRoute } from "@/pages/app"
 import { Route as AdminRoute } from "@/pages/admin"
+import {Route as DriverRoute} from "@/pages/app/motorista"
 
 // Components
 import HintInvalid from '@features/auth/ui/HintInvalid'
@@ -69,7 +70,7 @@ export function LoginForm() {
             if (isAdmin) {
                 navigate({ to: AdminRoute.to, replace: true })
             } else if (user?.profile_type === 'DRIVER') {
-                navigate({ to: '/app/motorista' as never, replace: true })
+                navigate({ to:DriverRoute.to, replace: true })
             } else {
                 navigate({ to: AppRoute.to, replace: true })
             }

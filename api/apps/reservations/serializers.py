@@ -487,9 +487,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         # if full but an unallocated bus is available
         user = self.context["request"].user
         if hasattr(user, "civil_servant_profile"):
-            from ..trips.services import has_available_bus
-
-            return has_available_bus(obj.trip_date, obj.route)
+            return TripService.has_available_bus(obj.trip_date, obj.route)
 
         return False
 

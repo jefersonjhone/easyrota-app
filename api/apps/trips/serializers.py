@@ -653,7 +653,17 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GuestPassenger
-        fields = ("id", "cpf", "full_name")
+        fields = (
+            "id", 
+            "cpf", 
+            "full_name", 
+            "trip_date",
+            "departure_time", 
+            "origin", 
+            "destiny", 
+            "arrival_time", 
+            "invited_by"
+        )
 
 
 class AdminTripDetailSerializer(serializers.ModelSerializer):
