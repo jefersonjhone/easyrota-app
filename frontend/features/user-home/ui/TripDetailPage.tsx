@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { Button } from "@ui/button";
@@ -385,9 +385,9 @@ function InfoCell({
   label,
   value,
 }: {
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
 }) {
   return (
     <div className="rounded-2xl bg-muted/20 p-4">
