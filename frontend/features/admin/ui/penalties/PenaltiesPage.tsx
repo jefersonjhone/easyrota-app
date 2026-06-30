@@ -40,7 +40,7 @@ export function PenaltiesPage() {
   const [isActiveFilter, setIsActiveFilter] = useState('')
   const [periodDays, setPeriodDays] = useState('30')
   const [weekdays, setWeekdays] = useState<Set<number>>(new Set())
-  const [expandedTripId, setExpandedTripId] = useState<number | null>(null)
+  const [expandedTripId, setExpandedTripId] = useState<string | null>(null)
 
   const filters: PenaltyFilters = useMemo(() => {
     const f: PenaltyFilters = {}
@@ -100,7 +100,7 @@ export function PenaltiesPage() {
     setWeekdays(new Set())
   }
 
-  const handleToggle = (item: { id: number; is_active: boolean }) => {
+  const handleToggle = (item: { id: string; is_active: boolean }) => {
     updateMutation.mutate({ id: item.id, data: { is_active: !item.is_active } })
   }
 

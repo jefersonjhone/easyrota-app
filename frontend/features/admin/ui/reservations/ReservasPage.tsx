@@ -62,7 +62,7 @@ export function ReservasPage() {
   const [passengerTypeFilter, setPassengerTypeFilter] = useState('')
   const [periodDays, setPeriodDays] = useState('7')
   const [weekdays, setWeekdays] = useState<Set<number>>(new Set())
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -429,7 +429,7 @@ function EditReservationForm({
 }: {
   reservation: Reservation
   onClose: () => void
-  onSave: (id: number, data: Partial<Reservation>) => void
+  onSave: (id: string, data: Partial<Reservation>) => void
 }) {
   const [status, setStatus] = useState(reservation.status)
   const [checkIn, setCheckIn] = useState(reservation.check_in)

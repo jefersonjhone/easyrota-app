@@ -1,7 +1,7 @@
 import { apiFetch } from '@lib/api'
 
 export interface Admin {
-  id: number
+  id: string
   user_id: string
   full_name: string
   email: string

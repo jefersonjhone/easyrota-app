@@ -1,11 +1,11 @@
 import { apiFetch } from '@lib/api'
 
 export interface Reservation {
-  id: number
+  id: string
   passenger_name: string
   passenger_type: 'ESTUDANTE' | 'SERVIDOR' | 'CONVIDADO'
   passenger_id_display: string | null
-  trip_id: number
+  trip_id: string
   trip_date: string
   route: string
   departure_time: string
@@ -24,7 +24,7 @@ export interface ReservationFilters {
 }
 
 export interface TripReservationGroup {
-  trip_id: number
+  trip_id: string
   trip_date: string
   departure_time: string
   route: string
@@ -52,21 +52,21 @@ export function fetchReservationsGrouped(filters: ReservationFilters = {}) {
   return apiFetch<TripReservationGroup[]>(`/reservations/grouped-by-trip/${buildParams(filters)}`)
 }
 
-export function updateReservation(id: number, data: Partial<Reservation>) {
+export function updateReservation(id: string, data: Partial<Reservation>) {
   return apiFetch<Reservation>(`/reservations/manage/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
 }
 
-export function deleteReservation(id: number) {
+export function deleteReservation(id: string) {
   return apiFetch<void>(`/reservations/manage/${id}/`, { method: 'DELETE' })
 }
 
 export interface CreateReservationPayload {
-  trip: number
+  trip: string
   passenger_type: 'ESTUDANTE' | 'SERVIDOR' | 'CONVIDADO'
-  profile_id?: number
+  profile_id?: string
   guest_name?: string
   guest_cpf?: string
 }

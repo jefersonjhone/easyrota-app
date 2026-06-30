@@ -1,7 +1,7 @@
 import { apiFetch } from '@lib/api'
 
 export interface Penalty {
-  id: number
+  id: string
   student_name: string
   student_id_display: string
   description: string
@@ -9,7 +9,7 @@ export interface Penalty {
   trip_date: string
   route: string
   departure_time: string
-  reservation_id: number
+  reservation_id: string
   created_at: string
 }
 
@@ -21,7 +21,7 @@ export interface PenaltyFilters {
 }
 
 export interface PunishmentGroup {
-  trip_id: number
+  trip_id: string
   trip_date: string
   departure_time: string
   route: string
@@ -49,13 +49,13 @@ export function fetchPenaltiesGrouped(filters: PenaltyFilters = {}) {
   return apiFetch<PunishmentGroup[]>(`/reservations/punishments/grouped-by-trip/${qs ? `?${qs}` : ''}`)
 }
 
-export function updatePenalty(id: number, data: { is_active: boolean }) {
+export function updatePenalty(id: string, data: { is_active: boolean }) {
   return apiFetch<Penalty>(`/reservations/punishments/manage/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
 }
 
-export function deletePenalty(id: number) {
+export function deletePenalty(id: string) {
   return apiFetch<void>(`/reservations/punishments/manage/${id}/`, { method: 'DELETE' })
 }

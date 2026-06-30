@@ -9,10 +9,11 @@ import { MagnifyingGlassIcon, UserPlus } from "@phosphor-icons/react"
 
 import { apiFetch } from '@lib/api'
 import { useCreateReservation } from '@/features/admin/hooks/useReservations'
+import type { CreateReservationPayload } from '@/features/admin/services/reservations'
 import { tripAdminKeys } from '@/features/admin/hooks/useTripAdminDetail'
 
 interface SearchResult {
-  id: number
+  id: string
   full_name: string
   student_id?: string
   civil_servant_id?: string
@@ -75,7 +76,7 @@ export function AddPassengerModal({ tripId, open, onOpenChange }: Props) {
   }, [search, type])
 
   const handleSubmit = async () => {
-    const payload: Record<string, unknown> = { trip: tripId, passenger_type: type }
+    const payload: CreateReservationPayload = { trip: tripId, passenger_type: type }
 
     if (type === 'CONVIDADO') {
       if (!guestName.trim() || !guestCpf.trim()) return
