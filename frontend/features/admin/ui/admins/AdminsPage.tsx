@@ -76,7 +76,8 @@ function AdminForm({
       createMutation.mutate(payload, {
         onSuccess: () => { toast.success('Administrador criado com sucesso!'); onSuccess() },
         onError: (err: unknown) => {
-          const msg = err?.data?.email?.[0] ?? err?.data?.detail ?? 'Erro ao criar'
+          const e = err as { data?: { email?: string[]; detail?: string } }
+          const msg = e?.data?.email?.[0] ?? e?.data?.detail ?? 'Erro ao criar'
           setError(msg)
           toast.error(msg)
         },
