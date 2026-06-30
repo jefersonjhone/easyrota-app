@@ -261,7 +261,7 @@ class TripViewSet(viewsets.ModelViewSet):
         if hasattr(self.request.user, "admin_profile"):
             return Trip.objects.all().order_by("trip_date", "route__departure_time")
         elif hasattr(self.request.user, "driver_profile"):
-            return Trip.objects.joinable_by_driver(self.request.user)
+            return Trip.objects.daily_driver_list(self.request.user)
         elif hasattr(self.request.user, "student_profile") or hasattr(
             self.request.user, "civil_servant_profile"
         ):
@@ -270,7 +270,7 @@ class TripViewSet(viewsets.ModelViewSet):
         return Trip.objects.none()
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
         if hasattr(request.user, "admin_profile"):
             serializer = self.serializer_class
         elif hasattr(request.user, "driver_profile"):
