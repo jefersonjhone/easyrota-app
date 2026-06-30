@@ -10,6 +10,7 @@ import {
   User,
   IdentificationBadge,
   WarningCircle,
+  Info,
 } from "@phosphor-icons/react";
 
 import { Button } from "@/lib/ui/button";
@@ -91,13 +92,10 @@ export function ReservationDetailPage() {
   const isTripInProgress = reservation?.status_trip?.toLowerCase() === "em andamento";
   const percentage = Math.min(100, Math.max(0, reservation?.percentage_complete ?? 0));
 
-  const [showQrCodes, setShowQrCodes] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-
-  useEffect(() => {
-    setShowQrCodes(false);
-  }, [reservation?.id]);
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const isAtRisk = reservation?.status_trip?.toLowerCase().includes("risco de cancelamento");
 
   useEffect(() => {
     if (!isTripInProgress) return;
@@ -177,66 +175,57 @@ export function ReservationDetailPage() {
           <div className="space-y-6">
 
             {!isTripInProgress && (
-              <div className="flex justify-center sm:justify-start">
-                <Button
-                  className="w-full sm:w-auto font-semibold"
-                  onClick={() => setShowQrCodes(!showQrCodes)}
-                >
-                  {showQrCodes ? "Ocultar QR Code" : "Mostrar QR Code"}
-                </Button>
-              </div>
-            )}
+              <>
+                <Card className="rounded-xl border overflow-hidden bg-card shadow-sm">
+                  <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
+                    <PassengerQRCode identifier={reservation.passenger_identifier} />
 
-            {!isTripInProgress && showQrCodes && (
-              <Card className="rounded-xl border overflow-hidden bg-card shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
-                  <PassengerQRCode identifier={reservation.passenger_identifier} />
+                    {reservation.has_checked_in ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/20">
+                        <CheckCircle size={14} />
+                        Check-in Realizado
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-600/20">
+                        Check-in Pendente
+                      </span>
+                    )}
+                  </CardContent>
+                </Card>
 
-                  {reservation.has_checked_in ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/20">
-                      <CheckCircle size={14} />
-                      Check-in Realizado
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-600/20">
-                      Check-in Pendente
-                    </span>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                {reservation.has_checked_in && (
+                  <Card className="rounded-xl border overflow-hidden bg-card shadow-sm">
+                    <CardContent className="flex flex-col items-center justify-center p-6 gap-4">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/20">
+                        <CheckCircle size={14} />
+                        Check-in realizado - embarque confirmado
+                      </span>
+                    </CardContent>
+                  </Card>
+                )}
 
-            {!isTripInProgress && showQrCodes && reservation.has_checked_in && (
-              <Card className="rounded-xl border overflow-hidden bg-card shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center p-6 gap-4">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/20">
-                    <CheckCircle size={14} />
-                    Check-in realizado - embarque confirmado
-                  </span>
-                </CardContent>
-              </Card>
-            )}
-
-            {!isTripInProgress && showQrCodes && reservation.passenger_guests.length > 0 && (
-              <Card className="rounded-xl border overflow-hidden bg-card shadow-sm">
-                <div
-                  className={`grid grid-cols-1 ${
-                    reservation.passenger_guests.length === 1
-                      ? ""
-                      : "sm:grid-cols-2 sm:divide-y-0 sm:divide-x"
-                  } divide-y`}
-                >
-                  {reservation.passenger_guests.map((guest) => (
-                    <div key={guest.id} className="flex flex-col items-center justify-center p-6 gap-4">
-                      <PassengerQRCode identifier={guest.passenger_identifier} />
-                      <div className="text-center space-y-1">
-                        <FieldLabel className="text-base text-center w-full block">{guest.full_name}</FieldLabel>
-                        <p className="text-sm text-muted-foreground font-medium text-center w-full">{guest.cpf}</p>
-                      </div>
+                {reservation.passenger_guests.length > 0 && (
+                  <Card className="rounded-xl border overflow-hidden bg-card shadow-sm">
+                    <div
+                      className={`grid grid-cols-1 ${
+                        reservation.passenger_guests.length === 1
+                          ? ""
+                          : "sm:grid-cols-2 sm:divide-y-0 sm:divide-x"
+                      } divide-y`}
+                    >
+                      {reservation.passenger_guests.map((guest) => (
+                        <div key={guest.id} className="flex flex-col items-center justify-center p-6 gap-4">
+                          <PassengerQRCode identifier={guest.passenger_identifier} />
+                          <div className="text-center space-y-1">
+                            <FieldLabel className="text-base text-center w-full block">{guest.full_name}</FieldLabel>
+                            <p className="text-sm text-muted-foreground font-medium text-center w-full">{guest.cpf}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </Card>
+                  </Card>
+                )}
+              </>
             )}
 
             <Card className="rounded-xl border border-border/70 bg-card">
@@ -290,7 +279,35 @@ export function ReservationDetailPage() {
                         <IdentificationBadge size={14} weight="duotone" />
                         Status da viagem
                       </div>
-                      <p className="text-sm md:text-lg font-bold">{reservation.status_trip}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm md:text-lg font-bold">{reservation.status_trip}</p>
+                        {isAtRisk && (
+                          <button 
+                            type="button" 
+                            className="group relative flex cursor-pointer items-center focus:outline-none"
+                            onClick={() => setIsTooltipOpen((prev) => !prev)}
+                            onBlur={() => setIsTooltipOpen(false)}
+                          >
+                            <Info 
+                              weight="fill" 
+                              className="size-5 md:size-6 grid place-items-center rounded-full border border-orange-200 bg-white text-orange-500 shadow-sm drop-shadow cursor-pointer" 
+                              />
+                            
+                            <div 
+                              className={`absolute bottom-full left-1/2 -translate-x-1/2 z-50 mb-2 w-[160px] rounded-md bg-slate-800 px-3 py-2 text-center text-xs font-medium leading-snug text-white shadow-lg ${
+                                isTooltipOpen ? "block" : "hidden sm:group-hover:block"
+                              }`}
+                            >
+                              Quórum insuficiente,
+                              <br />
+                              Falta 1 servidor.
+                              <span 
+                                className="absolute left-1/2 -translate-x-1/2 top-full border-[5px] border-transparent border-t-slate-800" 
+                                />
+                            </div>
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="rounded-2xl bg-muted/20 p-3 md:p-4">
                       <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase mb-2">
