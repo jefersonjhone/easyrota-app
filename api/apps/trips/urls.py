@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     BusViewSet,
     GuestHistoryView,
+    GuestPassengerDetailView,
     GuestPassengerView,
     MyNextTripView,
     PrivateTripDetailView,
@@ -24,6 +25,11 @@ urlpatterns = [
     path("trips/current/", MyNextTripView.as_view(), name="trip-current"),
     path("trips/guest/", GuestPassengerView.as_view(), name="trip-guest"),
     path("guests/history/", GuestHistoryView.as_view(), name="guest-history"),
+    path(
+        "trips/guest/<str:guest_id>/",
+        GuestPassengerDetailView.as_view(),
+        name="trip-guest-detail",
+    ),
     path("trips/private/", PrivateTripDetailView.as_view(), name="trip-private"),
     path("", include(router.urls)),
 ]

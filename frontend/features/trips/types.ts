@@ -76,7 +76,8 @@ export type LocalTripPassengerPayload = {
   trip: string
   passenger_type: 'LOCAL_SERVER' | 'LOCAL_GUEST'
   allowed_staff_id?: string
-  associated_staff_id?: string
+  associated_staff_id?: number
+  guest_without_server?: boolean
   full_name?: string
   cpf?: string
 }
@@ -134,6 +135,7 @@ export type TripRequest = {
   reason: string
   status: TripRequestStatus
   feedback: string | null
+  access_code: string | null
   created_at: string
 }
 

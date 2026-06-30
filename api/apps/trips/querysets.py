@@ -7,8 +7,8 @@ from django.utils import timezone
 class TripQuerySet(models.QuerySet):
     """Custom queryset methods for Trip model."""
 
-    def joinable_by_driver(self, user):
-        """Return trips that a driver can open from the driver trips list."""
+    def daily_driver_list(self, user):
+        """Return today's trips for the driver trips list."""
 
         return self.upcoming().by_date(timezone.localdate()).filter(
             models.Q(driver__user=user) | models.Q(driver__isnull=True)

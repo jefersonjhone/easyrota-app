@@ -247,6 +247,7 @@ class LocalTripPassengerSerializer(serializers.Serializer):
     kind = serializers.CharField(required=False, allow_blank=True)
     allowed_staff_id = serializers.UUIDField(required=False)
     associated_staff_id = serializers.UUIDField(required=False)
+    guest_without_server = serializers.BooleanField(required=False, default=False)
     name = serializers.CharField(required=False, allow_blank=True, max_length=255)
     registration_number = serializers.CharField(
         required=False, allow_blank=True, max_length=32

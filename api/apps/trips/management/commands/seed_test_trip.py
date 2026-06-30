@@ -100,13 +100,15 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f"A NOTIFICAÇÃO DISPARARÁ EM 2 MINUTOS, ÀS: {
-                    local_notify.strftime('%H:%M:%S')}"
+                    local_notify.strftime('%H:%M:%S')
+                }"
             )
         )
         self.stdout.write(
             self.style.WARNING(
                 f"Hora atual no sistema (Local): {
-                    timezone.localtime().strftime('%H:%M:%S')}"
+                    timezone.localtime().strftime('%H:%M:%S')
+                }"
             )
         )
         self.stdout.write(

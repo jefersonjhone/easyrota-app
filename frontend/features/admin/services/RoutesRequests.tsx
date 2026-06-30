@@ -6,6 +6,7 @@ export type CreateRouteValues = {
   destiny: string
   departure_time: string
   arrival_time: string
+  max_bus: number
 }
 
 type Values = {
@@ -14,6 +15,7 @@ type Values = {
   departure_time: string
   arrival_time: string
   administrator: string
+  max_bus: number
 }
 
 export type CreateRouteErrors = Record<string, string[]>
@@ -36,6 +38,7 @@ export async function CreateRouteRequest(values: CreateRouteValues): Promise<Cre
     destiny: values.destiny,
     departure_time: values.departure_time,
     arrival_time: values.arrival_time,
+    max_bus: values.max_bus,
     administrator: adm,
   }
   const response: CreateRouteResponse = await apiFetch("/routes/", {

@@ -109,39 +109,6 @@ jobs:
       - name: Install backend dependencies
         run: poetry install --no-interaction --no-ansi
 
-      - name: Create Django environment file
-        run: |
-          cat > api/.env << EOF
-          SECRET_KEY="some-secrete-key"
-          DEBUG=True
-          DJANGO_SETTINGS_MODULE="config.settings.development"
-          EOF
-
-      - name: Start backend server
-        working-directory: api
-        run: |
-          poetry run python manage.py migrate
-          poetry run python manage.py runserver 127.0.0.1:8000 > ../django-server.log 2>&1 &
-          echo $! > ../django-server.pid
-
-      - name: Wait for backend server
-        run: |
-          for i in {1..30}; do
-            if curl -fsS http://127.0.0.1:8000/api/docs/ > /dev/null; then
-              echo "Backend is ready"
-              exit 0
-            fi
-            if [[ -f django-server.pid ]] && ! kill -0 "$(cat django-server.pid)" 2>/dev/null; then
-              echo "Backend process exited early"
-              cat django-server.log || true
-              exit 1
-            fi
-            sleep 2
-          done
-          echo "Backend did not become ready in time"
-          cat django-server.log || true
-          exit 1
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:

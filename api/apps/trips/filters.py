@@ -11,10 +11,17 @@ class FilterTripViewSet(filters.BaseFilterBackend):
 
         status = request.query_params.get("status")
         if status:
-            return queryset.filter(status=status)
+            queryset = queryset.filter(status=status)
 
         exclude_statuses = request.query_params.get("exclude_statuses")
         if exclude_statuses:
             statuses = [s.strip() for s in exclude_statuses.split(",")]
             queryset = queryset.exclude(status__in=statuses)
+
+        date_order = request.query_params.get("date_order")
+        if date_order in {"recent", "recentes", "mais_recentes", "desc"}:
+            queryset = queryset.order_by("-trip_date", "-route__departure_time", "-id")
+        elif date_order in {"distant", "distantes", "mais_distantes", "asc"}:
+            queryset = queryset.order_by("trip_date", "route__departure_time", "id")
+
         return queryset

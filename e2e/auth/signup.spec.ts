@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test'
 import {
-  civilServantName,
-  civilServantRegistration,
-  uniqueEmail,
+  civilServantFor,
+  uniqueCivilServantEmail,
   uniqueStudentEmail,
   uniqueRegistration,
 } from '../utils/auth'
@@ -11,37 +10,48 @@ import { SignupPage } from '../pages/signup'
 test.describe('Signup Page', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/signup')
+    await new SignupPage(page).goto()
   })
 
-  test('Can create a new account as Professor', async ({ page }) => {
+  test('Can start registration as Professor', async ({ page }, testInfo) => {
     const signupPage = new SignupPage(page)
+    const civilServant = civilServantFor(testInfo.project.name, testInfo.retry)
+    const email = uniqueCivilServantEmail()
 
     await signupPage.asCivilServant()
 
-    await signupPage.email.fill(uniqueStudentEmail())
-    await signupPage.fullName.fill(civilServantName)
-    await signupPage.registration.fill(civilServantRegistration)
+    await signupPage.email.fill(email)
+    await signupPage.fullName.fill(civilServant.name)
+    await signupPage.registration.fill(civilServant.registration)
     await signupPage.password.fill('12345678')
     await signupPage.confirmPassword.fill('12345678')
+    await signupPage.legalConsent.check()
     await signupPage.submitButton.click()
 
-    await expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL(/\/verificar\?/)
+    const verificationUrl = new URL(page.url())
+    expect(verificationUrl.searchParams.get('email')).toBe(email)
+    expect(verificationUrl.searchParams.get('token')).toBeTruthy()
   })
 
-  test('Can create a new account as Student', async ({ page }) => {
+  test('Can start registration as Student', async ({ page }) => {
     const signupPage = new SignupPage(page)
+    const email = uniqueStudentEmail()
 
     await signupPage.asStudent()
 
-    await signupPage.email.fill(uniqueEmail())
+    await signupPage.email.fill(email)
     await signupPage.fullName.fill('Estudante da Silva Santos')
     await signupPage.registration.fill(uniqueRegistration())
     await signupPage.password.fill('12345678')
     await signupPage.confirmPassword.fill('12345678')
+    await signupPage.legalConsent.check()
     await signupPage.submitButton.click()
 
-    await expect(page).toHaveURL('/login')
+    await expect(page).toHaveURL(/\/verificar\?/)
+    const verificationUrl = new URL(page.url())
+    expect(verificationUrl.searchParams.get('email')).toBe(email)
+    expect(verificationUrl.searchParams.get('token')).toBeTruthy()
   })
 
   test('Can go to Login page', async ({ page }) => {
@@ -63,6 +73,7 @@ test.describe('Signup Page', () => {
     await expect(signupPage.registration).toBeVisible()
     await expect(signupPage.password).toBeVisible()
     await expect(signupPage.confirmPassword).toBeVisible()
+    await expect(signupPage.legalConsent).toBeVisible()
     await expect(signupPage.submitButton).toBeVisible()
   })
 
@@ -76,6 +87,7 @@ test.describe('Signup Page', () => {
     await expect(signupPage.registration).toBeVisible()
     await expect(signupPage.password).toBeVisible()
     await expect(signupPage.confirmPassword).toBeVisible()
+    await expect(signupPage.legalConsent).toBeVisible()
     await expect(signupPage.submitButton).toBeVisible()
   })
 

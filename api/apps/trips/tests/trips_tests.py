@@ -151,8 +151,8 @@ class TripAPITestCase(APITestCase):
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
         self.assertEqual(detail_response.data["id"], str(trip.id))
 
-    def test_driver_cannot_list_or_retrieve_another_in_progress_trip(self):
-        """Trips in progress remain hidden from drivers that are not assigned."""
+    def test_driver_can_list_but_not_retrieve_another_occupied_trip(self):
+        """Occupied trips appear in the daily list but cannot be opened."""
         other_driver_user = CustomUser.objects.create_user(
             email="outro-motorista@easyrota.com",
             password="password123",
@@ -181,6 +181,64 @@ class TripAPITestCase(APITestCase):
             reverse("trip-detail", kwargs={"pk": trip.id})
         )
         self.assertEqual(detail_response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_driver_list_contains_only_today_trips(self):
+        """The driver trips screen lists only daily trips."""
+        self.client.force_authenticate(user=self.driver_user)
+
+        today_trip = Trip.objects.create(
+            trip_date=self.today,
+            bus=self.bus,
+            route=self.route_morning,
+            status="CONFIRMADA",
+        )
+        tomorrow_trip = Trip.objects.create(
+            trip_date=self.tomorrow,
+            bus=self.bus,
+            route=self.route_overlapping,
+            status="CONFIRMADA",
+        )
+
+        response = self.client.get(self.trip_list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        trip_ids = [item["id"] for item in response.data]
+        self.assertIn(today_trip.id, trip_ids)
+        self.assertNotIn(tomorrow_trip.id, trip_ids)
+
+    def test_admin_can_filter_trips_by_status_and_recent_date(self):
+        """Admins can filter by trip status and order by latest date."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        older_confirmed = Trip.objects.create(
+            trip_date=self.tomorrow,
+            bus=self.bus,
+            route=self.route_morning,
+            status="CONFIRMADA",
+        )
+        newer_confirmed = Trip.objects.create(
+            trip_date=self.tomorrow + timedelta(days=1),
+            bus=self.bus,
+            route=self.route_overlapping,
+            status="CONFIRMADA",
+        )
+        Trip.objects.create(
+            trip_date=self.tomorrow + timedelta(days=2),
+            bus=self.bus,
+            route=self.route_midnight,
+            status="CANCELADA",
+        )
+
+        response = self.client.get(
+            self.trip_list_url,
+            {"status": "CONFIRMADA", "date_order": "recent"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [item["id"] for item in response.data],
+            [newer_confirmed.id, older_confirmed.id],
+        )
 
     def test_cannot_create_trip_in_previous_days(self):
         """It ensures that the system blocks trips scheduled for previous days."""

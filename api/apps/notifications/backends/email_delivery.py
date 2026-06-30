@@ -25,12 +25,14 @@ class ResendEmailBackend(BaseEmailBackend):
                     "subject": message.subject,
                 }
 
+                # Check if it's an EmailMultiAlternatives with HTML content
                 if hasattr(message, "alternatives") and message.alternatives:
                     for content, mimetype in message.alternatives:
                         if mimetype == "text/html":
                             params["html"] = content
                             break
 
+                # Fallback to text body if no HTML or just text
                 if "html" not in params:
                     params["text"] = message.body
                 elif message.body:

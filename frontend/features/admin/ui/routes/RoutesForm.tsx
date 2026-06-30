@@ -16,6 +16,7 @@ const schema = z.object({
   destiny: z.string().nonempty("Informe o destino"),
   departure_time: z.string().nonempty("Informe o horário de saída"),
   arrival_time: z.string().nonempty("Informe o horário de chegada"),
+  max_bus: z.string().nonempty("Informe a quantidade de onibus disponiveis"),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -45,24 +46,30 @@ export function RouteForm({
       destiny: routeValues ? routeValues.destiny : "",
       departure_time: routeValues ? routeValues.departure_time : "",
       arrival_time: routeValues ? routeValues.arrival_time : "",
+      max_bus: routeValues ? routeValues.max_bus.toString() : '1',
     },
   });
 
   const { register, handleSubmit, formState: state } = form;
   const isSubmitting = state.isSubmitting || createRouteMutation.isPending;
 
-  const onSubmit = async (data: Schema) => {
+  const submitForm = async (data: Schema) => {
+    console.log("submitting....");
     try {
-      if (onSend) {
+        const max_bus = /^[0-9]+$/.test(data.max_bus) ? Number(data.max_bus) : 0
         const values: CreateRouteValues = {
           origin: data.origin,
           destiny: data.destiny,
           departure_time: data.departure_time,
           arrival_time: data.arrival_time,
+          max_bus: max_bus,
         };
+      if (onSend) {
+        console.log("trying to send");
         onSend(values);
       } else {
-        await createRouteMutation.mutateAsync(data);
+        console.log("using mutation to create route")
+        await createRouteMutation.mutateAsync(values);
       }
 
       if (onCreate) {
@@ -100,6 +107,12 @@ export function RouteForm({
             ? errorData.origin[0]
             : errorData.origin;
           form.setError("origin", { type: "server", message });
+        }
+        if (errorData.max_bus) {
+          const message = Array.isArray(errorData.max_bus)
+            ? errorData.max_bus[0]
+            : errorData.max_bus;
+          form.setError("max_bus", { type: "server", message });
         }
       } else {
         toast.error('Erro inesperado ao criar rota.');
@@ -173,6 +186,7 @@ export function RouteForm({
               </FieldDescription>
             )}
           </Field>
+        
         </div>
 
         <Field>

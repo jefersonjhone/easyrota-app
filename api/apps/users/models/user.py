@@ -58,8 +58,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                 guest.name = "Convidado deletado"
                 guest.cpf = f"DEL_{guest.id}"
                 guests_to_update.append(guest)
-            
+
             if guests_to_update:
                 from apps.reservations.models import Guest
-                Guest.objects.bulk_update(guests_to_update, fields=['name', 'cpf'])
-            
+
+                Guest.objects.bulk_update(guests_to_update, fields=["name", "cpf"])

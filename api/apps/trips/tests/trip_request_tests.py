@@ -117,10 +117,10 @@ class TripRequestAPITestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access_code", response.data)
-        
+
         trip_req = TripRequest.objects.get(id=request_id)
         self.assertEqual(trip_req.status, "APROVADA")
-        
+
         trip = Trip.objects.get(id=response.data["trip_id"])
         self.assertTrue(trip.is_private)
         self.assertEqual(trip.access_code, response.data["access_code"])
@@ -146,12 +146,10 @@ class TripRequestAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(
             f"/api/trip-requests/{request_id}/reject/",
-            {
-                "feedback": "Não temos ônibus disponíveis."
-            },
+            {"feedback": "Não temos ônibus disponíveis."},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         trip_req = TripRequest.objects.get(id=request_id)
         self.assertEqual(trip_req.status, "RECUSADA")
         self.assertEqual(trip_req.feedback, "Não temos ônibus disponíveis.")
@@ -211,7 +209,9 @@ class PrivateTripAPITestCase(APITestCase):
             {
                 "origin_text": "UEFS",
                 "destiny_text": "Salvador",
-                "departure_date": (timezone.now() + timedelta(days=5)).date().isoformat(),
+                "departure_date": (timezone.now() + timedelta(days=5))
+                .date()
+                .isoformat(),
                 "departure_time": "08:00",
                 "reason": "Aula de Campo",
             },
@@ -231,21 +231,18 @@ class PrivateTripAPITestCase(APITestCase):
         response = self.client.get(f"/api/trips/private/?code={self.access_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.trip_id)
-        
+
     def test_reserve_private_trip_requires_code(self):
         self.client.force_authenticate(user=self.student_user)
-        
+
         # Try without code
-        fail_res = self.client.post(
-            "/api/reservations/",
-            {"trip": self.trip_id}
-        )
+        fail_res = self.client.post("/api/reservations/", {"trip": self.trip_id})
         self.assertEqual(fail_res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("access_code", fail_res.data)
-        
+
         # Try with code
         success_res = self.client.post(
             "/api/reservations/",
-            {"trip": self.trip_id, "access_code": self.access_code}
+            {"trip": self.trip_id, "access_code": self.access_code},
         )
         self.assertEqual(success_res.status_code, status.HTTP_201_CREATED)

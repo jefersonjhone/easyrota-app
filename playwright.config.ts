@@ -1,16 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -20,7 +9,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:4173',
     trace: 'on-first-retry',
   },
 
@@ -40,33 +29,33 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
 
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
 
-  webServer: {
-    command: process.env.CI
-      ? 'bun run dev -- --port 5173'
-      : 'bun dev -- --port 5173',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  }
+  webServer: [
+    {
+      command: [
+        'poetry run python api/manage.py migrate --noinput',
+        'poetry run python api/manage.py flush --noinput',
+        'poetry run python api/manage.py loaddata api/apps/users/fixtures/allowed_staff.json',
+        'poetry run python api/manage.py seed_e2e_auth',
+        'poetry run python api/manage.py runserver 127.0.0.1:8001 --noreload',
+      ].join(' && '),
+      env: {
+        DJANGO_SETTINGS_MODULE: 'config.settings.e2e',
+        SECRET_KEY: 'django-insecure-e2e-only-key-for-tests',
+      },
+      url: 'http://127.0.0.1:8001/api/health/',
+      reuseExistingServer: false,
+      timeout: 120 * 1000,
+    },
+    {
+      command: 'bun run dev -- --host 127.0.0.1 --port 4173',
+      env: {
+        VITE_API_PROXY_TARGET: 'http://127.0.0.1:8001',
+      },
+      url: 'http://127.0.0.1:4173',
+      reuseExistingServer: false,
+      timeout: 120 * 1000,
+    },
+  ],
 })

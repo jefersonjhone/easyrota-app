@@ -12,18 +12,21 @@ from .models import Bus, GuestPassenger, Route, Trip, TripPassenger, TripRequest
 from .services.trip_service import TripService
 
 
+
 class TripRequestSerializer(serializers.ModelSerializer):
-    requester_name = serializers.CharField(source="requester.user.full_name", read_only=True)
+    requester_name = serializers.CharField(
+        source="requester.user.full_name", read_only=True
+    )
     access_code = serializers.CharField(source="trip.access_code", read_only=True)
-    
+
     class Meta:
         model = TripRequest
         fields = "__all__"
         read_only_fields = [
             "requester",
-            "status", 
-            "feedback", 
-            "created_at", 
+            "status",
+            "feedback",
+            "created_at",
             "updated_at",
         ]
 
@@ -129,6 +132,12 @@ class RouteSerializer(serializers.ModelSerializer):
                     "destiny": "A origem e o destino não podem ser a mesma cidade."
                 })
 
+    def _check_max_bus(self, max_bus):
+        if max_bus <= 0:
+            raise serializers.ValidationError({
+                "max_bus": "A quantidade de ônibus disponíveis deve ser maior que 0"
+            })
+
     def _check_times(self, departure, arrival):
         if arrival and departure:
             today = datetime.now(ZoneInfo("America/Sao_Paulo")).date()
@@ -163,16 +172,26 @@ class RouteSerializer(serializers.ModelSerializer):
         destiny = data.get("destiny") or (
             self.instance.destiny if self.instance else ""
         )
+        # ``get`` distinguishes an omitted value from 0, which must reach
+        # ``_check_max_bus`` and be rejected instead of replaced as falsy.
+        buses = data.get(
+            "max_bus",
+            self.instance.max_bus
+            if self.instance
+            else Route._meta.get_field("max_bus").get_default(),
+        )
 
         self._check_locations(origin, destiny)
         self._check_times(departure, arrival)
-
+        self._check_max_bus(buses)
         return data
 
 
 class TripSerializer(serializers.ModelSerializer):
     origin = serializers.CharField(source="route.origin", read_only=True)
     destiny = serializers.CharField(source="route.destiny", read_only=True)
+    route_max_bus = serializers.IntegerField(source="route.max_bus", read_only=True)
+    same_route_trips_count = serializers.SerializerMethodField(read_only=True)
     active_reservations = serializers.SerializerMethodField(read_only=True)
     checked_in_count = serializers.SerializerMethodField(read_only=True)
     checked_in_passengers = serializers.SerializerMethodField(read_only=True)
@@ -193,6 +212,29 @@ class TripSerializer(serializers.ModelSerializer):
         """filter reservations by especific trip"""
         reservations = Reservation.objects.filter(trip=obj).count()
         return reservations
+
+    def get_same_route_trips_count(self, obj) -> int:
+        return Trip.objects.filter(
+            route=obj.route,
+            trip_date=obj.trip_date,
+        ).count()
+
+    def _get_request_driver(self):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+
+        if not user or not user.is_authenticated:
+            return None
+
+        return getattr(user, "driver_profile", None)
+
+    def get_is_current_driver(self, obj) -> bool:
+        driver = self._get_request_driver()
+        return bool(driver and obj.driver_id == driver.id)
+
+    def get_is_occupied_by_other_driver(self, obj) -> bool:
+        driver = self._get_request_driver()
+        return bool(obj.driver_id and (driver is None or obj.driver_id != driver.id))
 
     def get_checked_in_count(self, obj) -> int:
         """Count QR check-ins and passengers registered locally by the driver."""
@@ -594,6 +636,20 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
 class GuestPassengerSerializer(serializers.ModelSerializer):
     """Compact public representation of a guest passenger."""
+
+    # invited_by: string;
+    trip_date = serializers.DateField(
+        source="trip.trip_date", read_only=True, format="%d-%m-%Y"
+    )
+    departure_time = serializers.TimeField(
+        source="trip.route.departure_time", format="%H:%M", read_only=True
+    )
+    origin = serializers.CharField(source="trip.route.origin", read_only=True)
+    destiny = serializers.CharField(source="trip.route.destiny", read_only=True)
+    arrival_time = serializers.TimeField(
+        source="trip.route.arrival_time", format="%H:%M", read_only=True
+    )
+    invited_by = serializers.CharField(source="recorded_by.user.full_name")
 
     class Meta:
         model = GuestPassenger
