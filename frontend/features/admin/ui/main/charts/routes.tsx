@@ -23,21 +23,21 @@ export function TripsTable({ data, onFilterChange }: { data: TripsByRoute; onFil
           <TableCaption>Total de {data?.reduce((sum, t) => sum + t.total_trips, 0)} viagens cadastradas</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-16 text-xs">Rota</TableHead>
               <TableHead className="text-xs">Origem</TableHead>
               <TableHead className="text-xs">Destino</TableHead>
               <TableHead className="text-right text-xs">Viagens</TableHead>
-              <TableHead className="text-right text-xs">Horario</TableHead>
+              <TableHead className="text-right text-xs">Saída</TableHead>
+              <TableHead className="text-right text-xs">Chegada</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data?.map((trip) => (
               <TableRow key={trip.route_id}>
-                <TableCell className="font-medium text-xs">{trip.route_id}</TableCell>
                 <TableCell className="capitalize text-xs">{trip.origin}</TableCell>
                 <TableCell className="capitalize text-xs">{trip.destiny}</TableCell>
                 <TableCell className="text-right text-xs">{trip.total_trips}</TableCell>
                 <TableCell className="text-right text-xs">{formatTime(trip.departure_time)}</TableCell>
+                <TableCell className="text-right text-xs">{formatTime(trip.arrival_time)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

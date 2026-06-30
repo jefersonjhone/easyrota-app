@@ -46,6 +46,7 @@ class TripsSelectors:
                 "route__origin",
                 "route__destiny",
                 "route__departure_time",
+                "route__arrival_time",
             )
             .annotate(total=Count("id"))
             .order_by("-total")
@@ -57,6 +58,7 @@ class TripsSelectors:
                 "origin": item["route__origin"],
                 "destiny": item["route__destiny"],
                 "departure_time": item["route__departure_time"],
+                "arrival_time": item["route__arrival_time"],
                 "total_trips": item["total"],
             }
             for item in queryset
