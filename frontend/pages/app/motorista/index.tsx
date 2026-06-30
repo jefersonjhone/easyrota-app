@@ -4,6 +4,6 @@ import { MotoristaHomePage } from '@/features/Viagem_Motorista/MotoristaHomePage
 
 
 export const Route = createFileRoute('/app/motorista/')({
-  beforeLoad: () => requireProfile(['DRIVER', 'ADMIN']),
+  beforeLoad: () => requireProfile(['DRIVER']),
   component: MotoristaHomePage,
 })

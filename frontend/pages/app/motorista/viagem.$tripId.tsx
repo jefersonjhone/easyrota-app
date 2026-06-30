@@ -4,7 +4,7 @@ import { requireProfile } from '@/features/auth/services/require-profile'
 import { ViagemMotorista } from '@/features/ViagemMotorista/ViagemMotorista'
 
 export const Route = createFileRoute('/app/motorista/viagem/$tripId')({
-  beforeLoad: () => requireProfile(['DRIVER', 'ADMIN']),
+  beforeLoad: () => requireProfile(['DRIVER']),
   component: MotoristaTripDetailRoute,
 })
 
