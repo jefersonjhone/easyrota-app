@@ -27,9 +27,12 @@ class ReservationSerializer(serializers.ModelSerializer):
 
         if trip.is_private:
             if not access_code:
-                raise serializers.ValidationError({"access_code": "Esta é uma viagem privada. Um código de acesso é necessário."})
+                raise serializers.ValidationError(
+                    {"access_code": "Esta é uma viagem privada. "
+                     "Um código de acesso é necessário."})
             if trip.access_code != access_code:
-                raise serializers.ValidationError({"access_code": "Código de acesso inválido para esta viagem."})
+                raise serializers.ValidationError(
+                    {"access_code": "Código de acesso inválido para esta viagem."})
 
         return attrs
 

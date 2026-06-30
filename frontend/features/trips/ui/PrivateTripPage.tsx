@@ -23,6 +23,21 @@ type AvailableTrip = {
   user_is_reserved?: boolean
 }
 
+type ReservationError = {
+  data?: {
+    access_code?: string | string[]
+    non_field_errors?: string | string[]
+    detail?: string
+  }
+}
+
+function getReservationErrorMessage(error: unknown) {
+  const data = (error as ReservationError)?.data
+  const message = data?.access_code || data?.non_field_errors || data?.detail
+
+  return Array.isArray(message) ? message[0] : message || 'Erro ao reservar.'
+}
+
 function usePrivateTrip(code: string) {
   return useQuery({
     queryKey: ['private-trip', code],
@@ -52,8 +67,8 @@ export function PrivateTripPage({ code: initialCode }: { code?: string }) {
       await reserveMutation.mutateAsync({ tripId: trip.id, access_code: submittedCode })
       alert('Reserva realizada com sucesso!')
       window.location.href = '/app'
-    } catch (e: any) {
-      alert(e?.data?.access_code || e?.data?.non_field_errors || e?.data?.detail || 'Erro ao reservar.')
+    } catch (error: unknown) {
+      alert(getReservationErrorMessage(error))
     }
   }
 

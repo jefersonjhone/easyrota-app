@@ -72,7 +72,8 @@ class TripRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Request by {self.requester} from {self.origin_text} to {self.destiny_text}"
+        return (f"Request by {self.requester} from "
+                f"{self.origin_text} to {self.destiny_text}")
 
 
 class Trip(models.Model):
@@ -109,7 +110,11 @@ class Trip(models.Model):
     is_private = models.BooleanField(default=False)
     access_code = models.CharField(max_length=10, blank=True, null=True, unique=True)
     manager = models.ForeignKey(
-        CivilServantProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name="managed_trips"
+        CivilServantProfile, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name="managed_trips"
     )
     trip_request = models.OneToOneField(
         TripRequest, on_delete=models.SET_NULL, null=True, blank=True
@@ -139,7 +144,8 @@ class Trip(models.Model):
         return self.has_server
 
     def __str__(self):
-        return f"Trip on {self.trip_date} - ({self.route}) and has {self.seating_capacity} seats"
+        return (f"Trip on {self.trip_date} - ({self.route}) "
+                f"and has {self.seating_capacity} seats")
 
 
 class Occurrence(models.Model):

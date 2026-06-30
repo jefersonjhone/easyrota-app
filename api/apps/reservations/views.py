@@ -80,7 +80,8 @@ class AvailableTripListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         available_trips = (
-            Trip.objects.filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"], is_private=False)
+            Trip.objects.filter(status__in=["CONFIRMADA", "RISCO DE CANCELAMENTO"], 
+                                is_private=False)
             .select_related("route", "bus")
             .annotate(
                 active_reservation_seats=Count(

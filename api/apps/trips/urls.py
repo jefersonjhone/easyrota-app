@@ -6,11 +6,11 @@ from .views import (
     GuestPassengerView,
     GuestPassengerDetailView,
     MyNextTripView,
+    PrivateTripDetailView,
     RouteDetailView,
     RouteListCreateView,
-    TripViewSet,
     TripRequestViewSet,
-    PrivateTripDetailView,
+    TripViewSet,
 )
 
 router = DefaultRouter()

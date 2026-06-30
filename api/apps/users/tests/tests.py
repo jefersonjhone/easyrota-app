@@ -455,6 +455,39 @@ class DriverTripPassengerRemovalTests(APITestCase):
         self.client.force_authenticate(user=self.driver_user)
         self.url = "/api/staff/passengers/"
 
+    def test_driver_can_register_guest_without_boarding_associated_server(self):
+        associated_staff = AllowedStaff.objects.create(
+            name="SERVIDOR CONVIDANTE",
+            registration_number="55556666",
+        )
+
+        response = self.client.post(
+            self.url,
+            {
+                "trip": self.trip.id,
+                "passenger_type": "LOCAL_GUEST",
+                "associated_staff_id": associated_staff.id,
+                "guest_without_server": True,
+                "full_name": "Convidado Sem Servidor",
+                "cpf": "12345678901",
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["passenger"]["name"] == "Convidado Sem Servidor"
+        assert "associated_server" not in response.data
+        assert TripPassenger.objects.filter(
+            trip=self.trip,
+            passenger_type=TripPassenger.PassengerType.LOCAL_GUEST,
+            associated_staff=associated_staff,
+        ).exists()
+        assert not TripPassenger.objects.filter(
+            trip=self.trip,
+            passenger_type=TripPassenger.PassengerType.LOCAL_SERVER,
+            allowed_staff=associated_staff,
+        ).exists()
+
     def test_driver_can_remove_local_passenger_from_trip(self):
         allowed_staff = AllowedStaff.objects.create(
             name="SERVIDOR REMOVIDO",

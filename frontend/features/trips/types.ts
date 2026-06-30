@@ -19,6 +19,8 @@ export type Trip = {
   status: TripStatus
   departure_timestamp: string | null
   arrival_timestamp: string | null
+  is_current_driver?: boolean
+  is_occupied_by_other_driver?: boolean
   bus: number | null
   route: number
   is_private?: boolean
@@ -77,6 +79,7 @@ export type LocalTripPassengerPayload = {
   passenger_type: 'LOCAL_SERVER' | 'LOCAL_GUEST'
   allowed_staff_id?: number
   associated_staff_id?: number
+  guest_without_server?: boolean
   full_name?: string
   cpf?: string
 }
@@ -134,6 +137,7 @@ export type TripRequest = {
   reason: string
   status: TripRequestStatus
   feedback: string | null
+  access_code: string | null
   created_at: string
 }
 

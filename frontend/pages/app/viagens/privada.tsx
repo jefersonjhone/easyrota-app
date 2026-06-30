@@ -6,8 +6,8 @@ export const Route = createFileRoute('/app/viagens/privada')({
   validateSearch: z.object({
     code: z.string().optional()
   }),
-  component: () => {
+  component: function PrivateTripRoute() {
     const { code } = Route.useSearch()
     return <PrivateTripPage code={code} />
-  }
+  },
 })
