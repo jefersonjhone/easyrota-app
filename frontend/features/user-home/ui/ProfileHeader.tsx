@@ -153,136 +153,140 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
       </div>
 
       <Dialog open={openSettings} onOpenChange={setOpenSettings}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto w-full max-w-lg space-y-6">
-          <DialogTitle>Configurações</DialogTitle>
-          <DialogDescription>
-            Gerencie preferências de notificações, aparência e conta.
-          </DialogDescription>
+        <DialogContent className="max-h-[80vh] flex flex-col w-full max-w-lg p-0 overflow-hidden">
+          <div className="px-8 pt-8 pb-3 shrink-0">
+            <DialogTitle className="pr-6 text-xl">Configurações</DialogTitle>
+            <DialogDescription className="mt-1.5">
+              Gerencie preferências de notificações, aparência e conta.
+            </DialogDescription>
+          </div>
 
-          <section className="space-y-3">
-            <h2 className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              Notificações
-            </h2>
+          <div className="overflow-y-auto custom-scrollbar flex-1 px-8 pb-2 mb-6 space-y-6">
+            <section className="space-y-4">
+              <h2 className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+                Notificações
+              </h2>
 
-            <FieldGroup className="space-y-1">
-              <Field orientation="horizontal">
-                <Switch
-                  id="email-notifications"
-                  name="email-notifications"
-                />
-                <FieldLabel htmlFor="email-notifications">
-                  Receber notificações por email
-                </FieldLabel>
-              </Field>
+              <FieldGroup className="space-y-3">
+                <Field orientation="horizontal">
+                  <Switch
+                    id="email-notifications"
+                    name="email-notifications"
+                  />
+                  <FieldLabel htmlFor="email-notifications">
+                    Receber notificações por email
+                  </FieldLabel>
+                </Field>
 
-              <Field orientation="horizontal">
-                <Switch
-                  id="push-notifications"
-                  name="push-notifications"
-                  checked={pushEnabled}
-                  disabled={pushLoading}
-                  onCheckedChange={handlePushToggle}
-                />
-                <FieldLabel htmlFor="push-notifications">
-                  Receber notificações push
-                </FieldLabel>
-              </Field>
-            </FieldGroup>
-          </section>
+                <Field orientation="horizontal">
+                  <Switch
+                    id="push-notifications"
+                    name="push-notifications"
+                    checked={pushEnabled}
+                    disabled={pushLoading}
+                    onCheckedChange={handlePushToggle}
+                  />
+                  <FieldLabel htmlFor="push-notifications">
+                    Receber notificações push
+                  </FieldLabel>
+                </Field>
+              </FieldGroup>
+            </section>
 
-          <section className="space-y-3">
-            <h2 className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              Conta
-            </h2>
+            <section className="space-y-4">
+              <h2 className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+                Conta
+              </h2>
 
-            {!confirmingDelete ? (
-              <div className="flex flex-col gap-3">
-                <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
-                  Alterar email
-                </Button>
+              {!confirmingDelete ? (
+                <div className="flex flex-col gap-4">
+                  <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
+                    Alterar email
+                  </Button>
 
-                <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
-                  Alterar nome
-                </Button>
+                  <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
+                    Alterar nome
+                  </Button>
 
-                <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
-                  Alterar senha
-                </Button>
+                  <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
+                    Alterar senha
+                  </Button>
 
-                {canDeleteAccount && (
+                  {canDeleteAccount && (
+                    <Button
+                      variant="ghost"
+                      className="justify-start px-0 text-sm font-medium text-destructive hover:underline"
+                      onClick={() => {
+                        setConfirmingDelete(true)
+                        setConfirmPassword("")
+                        deleteAccountMutation.reset()
+                      }}
+                    >
+                      Solicitar exclusão da conta
+                    </Button>
+                  )}
+
                   <Button
                     variant="ghost"
-                    className="justify-start px-0 text-sm font-medium text-destructive hover:underline"
-                    onClick={() => {
-                      setConfirmingDelete(true)
-                      setConfirmPassword("")
-                      deleteAccountMutation.reset()
-                    }}
+                    className="justify-start px-0 text-sm font-medium hover:underline"
+                    onClick={() => logoutMutation.mutate()}
                   >
-                    Solicitar exclusão da conta
-                  </Button>
-                )}
-
-                <Button
-                  variant="ghost"
-                  className="justify-start px-0 text-sm font-medium hover:underline"
-                  onClick={() => logoutMutation.mutate()}
-                >
-                  Sair da conta
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4 rounded-4xl border border-border/70 bg-muted/20 p-6">
-                <div>
-                  <h3 className="text-lg font-semibold">Solicitação de exclusão da conta</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Essa ação desativará sua conta imediatamente. Alguns dados poderão ser mantidos
-                    temporariamente para cumprimento de obrigações legais e auditoria, conforme a LGPD.
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Você pode cancelar a solicitação de exclusão em até 30 dias, basta logar novamente
-                    em sua conta.
-                  </p>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Para confirmar, digite sua senha.
-                  </p>
-                </div>
-
-                <Input
-                  name="confirm-password"
-                  type="password"
-                  placeholder="Digite sua senha"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-
-                {deleteAccountMutation.isError && (
-                  <p className="text-sm text-destructive">Senha incorreta.</p>
-                )}
-
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setConfirmingDelete(false)
-                      setConfirmPassword("")
-                      deleteAccountMutation.reset()
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-
-                  <Button
-                    variant="destructive"
-                    disabled={deleteAccountMutation.isPending}
-                    onClick={() => deleteAccountMutation.mutate(confirmPassword)}
-                  >
-                    {deleteAccountMutation.isPending ? "Excluindo..." : "Excluir conta"}
+                    Sair da conta
                   </Button>
                 </div>
-              </div>
-            )}
-          </section>
+              ) : (
+                <div className="space-y-4 rounded-4xl border border-border/70 bg-muted/20 p-6">
+                  <div>
+                    <h3 className="text-lg font-semibold">Solicitação de exclusão da conta</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Essa ação desativará sua conta imediatamente. Alguns dados poderão ser mantidos
+                      temporariamente para cumprimento de obrigações legais e auditoria, conforme a LGPD.
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Você pode cancelar a solicitação de exclusão em até 30 dias, basta logar novamente
+                      em sua conta.
+                    </p>
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      Para confirmar, digite sua senha.
+                    </p>
+                  </div>
+
+                  <Input
+                    name="confirm-password"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+
+                  {deleteAccountMutation.isError && (
+                    <p className="text-sm text-destructive">Senha incorreta.</p>
+                  )}
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setConfirmingDelete(false)
+                        setConfirmPassword("")
+                        deleteAccountMutation.reset()
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+
+                    <Button
+                      variant="destructive"
+                      disabled={deleteAccountMutation.isPending}
+                      onClick={() => deleteAccountMutation.mutate(confirmPassword)}
+                    >
+                      {deleteAccountMutation.isPending ? "Excluindo..." : "Excluir conta"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
         </DialogContent>
       </Dialog>
     </header>
