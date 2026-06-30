@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { GuestPage } from "@/components/trips/guests/GuestPage";
 import { createFileRoute } from "@tanstack/react-router";
 
