@@ -722,3 +722,71 @@ class WebPushSubscriptionTests(APITestCase):
             profile.full_clean()
 
         assert "cnh" in exc.value.message_dict
+
+
+class ChangePasswordTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = CustomUser.objects.create_user(
+            email="testuser@email.com",
+            full_name="Test User",
+            password="oldpassword123",
+            is_active=True,
+        )
+        self.url = "/api/auth/change-password/"
+
+    def test_change_password_success(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "current_password": "oldpassword123",
+            "new_password": "newpassword123",
+            "new_password_confirm": "newpassword123",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_200_OK
+
+        # Verify user can log in with new password
+        self.user.refresh_from_db()
+        assert self.user.check_password("newpassword123") is True
+
+    def test_change_password_wrong_current(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "current_password": "wrongpassword",
+            "new_password": "newpassword123",
+            "new_password_confirm": "newpassword123",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "current_password" in response.data
+
+    def test_change_password_mismatch(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "current_password": "oldpassword123",
+            "new_password": "newpassword123",
+            "new_password_confirm": "differentpassword",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "new_password_confirm" in response.data
+
+    def test_change_password_too_short(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "current_password": "oldpassword123",
+            "new_password": "short",
+            "new_password_confirm": "short",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "new_password" in response.data
+
+    def test_change_password_unauthenticated(self):
+        payload = {
+            "current_password": "oldpassword123",
+            "new_password": "newpassword123",
+            "new_password_confirm": "newpassword123",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
