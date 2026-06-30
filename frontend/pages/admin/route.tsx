@@ -1,8 +1,7 @@
-/* eslint-disable react-refresh/only-export-components */
-import * as React from 'react'
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import { requireAuth } from '@/features/auth/services/require-auth'
+import { Fragment } from 'react'
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: () => {
@@ -21,8 +20,8 @@ export const Route = createFileRoute('/admin')({
 
 function RootComponent() {
   return (
-    <React.Fragment>
+    <Fragment>
       <Outlet />
-    </React.Fragment>
+    </Fragment>
   )
 }

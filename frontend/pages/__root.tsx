@@ -1,7 +1,6 @@
-/* eslint-disable react-refresh/only-export-components */
-import * as React from 'react'
 import { Outlet, createRootRoute } from '@tanstack/react-router'
 import { NotFoundPage } from '@/features/not-found/ui/NotFoundPage'
+import { Fragment } from 'react'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -11,9 +10,9 @@ export const Route = createRootRoute({
 function RootComponent() {
 
   return (
-    <React.Fragment>
+    <Fragment>
       
       <Outlet />
-    </React.Fragment>
+    </Fragment>
   )
 }

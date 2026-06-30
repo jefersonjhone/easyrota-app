@@ -1,10 +1,9 @@
-/* eslint-disable react-refresh/only-export-components */
 "use client"
 
-import * as React from "react"
 import { Tabs as TabsPrimitive } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@utils"
+import { createContext, useContext, useEffect, useRef, useState, type ComponentProps } from "react"
 
 type StepValue = string
 
@@ -20,10 +19,10 @@ interface StepsContextType {
   isUnlocked: (step: StepValue) => boolean
 }
 
-const StepsContext = React.createContext<StepsContextType | null>(null)
+const StepsContext = createContext<StepsContextType | null>(null)
 
 export function useSteps() {
-  const ctx = React.useContext(StepsContext)
+  const ctx = useContext(StepsContext)
   if (!ctx) throw new Error("useSteps must be used inside <StepsRoot>")
   return ctx
 }
@@ -36,7 +35,7 @@ type StepsRootProps = {
   stepsOrder: StepValue[]
   initialStep?: StepValue
 } & Omit<
-  React.ComponentProps<typeof TabsPrimitive.Root>,
+  ComponentProps<typeof TabsPrimitive.Root>,
   "value" | "defaultValue" | "onValueChange"
 >
 
@@ -46,13 +45,13 @@ export function StepsRoot({
   className,
   ...props
 }: StepsRootProps) {
-  const [current, setCurrent] = React.useState<StepValue>(
+  const [current, setCurrent] = useState<StepValue>(
     initialStep ?? stepsOrder[0]
   )
-  const [completed, setCompleted] = React.useState<StepValue[]>([])
-  const completedRef = React.useRef<StepValue[]>([])
+  const [completed, setCompleted] = useState<StepValue[]>([])
+  const completedRef = useRef<StepValue[]>([])
 
-  React.useEffect(() => {
+  useEffect(() => {
     completedRef.current = completed
   }, [completed])
 
@@ -121,7 +120,7 @@ export function StepsList({
   className,
   variant,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.List> &
+}: ComponentProps<typeof TabsPrimitive.List> &
   VariantProps<typeof stepsListVariants>) {
   return (
     <TabsPrimitive.List
@@ -134,7 +133,7 @@ export function StepsList({
 export function Step({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+}: ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
       className={cn("mt-4 outline-none", className)}
@@ -150,8 +149,8 @@ export function Step({
 export function StepIndex({
   value,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
-  const ctx = React.useContext(StepsContext)
+}: ComponentProps<typeof TabsPrimitive.Trigger>) {
+  const ctx = useContext(StepsContext)
 
   const disabled = ctx ? !ctx.isUnlocked(value as StepValue) : false
 
