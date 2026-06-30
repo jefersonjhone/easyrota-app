@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import type { TripStatus } from '@/features/trips/types'
 
 export const STATUS_CONFIG: Record<TripStatus, { label: string; className: string }> = {

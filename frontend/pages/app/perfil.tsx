@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuthStore } from '@/features/auth/store/auth-store'
 import { ProfilePage } from '../../features/user-home/ui/ProfilePage'

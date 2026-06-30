@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createFileRoute, useParams } from '@tanstack/react-router'
 import { requireAdmin } from '@/features/auth/services/require-admin'
 import { UserDetailPage } from '@/features/admin/ui/users/UserDetailPage'

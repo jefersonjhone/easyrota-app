@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -377,12 +377,6 @@ function AllowedStaffSection() {
 
   const { data, isLoading } = useAllowedStaff({ q: search || undefined, page, has_account: false })
 
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    setPage(1)
-  }, [search])
-  /* eslint-enable react-hooks/set-state-in-effect */
-
   const totalPages = data ? Math.ceil(data.count / 15) : 0
 
   return (
@@ -403,7 +397,10 @@ function AllowedStaffSection() {
             type="text"
             placeholder="Buscar por nome ou matrícula..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setPage(1)
+            }}
             className="h-8 w-full md:w-56 rounded-md border border-border bg-card pl-8 pr-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 placeholder:text-muted-foreground/60"
           />
         </div>
