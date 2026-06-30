@@ -69,9 +69,6 @@ class MFAService:
         if not check_password(code, challenge.code_hash):
             raise AuthenticationFailed("Código inválido")
 
-        challenge.used = True
-        challenge.save(update_fields=["used"])
-
         return challenge
 
     # ------------------------------------------------------------------
