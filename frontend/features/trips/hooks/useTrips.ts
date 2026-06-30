@@ -19,10 +19,10 @@ export const tripsKeys = {
   nextTrip: ['trips', 'next'] as const,
 }
 
-export function useTrips() {
+export function useTrips(filters: TripFilters = {}) {
   return useQuery({
-    queryKey: tripsKeys.all,
-    queryFn: fetchTrips,
+    queryKey: tripsKeys.list(filters),
+    queryFn: () => fetchTrips(filters),
     retry: false,
   })
 }

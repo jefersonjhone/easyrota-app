@@ -32,7 +32,7 @@ import { FieldDescription, FieldLabel } from "@/lib/ui/field";
 import { Separator } from "@/lib/ui/separator";
 import { formatTripDate } from "@/features/user-home/config";
 import PassengerQRCode from "@/lib/ui/qr-code";
-import { GuestForm } from "@/components/current-trip/GuestForm";
+import { GuestForm } from "@/components/utils/GuestForm";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { fetchReservationById, cancelReservation } from "../services/reservations";
 import type { ActiveReservation } from "../types";
