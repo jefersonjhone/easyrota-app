@@ -21,7 +21,6 @@ class Command(BaseCommand):
         for user in users:
             self.stdout.write(f"Tentando enviar para: {user.email}")
             try:
-                
                 send_user_notification(user=user, payload=payload, ttl=1000)
             except Exception:
                 logger.exception(

@@ -13,14 +13,20 @@ from .models import Bus, GuestPassenger, Route, Trip, TripPassenger, TripRequest
 
 class TripRequestSerializer(serializers.ModelSerializer):
     requester_name = serializers.CharField(
-        source="requester.user.full_name", read_only=True)
+        source="requester.user.full_name", read_only=True
+    )
     access_code = serializers.CharField(source="trip.access_code", read_only=True)
-    
+
     class Meta:
         model = TripRequest
         fields = "__all__"
-        read_only_fields = ["requester", "status", 
-                            "feedback", "created_at", "updated_at"]
+        read_only_fields = [
+            "requester",
+            "status",
+            "feedback",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class BusSerializer(serializers.ModelSerializer):
@@ -34,11 +40,9 @@ class BusSerializer(serializers.ModelSerializer):
     def validate_seating_capacity(self, value):
         """Ensures seating_capacity is greater than 0 and less than or equal to 120."""
         if value <= 0:
-            raise serializers.ValidationError(
-                "Capacidade deve ser maior que 0.")
+            raise serializers.ValidationError("Capacidade deve ser maior que 0.")
         if value > 120:
-            raise serializers.ValidationError(
-                "Capacidade muito alta para um ônibus.")
+            raise serializers.ValidationError("Capacidade muito alta para um ônibus.")
         return value
 
     def validate_number_plate(self, value):
@@ -83,8 +87,9 @@ class RouteSerializer(serializers.ModelSerializer):
 
     def _check_max_bus(self, max_bus):
         if max_bus <= 0:
-            raise serializers.ValidationError(
-                {"max_bus": "A quantidade de ônibus disponíveis deve ser maior que 0"})
+            raise serializers.ValidationError({
+                "max_bus": "A quantidade de ônibus disponíveis deve ser maior que 0"
+            })
 
     def _check_times(self, departure, arrival):
         if arrival and departure:
@@ -116,8 +121,7 @@ class RouteSerializer(serializers.ModelSerializer):
             self.instance.arrival_time if self.instance else None
         )
 
-        origin = data.get("origin") or (
-            self.instance.origin if self.instance else "")
+        origin = data.get("origin") or (self.instance.origin if self.instance else "")
         destiny = data.get("destiny") or (
             self.instance.destiny if self.instance else ""
         )
@@ -149,8 +153,7 @@ class TripSerializer(serializers.ModelSerializer):
     departure_time = serializers.CharField(
         source="route.departure_time", read_only=True
     )
-    arrival_time = serializers.CharField(
-        source="route.arrival_time", read_only=True)
+    arrival_time = serializers.CharField(source="route.arrival_time", read_only=True)
 
     class Meta:
         model = Trip
@@ -266,10 +269,8 @@ class TripSerializer(serializers.ModelSerializer):
         trip_date = data.get(
             "trip_date", self.instance.trip_date if self.instance else None
         )
-        route = data.get(
-            "route", self.instance.route if self.instance else None)
-        status = data.get(
-            "status", self.instance.status if self.instance else None)
+        route = data.get("route", self.instance.route if self.instance else None)
+        status = data.get("status", self.instance.status if self.instance else None)
 
         now = timezone.localtime()
         tz = timezone.get_current_timezone()
@@ -333,11 +334,9 @@ class TripSerializer(serializers.ModelSerializer):
                 trip_date,
                 trip_date + timedelta(days=1),
             ]
-            overlapping_trips = Trip.objects.filter(
-                bus=bus, trip_date__in=date_range)
+            overlapping_trips = Trip.objects.filter(bus=bus, trip_date__in=date_range)
             if self.instance:
-                overlapping_trips = overlapping_trips.exclude(
-                    id=self.instance.id)
+                overlapping_trips = overlapping_trips.exclude(id=self.instance.id)
 
             tz = timezone.get_current_timezone()
             new_start = timezone.make_aware(
@@ -398,10 +397,8 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     )
     status_trip = serializers.SerializerMethodField()
 
-    bus_number_plate = serializers.CharField(
-        source="bus.number_plate", read_only=True)
-    driver = serializers.CharField(
-        source="driver.user.full_name", read_only=True)
+    bus_number_plate = serializers.CharField(source="bus.number_plate", read_only=True)
+    driver = serializers.CharField(source="driver.user.full_name", read_only=True)
 
     percentage_complete = serializers.SerializerMethodField()
     minutes_remaining = serializers.SerializerMethodField()
@@ -464,8 +461,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
         user = request.user
         if hasattr(user, "student_profile"):
-            res = obj.reservation_set.filter(
-                student=user.student_profile).first()
+            res = obj.reservation_set.filter(student=user.student_profile).first()
             return res.check_in if res else False
 
         if hasattr(user, "civil_servant_profile"):
@@ -489,8 +485,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
             return now, 0
 
         expected_dep = timezone.make_aware(
-            datetime.combine(
-                obj.trip_date, obj.route.departure_time), time_zone
+            datetime.combine(obj.trip_date, obj.route.departure_time), time_zone
         )
 
         expected_arr = timezone.make_aware(
@@ -583,8 +578,11 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
 
 class GuestPassengerSerializer(serializers.ModelSerializer):
     """Compact public representation of a guest passenger."""
-  # invited_by: string;
-    trip_date = serializers.DateField(source="trip.trip_date", read_only=True, format="%d-%m-%Y")
+
+    # invited_by: string;
+    trip_date = serializers.DateField(
+        source="trip.trip_date", read_only=True, format="%d-%m-%Y"
+    )
     departure_time = serializers.TimeField(
         source="trip.route.departure_time", format="%H:%M", read_only=True
     )
@@ -597,5 +595,15 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GuestPassenger
-        fields = ("id", "cpf", "full_name", "email", "origin",
-                  "destiny", "departure_time", "arrival_time", "invited_by", "trip_date")
+        fields = (
+            "id",
+            "cpf",
+            "full_name",
+            "email",
+            "origin",
+            "destiny",
+            "departure_time",
+            "arrival_time",
+            "invited_by",
+            "trip_date",
+        )

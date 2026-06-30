@@ -45,16 +45,17 @@ def check_upcoming_trips_quorum():
 
 def anonymize_user_past_30_days():
     limit = timezone.now() - timedelta(days=30)
-    
-    users_to_anonymize = CustomUser.objects.filter(
-        is_deleted=True,
-        deleted_at__lte=limit,
-    ).select_related(
-        'student_profile', 
-        'civil_servant_profile'
-        ).prefetch_related(
-        'civil_servant_profile__guest_set')
-    
+
+    users_to_anonymize = (
+        CustomUser.objects
+        .filter(
+            is_deleted=True,
+            deleted_at__lte=limit,
+        )
+        .select_related("student_profile", "civil_servant_profile")
+        .prefetch_related("civil_servant_profile__guest_set")
+    )
+
     for user in users_to_anonymize:
         user.anonymize_user()
 

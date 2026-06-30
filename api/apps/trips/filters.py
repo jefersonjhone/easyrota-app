@@ -20,9 +20,7 @@ class FilterTripViewSet(filters.BaseFilterBackend):
 
         date_order = request.query_params.get("date_order")
         if date_order in {"recent", "recentes", "mais_recentes", "desc"}:
-            queryset = queryset.order_by(
-                "-trip_date", "-route__departure_time", "-id"
-            )
+            queryset = queryset.order_by("-trip_date", "-route__departure_time", "-id")
         elif date_order in {"distant", "distantes", "mais_distantes", "asc"}:
             queryset = queryset.order_by("trip_date", "route__departure_time", "id")
 

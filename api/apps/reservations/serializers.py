@@ -27,12 +27,14 @@ class ReservationSerializer(serializers.ModelSerializer):
 
         if trip.is_private:
             if not access_code:
-                raise serializers.ValidationError(
-                    {"access_code": "Esta é uma viagem privada. "
-                     "Um código de acesso é necessário."})
+                raise serializers.ValidationError({
+                    "access_code": "Esta é uma viagem privada. "
+                    "Um código de acesso é necessário."
+                })
             if trip.access_code != access_code:
-                raise serializers.ValidationError(
-                    {"access_code": "Código de acesso inválido para esta viagem."})
+                raise serializers.ValidationError({
+                    "access_code": "Código de acesso inválido para esta viagem."
+                })
 
         return attrs
 
@@ -255,10 +257,10 @@ class AvailableTripSerializer(serializers.ModelSerializer):
 
     def get_available_seats(self, obj):
         from .services import get_trip_occupancy
-        
+
         total_occupied, server_occupied = get_trip_occupancy(obj)
         seating_capacity = obj.bus.seating_capacity if obj.bus else obj.seating_capacity
-        
+
         user = self.context["request"].user
         if hasattr(user, "civil_servant_profile"):
             # For servers, show capacity minus other servers
@@ -278,11 +280,12 @@ class AvailableTripSerializer(serializers.ModelSerializer):
         if self.get_available_seats(obj) > 0:
             return True
 
-        # Special case: Civil servants can reserve 
+        # Special case: Civil servants can reserve
         # if full but an unallocated bus is available
         user = self.context["request"].user
         if hasattr(user, "civil_servant_profile"):
             from ..trips.services import has_available_bus
+
             return has_available_bus(obj.trip_date, obj.route)
 
         return False

@@ -19,20 +19,14 @@ class Command(BaseCommand):
 
         try:
             resend.Emails.send({
-            "from": settings.DEFAULT_FROM_EMAIL,
-            "to": [email],
-            "subject": "Teste EasyRota",
-            "html": "<h1>EasyRota</h1><p>Resend funcionando 🚀</p>",
-        })
+                "from": settings.DEFAULT_FROM_EMAIL,
+                "to": [email],
+                "subject": "Teste EasyRota",
+                "html": "<h1>EasyRota</h1><p>Resend funcionando 🚀</p>",
+            })
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"Email enviado com sucesso para: {email}"
-                )
+                self.style.SUCCESS(f"Email enviado com sucesso para: {email}")
             )
 
         except Exception as e:
-            self.stderr.write(
-                self.style.ERROR(
-                    f"Erro ao enviar email: {e}"
-                )
-            )
+            self.stderr.write(self.style.ERROR(f"Erro ao enviar email: {e}"))
