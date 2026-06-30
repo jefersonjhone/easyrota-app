@@ -530,10 +530,16 @@ class LocalDriverTripPassengerView(views.APIView):
 
             # --- local guest ---
             associated_staff = serializer.validated_data["associated_staff"]
-            server_passenger, _, fallback = LocalPassengerService.ensure_local_server(
-                trip, associated_staff, driver, evicted_passengers
+            guest_without_server = serializer.validated_data.get(
+                "guest_without_server", False
             )
-            TripStatusService.sync_trip_status(trip)
+            server_passenger = None
+            fallback = None
+            if not guest_without_server:
+                server_passenger, _, fallback = LocalPassengerService.ensure_local_server(
+                    trip, associated_staff, driver, evicted_passengers
+                )
+                TripStatusService.sync_trip_status(trip)
 
             passenger = LocalPassengerService.register_local_guest(
                 trip,

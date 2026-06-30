@@ -343,8 +343,7 @@ class TripService:
                 grace_limit = expected_dep + timedelta(hours=1)
                 if now > grace_limit:
                     raise serializers.ValidationError({
-                        "route": "Não é possível agendar uma viagem "
-                        "para um horário que já passou hoje."
+                        "trip_date": "A data da viagem não pode estar no passado."
                     })
 
         # --- starting trip validation ---

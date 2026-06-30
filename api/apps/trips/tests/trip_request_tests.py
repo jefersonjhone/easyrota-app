@@ -230,7 +230,7 @@ class PrivateTripAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.student_user)
         response = self.client.get(f"/api/trips/private/?code={self.access_code}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], str(self.trip_id))
+        self.assertEqual(str(response.data["id"]), str(self.trip_id))
 
     def test_reserve_private_trip_requires_code(self):
         self.client.force_authenticate(user=self.student_user)

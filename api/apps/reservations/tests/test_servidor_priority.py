@@ -85,12 +85,15 @@ def test_civil_servant_displaces_student(trip, student_user, server_user):
     )
     StudentProfile.objects.create(user=s2_user, student_id="ST002")
 
-    Reservation.objects.create(
+    res1 = Reservation.objects.create(
         trip=trip, student=student_user.student_profile, status="CONFIRMADA"
     )
-    Reservation.objects.create(
+    res2 = Reservation.objects.create(
         trip=trip, student=s2_user.student_profile, status="CONFIRMADA"
-        )
+    )
+    from django.utils import timezone
+    res1.created_at = timezone.now() - timedelta(seconds=10)
+    res1.save(update_fields=["created_at"])
     TripStatusService.sync_trip_status(trip)
     
     assert not TripService.trip_has_capacity(trip)
@@ -116,10 +119,8 @@ def test_civil_servant_displaces_student(trip, student_user, server_user):
     assert reservation.civil_servant == server_user.civil_servant_profile
 
     # One student should have been displaced
-    displaced = Reservation.objects.filter(
-        trip=trip, student=s2_user.student_profile
-    ).first()
-    assert displaced.status == "LISTA SECUNDÁRIA"
+    r2 = Reservation.objects.get(trip=trip, student=s2_user.student_profile)
+    assert r2.status == "LISTA SECUNDÁRIA"
 
 
 @pytest.mark.django_db

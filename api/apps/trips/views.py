@@ -270,7 +270,7 @@ class TripViewSet(viewsets.ModelViewSet):
         return Trip.objects.none()
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
         if hasattr(request.user, "admin_profile"):
             serializer = self.serializer_class
         elif hasattr(request.user, "driver_profile"):
