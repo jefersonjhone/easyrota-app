@@ -363,6 +363,7 @@ class AvailableTripSerializer(serializers.ModelSerializer):
     quorum_met = serializers.SerializerMethodField()
     reservation_deadline = serializers.SerializerMethodField()
     user_is_reserved = serializers.BooleanField(read_only=True)
+    user_reservation_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
@@ -382,7 +383,21 @@ class AvailableTripSerializer(serializers.ModelSerializer):
             "quorum_met",
             "reservation_deadline",
             "user_is_reserved",
+            "user_reservation_id",
         ]
+
+    def get_user_reservation_id(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return None
+        from django.db.models import Q
+        reservation = Reservation.objects.filter(
+            trip=obj,
+            status__in=["CONFIRMADA", "PENDENTE", "LISTA SECUNDÁRIA"]
+        ).filter(
+            Q(student__user=request.user) | Q(civil_servant__user=request.user)
+        ).first()
+        return reservation.id if reservation else None
 
     def get_status_trip(self, obj):
         return obj.get_status_display()

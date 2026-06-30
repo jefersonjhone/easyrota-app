@@ -108,4 +108,5 @@ export interface AvailableTrip {
   quorum_met?: boolean
   reservation_deadline?: string
   user_is_reserved?: boolean
+  user_reservation_id?: string | null
 }

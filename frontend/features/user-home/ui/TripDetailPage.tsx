@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { Button } from "@ui/button";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -9,6 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/lib/ui/dialog";
 import {
   ArrowLeft,
   CalendarBlank,
@@ -18,11 +27,13 @@ import {
   WarningCircle,
   MapPin,
   Timer,
+  InfoIcon,
 } from "@phosphor-icons/react";
 import { getStatusTone } from "../config";
 import {
   createReservation,
   fetchTripById,
+  cancelReservation,
 } from "../services/reservations";
 import type { AvailableTrip } from "../types";
 
@@ -33,14 +44,46 @@ const fadeUp = {
   transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
 };
 
+function getApiErrorMessage(err: unknown, defaultMessage: string): string {
+  if (!err) return defaultMessage;
+  const errObj = err as { data?: unknown; message?: string };
+  if (errObj.data) {
+    const data = errObj.data;
+    if (typeof data === "string") return data;
+    if (data && typeof data === "object") {
+      const dataObj = data as Record<string, unknown>;
+      if (typeof dataObj.detail === "string") return dataObj.detail;
+      if (Array.isArray(dataObj.non_field_errors) && dataObj.non_field_errors.length > 0) {
+        return String(dataObj.non_field_errors[0]);
+      }
+      const keys = Object.keys(dataObj);
+      if (keys.length > 0) {
+        const firstValue = dataObj[keys[0]];
+        if (typeof firstValue === "string") return firstValue;
+        if (Array.isArray(firstValue) && firstValue.length > 0) {
+          return String(firstValue[0]);
+        }
+      }
+    }
+  }
+  if (typeof errObj.message === "string") return errObj.message;
+  return defaultMessage;
+}
+
 export function TripDetailPage() {
   const { id } = useParams({ from: "/app/viagens/$id" });
   const [trip, setTrip] = useState<AvailableTrip | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isReserving, setIsReserving] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [reserved, setReserved] = useState(false);
-  const [justReserved, setJustReserved] = useState(false);
+  
+  const [associatedReservationId, setAssociatedReservationId] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+
+  const isAtRisk = trip?.status_trip?.toLowerCase().includes("risco de cancelamento");
 
   useEffect(() => {
     if (!error) return;
@@ -53,14 +96,16 @@ export function TripDetailPage() {
     fetchTripById(id)
       .then((data) => {
         setTrip(data);
-        if (data.user_is_reserved) setReserved(true);
+        if (data.user_is_reserved) {
+          setReserved(true);
+          setAssociatedReservationId(data.user_reservation_id || null);
+        } else {
+          setReserved(false);
+          setAssociatedReservationId(null);
+        }
       })
       .catch((err) => {
-        const errorData = err as { data?: { detail?: string } } | undefined;
-        setError(
-          errorData?.data?.detail ||
-            "Não foi possível carregar os dados da viagem.",
-        );
+        setError(getApiErrorMessage(err, "Não foi possível carregar os dados da viagem."));
       })
       .finally(() => setIsLoading(false));
   }, [id]);
@@ -76,16 +121,53 @@ export function TripDetailPage() {
     try {
       await createReservation(trip.id);
       setReserved(true);
-      setJustReserved(true);
-      loadTrip();
+      
+      toast.success("Reserva confirmada", {
+        description: `Sua vaga no trajeto ${trip.origin} → ${trip.destiny} foi garantida.`,
+      });
+
+      fetchTripById(id)
+        .then((data) => {
+          setTrip(data);
+          if (data.user_is_reserved) {
+            setAssociatedReservationId(data.user_reservation_id || null);
+          }
+        })
+        .catch((err) => {
+          console.error("Erro ao atualizar dados da viagem após reserva:", err);
+        });
     } catch (err) {
-      const errorData = err as { data?: { detail?: string } } | undefined;
-      setError(
-        errorData?.data?.detail ||
-          "Não foi possível reservar esta viagem.",
-      );
+      setError(getApiErrorMessage(err, "Não foi possível reservar esta viagem."));
     } finally {
       setIsReserving(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!associatedReservationId || !trip) return;
+    setIsCancelling(true);
+    setError(null);
+    try {
+      await cancelReservation(associatedReservationId);
+      setReserved(false);
+      setAssociatedReservationId(null);
+      
+      toast.success("Reserva cancelada", {
+        description: `Sua reserva para o trajeto ${trip?.origin} → ${trip?.destiny} foi cancelada.`,
+      });
+
+      fetchTripById(id)
+        .then((data) => {
+          setTrip(data);
+        })
+        .catch((err) => {
+          console.error("Erro ao recarregar viagem após cancelamento:", err);
+        });
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Não foi possível cancelar a reserva."));
+    } finally {
+      setIsCancelling(false);
+      setCancelDialogOpen(false);
     }
   };
 
@@ -184,41 +266,6 @@ export function TripDetailPage() {
         </motion.div>
       )}
 
-      {justReserved && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-6"
-        >
-          <Card className="rounded-xl border border-emerald-500/30 bg-emerald-500/5">
-            <CardContent className="flex flex-col items-center justify-center gap-4 py-8">
-              <span className="grid size-14 place-items-center rounded-full bg-emerald-500/10">
-                <CheckCircle
-                  size={28}
-                  weight="fill"
-                  className="text-emerald-600"
-                />
-              </span>
-              <div className="text-center">
-                <p className="text-lg font-bold text-emerald-700">
-                  Reserva confirmada
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Sua vaga no trajeto {trip.origin} &rarr; {trip.destiny} foi
-                  garantida.
-                </p>
-              </div>
-              <Link to="/app/reservas">
-                <Button variant="outline" size="sm">
-                  Ver minhas reservas
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
       <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
         <motion.div
           {...fadeUp}
@@ -312,11 +359,36 @@ export function TripDetailPage() {
                 <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase mb-1">
                   Status da viagem
                 </p>
-                <span
-                  className={`inline-flex rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase ring-1 ${getStatusTone(trip.status_trip)}`}
-                >
-                  {trip.status_trip}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase ring-1 ${getStatusTone(trip.status_trip)}`}
+                  >
+                    {trip.status_trip}
+                  </span>
+                  {isAtRisk && (
+                    <button
+                      type="button"
+                      className="group relative flex cursor-pointer items-center focus:outline-none"
+                      onClick={() => setIsTooltipOpen((prev) => !prev)}
+                      onBlur={() => setIsTooltipOpen(false)}
+                    >
+                      <InfoIcon
+                        weight="fill"
+                        className="size-5 md:size-6 grid place-items-center rounded-full border border-orange-200 bg-white text-orange-500 shadow-sm drop-shadow cursor-pointer"
+                      />
+                      <div
+                        className={`absolute bottom-full right-[-10px] z-50 mb-2 w-[160px] rounded-md bg-slate-800 px-3 py-2 text-center text-xs font-medium leading-snug text-white shadow-lg ${
+                          isTooltipOpen ? "block" : "hidden sm:group-hover:block"
+                        }`}
+                      >
+                        Quórum insuficiente,
+                        <br />
+                        Falta 1 servidor.
+                        <span className="absolute right-[17px] top-full border-[5px] border-transparent border-t-slate-800" />
+                      </div>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {trip.quorum_met !== undefined && (
@@ -352,30 +424,60 @@ export function TripDetailPage() {
                 </div>
               )}
 
-              <Button
-                className="w-full"
-                disabled={
-                  !trip.is_reservable || isReserving || reserved
-                }
-                onClick={handleReserve}
-              >
-                {reserved ? (
-                  <>
-                    <CheckCircle size={16} />
-                    Reservado
-                  </>
-                ) : isReserving ? (
-                  "Reservando..."
-                ) : trip.is_reservable ? (
-                  "Reservar"
-                ) : (
-                  "Indisponível"
-                )}
-              </Button>
+              {reserved || trip.user_is_reserved ? (
+                <div className="space-y-2 w-full">
+                  {associatedReservationId && (
+                    <Link
+                      to="/app/reservas/$id"
+                      params={{ id: associatedReservationId }}
+                      className="block w-full"
+                    >
+                      <Button className="w-full font-semibold">
+                        Ver Reserva
+                      </Button>
+                    </Link>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full text-destructive hover:bg-destructive/10 border-destructive/20 font-semibold"
+                    disabled={isCancelling}
+                    onClick={() => setCancelDialogOpen(true)}
+                  >
+                    {isCancelling ? "Cancelando..." : "Cancelar Reserva"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  className="w-full"
+                  disabled={!trip.is_reservable || isReserving}
+                  onClick={handleReserve}
+                >
+                  {isReserving ? "Reservando..." : trip.is_reservable ? "Reservar" : "Indisponível"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </motion.div>
       </div>
+
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancelar reserva</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja cancelar esta reserva? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
+              Manter reserva
+            </Button>
+            <Button variant="destructive" disabled={isCancelling} onClick={handleCancel}>
+              {isCancelling ? "Cancelando..." : "Sim, cancelar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

@@ -10,7 +10,7 @@ import {
   User,
   IdentificationBadge,
   WarningCircle,
-  Info,
+  InfoIcon,
 } from "@phosphor-icons/react";
 
 import { Button } from "@/lib/ui/button";
@@ -288,7 +288,7 @@ export function ReservationDetailPage() {
                             onClick={() => setIsTooltipOpen((prev) => !prev)}
                             onBlur={() => setIsTooltipOpen(false)}
                           >
-                            <Info 
+                            <InfoIcon 
                               weight="fill" 
                               className="size-5 md:size-6 grid place-items-center rounded-full border border-orange-200 bg-white text-orange-500 shadow-sm drop-shadow cursor-pointer" 
                               />
