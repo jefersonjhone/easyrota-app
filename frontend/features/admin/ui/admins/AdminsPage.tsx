@@ -55,8 +55,9 @@ function AdminForm({
         { userId: initial.user_id, data: payload },
         {
           onSuccess: () => { toast.success('Administrador atualizado com sucesso!'); onSuccess() },
-          onError: (err: any) => {
-            const msg = err?.data?.email?.[0] ?? err?.data?.detail ?? 'Erro ao atualizar'
+          onError: (err: unknown) => {
+            const e = err as { data?: { email?: string[]; detail?: string } }
+            const msg = e?.data?.email?.[0] ?? e?.data?.detail ?? 'Erro ao atualizar'
             setError(msg)
             toast.error(msg)
           },
@@ -74,7 +75,7 @@ function AdminForm({
       const payload: CreateAdminPayload = { full_name: fullName, email, password, role }
       createMutation.mutate(payload, {
         onSuccess: () => { toast.success('Administrador criado com sucesso!'); onSuccess() },
-        onError: (err: any) => {
+        onError: (err: unknown) => {
           const msg = err?.data?.email?.[0] ?? err?.data?.detail ?? 'Erro ao criar'
           setError(msg)
           toast.error(msg)

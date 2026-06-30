@@ -122,7 +122,7 @@ export function RouteForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(submitForm)}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="origin" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Origem</FieldLabel>

@@ -72,9 +72,9 @@ function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string
   )
 }
 
-async function downloadExport(tripId: string, _format: 'csv' | 'xlsx') {
+async function downloadExport(tripId: string, format: 'csv' | 'xlsx') {
   const token = useAuthStore.getState().accessToken
-  const response = await fetch(`${API_URL}/trips/${tripId}/export_passengers`, {
+  const response = await fetch(`${API_URL}/trips/${tripId}/export_passengers?format=${format}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!response.ok) return

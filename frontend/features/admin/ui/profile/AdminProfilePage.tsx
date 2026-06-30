@@ -57,14 +57,15 @@ export function AdminProfilePage() {
       if (showPasswordChange && password) {
         payload.password = password
       }
-      await updateAdmin(userId, payload as any)
+      await updateAdmin(userId, payload as Record<string, string>)
       toast.success('Perfil atualizado com sucesso!')
       setEditing(false)
       setShowPasswordChange(false)
       setPassword('')
       setPasswordConfirmation('')
-    } catch (err: any) {
-      const msg = err?.data?.email?.[0] ?? err?.data?.detail ?? 'Erro ao atualizar perfil.'
+    } catch (err: unknown) {
+      const e = err as { data?: { email?: string[]; detail?: string } }
+      const msg = e?.data?.email?.[0] ?? e?.data?.detail ?? 'Erro ao atualizar perfil.'
       toast.error(msg)
     } finally {
       setSaving(false)

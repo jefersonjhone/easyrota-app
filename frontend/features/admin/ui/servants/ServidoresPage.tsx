@@ -377,9 +377,11 @@ function AllowedStaffSection() {
 
   const { data, isLoading } = useAllowedStaff({ q: search || undefined, page, has_account: false })
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setPage(1)
   }, [search])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const totalPages = data ? Math.ceil(data.count / 15) : 0
 

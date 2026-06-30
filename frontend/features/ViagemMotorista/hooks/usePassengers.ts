@@ -144,7 +144,7 @@ export function usePassengers(
   }
 
   const handleRemovePassenger = async () => {
-    if (!trip || !selectedPassengerToRemove || !Boolean(selectedPassengerToRemove.reservationId ?? selectedPassengerToRemove.localPassengerId) || isPassengerRemoving) return
+    if (!trip || !selectedPassengerToRemove || !(selectedPassengerToRemove.reservationId ?? selectedPassengerToRemove.localPassengerId) || isPassengerRemoving) return
 
     setIsPassengerRemoving(true)
     setActionError(null)

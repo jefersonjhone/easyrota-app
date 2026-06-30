@@ -11,10 +11,12 @@ import {
   updateTrip,
 } from '../services/trips'
 import { fetchBuses, fetchDrivers, fetchRoutes } from '../services/resources'
+import type { TripFilters } from '../services/trips'
 import type { Trip } from '../types'
 
 export const tripsKeys = {
   all: ['trips'] as const,
+  list: (filters: TripFilters = {}) => ['trips', 'list', filters] as const,
   detail: (id: string) => ['trips', id] as const,
   nextTrip: ['trips', 'next'] as const,
 }

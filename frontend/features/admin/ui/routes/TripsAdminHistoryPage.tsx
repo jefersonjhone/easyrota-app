@@ -36,8 +36,11 @@ export function TripsAdminHistoryPage() {
   const selectedWeekdays = useMemo(() => new Set(weekdays), [weekdays])
   const selectedStatuses = useMemo(() => new Set(statuses), [statuses])
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const today = useMemo(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [])
   const todayStr = today.toISOString().split('T')[0]
 
   const minDate = useMemo(() => {
@@ -49,7 +52,7 @@ export function TripsAdminHistoryPage() {
     const d = new Date(todayStr + 'T12:00:00')
     d.setDate(d.getDate() - Number(dias))
     return d.toISOString().split('T')[0]
-  }, [dias, todayStr])
+  }, [dias, todayStr, today])
 
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null)

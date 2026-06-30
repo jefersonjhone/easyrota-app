@@ -75,7 +75,7 @@ export function AddPassengerModal({ tripId, open, onOpenChange }: Props) {
   }, [search, type])
 
   const handleSubmit = async () => {
-    const payload: any = { trip: tripId, passenger_type: type }
+    const payload: Record<string, unknown> = { trip: tripId, passenger_type: type }
 
     if (type === 'CONVIDADO') {
       if (!guestName.trim() || !guestCpf.trim()) return
