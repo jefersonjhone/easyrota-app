@@ -76,12 +76,9 @@ class Command(BaseCommand):
             registration_number = row[reg_idx].strip()
             if not name or not registration_number:
                 continue
-            
+
             users.append(
-                AllowedStaff(
-                    registration_number=registration_number,
-                    name=name
-                )
+                AllowedStaff(registration_number=registration_number, name=name)
             )
             imported += 1
         AllowedStaff.objects.bulk_create(users, batch_size=500, ignore_conflicts=True)

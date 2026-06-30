@@ -30,13 +30,13 @@ class WebPushSubscriptionView(APIView):
     def post(self, request):
         try:
             post_data = request.data
-            
+
             logger.info(
                 f"Push subscribe request - {request.user.email}",
                 extra={
                     "user": request.user.email,
                     "time": datetime.now(),
-                }
+                },
             )
             # Process the subscription data to match with the model
             subscription_data = process_subscription_data(dict(post_data))

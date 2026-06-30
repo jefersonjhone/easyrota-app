@@ -16,7 +16,8 @@ class TripQuerySet(models.QuerySet):
             return self
 
         return (
-            self.filter(trip_date=timezone.localdate())
+            self
+            .filter(trip_date=timezone.localdate())
             .exclude(status="CONCLU\u00cdDA")
             .order_by("route__departure_time", "id")
         )

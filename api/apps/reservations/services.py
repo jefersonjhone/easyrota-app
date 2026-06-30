@@ -94,7 +94,8 @@ def _send_trip_push_notification(trip, payload):
             send_user_notification(user=user, payload=payload, ttl=1000)
         except Exception as exc:
             logger.exception(
-                "Failed to send webpush notification to %s: %s", user.email, exc)
+                "Failed to send webpush notification to %s: %s", user.email, exc
+            )
 
     return bool(recipients)
 
@@ -216,15 +217,15 @@ def send_admin_leftover_server_alert(trip, civil_servant):
     payload = {
         "head": "Servidor sem vaga",
         "body": f"O servidor {civil_servant.user.full_name} não conseguiu vaga na "
-                f"viagem {trip}. Por favor, aloque um novo ônibus.",
+        f"viagem {trip}. Por favor, aloque um novo ônibus.",
         "url": "/app/admin/trips/",
     }
 
     # Find the superadmins (e.g. Ricardo Mattos)
     superadmins = AdministratorProfile.objects.filter(
         level=AdministratorProfile.Level.SUPERADMIN
-        )
-    
+    )
+
     for admin in superadmins:
         # WebPush notification
         try:
@@ -233,7 +234,7 @@ def send_admin_leftover_server_alert(trip, civil_servant):
         except Exception as exc:
             logger.error(
                 "Failed to send webpush notification to %s: %s", admin.user.email, exc
-                )
+            )
 
         # Email notification
         try:
@@ -257,7 +258,7 @@ def send_admin_leftover_server_alert(trip, civil_servant):
         except Exception as exc:
             logger.error(
                 "Failed to send email notification to %s: %s", admin.user.email, exc
-                )
+            )
 
 
 def promote_next_waitlisted_reservation(trip):

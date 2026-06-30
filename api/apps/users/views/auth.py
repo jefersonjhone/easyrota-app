@@ -264,6 +264,38 @@ def build_password_reset_email(code):
     )
 
 
+def build_qr_code_email(link):
+    subject = "Qr Code para checkin na sua viagem com EasyRota"
+    title = "Acesse seu QR Code"
+    intro = (
+        "Você foi adicionado como convidado em uma viagem com a EasyRota"
+        "Acesse o link abaixo para verificar mais informações"
+    )
+    helper_text = ""
+
+    return (
+        subject,
+        build_otp_text_message(title, intro, link, helper_text),
+        build_otp_email_html(title, intro, link, helper_text),
+    )
+
+
+def send_qr_code_email(email, link):
+    subject, message, html_message = build_qr_code_email(link)
+
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+            html_message=html_message,
+        )
+    except Exception:
+        logger.exception("Erro ao enviar código OTP")
+
+
 def unauthorized(message):
     response = Response(
         {"detail": message},

@@ -88,5 +88,3 @@ class AnonymizeUsersTests(APITestCase):
         self.assertEqual(user.email, f"deleted_{user.id}@anonymize")
         self.assertEqual(user.full_name, "Usuário deletado")
         self.assertEqual(student_profile.student_id, f"DEL_{user.id}")
-
-

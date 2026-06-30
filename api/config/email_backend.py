@@ -6,14 +6,14 @@ from django.core.mail.backends.base import BaseEmailBackend
 class ResendEmailBackend(BaseEmailBackend):
     def __init__(self, fail_silently=False, **kwargs):
         super().__init__(fail_silently=fail_silently, **kwargs)
-        if not hasattr(settings, 'RESEND_API_KEY'):
+        if not hasattr(settings, "RESEND_API_KEY"):
             raise ValueError("RESEND_API_KEY is not defined in settings")
         resend.api_key = settings.RESEND_API_KEY
 
     def send_messages(self, email_messages):
         if not email_messages:
             return 0
-        
+
         count = 0
         for message in email_messages:
             try:
@@ -22,14 +22,14 @@ class ResendEmailBackend(BaseEmailBackend):
                     "to": message.to,
                     "subject": message.subject,
                 }
-                
+
                 # Check if it's an EmailMultiAlternatives with HTML content
-                if hasattr(message, 'alternatives') and message.alternatives:
+                if hasattr(message, "alternatives") and message.alternatives:
                     for content, mimetype in message.alternatives:
-                        if mimetype == 'text/html':
+                        if mimetype == "text/html":
                             params["html"] = content
                             break
-                
+
                 # Fallback to text body if no HTML or just text
                 if "html" not in params:
                     params["text"] = message.body

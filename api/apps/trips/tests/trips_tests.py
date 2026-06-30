@@ -266,21 +266,21 @@ class TripAPITestCase(APITestCase):
         )
 
     def test_cannot_create_trip_for_past_time_today(self):
-        """It ensures that the system blocks trips for times 
+        """It ensures that the system blocks trips for times
         that already passed today.
         """
 
         self.client.force_authenticate(user=self.admin_user)
-        
+
         now = timezone.localtime()
-        # If it's before 2 AM, we can't easily test a "past time today" 
+        # If it's before 2 AM, we can't easily test a "past time today"
         # that exceeds the 1-hour grace period.
         if now.hour < 2:
             return
 
         past_dep = (now - timedelta(hours=2)).time()
         past_arr = (now - timedelta(hours=1)).time()
-        
+
         route_past = Route.objects.create(
             origin="Salvador",
             destiny="Feira",
