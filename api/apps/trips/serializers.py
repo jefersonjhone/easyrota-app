@@ -12,7 +12,6 @@ from .models import Bus, GuestPassenger, Route, Trip, TripPassenger, TripRequest
 from .services.trip_service import TripService
 
 
-
 class TripRequestSerializer(serializers.ModelSerializer):
     requester_name = serializers.CharField(
         source="requester.user.full_name", read_only=True

@@ -264,7 +264,8 @@ class TripService:
         new_start = timezone.make_aware(
             datetime.combine(trip_date, route.departure_time), tz
         )
-        new_end = timezone.make_aware(datetime.combine(trip_date, route.arrival_time), tz)
+        new_end = timezone.make_aware(datetime.combine(trip_date, route.arrival_time), 
+                                      tz)
     
         if new_end <= new_start:
             new_end += timedelta(days=1)
@@ -278,7 +279,8 @@ class TripService:
                 tz,
             )
             ex_end = timezone.make_aware(
-                datetime.combine(existing_trip.trip_date, existing_trip.route.arrival_time),
+                datetime.combine(existing_trip.trip_date, 
+                                 existing_trip.route.arrival_time),
                 tz,
             )
     

@@ -88,7 +88,7 @@ def test_civil_servant_displaces_student(trip, student_user, server_user):
     res1 = Reservation.objects.create(
         trip=trip, student=student_user.student_profile, status="CONFIRMADA"
     )
-    res2 = Reservation.objects.create(
+    Reservation.objects.create(
         trip=trip, student=s2_user.student_profile, status="CONFIRMADA"
     )
     from django.utils import timezone

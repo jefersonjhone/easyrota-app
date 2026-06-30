@@ -48,7 +48,6 @@ def generate_access_code(length=8):
     return "".join(random.choice(letters_and_digits) for i in range(length))
 
 
-
 class TripRequestViewSet(viewsets.ModelViewSet):
     queryset = (
         TripRequest.objects
@@ -190,7 +189,6 @@ class PrivateTripDetailView(APIView):
                 {"error": "Viagem privada não encontrada ou código inválido."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
 
 
 class BusViewSet(viewsets.ModelViewSet):
@@ -755,8 +753,8 @@ class MyNextTripView(APIView):
             "trip_date", "route__departure_time"
         )
 
-        for trip in running_trips:
-            updated_trip = TripStatusService.compute_status(trip)
+        for trip1 in running_trips:
+            updated_trip = TripStatusService.compute_status(trip1)
             if updated_trip.status == "EM ANDAMENTO":
                 serializer = TripCurrentScreenSerializer(
                     updated_trip, context={"request": request}
@@ -765,8 +763,8 @@ class MyNextTripView(APIView):
 
         next_trips = base_next_query.order_by("trip_date", "route__departure_time")
 
-        for trip in next_trips:
-            updated_trip = TripStatusService.compute_status(trip)
+        for trip2 in next_trips:
+            updated_trip = TripStatusService.compute_status(trip2)
             if updated_trip.status not in ["CONCLUÍDA", "CANCELADA"]:
                 serializer = TripCurrentScreenSerializer(
                     updated_trip, context={"request": request}
@@ -845,7 +843,9 @@ class GuestHistoryView(APIView):
 
         serializer = GuestHistorySerializer(guests, many=True)
         return Response(serializer.data)
+        '''
         sync_trip_status(trip)
+        TripService.sync_trip_status(trip)
 
         appLink = (
             "https://easyrota-app.vercel.app/"
@@ -857,6 +857,7 @@ class GuestHistoryView(APIView):
             email, appLink + "app/viagens/convidados/" + str(passenger.id)
         )
         return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)
+        '''
 
 
 class GuestPassengerDetailView(APIView):

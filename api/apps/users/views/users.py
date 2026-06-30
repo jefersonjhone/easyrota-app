@@ -2,8 +2,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, views, viewsets
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
@@ -536,9 +536,10 @@ class LocalDriverTripPassengerView(views.APIView):
             server_passenger = None
             fallback = None
             if not guest_without_server:
-                server_passenger, _, fallback = LocalPassengerService.ensure_local_server(
+                server_passenger, _, fallback = (
+                    LocalPassengerService.ensure_local_server(
                     trip, associated_staff, driver, evicted_passengers
-                )
+                ))
                 TripStatusService.sync_trip_status(trip)
 
             passenger = LocalPassengerService.register_local_guest(
