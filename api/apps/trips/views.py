@@ -267,7 +267,7 @@ class TripViewSet(viewsets.ModelViewSet):
             if hasattr(self.request.user, "admin_profile"):
                 return Trip.objects.all()
             elif hasattr(self.request.user, "driver_profile"):
-                return Trip.objects.filter(driver=self.request.user.driver_profile)
+                return Trip.objects.all()
             elif hasattr(self.request.user, "student_profile") or hasattr(
                 self.request.user, "civil_servant_profile"):
                 return Trip.objects.joinable_by_user(self.request.user)
