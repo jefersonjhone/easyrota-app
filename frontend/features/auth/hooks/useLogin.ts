@@ -18,6 +18,7 @@ export type LoginResponse = {
 	non_field_errors?: string[]
 	tokens?: {
 		access: string
+		refresh?: string
 	}
   user?: AuthUser;
 	[key: string]: unknown
@@ -45,12 +46,13 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: loginRequest,
     onSuccess: (data) => {
-      const tokens = data.tokens?.access
+      const accessToken = data.tokens?.access
+      const refreshToken = data.tokens?.refresh ?? null
       const user = data.user
-      
-      if (tokens && user) {
-        setAuth(tokens, user)
-		return user
+
+      if (accessToken && user) {
+        setAuth(accessToken, refreshToken, user)
+        return user
       } else {
         throw new Error('Invalid login response: missing tokens or user data')
       }

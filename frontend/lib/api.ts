@@ -13,10 +13,12 @@ let refreshPromise: Promise<void> | null = null
 
 async function handleRefresh(): Promise<void> {
   try {
-    const data = await refreshSession()
+    const refreshToken = useAuthStore.getState().refreshToken
+    const data = await refreshSession(refreshToken)
 
-    useAuthStore.getState().setAccessToken(
+    useAuthStore.getState().setTokens(
       data.tokens?.access,
+      data.tokens?.refresh,
     )
   } catch (error) {
     useAuthStore.getState().clearAuth()

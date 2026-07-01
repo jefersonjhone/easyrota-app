@@ -12,7 +12,10 @@ export function useAuthBootstrap() {
   useEffect(() => {
     if (!user) return;
     if (!accessToken || isTokenExpired(accessToken)) {
-      refreshTokenIfNeeded().catch(() => { clearAuth(); });
+      refreshTokenIfNeeded().catch(() => {
+        clearAuth();
+        window.location.href = '/login';
+      });
     }
   }, [accessToken, clearAuth, user])
 }
