@@ -138,6 +138,12 @@ class TripsStatsByRouteViewTests(DashboardStatsBaseTest):
             self.assertIn("origin", item)
             self.assertIn("destiny", item)
             self.assertIn("departure_time", item)
+            self.assertIn("arrival_time", item)
+
+        # Verify values for route_a item
+        route_a_data = next(item for item in response.data if item["route_id"] == route_a.id)
+        self.assertEqual(str(route_a_data["departure_time"]), "08:00:00")
+        self.assertEqual(str(route_a_data["arrival_time"]), "10:00:00")
 
 
 class TripsStatsByDateViewTests(DashboardStatsBaseTest):

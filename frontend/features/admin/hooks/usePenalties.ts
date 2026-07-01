@@ -16,7 +16,7 @@ export function usePenalties(filters: PenaltyFilters = {}) {
 export function useUpdatePenalty() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { is_active: boolean } }) => updatePenalty(id, data),
+    mutationFn: ({ id, data }: { id: string; data: { is_active: boolean } }) => updatePenalty(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: penaltiesKeys.all }),
   })
 }
@@ -31,7 +31,7 @@ export function usePenaltiesGrouped(filters: PenaltyFilters = {}) {
 export function useDeletePenalty() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => deletePenalty(id),
+    mutationFn: (id: string) => deletePenalty(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: penaltiesKeys.all }),
   })
 }

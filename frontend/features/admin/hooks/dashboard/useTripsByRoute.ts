@@ -6,6 +6,7 @@ export type TripsByRoute = {
    origin: string,
    destiny: string,
    departure_time: string,
+   arrival_time: string,
    total_trips: number
    }[]
 

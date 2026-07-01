@@ -36,7 +36,7 @@ export function useCreateReservation() {
 export function useUpdateReservation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Reservation> }) => updateReservation(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Reservation> }) => updateReservation(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reservationsKeys.all })
       toast.success('Reserva atualizada com sucesso')
@@ -48,7 +48,7 @@ export function useUpdateReservation() {
 export function useDeleteReservation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => deleteReservation(id),
+    mutationFn: (id: string) => deleteReservation(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reservationsKeys.all })
       toast.success('Reserva cancelada com sucesso')

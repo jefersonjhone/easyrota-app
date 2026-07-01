@@ -1,7 +1,9 @@
 import { useLogoutMutation } from '@/features/auth/hooks/useLogout'
 import { useDeleteAccountMutation } from '@/features/auth/hooks/useDeleteAccount'
+import { useChangePasswordMutation } from '@/features/auth/hooks/useChangePassword'
 import { useEffect, useState } from 'react'
 import { Input } from '@/lib/ui/input'
+import { toast } from 'sonner'
 
 import { formatTripDate } from '../config'
 import {
@@ -53,12 +55,24 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
   
   const logoutMutation = useLogoutMutation()
   const deleteAccountMutation = useDeleteAccountMutation()
+  const changePasswordMutation = useChangePasswordMutation()
   
   const [openSettings, setOpenSettings] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState("")
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushLoading, setPushLoading] = useState(false)
+
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<{
+    current_password?: string[];
+    new_password?: string[];
+    new_password_confirm?: string[];
+    detail?: string;
+  }>({})
   const canDeleteAccount =
     user.profile_type === "STUDENT" ||
     user.profile_type === "CIVIL-SERVANT"
@@ -100,6 +114,51 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
     } finally {
       setPushLoading(false)
     }
+  }
+
+  const handlePasswordChange = () => {
+    setFieldErrors({})
+
+    if (!currentPassword || !newPassword || !newPasswordConfirm) {
+      setFieldErrors({ detail: "Todos os campos de senha são obrigatórios." })
+      return
+    }
+
+    if (newPassword !== newPasswordConfirm) {
+      setFieldErrors({ new_password_confirm: ["A confirmação de senha não confere."] })
+      return
+    }
+
+    if (newPassword.length < 8) {
+      setFieldErrors({ new_password: ["A nova senha deve ter pelo menos 8 caracteres."] })
+      return
+    }
+
+    changePasswordMutation.mutate(
+      {
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirm: newPasswordConfirm,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Senha alterada com sucesso!")
+          setChangingPassword(false)
+          setCurrentPassword("")
+          setNewPassword("")
+          setNewPasswordConfirm("")
+          setFieldErrors({})
+        },
+        onError: (error: unknown) => {
+          const err = error as { data?: Record<string, string[] | string> };
+          if (err && err.data) {
+            setFieldErrors(err.data)
+          } else {
+            setFieldErrors({ detail: "Ocorreu um erro ao alterar a senha." })
+          }
+        },
+      }
+    )
   }
 
   
@@ -198,17 +257,20 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
                 Conta
               </h2>
 
-              {!confirmingDelete ? (
+              {!confirmingDelete && !changingPassword ? (
                 <div className="flex flex-col gap-4">
-                  <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
-                    Alterar email
-                  </Button>
-
-                  <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
-                    Alterar nome
-                  </Button>
-
-                  <Button variant="ghost" className="justify-start px-0 text-sm font-medium hover:underline">
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-0 text-sm font-medium hover:underline"
+                    onClick={() => {
+                      setChangingPassword(true)
+                      setCurrentPassword("")
+                      setNewPassword("")
+                      setNewPasswordConfirm("")
+                      setFieldErrors({})
+                      changePasswordMutation.reset()
+                    }}
+                  >
                     Alterar senha
                   </Button>
 
@@ -233,6 +295,85 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
                   >
                     Sair da conta
                   </Button>
+                </div>
+              ) : changingPassword ? (
+                <div className="space-y-4 rounded-4xl border border-border/70 bg-muted/20 p-6">
+                  <div>
+                    <h3 className="text-lg font-semibold">Alterar senha</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Para sua segurança, informe sua senha atual antes de definir uma nova.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Field>
+                      <FieldLabel htmlFor="currentPassword">Senha atual</FieldLabel>
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        placeholder="Sua senha atual"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                      {fieldErrors.current_password && (
+                        <p className="text-sm text-destructive mt-1">{fieldErrors.current_password[0]}</p>
+                      )}
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="newPassword">Nova senha</FieldLabel>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        placeholder="Mínimo de 8 caracteres"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                      {fieldErrors.new_password && (
+                        <p className="text-sm text-destructive mt-1">{fieldErrors.new_password[0]}</p>
+                      )}
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="newPasswordConfirm">Confirmar nova senha</FieldLabel>
+                      <Input
+                        id="newPasswordConfirm"
+                        type="password"
+                        placeholder="Repita a nova senha"
+                        value={newPasswordConfirm}
+                        onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                      />
+                      {fieldErrors.new_password_confirm && (
+                        <p className="text-sm text-destructive mt-1">{fieldErrors.new_password_confirm[0]}</p>
+                      )}
+                    </Field>
+                  </div>
+
+                  {fieldErrors.detail && (
+                    <p className="text-sm text-destructive">{fieldErrors.detail}</p>
+                  )}
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setChangingPassword(false)
+                        setCurrentPassword("")
+                        setNewPassword("")
+                        setNewPasswordConfirm("")
+                        setFieldErrors({})
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+
+                    <Button
+                      disabled={changePasswordMutation.isPending}
+                      onClick={handlePasswordChange}
+                    >
+                      {changePasswordMutation.isPending ? "Salvando..." : "Salvar senha"}
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4 rounded-4xl border border-border/70 bg-muted/20 p-6">

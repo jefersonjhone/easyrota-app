@@ -1,7 +1,7 @@
 import { apiFetch } from '@lib/api'
 
 export type TripPassengerEntry = {
-  id: number
+  id: string
   passenger_name: string
   passenger_type: 'ESTUDANTE' | 'SERVIDOR' | 'CONVIDADO' | 'SERVIDOR LOCAL' | 'CONVIDADO LOCAL'
   passenger_id_display: string | null
