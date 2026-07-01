@@ -29,7 +29,7 @@ class TripAPITestCase(APITestCase):
         Creates users, profiles, a bus, and some base routes.
         """
 
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
         self.tomorrow = self.today + timedelta(days=1)
 
         self.admin_user = CustomUser.objects.create_superuser(
@@ -584,7 +584,7 @@ class CurrentTripPassengerAPITests(APITestCase):
         """
 
         trip = Trip.objects.create(
-            trip_date=timezone.now().date(),
+            trip_date=timezone.localdate(),
             bus=self.bus,
             route=self.route_active,
             status="CONFIRMADA",
@@ -606,7 +606,7 @@ class CurrentTripPassengerAPITests(APITestCase):
         """
 
         trip = Trip.objects.create(
-            trip_date=timezone.now().date(),
+            trip_date=timezone.localdate(),
             bus=self.bus,
             route=self.route_active,
             status="EM ANDAMENTO",
@@ -631,7 +631,7 @@ class CurrentTripPassengerAPITests(APITestCase):
          the view should automatically update to 'IN PROGRESS'.
         """
         trip = Trip.objects.create(
-            trip_date=timezone.now().date(),
+            trip_date=timezone.localdate(),
             bus=self.bus,
             route=self.route_active,
             status="CONFIRMADA",
