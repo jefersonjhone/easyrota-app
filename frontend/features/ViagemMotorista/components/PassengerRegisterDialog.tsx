@@ -2,6 +2,7 @@ import { Input } from '@ui/input'
 import { Label } from '@ui/label'
 import { NativeSelect, NativeSelectOption } from '@ui/native-select'
 import { Button } from '@ui/button'
+import { Checkbox } from '@ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@ui/dialog'
 import { UserPlusIcon } from '@phosphor-icons/react'
 import { cn } from '@utils'
@@ -27,6 +28,8 @@ type Props = {
   onPassengerNameChange: (value: string) => void
   passengerCpf: string
   onPassengerCpfChange: (value: string) => void
+  guestWithoutServer: boolean
+  onGuestWithoutServerChange: (value: boolean) => void
   isPassengerSaving: boolean
   actionError: string | null
   onCancel: () => void
@@ -50,6 +53,8 @@ export function PassengerRegisterDialog({
   onPassengerNameChange,
   passengerCpf,
   onPassengerCpfChange,
+  guestWithoutServer,
+  onGuestWithoutServerChange,
   isPassengerSaving,
   actionError,
   onCancel,
@@ -131,6 +136,22 @@ export function PassengerRegisterDialog({
 
           {isGuestPassenger ? (
             <>
+              <div className="grid gap-1">
+                <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
+                  <Checkbox
+                    id="driver-guest-without-server"
+                    checked={guestWithoutServer}
+                    onCheckedChange={(checked) => onGuestWithoutServerChange(checked === true)}
+                  />
+                  <Label htmlFor="driver-guest-without-server" className="text-sm font-semibold leading-5">
+                    este convidado vai viajar sem servidor
+                  </Label>
+                </div>
+                <p className="pl-7 text-xs font-bold text-red-700">
+                  Necessário autorização da Uninfra
+                </p>
+              </div>
+
               <div className="grid gap-2">
                 <Label htmlFor="driver-passenger-name">Nome do convidado</Label>
                 <Input id="driver-passenger-name" type="text" value={passengerName} onChange={(event) => onPassengerNameChange(event.target.value)} required />

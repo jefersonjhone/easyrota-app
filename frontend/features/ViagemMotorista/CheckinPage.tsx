@@ -122,6 +122,7 @@ export function CheckinPage({ tripId }: Props) {
     passengerName, setPassengerName,
     passengerCpf, setPassengerCpf,
     passengerKind, setPassengerKind,
+    guestWithoutServer, setGuestWithoutServer,
     passengerStaffQuery, setPassengerStaffQuery,
     staffOptions: staffOptionsFromHook, isStaffSearchLoading, staffSearchError,
     selectedStaff, setSelectedStaff,
@@ -535,7 +536,7 @@ export function CheckinPage({ tripId }: Props) {
           isOpen={isPassengerMenuOpen}
           onOpenChange={setIsPassengerMenuOpen}
           passengerKind={passengerKind}
-          onPassengerKindChange={(k) => { setPassengerKind(k); setPassengerName(''); setPassengerCpf('') }}
+          onPassengerKindChange={(k) => { setPassengerKind(k); setPassengerName(''); setPassengerCpf(''); setGuestWithoutServer(false) }}
           passengerStaffQuery={passengerStaffQuery}
           onPassengerStaffQueryChange={(v) => { setPassengerStaffQuery(v); setSelectedStaff(null) }}
           staffOptions={staffOptionsFromHook}
@@ -548,6 +549,8 @@ export function CheckinPage({ tripId }: Props) {
           onPassengerNameChange={setPassengerName}
           passengerCpf={passengerCpf}
           onPassengerCpfChange={setPassengerCpf}
+          guestWithoutServer={guestWithoutServer}
+          onGuestWithoutServerChange={setGuestWithoutServer}
           isPassengerSaving={isPassengerSaving}
           actionError={actionError}
           onCancel={() => { setIsPassengerMenuOpen(false); setActionError(null) }}

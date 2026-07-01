@@ -538,8 +538,9 @@ class LocalDriverTripPassengerView(views.APIView):
             if not guest_without_server:
                 server_passenger, _, fallback = (
                     LocalPassengerService.ensure_local_server(
-                    trip, associated_staff, driver, evicted_passengers
-                ))
+                        trip, associated_staff, driver, evicted_passengers
+                    )
+                )
                 TripStatusService.sync_trip_status(trip)
 
             passenger = LocalPassengerService.register_local_guest(
@@ -572,22 +573,6 @@ class LocalDriverTripPassengerView(views.APIView):
         except LocalPassengerService.CapacityError as exc:
             transaction.set_rollback(True)
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
-        associated_staff = serializer.validated_data["associated_staff"]
-        guest_without_server = serializer.validated_data.get(
-            "guest_without_server", False
-        )
-        server_passenger = None
-        fallback = None
-        if not guest_without_server:
-            server_passenger, _, fallback = self._ensure_local_server(
-                trip,
-                associated_staff,
-                driver,
-                evicted_passengers,
-            )
-            if isinstance(fallback, Response):
-                transaction.set_rollback(True)
-                return fallback
 
 
 class AllowedStaffPagination(PageNumberPagination):

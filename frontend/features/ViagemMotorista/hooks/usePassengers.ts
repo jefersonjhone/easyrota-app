@@ -26,6 +26,7 @@ export function usePassengers(
   const [passengerName, setPassengerName] = useState('')
   const [passengerCpf, setPassengerCpf] = useState('')
   const [passengerKind, setPassengerKind] = useState<PassengerKind>('Servidor')
+  const [guestWithoutServer, setGuestWithoutServer] = useState(false)
   const [passengerStaffQuery, setPassengerStaffQuery] = useState('')
   const [staffOptions, setStaffOptions] = useState<AllowedStaffOption[]>([])
   const [selectedStaff, setSelectedStaff] = useState<AllowedStaffOption | null>(null)
@@ -87,6 +88,7 @@ export function usePassengers(
     setPassengerName('')
     setPassengerCpf('')
     setPassengerKind('Servidor')
+    setGuestWithoutServer(false)
     setPassengerStaffQuery('')
     setStaffOptions([])
     setSelectedStaff(null)
@@ -115,6 +117,7 @@ export function usePassengers(
         passenger_type: passengerKind === 'Convidado' ? 'LOCAL_GUEST' : 'LOCAL_SERVER',
         allowed_staff_id: passengerKind === 'Convidado' ? undefined : selectedStaff.id,
         associated_staff_id: passengerKind === 'Convidado' ? selectedStaff.id : undefined,
+        guest_without_server: passengerKind === 'Convidado' && guestWithoutServer,
         full_name: passengerKind === 'Convidado' ? passengerName.trim() : undefined,
         cpf: passengerKind === 'Convidado' ? passengerCpf.trim() : undefined,
       })
@@ -127,6 +130,7 @@ export function usePassengers(
       setPassengerName('')
       setPassengerCpf('')
       setPassengerKind('Servidor')
+      setGuestWithoutServer(false)
       setPassengerStaffQuery('')
       setStaffOptions([])
       setSelectedStaff(null)
@@ -192,6 +196,8 @@ export function usePassengers(
     setPassengerCpf,
     passengerKind,
     setPassengerKind,
+    guestWithoutServer,
+    setGuestWithoutServer,
     passengerStaffQuery,
     setPassengerStaffQuery,
     staffOptions,
