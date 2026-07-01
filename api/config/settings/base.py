@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.trips",
     "apps.reservations",
+    "apps.notifications",
     "webpush",
     "django_apscheduler",
 ]
@@ -147,13 +148,14 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
-    "config.email_backend.ResendEmailBackend",
+    "apps.notifications.backends.email_delivery.ResendEmailBackend",
 )
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = os.getenv("EMAIL_PORT", 587)
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "easyrota0@gmail.com")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL")
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 REST_FRAMEWORK = {

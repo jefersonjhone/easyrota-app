@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'sonner'
 import { routeTree } from './routeTree.gen'
 import { registerServiceWorker } from './lib/service-worker'
 import './index.css'
@@ -26,6 +27,7 @@ root.render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
+      <Toaster richColors closeButton position="top-right" />
     </QueryClientProvider>
   </StrictMode>,
 )

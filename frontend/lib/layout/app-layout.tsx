@@ -1,6 +1,6 @@
 import Header from "@layout/header"
-import Footer from "@layout/footer"
 import { useAuthStore } from "@/features/auth/store/auth-store"
+import { BottomNav } from "@layout/bottom-nav"
 
 const paths = {
   passager: "/app",
@@ -10,10 +10,10 @@ const paths = {
 
 type LayoutProps = {
   children: React.ReactNode
-  showFooter?: boolean
+  showBottomNav?: boolean
 }
 
-const AppLayout = ({ children, showFooter = true }: LayoutProps) => {
+const AppLayout = ({ children, showBottomNav = true }: LayoutProps) => {
   const user = useAuthStore((state) => state.user)
   const userTypes = user?.profile_type === "STUDENT" || user?.profile_type === "CIVIL-SERVANT" ? "passager" : user?.profile_type?.toLowerCase();
 
@@ -24,10 +24,10 @@ const AppLayout = ({ children, showFooter = true }: LayoutProps) => {
         user={{name: user?.full_name || 'Usuário', kind: userTypes as 'passager' | 'admin' | 'driver'}}
         paths={paths}
       />
-      <main className="flex-1 flex flex-col gap-6 ">
+      <main className={`flex-1 flex flex-col gap-6 ${showBottomNav ? 'pb-20' : ''}`}>
         {children}
       </main>
-      {showFooter && <Footer />}
+      {showBottomNav && <BottomNav />}
     </div>
   )
 }

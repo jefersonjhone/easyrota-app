@@ -6,7 +6,7 @@ export type TripStatus =
   | 'RISCO DE CANCELAMENTO'
 
 export type Trip = {
-  id: number
+  id: string
   origin: string
   destiny: string
   departure_time: string
@@ -19,17 +19,15 @@ export type Trip = {
   status: TripStatus
   departure_timestamp: string | null
   arrival_timestamp: string | null
-  is_current_driver?: boolean
-  is_occupied_by_other_driver?: boolean
-  bus: number | null
-  route: number
+  bus: string | null
+  route: string
   is_private?: boolean
   access_code?: string
 }
 
 export type TripCheckedInPassenger = {
-  reservation_id?: number
-  local_passenger_id?: number
+  reservation_id?: string
+  local_passenger_id?: string
   passenger_name: string
   check_in: boolean
   checkin_date: string | null
@@ -38,7 +36,7 @@ export type TripCheckedInPassenger = {
 }
 
 export type CurrentTripDetail = {
-  id: number
+  id: string
   trip_date: string
   origin: string
   destiny: string
@@ -55,61 +53,61 @@ export type CurrentTripDetail = {
 export type TripPassengerCheckInResponse = {
   status?: string
   error?: string
-  reservation_id?: number
+  reservation_id?: string
   passenger_name?: string
   checkin_date?: string
   evicted_passenger?: {
     name: string
-    reservation_id: number
+    reservation_id: string
   }
   evicted_passengers?: Array<{
     name: string
-    reservation_id: number
+    reservation_id: string
   }>
 }
 
 export type AllowedStaffOption = {
-  id: number
+  id: string
   name: string
   registration_number: string
 }
 
 export type LocalTripPassengerPayload = {
-  trip: number | string
+  trip: string
   passenger_type: 'LOCAL_SERVER' | 'LOCAL_GUEST'
-  allowed_staff_id?: number
-  associated_staff_id?: number
+  allowed_staff_id?: string
+  associated_staff_id?: string
   guest_without_server?: boolean
   full_name?: string
   cpf?: string
 }
 
 export type RemoveTripPassengerPayload = {
-  trip: number | string
-  reservation_id?: number
-  local_passenger_id?: number
+  trip: string
+  reservation_id?: string
+  local_passenger_id?: string
 }
 
 export type LocalTripPassengerResponse = {
   passenger?: {
-    id?: number
-    reservation_id?: number
+    id?: string
+    reservation_id?: string
     passenger_type?: string
     name?: string
   }
   associated_server?: {
-    id?: number
-    reservation_id?: number
+    id?: string
+    reservation_id?: string
     passenger_type?: string
     name?: string
   }
   evicted_passenger?: {
     name: string
-    reservation_id: number
+    reservation_id: string
   }
   evicted_passengers?: Array<{
     name: string
-    reservation_id: number
+    reservation_id: string
   }>
   checked_in_count?: number
 }
@@ -117,8 +115,8 @@ export type LocalTripPassengerResponse = {
 export type RemoveTripPassengerResponse = {
   removed_passenger: {
     name: string
-    reservation_id?: number
-    local_passenger_id?: number
+    reservation_id?: string
+    local_passenger_id?: string
   }
   checked_in_count: number
 }

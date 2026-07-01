@@ -44,7 +44,7 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-slate-200 data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarFallback className="rounded-lg">
@@ -68,7 +68,7 @@ export function NavUser() {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={"/avatar.png"} alt={user?.full_name} />
-                  <AvatarFallback className="rounded-lg">{avatarFallback}</AvatarFallback>
+                  <AvatarFallback className="rounded-lg bg-primary text-white">{avatarFallback}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{user?.full_name}</span>
@@ -78,17 +78,17 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link to="/app/perfil">
+              <Link to="/admin/perfil">
                 <DropdownMenuItem>
                     <UserCircleIcon />
-                    Profile
+                    Perfil
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
               <SignOutIcon />
-              Log out
+              Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

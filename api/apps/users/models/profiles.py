@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from ..validators import validate_cnh
@@ -17,6 +19,7 @@ class ProfileType(models.TextChoices):
 class StudentProfile(models.Model):
     """Profile data specific to student accounts."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
@@ -31,6 +34,7 @@ class StudentProfile(models.Model):
 class CivilServantProfile(models.Model):
     """Profile data specific to civil servant accounts."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
@@ -45,6 +49,7 @@ class CivilServantProfile(models.Model):
 class DriverProfile(models.Model):
     """Profile data specific to driver accounts."""
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
@@ -68,6 +73,7 @@ class AdministratorProfile(models.Model):
         SUPERADMIN = "superadmin", "Superadmin"
         SUBADMIN = "subadmin", "Subadmin"
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,

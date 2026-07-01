@@ -1,7 +1,7 @@
-import { Field, FieldLabel } from "@/lib/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/lib/ui/field";
 import { Button } from "@ui/button";
-import { Separator } from "@ui/separator";
 import { Input } from "@/lib/ui/input";
+import { toast } from 'sonner'
 import {
   useCreateRouteMutation,
   type RouteValues,
@@ -9,14 +9,13 @@ import {
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import HintInvalid from "@/features/auth/ui/HintInvalid";
 import type { CreateRouteValues } from "../../services/RoutesRequests";
 
 const schema = z.object({
   origin: z.string().nonempty("Informe a origem"),
   destiny: z.string().nonempty("Informe o destino"),
   departure_time: z.string().nonempty("Informe o horário de saída"),
-  arrival_time: z.string().nonempty("Informe o horário de saída"),
+  arrival_time: z.string().nonempty("Informe o horário de chegada"),
   max_bus: z.string().nonempty("Informe a quantidade de onibus disponiveis"),
 });
 
@@ -33,7 +32,6 @@ type Props = {
 
 export function RouteForm({
   onCreate,
-  title,
   routeValues,
   buttonCaption,
   buttonCaptionLoad,
@@ -77,6 +75,8 @@ export function RouteForm({
       if (onCreate) {
         onCreate();
       }
+
+      toast.success('Rota criada com sucesso!');
     } catch (error) {
       const err = error as {
         data?: Record<string, string | string[]>;
@@ -115,91 +115,88 @@ export function RouteForm({
           form.setError("max_bus", { type: "server", message });
         }
       } else {
+        toast.error('Erro inesperado ao criar rota.');
         console.error("Erro inesperado ao criar rota:", error);
       }
     }
   };
 
   return (
-    <>
-      <h1 className="text-center text-2xl font-heading font-medium">
-        {title ? title : "Configurar Nova Rota"}
-      </h1>
-      <Separator className="max-w-xl mx-auto " />
-      <Field className="px-4 text-2xl">
-        <form id="createRoute" onSubmit={handleSubmit(submitForm)}>
-          <section>
-            <FieldLabel>PONTO DE PARTIDA</FieldLabel>
+    <form onSubmit={handleSubmit(submitForm)}>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="origin" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Origem</FieldLabel>
+          <Input
+            id="origin"
+            placeholder="Local de partida"
+            className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2"
+            {...register("origin")}
+          />
+          {state.errors.origin && (
+            <FieldDescription className="text-red-500">
+              {state.errors.origin.message}
+            </FieldDescription>
+          )}
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="destiny" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Destino</FieldLabel>
+          <Input
+            id="destiny"
+            placeholder="Local de chegada"
+            className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2"
+            {...register("destiny")}
+          />
+          {state.errors.destiny && (
+            <FieldDescription className="text-red-500">
+              {state.errors.destiny.message}
+            </FieldDescription>
+          )}
+        </Field>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field>
+            <FieldLabel htmlFor="departure_time" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Horário de saída</FieldLabel>
             <Input
-              id="origin"
-              placeholder="Local de saída"
-              required
-              {...register("origin")}
-            ></Input>
-            <HintInvalid for={state.errors.origin} />
-          </section>
-          <section>
-            <FieldLabel>DESTINO</FieldLabel>
+              id="departure_time"
+              type="time"
+              step="60"
+              className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2"
+              {...register("departure_time")}
+            />
+            {state.errors.departure_time && (
+              <FieldDescription className="text-red-500">
+                {state.errors.departure_time.message}
+              </FieldDescription>
+            )}
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="arrival_time" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Horário de chegada</FieldLabel>
             <Input
-              id="destiny"
-              placeholder="Local de chegada"
-              required
-              {...register("destiny")}
-            ></Input>
-            <HintInvalid for={state.errors.destiny} />
-          </section>
-          <section className="grid  grid-cols-3 gap-2">
-            <section>
-              <FieldLabel>HORÁRIO DE SAIDA</FieldLabel>
-              <Input
-                id="departure_time"
-                type="time"
-                step="60"
-                placeholder="Ex: 08:28 PM"
-                required
-                {...register("departure_time")}
-              ></Input>
-              <HintInvalid for={state.errors.departure_time} />
-            </section>
-            <section>
-              <FieldLabel>HORÁRIO DE CHEGADA</FieldLabel>
-              <Input
-                id="arrival_time"
-                type="time"
-                step="60"
-                placeholder="Ex: 10:30 AM"
-                defaultValue={routeValues ? routeValues.arrival_time : ""}
-                required
-                {...register("arrival_time")}
-              ></Input>
-              <HintInvalid for={state.errors.arrival_time} />
-            </section>
-            <section>
-              <FieldLabel>ÔNIBUS DISPONÍVEIS</FieldLabel>
-              <Input
-                id="max_bus"
-                type="number"
-                required
-                {...register("max_bus")}
-              ></Input>
-              <HintInvalid for={state.errors.max_bus} />
-            </section>
-          </section>
-        <Button
-          type="submit"
-          className="w-full cursor-pointer"
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? buttonCaptionLoad
-              ? buttonCaptionLoad
-              : "PUBLICANDO..."
-            : buttonCaption
-              ? buttonCaption
-              : "PUBLICAR ROTA NO SISTEMA"}
-        </Button>
-        </form>
-      </Field>
-    </>
+              id="arrival_time"
+              type="time"
+              step="60"
+              className="h-8 rounded-md border-border bg-card px-2.5 text-xs focus-visible:ring-2"
+              {...register("arrival_time")}
+            />
+            {state.errors.arrival_time && (
+              <FieldDescription className="text-red-500">
+                {state.errors.arrival_time.message}
+              </FieldDescription>
+            )}
+          </Field>
+        
+        </div>
+
+        <Field>
+          <Button type="submit" className="cursor-pointer" disabled={isSubmitting}>
+            {isSubmitting
+              ? buttonCaptionLoad || "Salvando..."
+              : buttonCaption || "Criar rota"}
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
   );
 }

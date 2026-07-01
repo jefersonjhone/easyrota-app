@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     BusViewSet,
+    GuestHistoryView,
     GuestPassengerDetailView,
     GuestPassengerView,
     MyNextTripView,
@@ -20,9 +21,10 @@ router.register(r"trip-requests", TripRequestViewSet, basename="trip-request")
 
 urlpatterns = [
     path("routes/", RouteListCreateView.as_view(), name="route-list-create"),
-    path("routes/<int:pk>/", RouteDetailView.as_view(), name="route-detail"),
+    path("routes/<uuid:pk>/", RouteDetailView.as_view(), name="route-detail"),
     path("trips/current/", MyNextTripView.as_view(), name="trip-current"),
     path("trips/guest/", GuestPassengerView.as_view(), name="trip-guest"),
+    path("guests/history/", GuestHistoryView.as_view(), name="guest-history"),
     path(
         "trips/guest/<str:guest_id>/",
         GuestPassengerDetailView.as_view(),

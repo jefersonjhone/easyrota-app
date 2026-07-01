@@ -513,7 +513,7 @@ class DriverTripPassengerRemovalTests(APITestCase):
         assert response.data["checked_in_count"] == 0
         assert not TripPassenger.objects.filter(id=passenger.id).exists()
 
-    def test_driver_can_remove_reservation_check_in_without_deleting_reservation(self):
+    def test_driver_can_remove_reservation_check_in_and_cancel_reservation(self):
         passenger_user = CustomUser.objects.create_user(
             email="passageiro.remove@teste.com",
             full_name="Passageiro Removido",
@@ -544,9 +544,7 @@ class DriverTripPassengerRemovalTests(APITestCase):
         assert response.status_code == status.HTTP_200_OK
         assert response.data["removed_passenger"]["name"] == passenger_user.full_name
         assert response.data["checked_in_count"] == 0
-        reservation.refresh_from_db()
-        assert reservation.check_in is False
-        assert reservation.checkin_date is None
+        assert not Reservation.objects.filter(id=reservation.id).exists()
 
 
 class DriverProfileTests(APITestCase):
@@ -722,3 +720,71 @@ class WebPushSubscriptionTests(APITestCase):
             profile.full_clean()
 
         assert "cnh" in exc.value.message_dict
+
+
+class ChangePasswordTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = CustomUser.objects.create_user(
+            email="testuser@email.com",
+            full_name="Test User",
+            password="oldpassword123",
+            is_active=True,
+        )
+        self.url = "/api/auth/change-password/"
+
+    def test_change_password_success(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "current_password": "oldpassword123",
+            "new_password": "newpassword123",
+            "new_password_confirm": "newpassword123",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_200_OK
+
+        # Verify user can log in with new password
+        self.user.refresh_from_db()
+        assert self.user.check_password("newpassword123") is True
+
+    def test_change_password_wrong_current(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "current_password": "wrongpassword",
+            "new_password": "newpassword123",
+            "new_password_confirm": "newpassword123",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "current_password" in response.data
+
+    def test_change_password_mismatch(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "current_password": "oldpassword123",
+            "new_password": "newpassword123",
+            "new_password_confirm": "differentpassword",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "new_password_confirm" in response.data
+
+    def test_change_password_too_short(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "current_password": "oldpassword123",
+            "new_password": "short",
+            "new_password_confirm": "short",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "new_password" in response.data
+
+    def test_change_password_unauthenticated(self):
+        payload = {
+            "current_password": "oldpassword123",
+            "new_password": "newpassword123",
+            "new_password_confirm": "newpassword123",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED

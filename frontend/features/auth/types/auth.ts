@@ -1,15 +1,18 @@
 // its must be migrated to zod validation
 
 export type AuthUser = {
-  id: number
+  id: string
   email: string
   full_name: string
   profile_type: "STUDENT" | "CIVIL-SERVANT" | "ADMIN" | "DRIVER"
   admin_profile?: {
-    id: number
+    id: string
     role: string
     level: "superadmin" | "admin" | "moderator"
-    created_by: number
+    created_by: string | null
+  }
+  driver_profile?: {
+    id: string
   }
 }
 

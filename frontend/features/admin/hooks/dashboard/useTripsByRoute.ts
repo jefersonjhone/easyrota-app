@@ -2,10 +2,11 @@ import { useQuery } from "@tanstack/react-query"
 import { apiFetch } from "@/lib/api"
 
 export type TripsByRoute = {
-   route_id: number,
+   route_id: string,
    origin: string,
    destiny: string,
    departure_time: string,
+   arrival_time: string,
    total_trips: number
    }[]
 

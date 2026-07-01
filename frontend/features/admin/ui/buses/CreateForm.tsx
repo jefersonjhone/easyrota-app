@@ -5,7 +5,7 @@ import { Input } from '@ui/input'
 import { useForm } from 'react-hook-form'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from 'react'
+import { toast } from 'sonner'
 import type { Bus } from './BusesPage'
 
 const busSchema = z.object({
@@ -31,11 +31,8 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
     },
     mode: "onChange",
   });
-  const [success, setSuccess] = useState<string | null>(null)
 
   const onSubmit = async (data: BusData) => {
-    setSuccess(null)
-
     try {
       const response = await apiFetch('/buses/', {
         method: "POST",
@@ -43,15 +40,13 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
       }) as Bus
 
       onBusCreated(response)
-
-      setSuccess("Ônibus cadastrado com sucesso!")
+      toast.success('Ônibus cadastrado com sucesso!')
     } catch (err){
       console.error (err);
 
       const errorData = err as { data?: { detail?: string, number_plate?: string[] } } | undefined
       const detail = errorData?.data?.detail;
       const plateError = errorData?.data?.number_plate?.[0];
-      console.log(errorData)
 
       if (plateError){
         setError("number_plate", {message: `${errorData?.data?.number_plate}`})
@@ -69,6 +64,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
           : detail)
         || 'Erro ao criar ônibus.'
 
+        toast.error(message)
         setError("root.serverError", {message: message})
       }
     }
@@ -81,18 +77,12 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
           {errors.root.serverError.message}
         </FieldDescription>
       )}
-      
-      {success && (
-        <FieldDescription className="mb-4 rounded-md bg-green-50 p-3 text-green-700">
-          {success}
-        </FieldDescription>
-      )}
 
       <div>
         <form onSubmit={handleSubmit(onSubmit)}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="plate">Placa</FieldLabel>
+              <FieldLabel htmlFor="plate" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Placa</FieldLabel>
               <Input {...register("number_plate")} type="text" placeholder="ABC-1234"/>
 
             {errors.number_plate && (
@@ -103,7 +93,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="brand">Modelo</FieldLabel>
+              <FieldLabel htmlFor="brand" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Modelo</FieldLabel>
               <Input {...register("brand")} type="text" placeholder="Marcopolo Torino"/>
 
               {errors.brand && (
@@ -114,7 +104,7 @@ export const CreateBusForm = ({ onBusCreated }: { onBusCreated: (bus: Bus) => vo
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="capacity">Capacidade</FieldLabel>
+              <FieldLabel htmlFor="capacity" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Capacidade</FieldLabel>
               <Input {...register("seating_capacity", {valueAsNumber: true})} type="number" min={1} max={120}
                 placeholder="40"
               />

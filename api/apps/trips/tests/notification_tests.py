@@ -6,9 +6,10 @@ from django.test import TestCase
 from django.utils import timezone
 
 from apps.reservations.models import Reservation
-from apps.reservations.services import sync_trip_status, trip_has_quorum
 from apps.trips.management.commands.run_scheduler import check_upcoming_trips_quorum
 from apps.trips.models import Bus, Route, Trip, TripPassenger
+from apps.trips.services.trip_service import TripService
+from apps.trips.services.trip_status_service import TripStatusService
 from apps.users.models import CustomUser
 from apps.users.models.profiles import (
     AdministratorProfile,
@@ -102,11 +103,11 @@ class NotificationFlowTests(TestCase):
         )
 
         with patch(
-            "apps.trips.management.commands.send_test_push.send_user_notification"
+            "apps.notifications.management.commands.send_test_push.PushService.send_to_users"
         ) as mocked_send:
             call_command("send_test_push")
 
-        assert mocked_send.call_count >= 2
+        assert mocked_send.call_count == 1
 
     def test_scheduler_sends_notifications_when_quorum_is_missing(self):
         trip = Trip.objects.create(
@@ -129,7 +130,9 @@ class NotificationFlowTests(TestCase):
         )
         Reservation.objects.create(trip=trip, student=student, status="CONFIRMADA")
 
-        with patch("apps.reservations.services.send_user_notification") as mocked_send:
+        with patch(
+            "apps.notifications.backends.push_backend.send_user_notification"
+        ) as mocked_send:
             check_upcoming_trips_quorum()
             check_upcoming_trips_quorum()
 
@@ -159,12 +162,12 @@ class NotificationFlowTests(TestCase):
         )
         Reservation.objects.create(trip=trip, civil_servant=civ, status="CONFIRMADA")
 
-        assert trip_has_quorum(trip)
+        assert TripService.trip_has_quorum(trip)
 
     def test_trip_has_quorum_counts_local_server_passenger(self):
         trip = self._create_local_server_trip()
 
-        assert trip_has_quorum(trip)
+        assert TripService.trip_has_quorum(trip)
 
     def test_sync_trip_status_sends_quorum_met_notification(self):
         trip = Trip.objects.create(
@@ -187,8 +190,10 @@ class NotificationFlowTests(TestCase):
         )
         Reservation.objects.create(trip=trip, civil_servant=civ, status="CONFIRMADA")
 
-        with patch("apps.reservations.services.send_user_notification") as mocked_send:
-            sync_trip_status(trip)
+        with patch(
+            "apps.notifications.backends.push_backend.send_user_notification"
+        ) as mocked_send:
+            TripStatusService.sync_trip_status(trip)
 
         trip.refresh_from_db()
         assert trip.status == "CONFIRMADA"
@@ -199,7 +204,7 @@ class NotificationFlowTests(TestCase):
         trip = self._create_trip_with_minimum_quorum()
 
         with patch(
-            "apps.trips.management.commands.run_scheduler.send_trip_quorum_warning_notification"
+            "apps.trips.management.commands.run_scheduler.NotificationService.notify_quorum_warning"
         ) as mocked_warning:
             check_upcoming_trips_quorum()
 

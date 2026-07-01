@@ -9,9 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './pages/__root'
-import { Route as App_rootRouteImport } from './pages/app/__root'
-import { Route as Admin_rootRouteImport } from './pages/admin/__root'
-import { Route as AppViagens_rootRouteImport } from './pages/app/viagens/__root'
 import { Route as VerificarRouteImport } from './pages/verificar'
 import { Route as TermosDeUsoRouteImport } from './pages/termos-de-uso'
 import { Route as SobreProjetoRouteImport } from './pages/sobre-projeto'
@@ -20,36 +17,48 @@ import { Route as RecuperarRouteImport } from './pages/recuperar'
 import { Route as PoliticaDePrivacidadeRouteImport } from './pages/politica-de-privacidade'
 import { Route as LoginRouteImport } from './pages/login'
 import { Route as EquipeRouteImport } from './pages/equipe'
+import { Route as AppRouteRouteImport } from './pages/app/route'
+import { Route as AdminRouteRouteImport } from './pages/admin/route'
 import { Route as IndexRouteImport } from './pages/index'
 import { Route as AppIndexRouteImport } from './pages/app/index'
 import { Route as AdminIndexRouteImport } from './pages/admin/index'
 import { Route as AppPerfilRouteImport } from './pages/app/perfil'
+import { Route as AppHistoricoRouteImport } from './pages/app/historico'
 import { Route as AdminViagensRouteImport } from './pages/admin/viagens'
 import { Route as AdminSolicitacoesRouteImport } from './pages/admin/solicitacoes'
+import { Route as AdminServidoresRouteImport } from './pages/admin/servidores'
 import { Route as AdminRotasRouteImport } from './pages/admin/rotas'
+import { Route as AdminReservasRouteImport } from './pages/admin/reservas'
+import { Route as AdminPerfilRouteImport } from './pages/admin/perfil'
+import { Route as AdminPenalidadesRouteImport } from './pages/admin/penalidades'
 import { Route as AdminOnibusRouteImport } from './pages/admin/onibus'
 import { Route as AdminMotoristasRouteImport } from './pages/admin/motoristas'
+import { Route as AdminEstudantesRouteImport } from './pages/admin/estudantes'
+import { Route as AdminAdministradoresRouteImport } from './pages/admin/administradores'
 import { Route as AppViagensIndexRouteImport } from './pages/app/viagens/index'
+import { Route as AppReservasIndexRouteImport } from './pages/app/reservas/index'
+import { Route as AppMotoristaIndexRouteImport } from './pages/app/motorista/index'
+import { Route as AdminViagensIndexRouteImport } from './pages/admin/viagens/index'
+import { Route as AdminServidoresIndexRouteImport } from './pages/admin/servidores/index'
+import { Route as AdminOnibusIndexRouteImport } from './pages/admin/onibus/index'
+import { Route as AdminMotoristasIndexRouteImport } from './pages/admin/motoristas/index'
+import { Route as AdminEstudantesIndexRouteImport } from './pages/admin/estudantes/index'
 import { Route as AppViagensPrivadaRouteImport } from './pages/app/viagens/privada'
-import { Route as AppViagensHistoricoRouteImport } from './pages/app/viagens/historico'
-import { Route as AppViagensAtualRouteImport } from './pages/app/viagens/atual'
+import { Route as AppViagensIdRouteImport } from './pages/app/viagens/$id'
+import { Route as AppReservasIdRouteImport } from './pages/app/reservas/$id'
 import { Route as AppPenalidadesHistoricoRouteImport } from './pages/app/penalidades/historico'
-import { Route as AppDriverViagensRouteImport } from './pages/app/driver/viagens'
+import { Route as AppMotoristaViagensRouteImport } from './pages/app/motorista/viagens'
+import { Route as AppMotoristaPerfilRouteImport } from './pages/app/motorista/perfil'
+import { Route as AdminViagensHistoricoRouteImport } from './pages/admin/viagens/historico'
+import { Route as AdminViagensIdRouteImport } from './pages/admin/viagens/$id'
+import { Route as AdminServidoresIdRouteImport } from './pages/admin/servidores/$id'
+import { Route as AdminOnibusIdRouteImport } from './pages/admin/onibus/$id'
+import { Route as AdminMotoristasIdRouteImport } from './pages/admin/motoristas/$id'
+import { Route as AdminEstudantesIdRouteImport } from './pages/admin/estudantes/$id'
 import { Route as AppViagensConvidadosGuest_idRouteImport } from './pages/app/viagens/convidados.$guest_id'
-import { Route as AppDriverViagemTripIdRouteImport } from './pages/app/driver/viagem.$tripId'
+import { Route as AppMotoristaViagemTripIdRouteImport } from './pages/app/motorista/viagem.$tripId'
+import { Route as AppMotoristaCheckinTripIdRouteImport } from './pages/app/motorista/checkin.$tripId'
 
-const App_rootRoute = App_rootRouteImport.update({
-  id: '/app/__root',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const Admin_rootRoute = Admin_rootRouteImport.update({
-  id: '/admin/__root',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppViagens_rootRoute = AppViagens_rootRouteImport.update({
-  id: '/app/viagens/__root',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const VerificarRoute = VerificarRouteImport.update({
   id: '/verificar',
   path: '/verificar',
@@ -90,95 +99,219 @@ const EquipeRoute = EquipeRouteImport.update({
   path: '/equipe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/app/',
-  path: '/app/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AppPerfilRoute = AppPerfilRouteImport.update({
-  id: '/app/perfil',
-  path: '/app/perfil',
-  getParentRoute: () => rootRouteImport,
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppHistoricoRoute = AppHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AdminViagensRoute = AdminViagensRouteImport.update({
-  id: '/admin/viagens',
-  path: '/admin/viagens',
-  getParentRoute: () => rootRouteImport,
+  id: '/viagens',
+  path: '/viagens',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminSolicitacoesRoute = AdminSolicitacoesRouteImport.update({
-  id: '/admin/solicitacoes',
-  path: '/admin/solicitacoes',
-  getParentRoute: () => rootRouteImport,
+  id: '/solicitacoes',
+  path: '/solicitacoes',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminServidoresRoute = AdminServidoresRouteImport.update({
+  id: '/servidores',
+  path: '/servidores',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminRotasRoute = AdminRotasRouteImport.update({
-  id: '/admin/rotas',
-  path: '/admin/rotas',
-  getParentRoute: () => rootRouteImport,
+  id: '/rotas',
+  path: '/rotas',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminReservasRoute = AdminReservasRouteImport.update({
+  id: '/reservas',
+  path: '/reservas',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPerfilRoute = AdminPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPenalidadesRoute = AdminPenalidadesRouteImport.update({
+  id: '/penalidades',
+  path: '/penalidades',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminOnibusRoute = AdminOnibusRouteImport.update({
-  id: '/admin/onibus',
-  path: '/admin/onibus',
-  getParentRoute: () => rootRouteImport,
+  id: '/onibus',
+  path: '/onibus',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminMotoristasRoute = AdminMotoristasRouteImport.update({
-  id: '/admin/motoristas',
-  path: '/admin/motoristas',
-  getParentRoute: () => rootRouteImport,
+  id: '/motoristas',
+  path: '/motoristas',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminEstudantesRoute = AdminEstudantesRouteImport.update({
+  id: '/estudantes',
+  path: '/estudantes',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAdministradoresRoute = AdminAdministradoresRouteImport.update({
+  id: '/administradores',
+  path: '/administradores',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AppViagensIndexRoute = AppViagensIndexRouteImport.update({
-  id: '/app/viagens/',
-  path: '/app/viagens/',
-  getParentRoute: () => rootRouteImport,
+  id: '/viagens/',
+  path: '/viagens/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppReservasIndexRoute = AppReservasIndexRouteImport.update({
+  id: '/reservas/',
+  path: '/reservas/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppMotoristaIndexRoute = AppMotoristaIndexRouteImport.update({
+  id: '/motorista/',
+  path: '/motorista/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AdminViagensIndexRoute = AdminViagensIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminViagensRoute,
+} as any)
+const AdminServidoresIndexRoute = AdminServidoresIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminServidoresRoute,
+} as any)
+const AdminOnibusIndexRoute = AdminOnibusIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminOnibusRoute,
+} as any)
+const AdminMotoristasIndexRoute = AdminMotoristasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminMotoristasRoute,
+} as any)
+const AdminEstudantesIndexRoute = AdminEstudantesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminEstudantesRoute,
 } as any)
 const AppViagensPrivadaRoute = AppViagensPrivadaRouteImport.update({
-  id: '/app/viagens/privada',
-  path: '/app/viagens/privada',
-  getParentRoute: () => rootRouteImport,
+  id: '/viagens/privada',
+  path: '/viagens/privada',
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const AppViagensHistoricoRoute = AppViagensHistoricoRouteImport.update({
-  id: '/app/viagens/historico',
-  path: '/app/viagens/historico',
-  getParentRoute: () => rootRouteImport,
+const AppViagensIdRoute = AppViagensIdRouteImport.update({
+  id: '/viagens/$id',
+  path: '/viagens/$id',
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const AppViagensAtualRoute = AppViagensAtualRouteImport.update({
-  id: '/app/viagens/atual',
-  path: '/app/viagens/atual',
-  getParentRoute: () => rootRouteImport,
+const AppReservasIdRoute = AppReservasIdRouteImport.update({
+  id: '/reservas/$id',
+  path: '/reservas/$id',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppPenalidadesHistoricoRoute = AppPenalidadesHistoricoRouteImport.update({
-  id: '/app/penalidades/historico',
-  path: '/app/penalidades/historico',
-  getParentRoute: () => rootRouteImport,
+  id: '/penalidades/historico',
+  path: '/penalidades/historico',
+  getParentRoute: () => AppRouteRoute,
 } as any)
-const AppDriverViagensRoute = AppDriverViagensRouteImport.update({
-  id: '/app/driver/viagens',
-  path: '/app/driver/viagens',
-  getParentRoute: () => rootRouteImport,
+const AppMotoristaViagensRoute = AppMotoristaViagensRouteImport.update({
+  id: '/motorista/viagens',
+  path: '/motorista/viagens',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppMotoristaPerfilRoute = AppMotoristaPerfilRouteImport.update({
+  id: '/motorista/perfil',
+  path: '/motorista/perfil',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AdminViagensHistoricoRoute = AdminViagensHistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => AdminViagensRoute,
+} as any)
+const AdminViagensIdRoute = AdminViagensIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminViagensRoute,
+} as any)
+const AdminServidoresIdRoute = AdminServidoresIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminServidoresRoute,
+} as any)
+const AdminOnibusIdRoute = AdminOnibusIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminOnibusRoute,
+} as any)
+const AdminMotoristasIdRoute = AdminMotoristasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminMotoristasRoute,
+} as any)
+const AdminEstudantesIdRoute = AdminEstudantesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminEstudantesRoute,
 } as any)
 const AppViagensConvidadosGuest_idRoute =
   AppViagensConvidadosGuest_idRouteImport.update({
-    id: '/app/viagens/convidados/$guest_id',
-    path: '/app/viagens/convidados/$guest_id',
-    getParentRoute: () => rootRouteImport,
+    id: '/viagens/convidados/$guest_id',
+    path: '/viagens/convidados/$guest_id',
+    getParentRoute: () => AppRouteRoute,
   } as any)
-const AppDriverViagemTripIdRoute = AppDriverViagemTripIdRouteImport.update({
-  id: '/app/driver/viagem/$tripId',
-  path: '/app/driver/viagem/$tripId',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AppMotoristaViagemTripIdRoute =
+  AppMotoristaViagemTripIdRouteImport.update({
+    id: '/motorista/viagem/$tripId',
+    path: '/motorista/viagem/$tripId',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
+const AppMotoristaCheckinTripIdRoute =
+  AppMotoristaCheckinTripIdRouteImport.update({
+    id: '/motorista/checkin/$tripId',
+    path: '/motorista/checkin/$tripId',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
@@ -187,24 +320,43 @@ export interface FileRoutesByFullPath {
   '/sobre-projeto': typeof SobreProjetoRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
-  '/admin': typeof Admin_rootRoute
-  '/admin/motoristas': typeof AdminMotoristasRoute
-  '/admin/onibus': typeof AdminOnibusRoute
+  '/admin/administradores': typeof AdminAdministradoresRoute
+  '/admin/estudantes': typeof AdminEstudantesRouteWithChildren
+  '/admin/motoristas': typeof AdminMotoristasRouteWithChildren
+  '/admin/onibus': typeof AdminOnibusRouteWithChildren
+  '/admin/penalidades': typeof AdminPenalidadesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/reservas': typeof AdminReservasRoute
   '/admin/rotas': typeof AdminRotasRoute
+  '/admin/servidores': typeof AdminServidoresRouteWithChildren
   '/admin/solicitacoes': typeof AdminSolicitacoesRoute
-  '/admin/viagens': typeof AdminViagensRoute
-  '/app': typeof App_rootRoute
+  '/admin/viagens': typeof AdminViagensRouteWithChildren
+  '/app/historico': typeof AppHistoricoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
-  '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/admin/estudantes/$id': typeof AdminEstudantesIdRoute
+  '/admin/motoristas/$id': typeof AdminMotoristasIdRoute
+  '/admin/onibus/$id': typeof AdminOnibusIdRoute
+  '/admin/servidores/$id': typeof AdminServidoresIdRoute
+  '/admin/viagens/$id': typeof AdminViagensIdRoute
+  '/admin/viagens/historico': typeof AdminViagensHistoricoRoute
+  '/app/motorista/perfil': typeof AppMotoristaPerfilRoute
+  '/app/motorista/viagens': typeof AppMotoristaViagensRoute
   '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
-  '/app/viagens': typeof AppViagens_rootRoute
-  '/app/viagens/atual': typeof AppViagensAtualRoute
-  '/app/viagens/historico': typeof AppViagensHistoricoRoute
+  '/app/reservas/$id': typeof AppReservasIdRoute
+  '/app/viagens/$id': typeof AppViagensIdRoute
   '/app/viagens/privada': typeof AppViagensPrivadaRoute
+  '/admin/estudantes/': typeof AdminEstudantesIndexRoute
+  '/admin/motoristas/': typeof AdminMotoristasIndexRoute
+  '/admin/onibus/': typeof AdminOnibusIndexRoute
+  '/admin/servidores/': typeof AdminServidoresIndexRoute
+  '/admin/viagens/': typeof AdminViagensIndexRoute
+  '/app/motorista/': typeof AppMotoristaIndexRoute
+  '/app/reservas/': typeof AppReservasIndexRoute
   '/app/viagens/': typeof AppViagensIndexRoute
-  '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
+  '/app/motorista/checkin/$tripId': typeof AppMotoristaCheckinTripIdRoute
+  '/app/motorista/viagem/$tripId': typeof AppMotoristaViagemTripIdRoute
   '/app/viagens/convidados/$guest_id': typeof AppViagensConvidadosGuest_idRoute
 }
 export interface FileRoutesByTo {
@@ -217,26 +369,45 @@ export interface FileRoutesByTo {
   '/sobre-projeto': typeof SobreProjetoRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
-  '/admin': typeof AdminIndexRoute
-  '/admin/motoristas': typeof AdminMotoristasRoute
-  '/admin/onibus': typeof AdminOnibusRoute
+  '/admin/administradores': typeof AdminAdministradoresRoute
+  '/admin/penalidades': typeof AdminPenalidadesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/reservas': typeof AdminReservasRoute
   '/admin/rotas': typeof AdminRotasRoute
   '/admin/solicitacoes': typeof AdminSolicitacoesRoute
-  '/admin/viagens': typeof AdminViagensRoute
-  '/app': typeof AppIndexRoute
+  '/app/historico': typeof AppHistoricoRoute
   '/app/perfil': typeof AppPerfilRoute
-  '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/admin': typeof AdminIndexRoute
+  '/app': typeof AppIndexRoute
+  '/admin/estudantes/$id': typeof AdminEstudantesIdRoute
+  '/admin/motoristas/$id': typeof AdminMotoristasIdRoute
+  '/admin/onibus/$id': typeof AdminOnibusIdRoute
+  '/admin/servidores/$id': typeof AdminServidoresIdRoute
+  '/admin/viagens/$id': typeof AdminViagensIdRoute
+  '/admin/viagens/historico': typeof AdminViagensHistoricoRoute
+  '/app/motorista/perfil': typeof AppMotoristaPerfilRoute
+  '/app/motorista/viagens': typeof AppMotoristaViagensRoute
   '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
-  '/app/viagens': typeof AppViagensIndexRoute
-  '/app/viagens/atual': typeof AppViagensAtualRoute
-  '/app/viagens/historico': typeof AppViagensHistoricoRoute
+  '/app/reservas/$id': typeof AppReservasIdRoute
+  '/app/viagens/$id': typeof AppViagensIdRoute
   '/app/viagens/privada': typeof AppViagensPrivadaRoute
-  '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
+  '/admin/estudantes': typeof AdminEstudantesIndexRoute
+  '/admin/motoristas': typeof AdminMotoristasIndexRoute
+  '/admin/onibus': typeof AdminOnibusIndexRoute
+  '/admin/servidores': typeof AdminServidoresIndexRoute
+  '/admin/viagens': typeof AdminViagensIndexRoute
+  '/app/motorista': typeof AppMotoristaIndexRoute
+  '/app/reservas': typeof AppReservasIndexRoute
+  '/app/viagens': typeof AppViagensIndexRoute
+  '/app/motorista/checkin/$tripId': typeof AppMotoristaCheckinTripIdRoute
+  '/app/motorista/viagem/$tripId': typeof AppMotoristaViagemTripIdRoute
   '/app/viagens/convidados/$guest_id': typeof AppViagensConvidadosGuest_idRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
   '/equipe': typeof EquipeRoute
   '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
@@ -245,30 +416,51 @@ export interface FileRoutesById {
   '/sobre-projeto': typeof SobreProjetoRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
   '/verificar': typeof VerificarRoute
-  '/admin/__root': typeof Admin_rootRoute
-  '/admin/motoristas': typeof AdminMotoristasRoute
-  '/admin/onibus': typeof AdminOnibusRoute
+  '/admin/administradores': typeof AdminAdministradoresRoute
+  '/admin/estudantes': typeof AdminEstudantesRouteWithChildren
+  '/admin/motoristas': typeof AdminMotoristasRouteWithChildren
+  '/admin/onibus': typeof AdminOnibusRouteWithChildren
+  '/admin/penalidades': typeof AdminPenalidadesRoute
+  '/admin/perfil': typeof AdminPerfilRoute
+  '/admin/reservas': typeof AdminReservasRoute
   '/admin/rotas': typeof AdminRotasRoute
+  '/admin/servidores': typeof AdminServidoresRouteWithChildren
   '/admin/solicitacoes': typeof AdminSolicitacoesRoute
-  '/admin/viagens': typeof AdminViagensRoute
-  '/app/__root': typeof App_rootRoute
+  '/admin/viagens': typeof AdminViagensRouteWithChildren
+  '/app/historico': typeof AppHistoricoRoute
   '/app/perfil': typeof AppPerfilRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
-  '/app/driver/viagens': typeof AppDriverViagensRoute
+  '/admin/estudantes/$id': typeof AdminEstudantesIdRoute
+  '/admin/motoristas/$id': typeof AdminMotoristasIdRoute
+  '/admin/onibus/$id': typeof AdminOnibusIdRoute
+  '/admin/servidores/$id': typeof AdminServidoresIdRoute
+  '/admin/viagens/$id': typeof AdminViagensIdRoute
+  '/admin/viagens/historico': typeof AdminViagensHistoricoRoute
+  '/app/motorista/perfil': typeof AppMotoristaPerfilRoute
+  '/app/motorista/viagens': typeof AppMotoristaViagensRoute
   '/app/penalidades/historico': typeof AppPenalidadesHistoricoRoute
-  '/app/viagens/__root': typeof AppViagens_rootRoute
-  '/app/viagens/atual': typeof AppViagensAtualRoute
-  '/app/viagens/historico': typeof AppViagensHistoricoRoute
+  '/app/reservas/$id': typeof AppReservasIdRoute
+  '/app/viagens/$id': typeof AppViagensIdRoute
   '/app/viagens/privada': typeof AppViagensPrivadaRoute
+  '/admin/estudantes/': typeof AdminEstudantesIndexRoute
+  '/admin/motoristas/': typeof AdminMotoristasIndexRoute
+  '/admin/onibus/': typeof AdminOnibusIndexRoute
+  '/admin/servidores/': typeof AdminServidoresIndexRoute
+  '/admin/viagens/': typeof AdminViagensIndexRoute
+  '/app/motorista/': typeof AppMotoristaIndexRoute
+  '/app/reservas/': typeof AppReservasIndexRoute
   '/app/viagens/': typeof AppViagensIndexRoute
-  '/app/driver/viagem/$tripId': typeof AppDriverViagemTripIdRoute
+  '/app/motorista/checkin/$tripId': typeof AppMotoristaCheckinTripIdRoute
+  '/app/motorista/viagem/$tripId': typeof AppMotoristaViagemTripIdRoute
   '/app/viagens/convidados/$guest_id': typeof AppViagensConvidadosGuest_idRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
+    | '/app'
     | '/equipe'
     | '/login'
     | '/politica-de-privacidade'
@@ -277,24 +469,43 @@ export interface FileRouteTypes {
     | '/sobre-projeto'
     | '/termos-de-uso'
     | '/verificar'
-    | '/admin'
+    | '/admin/administradores'
+    | '/admin/estudantes'
     | '/admin/motoristas'
     | '/admin/onibus'
+    | '/admin/penalidades'
+    | '/admin/perfil'
+    | '/admin/reservas'
     | '/admin/rotas'
+    | '/admin/servidores'
     | '/admin/solicitacoes'
     | '/admin/viagens'
-    | '/app'
+    | '/app/historico'
     | '/app/perfil'
     | '/admin/'
     | '/app/'
-    | '/app/driver/viagens'
+    | '/admin/estudantes/$id'
+    | '/admin/motoristas/$id'
+    | '/admin/onibus/$id'
+    | '/admin/servidores/$id'
+    | '/admin/viagens/$id'
+    | '/admin/viagens/historico'
+    | '/app/motorista/perfil'
+    | '/app/motorista/viagens'
     | '/app/penalidades/historico'
-    | '/app/viagens'
-    | '/app/viagens/atual'
-    | '/app/viagens/historico'
+    | '/app/reservas/$id'
+    | '/app/viagens/$id'
     | '/app/viagens/privada'
+    | '/admin/estudantes/'
+    | '/admin/motoristas/'
+    | '/admin/onibus/'
+    | '/admin/servidores/'
+    | '/admin/viagens/'
+    | '/app/motorista/'
+    | '/app/reservas/'
     | '/app/viagens/'
-    | '/app/driver/viagem/$tripId'
+    | '/app/motorista/checkin/$tripId'
+    | '/app/motorista/viagem/$tripId'
     | '/app/viagens/convidados/$guest_id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -307,25 +518,44 @@ export interface FileRouteTypes {
     | '/sobre-projeto'
     | '/termos-de-uso'
     | '/verificar'
-    | '/admin'
-    | '/admin/motoristas'
-    | '/admin/onibus'
+    | '/admin/administradores'
+    | '/admin/penalidades'
+    | '/admin/perfil'
+    | '/admin/reservas'
     | '/admin/rotas'
     | '/admin/solicitacoes'
-    | '/admin/viagens'
-    | '/app'
+    | '/app/historico'
     | '/app/perfil'
-    | '/app/driver/viagens'
+    | '/admin'
+    | '/app'
+    | '/admin/estudantes/$id'
+    | '/admin/motoristas/$id'
+    | '/admin/onibus/$id'
+    | '/admin/servidores/$id'
+    | '/admin/viagens/$id'
+    | '/admin/viagens/historico'
+    | '/app/motorista/perfil'
+    | '/app/motorista/viagens'
     | '/app/penalidades/historico'
-    | '/app/viagens'
-    | '/app/viagens/atual'
-    | '/app/viagens/historico'
+    | '/app/reservas/$id'
+    | '/app/viagens/$id'
     | '/app/viagens/privada'
-    | '/app/driver/viagem/$tripId'
+    | '/admin/estudantes'
+    | '/admin/motoristas'
+    | '/admin/onibus'
+    | '/admin/servidores'
+    | '/admin/viagens'
+    | '/app/motorista'
+    | '/app/reservas'
+    | '/app/viagens'
+    | '/app/motorista/checkin/$tripId'
+    | '/app/motorista/viagem/$tripId'
     | '/app/viagens/convidados/$guest_id'
   id:
     | '__root__'
     | '/'
+    | '/admin'
+    | '/app'
     | '/equipe'
     | '/login'
     | '/politica-de-privacidade'
@@ -334,29 +564,50 @@ export interface FileRouteTypes {
     | '/sobre-projeto'
     | '/termos-de-uso'
     | '/verificar'
-    | '/admin/__root'
+    | '/admin/administradores'
+    | '/admin/estudantes'
     | '/admin/motoristas'
     | '/admin/onibus'
+    | '/admin/penalidades'
+    | '/admin/perfil'
+    | '/admin/reservas'
     | '/admin/rotas'
+    | '/admin/servidores'
     | '/admin/solicitacoes'
     | '/admin/viagens'
-    | '/app/__root'
+    | '/app/historico'
     | '/app/perfil'
     | '/admin/'
     | '/app/'
-    | '/app/driver/viagens'
+    | '/admin/estudantes/$id'
+    | '/admin/motoristas/$id'
+    | '/admin/onibus/$id'
+    | '/admin/servidores/$id'
+    | '/admin/viagens/$id'
+    | '/admin/viagens/historico'
+    | '/app/motorista/perfil'
+    | '/app/motorista/viagens'
     | '/app/penalidades/historico'
-    | '/app/viagens/__root'
-    | '/app/viagens/atual'
-    | '/app/viagens/historico'
+    | '/app/reservas/$id'
+    | '/app/viagens/$id'
     | '/app/viagens/privada'
+    | '/admin/estudantes/'
+    | '/admin/motoristas/'
+    | '/admin/onibus/'
+    | '/admin/servidores/'
+    | '/admin/viagens/'
+    | '/app/motorista/'
+    | '/app/reservas/'
     | '/app/viagens/'
-    | '/app/driver/viagem/$tripId'
+    | '/app/motorista/checkin/$tripId'
+    | '/app/motorista/viagem/$tripId'
     | '/app/viagens/convidados/$guest_id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  AppRouteRoute: typeof AppRouteRouteWithChildren
   EquipeRoute: typeof EquipeRoute
   LoginRoute: typeof LoginRoute
   PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
@@ -365,50 +616,10 @@ export interface RootRouteChildren {
   SobreProjetoRoute: typeof SobreProjetoRoute
   TermosDeUsoRoute: typeof TermosDeUsoRoute
   VerificarRoute: typeof VerificarRoute
-  Admin_rootRoute: typeof Admin_rootRoute
-  AdminMotoristasRoute: typeof AdminMotoristasRoute
-  AdminOnibusRoute: typeof AdminOnibusRoute
-  AdminRotasRoute: typeof AdminRotasRoute
-  AdminSolicitacoesRoute: typeof AdminSolicitacoesRoute
-  AdminViagensRoute: typeof AdminViagensRoute
-  App_rootRoute: typeof App_rootRoute
-  AppPerfilRoute: typeof AppPerfilRoute
-  AdminIndexRoute: typeof AdminIndexRoute
-  AppIndexRoute: typeof AppIndexRoute
-  AppDriverViagensRoute: typeof AppDriverViagensRoute
-  AppPenalidadesHistoricoRoute: typeof AppPenalidadesHistoricoRoute
-  AppViagens_rootRoute: typeof AppViagens_rootRoute
-  AppViagensAtualRoute: typeof AppViagensAtualRoute
-  AppViagensHistoricoRoute: typeof AppViagensHistoricoRoute
-  AppViagensPrivadaRoute: typeof AppViagensPrivadaRoute
-  AppViagensIndexRoute: typeof AppViagensIndexRoute
-  AppDriverViagemTripIdRoute: typeof AppDriverViagemTripIdRoute
-  AppViagensConvidadosGuest_idRoute: typeof AppViagensConvidadosGuest_idRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/app/__root': {
-      id: '/app/__root'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof App_rootRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/__root': {
-      id: '/admin/__root'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof Admin_rootRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app/viagens/__root': {
-      id: '/app/viagens/__root'
-      path: '/app/viagens'
-      fullPath: '/app/viagens'
-      preLoaderRoute: typeof AppViagens_rootRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/verificar': {
       id: '/verificar'
       path: '/verificar'
@@ -465,6 +676,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EquipeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -474,121 +699,423 @@ declare module '@tanstack/react-router' {
     }
     '/app/': {
       id: '/app/'
-      path: '/app'
+      path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/admin/': {
       id: '/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/app/perfil': {
       id: '/app/perfil'
-      path: '/app/perfil'
+      path: '/perfil'
       fullPath: '/app/perfil'
       preLoaderRoute: typeof AppPerfilRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/historico': {
+      id: '/app/historico'
+      path: '/historico'
+      fullPath: '/app/historico'
+      preLoaderRoute: typeof AppHistoricoRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/admin/viagens': {
       id: '/admin/viagens'
-      path: '/admin/viagens'
+      path: '/viagens'
       fullPath: '/admin/viagens'
       preLoaderRoute: typeof AdminViagensRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/solicitacoes': {
       id: '/admin/solicitacoes'
-      path: '/admin/solicitacoes'
+      path: '/solicitacoes'
       fullPath: '/admin/solicitacoes'
       preLoaderRoute: typeof AdminSolicitacoesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/servidores': {
+      id: '/admin/servidores'
+      path: '/servidores'
+      fullPath: '/admin/servidores'
+      preLoaderRoute: typeof AdminServidoresRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/rotas': {
       id: '/admin/rotas'
-      path: '/admin/rotas'
+      path: '/rotas'
       fullPath: '/admin/rotas'
       preLoaderRoute: typeof AdminRotasRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/reservas': {
+      id: '/admin/reservas'
+      path: '/reservas'
+      fullPath: '/admin/reservas'
+      preLoaderRoute: typeof AdminReservasRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/perfil': {
+      id: '/admin/perfil'
+      path: '/perfil'
+      fullPath: '/admin/perfil'
+      preLoaderRoute: typeof AdminPerfilRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/penalidades': {
+      id: '/admin/penalidades'
+      path: '/penalidades'
+      fullPath: '/admin/penalidades'
+      preLoaderRoute: typeof AdminPenalidadesRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/onibus': {
       id: '/admin/onibus'
-      path: '/admin/onibus'
+      path: '/onibus'
       fullPath: '/admin/onibus'
       preLoaderRoute: typeof AdminOnibusRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/motoristas': {
       id: '/admin/motoristas'
-      path: '/admin/motoristas'
+      path: '/motoristas'
       fullPath: '/admin/motoristas'
       preLoaderRoute: typeof AdminMotoristasRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/estudantes': {
+      id: '/admin/estudantes'
+      path: '/estudantes'
+      fullPath: '/admin/estudantes'
+      preLoaderRoute: typeof AdminEstudantesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/administradores': {
+      id: '/admin/administradores'
+      path: '/administradores'
+      fullPath: '/admin/administradores'
+      preLoaderRoute: typeof AdminAdministradoresRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/app/viagens/': {
       id: '/app/viagens/'
-      path: '/app/viagens'
+      path: '/viagens'
       fullPath: '/app/viagens/'
       preLoaderRoute: typeof AppViagensIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/reservas/': {
+      id: '/app/reservas/'
+      path: '/reservas'
+      fullPath: '/app/reservas/'
+      preLoaderRoute: typeof AppReservasIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/motorista/': {
+      id: '/app/motorista/'
+      path: '/motorista'
+      fullPath: '/app/motorista/'
+      preLoaderRoute: typeof AppMotoristaIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/admin/viagens/': {
+      id: '/admin/viagens/'
+      path: '/'
+      fullPath: '/admin/viagens/'
+      preLoaderRoute: typeof AdminViagensIndexRouteImport
+      parentRoute: typeof AdminViagensRoute
+    }
+    '/admin/servidores/': {
+      id: '/admin/servidores/'
+      path: '/'
+      fullPath: '/admin/servidores/'
+      preLoaderRoute: typeof AdminServidoresIndexRouteImport
+      parentRoute: typeof AdminServidoresRoute
+    }
+    '/admin/onibus/': {
+      id: '/admin/onibus/'
+      path: '/'
+      fullPath: '/admin/onibus/'
+      preLoaderRoute: typeof AdminOnibusIndexRouteImport
+      parentRoute: typeof AdminOnibusRoute
+    }
+    '/admin/motoristas/': {
+      id: '/admin/motoristas/'
+      path: '/'
+      fullPath: '/admin/motoristas/'
+      preLoaderRoute: typeof AdminMotoristasIndexRouteImport
+      parentRoute: typeof AdminMotoristasRoute
+    }
+    '/admin/estudantes/': {
+      id: '/admin/estudantes/'
+      path: '/'
+      fullPath: '/admin/estudantes/'
+      preLoaderRoute: typeof AdminEstudantesIndexRouteImport
+      parentRoute: typeof AdminEstudantesRoute
     }
     '/app/viagens/privada': {
       id: '/app/viagens/privada'
-      path: '/app/viagens/privada'
+      path: '/viagens/privada'
       fullPath: '/app/viagens/privada'
       preLoaderRoute: typeof AppViagensPrivadaRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/app/viagens/historico': {
-      id: '/app/viagens/historico'
-      path: '/app/viagens/historico'
-      fullPath: '/app/viagens/historico'
-      preLoaderRoute: typeof AppViagensHistoricoRouteImport
-      parentRoute: typeof rootRouteImport
+    '/app/viagens/$id': {
+      id: '/app/viagens/$id'
+      path: '/viagens/$id'
+      fullPath: '/app/viagens/$id'
+      preLoaderRoute: typeof AppViagensIdRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/app/viagens/atual': {
-      id: '/app/viagens/atual'
-      path: '/app/viagens/atual'
-      fullPath: '/app/viagens/atual'
-      preLoaderRoute: typeof AppViagensAtualRouteImport
-      parentRoute: typeof rootRouteImport
+    '/app/reservas/$id': {
+      id: '/app/reservas/$id'
+      path: '/reservas/$id'
+      fullPath: '/app/reservas/$id'
+      preLoaderRoute: typeof AppReservasIdRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/app/penalidades/historico': {
       id: '/app/penalidades/historico'
-      path: '/app/penalidades/historico'
+      path: '/penalidades/historico'
       fullPath: '/app/penalidades/historico'
       preLoaderRoute: typeof AppPenalidadesHistoricoRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/app/driver/viagens': {
-      id: '/app/driver/viagens'
-      path: '/app/driver/viagens'
-      fullPath: '/app/driver/viagens'
-      preLoaderRoute: typeof AppDriverViagensRouteImport
-      parentRoute: typeof rootRouteImport
+    '/app/motorista/viagens': {
+      id: '/app/motorista/viagens'
+      path: '/motorista/viagens'
+      fullPath: '/app/motorista/viagens'
+      preLoaderRoute: typeof AppMotoristaViagensRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/motorista/perfil': {
+      id: '/app/motorista/perfil'
+      path: '/motorista/perfil'
+      fullPath: '/app/motorista/perfil'
+      preLoaderRoute: typeof AppMotoristaPerfilRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/admin/viagens/historico': {
+      id: '/admin/viagens/historico'
+      path: '/historico'
+      fullPath: '/admin/viagens/historico'
+      preLoaderRoute: typeof AdminViagensHistoricoRouteImport
+      parentRoute: typeof AdminViagensRoute
+    }
+    '/admin/viagens/$id': {
+      id: '/admin/viagens/$id'
+      path: '/$id'
+      fullPath: '/admin/viagens/$id'
+      preLoaderRoute: typeof AdminViagensIdRouteImport
+      parentRoute: typeof AdminViagensRoute
+    }
+    '/admin/servidores/$id': {
+      id: '/admin/servidores/$id'
+      path: '/$id'
+      fullPath: '/admin/servidores/$id'
+      preLoaderRoute: typeof AdminServidoresIdRouteImport
+      parentRoute: typeof AdminServidoresRoute
+    }
+    '/admin/onibus/$id': {
+      id: '/admin/onibus/$id'
+      path: '/$id'
+      fullPath: '/admin/onibus/$id'
+      preLoaderRoute: typeof AdminOnibusIdRouteImport
+      parentRoute: typeof AdminOnibusRoute
+    }
+    '/admin/motoristas/$id': {
+      id: '/admin/motoristas/$id'
+      path: '/$id'
+      fullPath: '/admin/motoristas/$id'
+      preLoaderRoute: typeof AdminMotoristasIdRouteImport
+      parentRoute: typeof AdminMotoristasRoute
+    }
+    '/admin/estudantes/$id': {
+      id: '/admin/estudantes/$id'
+      path: '/$id'
+      fullPath: '/admin/estudantes/$id'
+      preLoaderRoute: typeof AdminEstudantesIdRouteImport
+      parentRoute: typeof AdminEstudantesRoute
     }
     '/app/viagens/convidados/$guest_id': {
       id: '/app/viagens/convidados/$guest_id'
-      path: '/app/viagens/convidados/$guest_id'
+      path: '/viagens/convidados/$guest_id'
       fullPath: '/app/viagens/convidados/$guest_id'
       preLoaderRoute: typeof AppViagensConvidadosGuest_idRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AppRouteRoute
     }
-    '/app/driver/viagem/$tripId': {
-      id: '/app/driver/viagem/$tripId'
-      path: '/app/driver/viagem/$tripId'
-      fullPath: '/app/driver/viagem/$tripId'
-      preLoaderRoute: typeof AppDriverViagemTripIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/app/motorista/viagem/$tripId': {
+      id: '/app/motorista/viagem/$tripId'
+      path: '/motorista/viagem/$tripId'
+      fullPath: '/app/motorista/viagem/$tripId'
+      preLoaderRoute: typeof AppMotoristaViagemTripIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/motorista/checkin/$tripId': {
+      id: '/app/motorista/checkin/$tripId'
+      path: '/motorista/checkin/$tripId'
+      fullPath: '/app/motorista/checkin/$tripId'
+      preLoaderRoute: typeof AppMotoristaCheckinTripIdRouteImport
+      parentRoute: typeof AppRouteRoute
     }
   }
 }
 
+interface AdminEstudantesRouteChildren {
+  AdminEstudantesIdRoute: typeof AdminEstudantesIdRoute
+  AdminEstudantesIndexRoute: typeof AdminEstudantesIndexRoute
+}
+
+const AdminEstudantesRouteChildren: AdminEstudantesRouteChildren = {
+  AdminEstudantesIdRoute: AdminEstudantesIdRoute,
+  AdminEstudantesIndexRoute: AdminEstudantesIndexRoute,
+}
+
+const AdminEstudantesRouteWithChildren = AdminEstudantesRoute._addFileChildren(
+  AdminEstudantesRouteChildren,
+)
+
+interface AdminMotoristasRouteChildren {
+  AdminMotoristasIdRoute: typeof AdminMotoristasIdRoute
+  AdminMotoristasIndexRoute: typeof AdminMotoristasIndexRoute
+}
+
+const AdminMotoristasRouteChildren: AdminMotoristasRouteChildren = {
+  AdminMotoristasIdRoute: AdminMotoristasIdRoute,
+  AdminMotoristasIndexRoute: AdminMotoristasIndexRoute,
+}
+
+const AdminMotoristasRouteWithChildren = AdminMotoristasRoute._addFileChildren(
+  AdminMotoristasRouteChildren,
+)
+
+interface AdminOnibusRouteChildren {
+  AdminOnibusIdRoute: typeof AdminOnibusIdRoute
+  AdminOnibusIndexRoute: typeof AdminOnibusIndexRoute
+}
+
+const AdminOnibusRouteChildren: AdminOnibusRouteChildren = {
+  AdminOnibusIdRoute: AdminOnibusIdRoute,
+  AdminOnibusIndexRoute: AdminOnibusIndexRoute,
+}
+
+const AdminOnibusRouteWithChildren = AdminOnibusRoute._addFileChildren(
+  AdminOnibusRouteChildren,
+)
+
+interface AdminServidoresRouteChildren {
+  AdminServidoresIdRoute: typeof AdminServidoresIdRoute
+  AdminServidoresIndexRoute: typeof AdminServidoresIndexRoute
+}
+
+const AdminServidoresRouteChildren: AdminServidoresRouteChildren = {
+  AdminServidoresIdRoute: AdminServidoresIdRoute,
+  AdminServidoresIndexRoute: AdminServidoresIndexRoute,
+}
+
+const AdminServidoresRouteWithChildren = AdminServidoresRoute._addFileChildren(
+  AdminServidoresRouteChildren,
+)
+
+interface AdminViagensRouteChildren {
+  AdminViagensIdRoute: typeof AdminViagensIdRoute
+  AdminViagensHistoricoRoute: typeof AdminViagensHistoricoRoute
+  AdminViagensIndexRoute: typeof AdminViagensIndexRoute
+}
+
+const AdminViagensRouteChildren: AdminViagensRouteChildren = {
+  AdminViagensIdRoute: AdminViagensIdRoute,
+  AdminViagensHistoricoRoute: AdminViagensHistoricoRoute,
+  AdminViagensIndexRoute: AdminViagensIndexRoute,
+}
+
+const AdminViagensRouteWithChildren = AdminViagensRoute._addFileChildren(
+  AdminViagensRouteChildren,
+)
+
+interface AdminRouteRouteChildren {
+  AdminAdministradoresRoute: typeof AdminAdministradoresRoute
+  AdminEstudantesRoute: typeof AdminEstudantesRouteWithChildren
+  AdminMotoristasRoute: typeof AdminMotoristasRouteWithChildren
+  AdminOnibusRoute: typeof AdminOnibusRouteWithChildren
+  AdminPenalidadesRoute: typeof AdminPenalidadesRoute
+  AdminPerfilRoute: typeof AdminPerfilRoute
+  AdminReservasRoute: typeof AdminReservasRoute
+  AdminRotasRoute: typeof AdminRotasRoute
+  AdminServidoresRoute: typeof AdminServidoresRouteWithChildren
+  AdminSolicitacoesRoute: typeof AdminSolicitacoesRoute
+  AdminViagensRoute: typeof AdminViagensRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminAdministradoresRoute: AdminAdministradoresRoute,
+  AdminEstudantesRoute: AdminEstudantesRouteWithChildren,
+  AdminMotoristasRoute: AdminMotoristasRouteWithChildren,
+  AdminOnibusRoute: AdminOnibusRouteWithChildren,
+  AdminPenalidadesRoute: AdminPenalidadesRoute,
+  AdminPerfilRoute: AdminPerfilRoute,
+  AdminReservasRoute: AdminReservasRoute,
+  AdminRotasRoute: AdminRotasRoute,
+  AdminServidoresRoute: AdminServidoresRouteWithChildren,
+  AdminSolicitacoesRoute: AdminSolicitacoesRoute,
+  AdminViagensRoute: AdminViagensRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
+interface AppRouteRouteChildren {
+  AppHistoricoRoute: typeof AppHistoricoRoute
+  AppPerfilRoute: typeof AppPerfilRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppMotoristaPerfilRoute: typeof AppMotoristaPerfilRoute
+  AppMotoristaViagensRoute: typeof AppMotoristaViagensRoute
+  AppPenalidadesHistoricoRoute: typeof AppPenalidadesHistoricoRoute
+  AppReservasIdRoute: typeof AppReservasIdRoute
+  AppViagensIdRoute: typeof AppViagensIdRoute
+  AppViagensPrivadaRoute: typeof AppViagensPrivadaRoute
+  AppMotoristaIndexRoute: typeof AppMotoristaIndexRoute
+  AppReservasIndexRoute: typeof AppReservasIndexRoute
+  AppViagensIndexRoute: typeof AppViagensIndexRoute
+  AppMotoristaCheckinTripIdRoute: typeof AppMotoristaCheckinTripIdRoute
+  AppMotoristaViagemTripIdRoute: typeof AppMotoristaViagemTripIdRoute
+  AppViagensConvidadosGuest_idRoute: typeof AppViagensConvidadosGuest_idRoute
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppHistoricoRoute: AppHistoricoRoute,
+  AppPerfilRoute: AppPerfilRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppMotoristaPerfilRoute: AppMotoristaPerfilRoute,
+  AppMotoristaViagensRoute: AppMotoristaViagensRoute,
+  AppPenalidadesHistoricoRoute: AppPenalidadesHistoricoRoute,
+  AppReservasIdRoute: AppReservasIdRoute,
+  AppViagensIdRoute: AppViagensIdRoute,
+  AppViagensPrivadaRoute: AppViagensPrivadaRoute,
+  AppMotoristaIndexRoute: AppMotoristaIndexRoute,
+  AppReservasIndexRoute: AppReservasIndexRoute,
+  AppViagensIndexRoute: AppViagensIndexRoute,
+  AppMotoristaCheckinTripIdRoute: AppMotoristaCheckinTripIdRoute,
+  AppMotoristaViagemTripIdRoute: AppMotoristaViagemTripIdRoute,
+  AppViagensConvidadosGuest_idRoute: AppViagensConvidadosGuest_idRoute,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
+  AppRouteRoute: AppRouteRouteWithChildren,
   EquipeRoute: EquipeRoute,
   LoginRoute: LoginRoute,
   PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
@@ -597,25 +1124,6 @@ const rootRouteChildren: RootRouteChildren = {
   SobreProjetoRoute: SobreProjetoRoute,
   TermosDeUsoRoute: TermosDeUsoRoute,
   VerificarRoute: VerificarRoute,
-  Admin_rootRoute: Admin_rootRoute,
-  AdminMotoristasRoute: AdminMotoristasRoute,
-  AdminOnibusRoute: AdminOnibusRoute,
-  AdminRotasRoute: AdminRotasRoute,
-  AdminSolicitacoesRoute: AdminSolicitacoesRoute,
-  AdminViagensRoute: AdminViagensRoute,
-  App_rootRoute: App_rootRoute,
-  AppPerfilRoute: AppPerfilRoute,
-  AdminIndexRoute: AdminIndexRoute,
-  AppIndexRoute: AppIndexRoute,
-  AppDriverViagensRoute: AppDriverViagensRoute,
-  AppPenalidadesHistoricoRoute: AppPenalidadesHistoricoRoute,
-  AppViagens_rootRoute: AppViagens_rootRoute,
-  AppViagensAtualRoute: AppViagensAtualRoute,
-  AppViagensHistoricoRoute: AppViagensHistoricoRoute,
-  AppViagensPrivadaRoute: AppViagensPrivadaRoute,
-  AppViagensIndexRoute: AppViagensIndexRoute,
-  AppDriverViagemTripIdRoute: AppDriverViagemTripIdRoute,
-  AppViagensConvidadosGuest_idRoute: AppViagensConvidadosGuest_idRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

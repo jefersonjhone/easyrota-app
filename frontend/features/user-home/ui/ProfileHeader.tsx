@@ -1,7 +1,9 @@
 import { useLogoutMutation } from '@/features/auth/hooks/useLogout'
 import { useDeleteAccountMutation } from '@/features/auth/hooks/useDeleteAccount'
+import { useChangePasswordMutation } from '@/features/auth/hooks/useChangePassword'
 import { useEffect, useState } from 'react'
 import { Input } from '@/lib/ui/input'
+import { toast } from 'sonner'
 
 import { formatTripDate } from '../config'
 import {
@@ -10,9 +12,10 @@ import {
   AvatarImage,
 } from "@/lib/ui/avatar"
 import {
-  CalendarBlankIcon,
-  IdentificationBadgeIcon,
-  UserSquareIcon,
+  CalendarBlank,
+  IdentificationBadge,
+  UserSquare,
+  Gear,
 } from "@phosphor-icons/react"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/lib/ui/dialog'
 import { Switch } from '@/lib/ui/switch'
@@ -52,12 +55,24 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
   
   const logoutMutation = useLogoutMutation()
   const deleteAccountMutation = useDeleteAccountMutation()
+  const changePasswordMutation = useChangePasswordMutation()
   
   const [openSettings, setOpenSettings] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState("")
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushLoading, setPushLoading] = useState(false)
+
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<{
+    current_password?: string[];
+    new_password?: string[];
+    new_password_confirm?: string[];
+    detail?: string;
+  }>({})
   const canDeleteAccount =
     user.profile_type === "STUDENT" ||
     user.profile_type === "CIVIL-SERVANT"
@@ -101,242 +116,318 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
     }
   }
 
+  const handlePasswordChange = () => {
+    setFieldErrors({})
+
+    if (!currentPassword || !newPassword || !newPasswordConfirm) {
+      setFieldErrors({ detail: "Todos os campos de senha são obrigatórios." })
+      return
+    }
+
+    if (newPassword !== newPasswordConfirm) {
+      setFieldErrors({ new_password_confirm: ["A confirmação de senha não confere."] })
+      return
+    }
+
+    if (newPassword.length < 8) {
+      setFieldErrors({ new_password: ["A nova senha deve ter pelo menos 8 caracteres."] })
+      return
+    }
+
+    changePasswordMutation.mutate(
+      {
+        current_password: currentPassword,
+        new_password: newPassword,
+        new_password_confirm: newPasswordConfirm,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Senha alterada com sucesso!")
+          setChangingPassword(false)
+          setCurrentPassword("")
+          setNewPassword("")
+          setNewPasswordConfirm("")
+          setFieldErrors({})
+        },
+        onError: (error: unknown) => {
+          const err = error as { data?: Record<string, string[] | string> };
+          if (err && err.data) {
+            setFieldErrors(err.data)
+          } else {
+            setFieldErrors({ detail: "Ocorreu um erro ao alterar a senha." })
+          }
+        },
+      }
+    )
+  }
+
   
   return (
-    <header className='w-full'>
-      <div className='w-full h-26 md:h-42 bg-linear-to-r from-slate-300 to-slate-200' />
-      
-      <div className='max-w-4xl mx-auto px-4 pb-4'>
-        
-        <div className='flex gap-4 -mt-12 md:-mt-18 justify-between '>
-          <div className='shrink-0'>
-            <Avatar className='w-22 h-22 md:w-32 md:h-32 border-4 md:border-6 border-white'>
-              <AvatarImage src='/avatar.png' alt='João da Silva' />
-              <AvatarFallback className='text-4xl font-bold '>{get_initials(user.full_name)}</AvatarFallback>
+    <header className='w-full mb-6 md:mb-8'>
+      <div className="overflow-hidden rounded-4xl border border-border/70 bg-card shadow-sm">
+        <div className="grid gap-4 md:gap-8 p-4 md:p-6 lg:p-8 lg:grid-cols-[1.35fr_0.85fr]">
+          <div className="flex items-start gap-3 md:gap-5">
+            <Avatar className='w-14 h-14 md:w-20 md:h-20 shrink-0'>
+              <AvatarImage src='/avatar.png' alt={user.full_name} />
+              <AvatarFallback className="text-base md:text-2xl font-bold text-muted-foreground bg-muted">
+                {get_initials(user.full_name)}
+              </AvatarFallback>
             </Avatar>
-            
-            <div className='flex flex-col pb-2 m-0 '>
-              <h1 className='text-lg md:text-2xl font-bold '>{user.full_name}</h1>
-              <p className='text-gray-500 text-base'>{user.email}</p>
-              <div className="text-sm sm:text-base font-">
-                <p className='text-gray-600 mt-1 md:mt-2'>
-                  <UserSquareIcon className='inline-block mr-1' />
-                  <span>
-                    Perfil: {role_Label(user.profile_type)}
-                  </span>
+
+            <div className="space-y-2 md:space-y-3 min-w-0">
+              <div className="space-y-1 md:space-y-2">
+                <span className="inline-flex w-fit rounded-full bg-primary/10 px-2.5 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-semibold tracking-[0.2em] text-primary uppercase">
+                  Perfil
+                </span>
+                <h1 className="font-heading text-lg md:text-2xl font-semibold tracking-tight break-words">
+                  {user.full_name}
+                </h1>
+                <p className="text-xs md:text-sm text-muted-foreground">{user.email}</p>
+              </div>
+
+              <div className="space-y-1 md:space-y-1.5 text-[11px] md:text-sm text-muted-foreground">
+                <p className="flex items-center gap-1.5 md:gap-2">
+                  <UserSquare size={14} className="shrink-0 md:size-[16px]" />
+                  <span>{role_Label(user.profile_type)}</span>
                 </p>
-                
-                <p className='text-gray-600 '>
-                  <IdentificationBadgeIcon className='inline-block mr-1' />
-                  <span className="">
-                    
-                    Matrícula: {user.student_id ?? user.civil_servant_id}
-                  </span>
+                <p className="flex items-center gap-1.5 md:gap-2">
+                  <IdentificationBadge size={14} className="shrink-0 md:size-[16px]" />
+                  <span>Matrícula: {user.student_id ?? user.civil_servant_id}</span>
                 </p>
-                <p className='text-gray-600'>
-                  <CalendarBlankIcon className='inline-block mr-1' />
+                <p className="flex items-center gap-1.5 md:gap-2">
+                  <CalendarBlank size={14} className="shrink-0 md:size-[16px]" />
                   <span>Ingressou em {formatTripDate(user.joined_at)}</span>
                 </p>
               </div>
             </div>
           </div>
 
-          <div className='flex gap-2 items-start pt-2 mt-4 md:mt-10'>
-            <button
-              className='px-4 md:px-8 py-2 bg-slate-400  text-sm text-white border border-white
-              rounded-full font-medium md:font-bold hover:opacity-90' 
-              onClick={()=>{setOpenSettings(true)}}
-            >
+          <div className="flex items-start justify-end lg:justify-end">
+            <Button variant="outline" size="sm" onClick={() => setOpenSettings(true)}>
+              <Gear size={14} className="md:size-[16px]" />
               Configurações
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-      <Dialog open={openSettings} onOpenChange={setOpenSettings}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto w-full max-w-lg space-y-2 md:space-y-6">
-          <DialogTitle>Configurações</DialogTitle>
-          <DialogDescription>
-            Gerencie preferências de notificações, aparência e conta.
-          </DialogDescription>
-          <section className="space-y-3">
-            <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              Notificações
-            </h2>
-      
-            <FieldGroup className="space-y-1">
-              <Field orientation="horizontal">
-                <Switch
-                  id="email-notifications"
-                  name="email-notifications"
-                />
-                <FieldLabel htmlFor="email-notifications">
-                  Receber notificações por email
-                </FieldLabel>
-              </Field>
-      
-              <Field orientation="horizontal">
-                <Switch
-                  id="push-notifications"
-                  name="push-notifications"
-                  checked={pushEnabled}
-                  disabled={pushLoading}
-                  onCheckedChange={handlePushToggle}
-                />
-                <FieldLabel htmlFor="push-notifications">
-                  Receber notificações push
-                </FieldLabel>
-              </Field>
-            </FieldGroup>
-          </section>
-      
-          {/*<Separator />
-      
-          <section className="space-y-2">
-            <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              Aparência
-            </h2>
-      
-            <div className="space-y-2">
-              <p className="text-sm font-medium">
-                Tema
-              </p>
-            </div>
-          </section>
-      
-          <Separator />*/}
-      
-          
-          {/*<section className="space-y-3">
-            <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              Acessibilidade
-            </h2>
-      
-            <div className="space-y-2">
-              <p className="text-sm font-medium">
-                Alto contraste
-              </p>
-      
-              <p className="text-sm font-medium">
-                Tamanho da fonte
-              </p>
-            </div>
-          </section>
-      
-          <Separator />*/}
-      
-          <section className="space-y-3">
-            <h2 className="text-base font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-              Conta
-            </h2>
-      
-            {!confirmingDelete ? (
-              <div className="flex flex-col gap-3">
-      
-                <button className="text-left text-sm font-medium hover:underline">
-                  Alterar email
-                </button>
-      
-                <button className="text-left text-sm font-medium hover:underline">
-                  Alterar nome
-                </button>
-      
-                <button className="text-left text-sm font-medium hover:underline">
-                  Alterar senha
-                </button>
-      
-                {canDeleteAccount && (<button
-                  className="text-left text-sm font-medium text-destructive hover:underline"
-                  onClick={() => {
-                    setConfirmingDelete(true)
-                    setConfirmPassword("")
-                    deleteAccountMutation.reset()
-                  }}
-                >
-                  Solicitar exclusão da conta
-                </button>)}
-      
-                <button
-                  className="text-left text-sm font-medium hover:underline"
-                  onClick={() => {
-                    logoutMutation.mutate()
-                  }}
-                >
-                  Sair da conta
-                </button>
-      
-              </div>
-            ) : (
-              <div className="space-y-4 rounded-lg border p-4">
-      
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    Solicitação de exclusão da conta
-                  </h3>
-      
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Essa ação desativará sua conta imediatamente.
-                  </p>
-                  
-                  <p className="text-sm text-muted-foreground">
-                    Alguns dados poderão ser mantidos temporariamente
-                    para cumprimento de obrigações legais e auditoria,
-                    conforme a LGPD.
-                  </p>
 
-                  <p className="text-sm text-muted-foreground">
-                    OBS: Você pode cancelar a solicitação de exclusão em até 30 dias, basta logar novamente em sua conta.
-                  </p>
-      
-                  <p className="text-sm text-muted-foreground py-3">
-                    Para confirmar, digite sua senha.
-                  </p>
-                </div>
-      
-                <Input
-                  name="confirm-password"
-                  type="password"
-                  placeholder="Digite sua senha"
-                  className="rounded-sm"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-      
-                {deleteAccountMutation.isError && (
-                  <p className="text-sm text-destructive">
-                    Senha incorreta.
-                  </p>
-                )}
-      
-                <div className="flex justify-end gap-2">
-      
+      <Dialog open={openSettings} onOpenChange={setOpenSettings}>
+        <DialogContent className="max-h-[80vh] flex flex-col w-full max-w-lg p-0 overflow-hidden">
+          <div className="px-8 pt-8 pb-3 shrink-0">
+            <DialogTitle className="pr-6 text-xl">Configurações</DialogTitle>
+            <DialogDescription className="mt-1.5">
+              Gerencie preferências de notificações, aparência e conta.
+            </DialogDescription>
+          </div>
+
+          <div className="overflow-y-auto custom-scrollbar flex-1 px-8 pb-2 mb-6 space-y-6">
+            <section className="space-y-4">
+              <h2 className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+                Notificações
+              </h2>
+
+              <FieldGroup className="space-y-3">
+                <Field orientation="horizontal">
+                  <Switch
+                    id="email-notifications"
+                    name="email-notifications"
+                  />
+                  <FieldLabel htmlFor="email-notifications">
+                    Receber notificações por email
+                  </FieldLabel>
+                </Field>
+
+                <Field orientation="horizontal">
+                  <Switch
+                    id="push-notifications"
+                    name="push-notifications"
+                    checked={pushEnabled}
+                    disabled={pushLoading}
+                    onCheckedChange={handlePushToggle}
+                  />
+                  <FieldLabel htmlFor="push-notifications">
+                    Receber notificações push
+                  </FieldLabel>
+                </Field>
+              </FieldGroup>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+                Conta
+              </h2>
+
+              {!confirmingDelete && !changingPassword ? (
+                <div className="flex flex-col gap-4">
                   <Button
-                    variant="outline"
+                    variant="ghost"
+                    className="justify-start px-0 text-sm font-medium hover:underline"
                     onClick={() => {
-                      setConfirmingDelete(false)
-                      setConfirmPassword("")
-                      deleteAccountMutation.reset()
+                      setChangingPassword(true)
+                      setCurrentPassword("")
+                      setNewPassword("")
+                      setNewPasswordConfirm("")
+                      setFieldErrors({})
+                      changePasswordMutation.reset()
                     }}
                   >
-                    Cancelar
+                    Alterar senha
                   </Button>
-      
+
+                  {canDeleteAccount && (
+                    <Button
+                      variant="ghost"
+                      className="justify-start px-0 text-sm font-medium text-destructive hover:underline"
+                      onClick={() => {
+                        setConfirmingDelete(true)
+                        setConfirmPassword("")
+                        deleteAccountMutation.reset()
+                      }}
+                    >
+                      Solicitar exclusão da conta
+                    </Button>
+                  )}
+
                   <Button
-                    variant="destructive"
-                    disabled={deleteAccountMutation.isPending}
-                    onClick={() =>
-                      deleteAccountMutation.mutate(confirmPassword)
-                    }
+                    variant="ghost"
+                    className="justify-start px-0 text-sm font-medium hover:underline"
+                    onClick={() => logoutMutation.mutate()}
                   >
-                    {deleteAccountMutation.isPending
-                      ? "Excluindo..."
-                      : "Excluir conta"}
+                    Sair da conta
                   </Button>
-      
                 </div>
-              </div>
-            )}
-          </section>
-      
+              ) : changingPassword ? (
+                <div className="space-y-4 rounded-4xl border border-border/70 bg-muted/20 p-6">
+                  <div>
+                    <h3 className="text-lg font-semibold">Alterar senha</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Para sua segurança, informe sua senha atual antes de definir uma nova.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Field>
+                      <FieldLabel htmlFor="currentPassword">Senha atual</FieldLabel>
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        placeholder="Sua senha atual"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                      {fieldErrors.current_password && (
+                        <p className="text-sm text-destructive mt-1">{fieldErrors.current_password[0]}</p>
+                      )}
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="newPassword">Nova senha</FieldLabel>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        placeholder="Mínimo de 8 caracteres"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                      {fieldErrors.new_password && (
+                        <p className="text-sm text-destructive mt-1">{fieldErrors.new_password[0]}</p>
+                      )}
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="newPasswordConfirm">Confirmar nova senha</FieldLabel>
+                      <Input
+                        id="newPasswordConfirm"
+                        type="password"
+                        placeholder="Repita a nova senha"
+                        value={newPasswordConfirm}
+                        onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                      />
+                      {fieldErrors.new_password_confirm && (
+                        <p className="text-sm text-destructive mt-1">{fieldErrors.new_password_confirm[0]}</p>
+                      )}
+                    </Field>
+                  </div>
+
+                  {fieldErrors.detail && (
+                    <p className="text-sm text-destructive">{fieldErrors.detail}</p>
+                  )}
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setChangingPassword(false)
+                        setCurrentPassword("")
+                        setNewPassword("")
+                        setNewPasswordConfirm("")
+                        setFieldErrors({})
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+
+                    <Button
+                      disabled={changePasswordMutation.isPending}
+                      onClick={handlePasswordChange}
+                    >
+                      {changePasswordMutation.isPending ? "Salvando..." : "Salvar senha"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 rounded-4xl border border-border/70 bg-muted/20 p-6">
+                  <div>
+                    <h3 className="text-lg font-semibold">Solicitação de exclusão da conta</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Essa ação desativará sua conta imediatamente. Alguns dados poderão ser mantidos
+                      temporariamente para cumprimento de obrigações legais e auditoria, conforme a LGPD.
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Você pode cancelar a solicitação de exclusão em até 30 dias, basta logar novamente
+                      em sua conta.
+                    </p>
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      Para confirmar, digite sua senha.
+                    </p>
+                  </div>
+
+                  <Input
+                    name="confirm-password"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+
+                  {deleteAccountMutation.isError && (
+                    <p className="text-sm text-destructive">Senha incorreta.</p>
+                  )}
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setConfirmingDelete(false)
+                        setConfirmPassword("")
+                        deleteAccountMutation.reset()
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+
+                    <Button
+                      variant="destructive"
+                      disabled={deleteAccountMutation.isPending}
+                      onClick={() => deleteAccountMutation.mutate(confirmPassword)}
+                    >
+                      {deleteAccountMutation.isPending ? "Excluindo..." : "Excluir conta"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
         </DialogContent>
       </Dialog>
     </header>

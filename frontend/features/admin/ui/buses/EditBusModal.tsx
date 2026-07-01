@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@ui/button'
+import { toast } from 'sonner'
 import type { Bus } from './BusesPage'
 
 const editBusSchema = z.object({
@@ -59,6 +60,7 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
 
       onBusUpdated(response)
       onClose()
+      toast.success('Ônibus atualizado com sucesso!')
     } catch (err) {
       console.error(err)
       const errorData = err as { data?: { detail?: string, number_plate?: string[] } } | undefined
@@ -67,7 +69,9 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
       if (plateError) {
         setError("number_plate", { message: "A placa inserida já está cadastrada." })
       } else {
-        setError("root.serverError", { message: "Erro ao atualizar os dados do veículo." })
+        const msg = errorData?.data?.detail || 'Erro ao atualizar os dados do veículo.'
+        toast.error(msg)
+        setError("root.serverError", { message: msg })
       }
     }
   }
@@ -93,7 +97,7 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
           <div className="flex flex-col gap-4">
             {/* Campo: Placa */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit_plate" className="text-sm font-medium text-foreground">Placa</label>
+              <label htmlFor="edit_plate" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Placa</label>
               <input 
                 {...register("number_plate")} 
                 type="text" 
@@ -108,7 +112,7 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
 
             {/* Campo: Modelo */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit_brand" className="text-sm font-medium text-foreground">Modelo</label>
+              <label htmlFor="edit_brand" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Modelo</label>
               <input 
                 {...register("brand")} 
                 type="text" 
@@ -123,7 +127,7 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
 
             {/* Campo: Capacidade */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit_capacity" className="text-sm font-medium text-foreground">Capacidade</label>
+              <label htmlFor="edit_capacity" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Capacidade</label>
               <input 
                 {...register("seating_capacity", { valueAsNumber: true })} 
                 type="number" 
@@ -138,7 +142,7 @@ export const EditBusModal = ({ bus, isOpen, onClose, onBusUpdated }: EditBusModa
 
             {/* Campo: Status */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="edit_status" className="text-sm font-medium text-foreground">Status</label>
+              <label htmlFor="edit_status" className="block text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Status</label>
               <select
                 {...register("status")}
                 id="edit_status"

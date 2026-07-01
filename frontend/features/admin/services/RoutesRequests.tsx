@@ -14,7 +14,7 @@ type Values = {
   destiny: string
   departure_time: string
   arrival_time: string
-  administrator: number
+  administrator: string
   max_bus: number
 }
 
@@ -28,7 +28,7 @@ export type CreateRouteResponse = {
 }
 
 export async function CreateRouteRequest(values: CreateRouteValues): Promise<CreateRouteResponse> {
-  let adm = 0;
+  let adm = "";
   const user = useAuthStore.getState().user
   if (user) {
     adm = user.id
@@ -49,13 +49,13 @@ export async function CreateRouteRequest(values: CreateRouteValues): Promise<Cre
   return response
 }
 
-export async function DeleteRoute(routeId: number) {
+export async function DeleteRoute(routeId: string) {
   await apiFetch("/routes/" + routeId + "/", {
     method: "DELETE",
   })
 }
 
-export async function UpdateRoute(routeId: number, values: CreateRouteValues): Promise<CreateRouteResponse> {
+export async function UpdateRoute(routeId: string, values: CreateRouteValues): Promise<CreateRouteResponse> {
   const response: CreateRouteResponse = await apiFetch("/routes/"+routeId+"/", {
     method: "PUT",
     body: JSON.stringify(values),

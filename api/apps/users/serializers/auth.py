@@ -242,11 +242,11 @@ class CivilServantAllowedStaffSerializer(serializers.Serializer):
 
 
 class LocalTripPassengerSerializer(serializers.Serializer):
-    trip = serializers.IntegerField()
+    trip = serializers.UUIDField()
     passenger_type = serializers.CharField(required=False, allow_blank=True)
     kind = serializers.CharField(required=False, allow_blank=True)
-    allowed_staff_id = serializers.IntegerField(required=False)
-    associated_staff_id = serializers.IntegerField(required=False)
+    allowed_staff_id = serializers.UUIDField(required=False)
+    associated_staff_id = serializers.UUIDField(required=False)
     guest_without_server = serializers.BooleanField(required=False, default=False)
     name = serializers.CharField(required=False, allow_blank=True, max_length=255)
     registration_number = serializers.CharField(
@@ -332,6 +332,14 @@ class AllowedStaffSearchSerializer(serializers.ModelSerializer):
     class Meta:
         model = AllowedStaff
         fields = ("id", "name", "registration_number")
+
+
+class AllowedStaffListSerializer(serializers.ModelSerializer):
+    has_account = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = AllowedStaff
+        fields = ("id", "name", "registration_number", "has_account")
 
 
 class RegistrationResponseSerializer(serializers.Serializer):

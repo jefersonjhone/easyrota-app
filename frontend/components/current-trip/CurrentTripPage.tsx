@@ -23,10 +23,11 @@ type PassengerGuest = {
   id: string;
   cpf: string;
   full_name: string;
+  passenger_identifier: string;
 };
 
 type CurrentTripData = {
-  id: number;
+  id: string;
   trip_date: string;
   origin: string;
   destiny: string;
@@ -166,7 +167,7 @@ export function CurrentTripPage() {
                     >
                       {trip.passenger_guests.map((guest: PassengerGuest) => (
                         <div key={guest.id} className="flex flex-col items-center justify-center p-6 gap-4">
-                          <PassengerQRCode identifier={guest.id} />
+                          <PassengerQRCode identifier={guest.passenger_identifier} />
                           
                           <div className="text-center space-y-1">
                             <FieldLabel className="text-base text-center w-full block">{guest.full_name}</FieldLabel>

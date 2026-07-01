@@ -9,6 +9,7 @@ from rest_framework import serializers
 
 from ..reservations.models import Reservation
 from .models import Bus, GuestPassenger, Route, Trip, TripPassenger, TripRequest
+from .services.trip_service import TripService
 
 
 class TripRequestSerializer(serializers.ModelSerializer):
@@ -55,6 +56,51 @@ class BusSerializer(serializers.ModelSerializer):
             )
 
         return value
+
+
+class BusAdminDetailSerializer(serializers.ModelSerializer):
+    trip_count = serializers.SerializerMethodField()
+    recent_trips = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Bus
+        fields = [
+            "id",
+            "number_plate",
+            "brand",
+            "seating_capacity",
+            "status",
+            "trip_count",
+            "recent_trips",
+        ]
+
+    def get_trip_count(self, obj):
+        from .models import Trip
+
+        return Trip.objects.filter(bus=obj).count()
+
+    def get_recent_trips(self, obj):
+        from .models import Trip
+
+        trips = (
+            Trip.objects
+            .filter(bus=obj)
+            .select_related("route")
+            .order_by("-trip_date")[:50]
+        )
+        return [
+            {
+                "id": t.id,
+                "trip_date": t.trip_date,
+                "departure_time": t.route.departure_time.strftime("%H:%M")
+                if t.route
+                else None,
+                "origin": t.route.origin if t.route else None,
+                "destiny": t.route.destiny if t.route else None,
+                "status": t.status,
+            }
+            for t in trips
+        ]
 
 
 class RouteSerializer(serializers.ModelSerializer):
@@ -148,21 +194,30 @@ class TripSerializer(serializers.ModelSerializer):
     active_reservations = serializers.SerializerMethodField(read_only=True)
     checked_in_count = serializers.SerializerMethodField(read_only=True)
     checked_in_passengers = serializers.SerializerMethodField(read_only=True)
-    is_current_driver = serializers.SerializerMethodField(read_only=True)
-    is_occupied_by_other_driver = serializers.SerializerMethodField(read_only=True)
-    departure_time = serializers.CharField(
-        source="route.departure_time", read_only=True
+    available_seats = serializers.SerializerMethodField(read_only=True)
+    bus_plate = serializers.SerializerMethodField(read_only=True)
+    bus_number_plate = serializers.SerializerMethodField(read_only=True)
+    students_count = serializers.SerializerMethodField(read_only=True)
+    servants_count = serializers.SerializerMethodField(read_only=True)
+    guests_count = serializers.SerializerMethodField(read_only=True)
+    local_passengers_count = serializers.SerializerMethodField(read_only=True)
+    departure_time = serializers.TimeField(
+        source="route.departure_time", format="%H:%M", read_only=True
     )
-    arrival_time = serializers.CharField(source="route.arrival_time", read_only=True)
+    arrival_time = serializers.TimeField(
+        source="route.arrival_time", format="%H:%M", read_only=True
+    )
+    expected_departure = serializers.SerializerMethodField(read_only=True)
+    expected_arrival = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Trip
         fields = "__all__"
 
     def get_active_reservations(self, obj) -> int:
-        """filter reservations by especific trip"""
-        reservations = Reservation.objects.filter(trip=obj).count()
-        return reservations
+        """Return occupied seats, including local passengers added by the driver."""
+        occupied_seats, _ = TripService.get_trip_occupancy(obj)
+        return occupied_seats
 
     def get_same_route_trips_count(self, obj) -> int:
         return Trip.objects.filter(
@@ -193,6 +248,11 @@ class TripSerializer(serializers.ModelSerializer):
             Reservation.objects.filter(trip=obj, check_in=True).count()
             + obj.trip_passengers.count()
         )
+
+    def get_available_seats(self, obj) -> int:
+        occupied_seats, _ = TripService.get_trip_occupancy(obj)
+        capacity = obj.bus.seating_capacity if obj.bus_id else obj.seating_capacity
+        return max(capacity - occupied_seats, 0)
 
     def get_checked_in_passengers(self, obj) -> list[dict]:
         """Return the checked-in passengers used by the driver occupancy screen."""
@@ -256,6 +316,46 @@ class TripSerializer(serializers.ModelSerializer):
 
         return passengers
 
+    def get_expected_departure(self, obj) -> str | None:
+        from apps.trips.services.trip_service import TripService
+
+        try:
+            dep = TripService._departure_datetime(obj)
+            return dep.isoformat()
+        except AttributeError:
+            return None
+
+    def get_expected_arrival(self, obj) -> str | None:
+        from apps.trips.services.trip_service import TripService
+
+        try:
+            arr = TripService._arrival_datetime(obj)
+            return arr.isoformat()
+        except AttributeError:
+            return None
+
+    def get_bus_plate(self, obj):
+        if obj.bus_id:
+            return obj.bus.number_plate
+        return None
+
+    def get_bus_number_plate(self, obj):
+        return self.get_bus_plate(obj)
+
+    def get_students_count(self, obj):
+        return Reservation.objects.filter(trip=obj, student__isnull=False).count()
+
+    def get_servants_count(self, obj):
+        return Reservation.objects.filter(trip=obj, civil_servant__isnull=False).count()
+
+    def get_guests_count(self, obj):
+        return Reservation.objects.filter(
+            trip=obj, guest_passenger__isnull=False
+        ).count()
+
+    def get_local_passengers_count(self, obj):
+        return obj.trip_passengers.count()
+
     def validate_trip_date(self, value):
         today = timezone.localtime().date()
         if self.instance is None and value < today:
@@ -265,118 +365,113 @@ class TripSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        bus = data.get("bus", self.instance.bus if self.instance else None)
-        trip_date = data.get(
-            "trip_date", self.instance.trip_date if self.instance else None
+        """Delegate all business rule validation to TripService."""
+        return TripService.validate_trip(data, instance=self.instance)
+
+
+class AvailableTripSerializer(serializers.ModelSerializer):
+    trip_date = serializers.DateField(format="%d/%m/%Y", read_only=True)
+    departure_time = serializers.TimeField(
+        source="route.departure_time", format="%H:%M", read_only=True
+    )
+    origin = serializers.CharField(source="route.origin", read_only=True)
+    destiny = serializers.CharField(source="route.destiny", read_only=True)
+    bus_brand = serializers.CharField(source="bus.brand", read_only=True)
+    status_trip = serializers.SerializerMethodField()
+    reserved_seats = serializers.SerializerMethodField()
+    available_seats = serializers.SerializerMethodField()
+    server_reserved_seats = serializers.SerializerMethodField()
+    is_full = serializers.SerializerMethodField()
+    is_reservable = serializers.SerializerMethodField()
+    quorum_met = serializers.SerializerMethodField()
+    reservation_deadline = serializers.SerializerMethodField()
+    user_is_reserved = serializers.BooleanField(read_only=True)
+    user_reservation_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Trip
+        fields = [
+            "id",
+            "trip_date",
+            "origin",
+            "destiny",
+            "departure_time",
+            "bus_brand",
+            "status_trip",
+            "available_seats",
+            "reserved_seats",
+            "server_reserved_seats",
+            "is_full",
+            "is_reservable",
+            "quorum_met",
+            "reservation_deadline",
+            "user_is_reserved",
+            "user_reservation_id",
+        ]
+
+    def get_user_reservation_id(self, obj):
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            return None
+        from django.db.models import Q
+        reservation = Reservation.objects.filter(
+            trip=obj,
+            status__in=["CONFIRMADA", "PENDENTE", "LISTA SECUNDÁRIA"]
+        ).filter(
+            Q(student__user=request.user) | Q(civil_servant__user=request.user)
+        ).first()
+        return reservation.id if reservation else None
+
+    def get_status_trip(self, obj):
+        return obj.get_status_display()
+
+    def get_reserved_seats(self, obj):
+        return Reservation.objects.filter(trip=obj).count()
+
+    def get_server_reserved_seats(self, obj):
+        return Reservation.objects.filter(
+            trip=obj, civil_servant__isnull=False, status__in=["CONFIRMADA", "PENDENTE"]
+        ).count()
+
+    def get_available_seats(self, obj):
+        total_occupied, server_occupied = TripService.get_trip_occupancy(obj)
+        seating_capacity = obj.bus.seating_capacity if obj.bus else 46
+        user = self.context["request"].user
+        if hasattr(user, "civil_servant_profile"):
+            # For servers, show capacity minus other servers
+            return max(seating_capacity - server_occupied, 0)
+
+        # For students and others, show total occupied
+        return max(seating_capacity - total_occupied, 0)
+
+    def get_is_full(self, obj):
+        return self.get_available_seats(obj) == 0
+
+    def get_is_reservable(self, obj):
+        base_reservable = obj.status != "CANCELADA" and TripService.is_reservation_open(
+            obj
         )
-        route = data.get("route", self.instance.route if self.instance else None)
-        status = data.get("status", self.instance.status if self.instance else None)
+        if not base_reservable:
+            return False
 
-        now = timezone.localtime()
-        tz = timezone.get_current_timezone()
+        if self.get_available_seats(obj) > 0:
+            return True
 
-        if trip_date and trip_date < now.date():
-            raise serializers.ValidationError({
-                "trip_date": "A data da viagem não pode estar no passado."
-            })
+        # Special case: Civil servants can reserve
+        # if full but an unallocated bus is available
+        user = self.context["request"].user
+        if hasattr(user, "civil_servant_profile"):
+            from ..trips.services.trip_service import has_available_bus
 
-        if status == "EM ANDAMENTO" and trip_date and trip_date < now.date():
-            raise serializers.ValidationError({
-                "trip_date": "A data da viagem não pode estar no passado."
-            })
+            return has_available_bus(obj.trip_date, obj.route)
 
-        if trip_date and route:
-            expected_dep = timezone.make_aware(
-                datetime.combine(trip_date, route.departure_time), tz
-            )
+        return False
 
-            is_new = self.instance is None
-            date_changed = self.instance and self.instance.trip_date != trip_date
-            route_changed = self.instance and self.instance.route != route
+    def get_quorum_met(self, obj):
+        return TripService.trip_has_quorum(obj)
 
-            if is_new or date_changed or route_changed:
-                grace_limit = expected_dep + timedelta(hours=1)
-
-                if now > grace_limit:
-                    raise serializers.ValidationError({
-                        "route": "Não é possível agendar uma viagem "
-                        "para um horário que já passou hoje."
-                    })
-
-        if status == "EM ANDAMENTO":
-            if trip_date == now.date() and route:
-                expected_dep = timezone.make_aware(
-                    datetime.combine(trip_date, route.departure_time), tz
-                )
-
-                if now < expected_dep - timedelta(minutes=30):
-                    raise serializers.ValidationError({
-                        "status": "Muito cedo para iniciar a viagem. "
-                        "O horário previsto é {route.departure_time.strftime('%H:%M')}."
-                    })
-
-            elif trip_date > now.date():
-                raise serializers.ValidationError({
-                    "status": "Não é possível iniciar uma viagem "
-                    "agendada para o futuro."
-                })
-
-            departure = data.get(
-                "departure_timestamp",
-                self.instance.departure_timestamp if self.instance else None,
-            )
-            if not departure:
-                data["departure_timestamp"] = now
-
-        if bus and trip_date and route:
-            date_range = [
-                trip_date - timedelta(days=1),
-                trip_date,
-                trip_date + timedelta(days=1),
-            ]
-            overlapping_trips = Trip.objects.filter(bus=bus, trip_date__in=date_range)
-            if self.instance:
-                overlapping_trips = overlapping_trips.exclude(id=self.instance.id)
-
-            tz = timezone.get_current_timezone()
-            new_start = timezone.make_aware(
-                datetime.combine(trip_date, route.departure_time), tz
-            )
-            new_end = timezone.make_aware(
-                datetime.combine(trip_date, route.arrival_time), tz
-            )
-
-            if new_end <= new_start:
-                new_end += timedelta(days=1)
-
-            for existing_trip in overlapping_trips:
-                ex_start = timezone.make_aware(
-                    datetime.combine(
-                        existing_trip.trip_date, existing_trip.route.departure_time
-                    ),
-                    tz,
-                )
-                ex_end = timezone.make_aware(
-                    datetime.combine(
-                        existing_trip.trip_date, existing_trip.route.arrival_time
-                    ),
-                    tz,
-                )
-
-                if ex_end <= ex_start:
-                    ex_end += timedelta(days=1)
-
-                if new_start < ex_end and new_end > ex_start:
-                    raise serializers.ValidationError({
-                        "bus": (
-                            f"Este ônibus já está alocado para a viagem "
-                            f"'{existing_trip.route}' "
-                            f"(Data: {existing_trip.trip_date}) "
-                            "que conflita com este horário."
-                        )
-                    })
-
-        return data
+    def get_reservation_deadline(self, obj):
+        return TripService.reservation_cutoff(obj)
 
 
 class TripCurrentScreenSerializer(serializers.ModelSerializer):
@@ -572,7 +667,7 @@ class TripCurrentScreenSerializer(serializers.ModelSerializer):
     def get_passenger_identifier(self, obj):
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
-            return str(request.user.id)
+            return f"{obj.id}@{request.user.id}"
         return None
 
 
@@ -580,6 +675,7 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
     """Compact public representation of a guest passenger."""
 
     # invited_by: string;
+    passenger_identifier = serializers.SerializerMethodField()
     trip_date = serializers.DateField(
         source="trip.trip_date", read_only=True, format="%d-%m-%Y"
     )
@@ -596,14 +692,203 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
     class Meta:
         model = GuestPassenger
         fields = (
+            "id", 
+            "cpf", 
+            "full_name", 
+            "trip_date",
+            "departure_time", 
+            "origin", 
+            "destiny", 
+            "arrival_time", 
+            "invited_by",
+            "passenger_identifier",
+        )
+
+    def get_passenger_identifier(self, obj):
+        reservation = (
+            Reservation.objects
+            .filter(trip=obj.trip, guest_passenger=obj)
+            .only("id")
+            .first()
+        )
+        if not reservation:
+            return str(obj.id)
+        return f"{reservation.id}@{obj.id}"
+
+
+class AdminTripDetailSerializer(serializers.ModelSerializer):
+    origin = serializers.CharField(source="route.origin")
+    destiny = serializers.CharField(source="route.destiny")
+    departure_time = serializers.TimeField(
+        source="route.departure_time", format="%H:%M"
+    )
+    arrival_time = serializers.TimeField(source="route.arrival_time", format="%H:%M")
+    trip_departure_time = serializers.SerializerMethodField()
+    trip_arrival_time = serializers.SerializerMethodField()
+    driver_name = serializers.SerializerMethodField()
+    driver_cnh = serializers.SerializerMethodField()
+    driver_id = serializers.SerializerMethodField()
+    bus_plate = serializers.SerializerMethodField()
+    bus_brand = serializers.SerializerMethodField()
+    bus_capacity = serializers.SerializerMethodField()
+    bus_id = serializers.SerializerMethodField()
+    active_reservations = serializers.SerializerMethodField()
+    checked_in_count = serializers.SerializerMethodField()
+    passengers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Trip
+        fields = [
             "id",
-            "cpf",
-            "full_name",
-            "email",
+            "trip_date",
+            "status",
             "origin",
             "destiny",
             "departure_time",
             "arrival_time",
-            "invited_by",
+            "trip_departure_time",
+            "trip_arrival_time",
+            "driver_name",
+            "driver_cnh",
+            "driver_id",
+            "bus_plate",
+            "bus_brand",
+            "bus_capacity",
+            "bus_id",
+            "seating_capacity",
+            "active_reservations",
+            "checked_in_count",
+            "passengers",
+        ]
+
+    def get_trip_departure_time(self, obj):
+        if obj.departure_timestamp:
+            return obj.departure_timestamp.astimezone().strftime("%H:%M")
+        return None
+
+    def get_trip_arrival_time(self, obj):
+        if obj.arrival_timestamp:
+            return obj.arrival_timestamp.astimezone().strftime("%H:%M")
+        return None
+
+    def get_driver_name(self, obj):
+        return obj.driver.user.full_name if obj.driver else None
+
+    def get_driver_cnh(self, obj):
+        return obj.driver.cnh if obj.driver else None
+
+    def get_driver_id(self, obj):
+        return obj.driver.id if obj.driver else None
+
+    def get_bus_plate(self, obj):
+        return obj.bus.number_plate if obj.bus else None
+
+    def get_bus_brand(self, obj):
+        return obj.bus.brand if obj.bus else None
+
+    def get_bus_capacity(self, obj):
+        return obj.bus.seating_capacity if obj.bus else None
+
+    def get_bus_id(self, obj):
+        return obj.bus.id if obj.bus else None
+
+    def get_active_reservations(self, obj):
+        occupied_seats, _ = TripService.get_trip_occupancy(obj)
+        return occupied_seats
+
+    def get_checked_in_count(self, obj):
+        from ..reservations.models import Reservation
+
+        return (
+            Reservation.objects.filter(trip=obj, check_in=True).count()
+            + obj.trip_passengers.count()
+        )
+
+    def get_passengers(self, obj):
+        from ..reservations.models import Reservation
+
+        reservations = Reservation.objects.filter(trip=obj).select_related(
+            "student__user", "civil_servant__user", "guest_passenger"
+        )
+
+        trip_passengers = obj.trip_passengers.select_related("allowed_staff")
+
+        passengers = []
+
+        for r in reservations:
+            if r.student:
+                name = r.student.user.full_name
+                ptype = "ESTUDANTE"
+                pid = r.student.student_id
+            elif r.civil_servant:
+                name = r.civil_servant.user.full_name
+                ptype = "SERVIDOR"
+                pid = r.civil_servant.civil_servant_id
+            elif r.guest_passenger:
+                name = r.guest_passenger.full_name
+                ptype = "CONVIDADO"
+                pid = r.guest_passenger.cpf
+            else:
+                continue
+
+            passengers.append({
+                "id": r.id,
+                "passenger_name": name,
+                "passenger_type": ptype,
+                "passenger_id_display": pid,
+                "profile_id": r.student.id
+                if r.student
+                else (r.civil_servant.id if r.civil_servant else None),
+                "reservation_status": r.status,
+                "check_in": r.check_in,
+                "checkin_date": r.checkin_date,
+            })
+
+        for tp in trip_passengers:
+            if (
+                tp.passenger_type == TripPassenger.PassengerType.LOCAL_SERVER
+                and tp.allowed_staff
+            ):
+                name = tp.allowed_staff.name
+                pid = tp.allowed_staff.registration_number
+                ptype = "SERVIDOR LOCAL"
+            elif tp.passenger_type == TripPassenger.PassengerType.LOCAL_GUEST:
+                name = tp.full_name
+                pid = tp.cpf
+                ptype = "CONVIDADO LOCAL"
+            else:
+                continue
+
+            passengers.append({
+                "id": tp.id,
+                "passenger_name": name,
+                "passenger_type": ptype,
+                "passenger_id_display": pid,
+                "profile_id": None,
+                "reservation_status": "CONFIRMADA",
+                "check_in": True,
+                "checkin_date": tp.created_at,
+            })
+
+        passengers.sort(key=lambda p: p["id"], reverse=True)
+        return passengers
+
+
+class GuestHistorySerializer(serializers.ModelSerializer):
+    """Serializes a guest with trip context for history display."""
+
+    trip_id = serializers.UUIDField(source="trip.id")
+    trip_origin = serializers.CharField(source="trip.route.origin")
+    trip_destiny = serializers.CharField(source="trip.route.destiny")
+    trip_date = serializers.DateField(source="trip.trip_date")
+
+    class Meta:
+        model = GuestPassenger
+        fields = (
+            "id",
+            "full_name",
+            "trip_id",
+            "trip_origin",
+            "trip_destiny",
             "trip_date",
         )

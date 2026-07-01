@@ -5,6 +5,7 @@ import { Input } from "@/lib/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
 const normalizeCpf = (value: string | undefined) => {
@@ -26,13 +27,13 @@ const guestSchema = z.object({
       (val) => val.replace(/\D/g, "").length === 11,
       "CPF deve ter exatamente 11 números.",
     ),
-  trip: z.number(),
+  trip: z.string(),
 });
 
 type GuestSchema = z.infer<typeof guestSchema>;
 
 type Props = {
-  tripId: number;
+  tripId: string;
   onGuestAdded: () => void;
 };
 
@@ -59,6 +60,7 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
       });
     },
     onSuccess: () => {
+      toast.success("Convidado cadastrado com sucesso!");
       onGuestAdded();
     },
     onError: (error) => {
@@ -68,7 +70,10 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
           type: "server",
           message: "Esse convidado já foi adicionado para essa viagem",
         });
+        toast.error("Esse convidado ja foi adicionado para essa viagem.");
+        return;
       }
+      toast.error("Erro ao cadastrar convidado.");
     },
   });
 

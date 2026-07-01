@@ -34,7 +34,7 @@ export function fetchTrips(filters: TripFilters = {}) {
   return apiFetch<Trip[]>(`/trips/${query ? `?${query}` : ''}`)
 }
 
-export function fetchTrip(id: number) {
+export function fetchTrip(id: string) {
   return apiFetch<Trip>(`/trips/${id}/`)
 }
 
@@ -49,18 +49,25 @@ export function createTrip(data: Partial<Trip>) {
   })
 }
 
-export function updateTrip(id: number, data: Partial<Trip>) {
+export function updateTrip(id: string, data: Partial<Trip>) {
   return apiFetch<Trip>(`/trips/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
 }
 
-export function deleteTrip(id: number) {
+export function deleteTrip(id: string) {
   return apiFetch<void>(`/trips/${id}/`, { method: 'DELETE' })
 }
 
-export function checkInTripPassenger(tripId: number | string, passengerIdentifier: string) {
+export function bulkDeleteTrips(ids: string[]) {
+  return apiFetch<{ deleted: number }>('/trips/bulk-delete/', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  })
+}
+
+export function checkInTripPassenger(tripId: string, passengerIdentifier: string) {
   return apiFetch<TripPassengerCheckInResponse>(`/trips/${tripId}/check-in/`, {
     method: 'POST',
     body: JSON.stringify({ passenger_identifier: passengerIdentifier }),

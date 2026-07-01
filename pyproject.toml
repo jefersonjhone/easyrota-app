@@ -13,7 +13,7 @@ dependencies = [
     "djangorestframework (>=3.17.1,<4.0.0)",
     "djangorestframework-simplejwt (>=5.5.0,<6.0.0)",
     "python-dotenv (>=1.2.2,<2.0.0)",
-    "django-webpush>=0.3.6",
+    "django-webpush (==0.3.6)",
     "pywebpush>=2.3.0",
     "django-apscheduler>=0.7.0",
     "gunicorn (>=26.0.0,<27.0.0)",

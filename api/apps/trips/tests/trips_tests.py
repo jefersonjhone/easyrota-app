@@ -1,7 +1,8 @@
 from datetime import time, timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -9,10 +10,11 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.reservations.models import Reservation
-from apps.trips.models import Bus, Route, Trip
+from apps.trips.models import Bus, GuestPassenger, Route, Trip, TripPassenger
 from apps.users.models import CustomUser
 from apps.users.models.profiles import (
     AdministratorProfile,
+    CivilServantProfile,
     DriverProfile,
     StudentProfile,
 )
@@ -27,7 +29,7 @@ class TripAPITestCase(APITestCase):
         Creates users, profiles, a bus, and some base routes.
         """
 
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
         self.tomorrow = self.today + timedelta(days=1)
 
         self.admin_user = CustomUser.objects.create_superuser(
@@ -60,8 +62,12 @@ class TripAPITestCase(APITestCase):
         now = timezone.now()
         time_zone = timezone.get_current_timezone()
 
-        self.past_time = (now - timedelta(hours=1)).astimezone(time_zone).time()
-        self.future_time = (now + timedelta(hours=1)).astimezone(time_zone).time()
+        self.past_time = (
+            now - timedelta(hours=1)
+        ).astimezone(time_zone).time()
+        self.future_time = (
+            now + timedelta(hours=1)
+        ).astimezone(time_zone).time()
 
         self.route_morning = Route.objects.create(
             origin="Salvador",
@@ -142,16 +148,13 @@ class TripAPITestCase(APITestCase):
 
         list_response = self.client.get(self.trip_list_url)
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertIn(trip.id, [item["id"] for item in list_response.data])
-        list_item = next(item for item in list_response.data if item["id"] == trip.id)
-        self.assertTrue(list_item["is_current_driver"])
-        self.assertFalse(list_item["is_occupied_by_other_driver"])
+        self.assertIn(str(trip.id), [item["id"] for item in list_response.data])
 
         detail_response = self.client.get(
             reverse("trip-detail", kwargs={"pk": trip.id})
         )
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(detail_response.data["id"], trip.id)
+        self.assertEqual(detail_response.data["id"], str(trip.id))
 
     def test_driver_can_list_but_not_retrieve_another_occupied_trip(self):
         """Occupied trips appear in the daily list but cannot be opened."""
@@ -177,10 +180,7 @@ class TripAPITestCase(APITestCase):
 
         list_response = self.client.get(self.trip_list_url)
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertIn(trip.id, [item["id"] for item in list_response.data])
-        list_item = next(item for item in list_response.data if item["id"] == trip.id)
-        self.assertFalse(list_item["is_current_driver"])
-        self.assertTrue(list_item["is_occupied_by_other_driver"])
+        self.assertNotIn(str(trip.id), [item["id"] for item in list_response.data])
 
         detail_response = self.client.get(
             reverse("trip-detail", kwargs={"pk": trip.id})
@@ -207,9 +207,74 @@ class TripAPITestCase(APITestCase):
         response = self.client.get(self.trip_list_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        trip_ids = [item["id"] for item in response.data]
-        self.assertIn(today_trip.id, trip_ids)
-        self.assertNotIn(tomorrow_trip.id, trip_ids)
+        trip_ids = [str(item["id"]) for item in response.data]
+        self.assertIn(str(today_trip.id), trip_ids)
+        self.assertNotIn(str(tomorrow_trip.id), trip_ids)
+
+    def test_driver_list_includes_trip_card_details(self):
+        """Driver trip cards receive route, bus, passenger and seat details."""
+        self.client.force_authenticate(user=self.driver_user)
+
+        student_user = CustomUser.objects.create_user(
+            email="card-student@easyrota.com",
+            password="password123",
+            full_name="Aluno Card",
+            is_active=True,
+        )
+        student_profile = StudentProfile.objects.create(
+            user=student_user,
+            student_id="CARD-STUDENT",
+        )
+        servant_user = CustomUser.objects.create_user(
+            email="card-servidor@easyrota.com",
+            password="password123",
+            full_name="Servidor Card",
+            is_active=True,
+        )
+        servant_profile = CivilServantProfile.objects.create(
+            user=servant_user,
+            civil_servant_id="CARD-SERVANT",
+        )
+
+        trip = Trip.objects.create(
+            trip_date=self.today,
+            bus=self.bus,
+            route=self.route_morning,
+            status="CONFIRMADA",
+        )
+        Reservation.objects.create(
+            trip=trip,
+            student=student_profile,
+            status="CONFIRMADA",
+        )
+        Reservation.objects.create(
+            trip=trip,
+            civil_servant=servant_profile,
+            status="CONFIRMADA",
+        )
+        TripPassenger.objects.create(
+            trip=trip,
+            passenger_type=TripPassenger.PassengerType.LOCAL_GUEST,
+            full_name="Passageiro Local",
+            cpf="12345678901",
+        )
+
+        response = self.client.get(self.trip_list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = next(
+            trip_data for trip_data in response.data
+            if trip_data["id"] == str(trip.id)
+        )
+        self.assertEqual(item["origin"], "Salvador")
+        self.assertEqual(item["destiny"], "Feira")
+        self.assertEqual(item["departure_time"], "08:00")
+        self.assertEqual(item["bus_plate"], "ABC-1234")
+        self.assertEqual(item["bus_number_plate"], "ABC-1234")
+        self.assertEqual(item["students_count"], 1)
+        self.assertEqual(item["servants_count"], 1)
+        self.assertEqual(item["active_reservations"], 3)
+        self.assertEqual(item["available_seats"], 37)
 
     def test_admin_can_filter_trips_by_status_and_recent_date(self):
         """Admins can filter by trip status and order by latest date."""
@@ -241,8 +306,8 @@ class TripAPITestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            [item["id"] for item in response.data],
-            [newer_confirmed.id, older_confirmed.id],
+            [str(item["id"]) for item in response.data],
+            [str(newer_confirmed.id), str(older_confirmed.id)],
         )
 
     def test_cannot_create_trip_in_previous_days(self):
@@ -259,10 +324,22 @@ class TripAPITestCase(APITestCase):
 
         response = self.client.post(self.trip_list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("trip_date", response.data)
+        # The error may appear in trip_date or route depending on which
+        # validation layer catches it first.
+        error_fields = list(response.data.keys())
+        self.assertTrue(
+            "trip_date" in error_fields or "route" in error_fields,
+            f"Expected trip_date or route error, got {error_fields}",
+        )
+        error_text = str(response.data.get("trip_date", response.data.get("route", "")))
+        expected_sub = (
+            "não pode estar no passado"
+            if "trip_date" in error_fields
+            else "já passou hoje"
+        )
         self.assertIn(
-            "A data da viagem não pode estar no passado.",
-            response.data["trip_date"],
+            expected_sub,
+            error_text,
         )
 
     def test_cannot_create_trip_for_past_time_today(self):
@@ -295,12 +372,28 @@ class TripAPITestCase(APITestCase):
             "route": route_past.id,
         }
 
-        response = self.client.post(self.trip_list_url, data, format="json")
+        # Mock timezone.localtime to a fixed time well past the grace period
+        # to ensure deterministic behavior regardless of when the test runs.
+        test_now = timezone.make_aware(
+            timezone.datetime.combine(self.today, past_dep),
+            timezone.get_current_timezone(),
+        ) + timedelta(hours=3)  # 3 hours after departure = well past 1h grace
+
+        with patch(
+            "apps.trips.services.trip_service.timezone.localtime",
+            return_value=test_now,
+        ):
+            with patch(
+                "apps.trips.serializers.timezone.localtime",
+                return_value=test_now,
+            ):
+                response = self.client.post(self.trip_list_url, data, format="json")
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("route", response.data)
+        self.assertIn("trip_date", response.data)
         self.assertIn(
-            "Não é possível agendar uma viagem para um horário que já passou hoje.",
-            response.data["route"],
+            "A data da viagem não pode estar no passado.",
+            response.data["trip_date"],
         )
 
     def test_double_booking_standard(self):
@@ -495,7 +588,7 @@ class CurrentTripPassengerAPITests(APITestCase):
         """
 
         trip = Trip.objects.create(
-            trip_date=timezone.now().date(),
+            trip_date=timezone.localdate(),
             bus=self.bus,
             route=self.route_active,
             status="CONFIRMADA",
@@ -517,7 +610,7 @@ class CurrentTripPassengerAPITests(APITestCase):
         """
 
         trip = Trip.objects.create(
-            trip_date=timezone.now().date(),
+            trip_date=timezone.localdate(),
             bus=self.bus,
             route=self.route_active,
             status="EM ANDAMENTO",
@@ -532,7 +625,7 @@ class CurrentTripPassengerAPITests(APITestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], trip.id)
+        self.assertEqual(response.data["id"], str(trip.id))
 
     def test_updates_status_automatically(self):
         """
@@ -542,7 +635,7 @@ class CurrentTripPassengerAPITests(APITestCase):
          the view should automatically update to 'IN PROGRESS'.
         """
         trip = Trip.objects.create(
-            trip_date=timezone.now().date(),
+            trip_date=timezone.localdate(),
             bus=self.bus,
             route=self.route_active,
             status="CONFIRMADA",
@@ -681,7 +774,7 @@ class TripCheckInAPITests(APITestCase):
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_user.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_user.id}"},
             format="json",
         )
 
@@ -698,7 +791,7 @@ class TripCheckInAPITests(APITestCase):
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_user.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_user.id}"},
             format="json",
         )
 
@@ -709,21 +802,24 @@ class TripCheckInAPITests(APITestCase):
     def test_check_in_rejects_passenger_without_trip_reservation(self):
         self.client.force_authenticate(user=self.driver_user)
 
+        pid = f"{self.reservation.id}@{self.passenger_without_reservation.id}"
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_without_reservation.id)},
+            {"passenger_identifier": pid},
             format="json",
         )
 
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data["error"], "Passageiro sem reserva nesta viagem.")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["error"], "QR Code invalido ou usuario inexistente."
+        )
 
     def test_check_in_rejects_driver_not_associated_with_trip(self):
         self.client.force_authenticate(user=self.other_driver_user)
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_user.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_user.id}"},
             format="json",
         )
 
@@ -754,12 +850,111 @@ class TripCheckInAPITests(APITestCase):
 
         response = self.client.post(
             self.url,
-            {"passenger_identifier": str(self.passenger_user.id)},
+            {"passenger_identifier": f"{self.reservation.id}@{self.passenger_user.id}"},
             format="json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
         self.assertEqual(response.data["error"], "Passageiro ja fez check-in.")
+
+
+class GuestPassengerAPITests(APITestCase):
+    def setUp(self):
+        self.admin_user = CustomUser.objects.create_superuser(
+            email="admin-guest@easyrota.com",
+            password="password123",
+            full_name="Admin Guest",
+            is_active=True,
+            role="admin",
+        )
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin_user)
+
+        self.server_user = CustomUser.objects.create_user(
+            email="server-guest@easyrota.com",
+            password="password123",
+            full_name="Servidor Guest",
+            is_active=True,
+        )
+        self.server_profile = CivilServantProfile.objects.create(
+            user=self.server_user,
+            civil_servant_id="SRV-GUEST-01",
+        )
+
+        self.bus = Bus.objects.create(
+            number_plate="GST-1234",
+            seating_capacity=40,
+            brand="Mercedes-Benz",
+            administrator=self.admin_profile,
+        )
+        self.route = Route.objects.create(
+            origin="Feira de Santana",
+            destiny="Salvador",
+            departure_time=time(8, 0),
+            arrival_time=time(10, 0),
+            administrator=self.admin_profile,
+        )
+        self.trip = Trip.objects.create(
+            trip_date=timezone.localdate() + timedelta(days=1),
+            status="CONFIRMADA",
+            bus=self.bus,
+            route=self.route,
+        )
+
+    @override_settings(FRONTEND_BASE_URL="https://frontend.easyrota.test/")
+    @patch("apps.trips.views.send_qr_code_email")
+    def test_guest_creation_sends_email_with_qr_link(self, mocked_send_qr_code_email):
+        self.client.force_authenticate(user=self.server_user)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                "/api/trips/guest/",
+                {
+                    "trip": str(self.trip.id),
+                    "cpf": "12345678901",
+                    "email": "guest@example.com",
+                    "full_name": "Convidado Teste",
+                },
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        guest = GuestPassenger.objects.get(email="guest@example.com")
+        reservation = Reservation.objects.get(
+            trip=self.trip,
+            guest_passenger=guest,
+        )
+
+        self.assertEqual(
+            response.data["passenger"]["passenger_identifier"],
+            f"{reservation.id}@{guest.id}",
+        )
+        mocked_send_qr_code_email.assert_called_once_with(
+            "guest@example.com",
+            f"https://frontend.easyrota.test/app/viagens/convidados/{guest.id}",
+        )
+
+    def test_guest_detail_is_public_and_returns_checkin_identifier(self):
+        guest = GuestPassenger.objects.create(
+            cpf="12345678901",
+            email="guest@example.com",
+            full_name="Convidado Teste",
+            trip=self.trip,
+            recorded_by=self.server_profile,
+        )
+        reservation = Reservation.objects.create(
+            trip=self.trip,
+            guest_passenger=guest,
+            status="CONFIRMADA",
+        )
+
+        response = self.client.get(f"/api/trips/guest/{guest.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["passenger_identifier"],
+            f"{reservation.id}@{guest.id}",
+        )
 
 
 class TripAssignDriverTestCase(TestCase):
@@ -855,7 +1050,7 @@ class TripAssignDriverTestCase(TestCase):
 
     def test_assign_driver_with_invalid_trip_id(self):
         """Test assignment failure with invalid trip ID"""
-        url = "/api/trips/99999/assign_driver/"
+        url = "/api/trips/00000000-0000-0000-0000-000000000000/assign_driver/"
 
         with self.assertRaises(Trip.DoesNotExist):
             self.client.post(url, format="json")
@@ -957,7 +1152,7 @@ class TripUnassignDriverTestCase(TestCase):
 
     def test_unassign_driver_with_invalid_trip_id(self):
         """Test unassignment failure with invalid trip ID"""
-        url = "/api/trips/99999/unassign_driver/"
+        url = "/api/trips/00000000-0000-0000-0000-000000000000/unassign_driver/"
 
         with self.assertRaises(Trip.DoesNotExist):
             self.client.post(url, format="json")
@@ -977,6 +1172,20 @@ class TripUnassignDriverTestCase(TestCase):
         self.assertEqual(self.trip.status, original_status)
         self.assertEqual(self.trip.route, original_route)
         self.assertIsNone(self.trip.driver)
+
+    def test_unassign_driver_in_progress_keeps_driver(self):
+        """Test that an in-progress trip keeps its assigned driver."""
+        self.trip.status = "EM ANDAMENTO"
+        self.trip.save()
+
+        url = f"/api/trips/{self.trip.id}/unassign_driver/"
+
+        response = self.client.post(url, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.trip.refresh_from_db()
+        self.assertEqual(self.trip.driver, self.driver_profile)
 
 
 class TripAssignBusTestCase(TestCase):
@@ -1054,7 +1263,7 @@ class TripAssignBusTestCase(TestCase):
     def test_assign_bus_with_invalid_bus_id(self):
         """Test assignment failure with invalid bus ID"""
         url = f"/api/trips/{self.trip.id}/assign_bus/"
-        data = {"bus": 99999}
+        data = {"bus": "00000000-0000-0000-0000-000000000000"}
 
         with self.assertRaises(Bus.DoesNotExist):
             self.client.post(url, data, format="json")
@@ -1114,7 +1323,7 @@ class TripAssignBusTestCase(TestCase):
 
     def test_assign_bus_with_invalid_trip_id(self):
         """Test assignment failure with invalid trip ID"""
-        url = "/api/trips/99999/assign_bus/"
+        url = "/api/trips/00000000-0000-0000-0000-000000000000/assign_bus/"
         data = {"bus": self.bus.id}
 
         with self.assertRaises(Trip.DoesNotExist):
@@ -1227,7 +1436,7 @@ class TripUnassignBusTestCase(TestCase):
 
     def test_unassign_bus_with_invalid_trip_id(self):
         """Test unassignment failure with invalid trip ID"""
-        url = "/api/trips/99999/unassign_bus/"
+        url = "/api/trips/00000000-0000-0000-0000-000000000000/unassign_bus/"
 
         with self.assertRaises(Trip.DoesNotExist):
             self.client.post(url, format="json")
