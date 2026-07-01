@@ -226,7 +226,9 @@ class Command(BaseCommand):
                 "Scheduler iniciado. Verificando notificações a cada 1 minuto."
             )
         )
-        scheduler = BlockingScheduler(timezone=timezone.get_current_timezone())
+        scheduler = BlockingScheduler(
+            timezone=timezone.get_current_timezone()
+        )
         scheduler.add_jobstore(DjangoJobStore(), "default")
 
         scheduler.add_job(
