@@ -167,7 +167,12 @@ export function usePassengers(
       setPassengerRemoveQuery('')
       setSelectedPassengerToRemove(null)
       setIsRemovePassengerMenuOpen(false)
-      setQrFeedback({ kind: 'success', message: `${removedName} removido do embarque.` })
+      setQrFeedback({
+        kind: 'success',
+        message: selectedPassengerToRemove.reservationId
+          ? `${removedName} removido do embarque e reserva cancelada.`
+          : `${removedName} removido do embarque.`,
+      })
       onCheckinChange?.()
     } catch (error) {
       console.warn('Nao foi possivel remover passageiro:', error)

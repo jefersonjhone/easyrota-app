@@ -222,7 +222,7 @@ class LocalPassengerService:
 
     @staticmethod
     def remove_reservation_checkin(trip, reservation_id):
-        """Undo a reservation check-in and return the passenger's name."""
+        """Cancel a checked-in reservation removed by the driver."""
         reservation = (
             Reservation.objects.select_related(
                 "student__user", "civil_servant__user", "guest_passenger"
@@ -236,8 +236,7 @@ class LocalPassengerService:
             )
 
         name = ReservationService.get_passenger_name(reservation)
-        reservation.check_in = False
-        reservation.checkin_date = None
-        reservation.save(update_fields=["check_in", "checkin_date"])
+        reservation_id = reservation.id
+        ReservationService.cancel(reservation)
         TripStatusService.sync_trip_status(trip)
-        return name, reservation.id
+        return name, reservation_id

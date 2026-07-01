@@ -513,7 +513,7 @@ class DriverTripPassengerRemovalTests(APITestCase):
         assert response.data["checked_in_count"] == 0
         assert not TripPassenger.objects.filter(id=passenger.id).exists()
 
-    def test_driver_can_remove_reservation_check_in_without_deleting_reservation(self):
+    def test_driver_can_remove_reservation_check_in_and_cancel_reservation(self):
         passenger_user = CustomUser.objects.create_user(
             email="passageiro.remove@teste.com",
             full_name="Passageiro Removido",
@@ -544,9 +544,7 @@ class DriverTripPassengerRemovalTests(APITestCase):
         assert response.status_code == status.HTTP_200_OK
         assert response.data["removed_passenger"]["name"] == passenger_user.full_name
         assert response.data["checked_in_count"] == 0
-        reservation.refresh_from_db()
-        assert reservation.check_in is False
-        assert reservation.checkin_date is None
+        assert not Reservation.objects.filter(id=reservation.id).exists()
 
 
 class DriverProfileTests(APITestCase):
