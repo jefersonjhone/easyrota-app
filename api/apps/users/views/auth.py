@@ -219,7 +219,7 @@ class LoginView(generics.GenericAPIView):
         response = Response(
             {
                 "user": AuthenticatedUserWithProfileSerializer(user).data,
-                "tokens": {"access": access_token},
+                "tokens": {"access": access_token, "refresh": refresh_token},
             },
             status=status.HTTP_200_OK,
         )
@@ -427,7 +427,9 @@ class RefreshTokenView(generics.GenericAPIView):
     serializer_class = TokenRefreshSerializer
 
     def post(self, request):
-        refresh_token = request.COOKIES.get("refresh_token")
+        refresh_token = request.data.get("refresh") or request.COOKIES.get(
+            "refresh_token"
+        )
         if not refresh_token:
             return Response(
                 {"detail": "Refresh token not provided."},
@@ -455,7 +457,12 @@ class RefreshTokenView(generics.GenericAPIView):
 
         data = serializer.validated_data
         response = Response(
-            {"tokens": {"access": data["access"]}},
+            {
+                "tokens": {
+                    "access": data["access"],
+                    "refresh": data.get("refresh"),
+                },
+            },
             status=status.HTTP_200_OK,
         )
 
