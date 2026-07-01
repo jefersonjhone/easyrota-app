@@ -16,6 +16,7 @@ type GuestData = {
   arrival_time: string;
   invited_by: string;
   trip_date: string;
+  passenger_identifier: string;
 };
 
 type GuestProps = {
@@ -31,6 +32,7 @@ export function GuestPage({ guest_id }: GuestProps) {
       try {
         const data = await apiFetch<GuestData>(
           "/trips/guest/" + guest_id + "/",
+          { auth: false },
         );
         setGuestData(data);
       } catch (err) {
@@ -73,7 +75,7 @@ export function GuestPage({ guest_id }: GuestProps) {
           <Card>
             <CardContent className="flex flex-col pt-6 pb-6 gap-5">
               <CardContent className="flex flex-col items-center justify-center pt-6 pb-6 gap-5">
-                <PassengerQRCode identifier={guestData.id} />
+                <PassengerQRCode identifier={guestData.passenger_identifier} />
               </CardContent>
               <section className="grid grid-rows-3 grid-cols-2 gap-4">
                 <section>

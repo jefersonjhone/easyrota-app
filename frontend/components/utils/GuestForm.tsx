@@ -5,6 +5,7 @@ import { Input } from "@/lib/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
 const normalizeCpf = (value: string | undefined) => {
@@ -59,6 +60,7 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
       });
     },
     onSuccess: () => {
+      toast.success("Convidado cadastrado com sucesso!");
       onGuestAdded();
     },
     onError: (error) => {
@@ -68,7 +70,10 @@ export function GuestForm({ tripId, onGuestAdded }: Props) {
           type: "server",
           message: "Esse convidado já foi adicionado para essa viagem",
         });
+        toast.error("Esse convidado ja foi adicionado para essa viagem.");
+        return;
       }
+      toast.error("Erro ao cadastrar convidado.");
     },
   });
 

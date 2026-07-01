@@ -6,6 +6,9 @@ import { Fragment, useEffect } from 'react'
 
 export const Route = createFileRoute('/app')({
   beforeLoad: ({ location }) => {
+    const isGuestInvitePath = location.pathname.startsWith('/app/viagens/convidados/')
+    if (isGuestInvitePath) return
+
     requireAuth()
     const user = useAuthStore.getState().user
     const isMotoristaPath = location.pathname.startsWith('/app/motorista')

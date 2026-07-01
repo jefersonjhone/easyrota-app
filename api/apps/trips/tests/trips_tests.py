@@ -2,7 +2,7 @@ from datetime import time, timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -10,7 +10,7 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.reservations.models import Reservation
-from apps.trips.models import Bus, Route, Trip
+from apps.trips.models import Bus, GuestPassenger, Route, Trip, TripPassenger
 from apps.users.models import CustomUser
 from apps.users.models.profiles import (
     AdministratorProfile,
@@ -248,6 +248,12 @@ class TripAPITestCase(APITestCase):
             civil_servant=servant_profile,
             status="CONFIRMADA",
         )
+        TripPassenger.objects.create(
+            trip=trip,
+            passenger_type=TripPassenger.PassengerType.LOCAL_GUEST,
+            full_name="Passageiro Local",
+            cpf="12345678901",
+        )
 
         response = self.client.get(self.trip_list_url)
 
@@ -263,8 +269,8 @@ class TripAPITestCase(APITestCase):
         self.assertEqual(item["bus_number_plate"], "ABC-1234")
         self.assertEqual(item["students_count"], 1)
         self.assertEqual(item["servants_count"], 1)
-        self.assertEqual(item["active_reservations"], 2)
-        self.assertEqual(item["available_seats"], 38)
+        self.assertEqual(item["active_reservations"], 3)
+        self.assertEqual(item["available_seats"], 37)
 
     def test_admin_can_filter_trips_by_status_and_recent_date(self):
         """Admins can filter by trip status and order by latest date."""
@@ -846,6 +852,105 @@ class TripCheckInAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
         self.assertEqual(response.data["error"], "Passageiro ja fez check-in.")
+
+
+class GuestPassengerAPITests(APITestCase):
+    def setUp(self):
+        self.admin_user = CustomUser.objects.create_superuser(
+            email="admin-guest@easyrota.com",
+            password="password123",
+            full_name="Admin Guest",
+            is_active=True,
+            role="admin",
+        )
+        self.admin_profile = AdministratorProfile.objects.get(user=self.admin_user)
+
+        self.server_user = CustomUser.objects.create_user(
+            email="server-guest@easyrota.com",
+            password="password123",
+            full_name="Servidor Guest",
+            is_active=True,
+        )
+        self.server_profile = CivilServantProfile.objects.create(
+            user=self.server_user,
+            civil_servant_id="SRV-GUEST-01",
+        )
+
+        self.bus = Bus.objects.create(
+            number_plate="GST-1234",
+            seating_capacity=40,
+            brand="Mercedes-Benz",
+            administrator=self.admin_profile,
+        )
+        self.route = Route.objects.create(
+            origin="Feira de Santana",
+            destiny="Salvador",
+            departure_time=time(8, 0),
+            arrival_time=time(10, 0),
+            administrator=self.admin_profile,
+        )
+        self.trip = Trip.objects.create(
+            trip_date=timezone.localdate() + timedelta(days=1),
+            status="CONFIRMADA",
+            bus=self.bus,
+            route=self.route,
+        )
+
+    @override_settings(FRONTEND_BASE_URL="https://frontend.easyrota.test/")
+    @patch("apps.trips.views.send_qr_code_email")
+    def test_guest_creation_sends_email_with_qr_link(self, mocked_send_qr_code_email):
+        self.client.force_authenticate(user=self.server_user)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                "/api/trips/guest/",
+                {
+                    "trip": str(self.trip.id),
+                    "cpf": "12345678901",
+                    "email": "guest@example.com",
+                    "full_name": "Convidado Teste",
+                },
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        guest = GuestPassenger.objects.get(email="guest@example.com")
+        reservation = Reservation.objects.get(
+            trip=self.trip,
+            guest_passenger=guest,
+        )
+
+        self.assertEqual(
+            response.data["passenger"]["passenger_identifier"],
+            f"{reservation.id}@{guest.id}",
+        )
+        mocked_send_qr_code_email.assert_called_once_with(
+            "guest@example.com",
+            f"https://frontend.easyrota.test/app/viagens/convidados/{guest.id}",
+        )
+
+    def test_guest_detail_is_public_and_returns_checkin_identifier(self):
+        guest = GuestPassenger.objects.create(
+            cpf="12345678901",
+            email="guest@example.com",
+            full_name="Convidado Teste",
+            trip=self.trip,
+            recorded_by=self.server_profile,
+        )
+        reservation = Reservation.objects.create(
+            trip=self.trip,
+            guest_passenger=guest,
+            status="CONFIRMADA",
+        )
+
+        response = self.client.get(f"/api/trips/guest/{guest.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["passenger_identifier"],
+            f"{reservation.id}@{guest.id}",
+        )
 
 
 class TripAssignDriverTestCase(TestCase):

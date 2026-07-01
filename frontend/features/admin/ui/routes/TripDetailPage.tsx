@@ -11,12 +11,13 @@ import {
 } from '@/features/admin/hooks/useTripAdminActions'
 import { fetchDrivers, fetchBuses } from '@/features/admin/services/trip-admin-actions'
 import { AdminLayout } from '@/features/admin/ui/Layout'
-import { ArrowLeftIcon, ArrowRightIcon, Check, DownloadSimple, Printer, X, User, Bus, MapPin, Users, CalendarBlank, UserPlus, PencilSimpleIcon } from '@phosphor-icons/react'
+import { ArrowLeftIcon, ArrowRightIcon, Check, DownloadSimple, X, User, Bus, MapPin, Users, CalendarBlank, UserPlus, PencilSimpleIcon } from '@phosphor-icons/react'
 import { Button } from '@ui/button'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@ui/dropdown-menu'
 import { AddPassengerModal } from './AddPassengerModal'
 import { API_URL } from '@lib/config'
 import { useAuthStore } from '@/features/auth/store/auth-store'
+import { downloadTripReportPdf, isCompletedTripStatus } from '@/features/admin/services/trip-report-pdf'
 
 function formatDate(dateStr: string) {
   const [year, month, day] = dateStr.split('-')
@@ -144,6 +145,18 @@ export function TripDetailPage() {
   }
 
   const occupancy = trip.seating_capacity > 0 ? Math.min((trip.active_reservations / trip.seating_capacity) * 100, 100) : 0
+  const canExportReport = isCompletedTripStatus(trip.status)
+
+  function handleDownloadReport() {
+    if (!trip) return
+
+    try {
+      downloadTripReportPdf(trip)
+      toast.success('Relatório PDF gerado com sucesso!')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível gerar o relatório.')
+    }
+  }
 
   return (
     <AdminLayout>
@@ -413,8 +426,12 @@ export function TripDetailPage() {
               </h2>
             </div>
             <div className="no-print">
-            {trip.status === 'CONCLUÍDA' ? (
-              <div className="flex items-center gap-2">
+            {canExportReport ? (
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button size="sm" variant="outline" onClick={handleDownloadReport} className="min-w-[132px] justify-start">
+                  <DownloadSimple size={14} weight="bold" className="mr-1" />
+                  Relatório PDF
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" variant="outline">
@@ -433,10 +450,6 @@ export function TripDetailPage() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button size="sm" variant="outline" onClick={() => window.print()}>
-                  <Printer size={14} weight="bold" className="mr-1" />
-                  Imprimir
-                </Button>
               </div>
             ) : trip.status !== 'CANCELADA' && (
               <Button size="sm" onClick={() => setModalOpen(true)}>

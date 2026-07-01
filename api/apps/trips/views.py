@@ -2,6 +2,7 @@ import random
 import string
 from datetime import date, timedelta
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -12,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.reservations.models import Reservation
-from apps.reservations.serializers import ReservationSerializer
+from apps.reservations.services.reservation_service import ReservationService
 from apps.trips.services.trip_status_service import TripStatusService
 from apps.users.models.profiles import DriverProfile
 from apps.users.permissions import (
@@ -20,6 +21,7 @@ from apps.users.permissions import (
     IsDriver,
     IsDriverReadOnly,
 )
+from apps.users.views.auth import send_qr_code_email
 
 from .filters import FilterTripViewSet
 from .models import Bus, GuestPassenger, Route, Trip, TripRequest
@@ -46,6 +48,21 @@ from .services.trip_service import (
 def generate_access_code(length=8):
     letters_and_digits = string.ascii_uppercase + string.digits
     return "".join(random.choice(letters_and_digits) for i in range(length))
+
+
+def get_frontend_base_url():
+    configured_url = getattr(settings, "FRONTEND_BASE_URL", None)
+    if configured_url:
+        return configured_url.rstrip("/") + "/"
+
+    if settings.DEBUG:
+        return "http://localhost:5173/"
+
+    return "https://easyrota-app.vercel.app/"
+
+
+def build_guest_qr_code_link(guest):
+    return f"{get_frontend_base_url()}app/viagens/convidados/{guest.id}"
 
 
 class TripRequestViewSet(viewsets.ModelViewSet):
@@ -790,6 +807,7 @@ class GuestPassengerView(APIView):
     serializer_class = GuestPassengerSerializer
     # queryset = GuestPassenger.objects.all()
 
+    @transaction.atomic
     def post(self, request):
         if not hasattr(request.user, "civil_servant_profile"):
             return Response(
@@ -819,18 +837,28 @@ class GuestPassengerView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        try:
+            trip = Trip.objects.get(id=trip_id)
+        except Trip.DoesNotExist:
+            return Response(
+                {"trip": ["Viagem nao encontrada."]},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
         passenger = GuestPassenger.objects.create(
             cpf=cpf,
-            trip_id=trip_id,
+            trip=trip,
             email=email,
             recorded_by=request.user.civil_servant_profile,
             full_name=request.data.get("full_name"),
         )
 
-        trip = Trip.objects.get(id=trip_id)
+        ReservationService.create_for_guest(passenger, trip)
+        transaction.on_commit(
+            lambda: send_qr_code_email(email, build_guest_qr_code_link(passenger))
+        )
+
         serializer = GuestPassengerSerializer(passenger)
-        reservetionSerializer = ReservationSerializer()
-        reservetionSerializer.reserveToGuest(passenger, trip)
         TripStatusService.sync_trip_status(trip)
         return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)
 
@@ -854,24 +882,11 @@ class GuestHistoryView(APIView):
 
         serializer = GuestHistorySerializer(guests, many=True)
         return Response(serializer.data)
-        '''
-        sync_trip_status(trip)
-        TripService.sync_trip_status(trip)
-
-        appLink = (
-            "https://easyrota-app.vercel.app/"
-            if os.environ["STATE"] != "DEV"
-            else "http://localhost:5173/"
-        )
-
-        send_qr_code_email(
-            email, appLink + "app/viagens/convidados/" + str(passenger.id)
-        )
-        return Response({"passenger": serializer.data}, status=status.HTTP_201_CREATED)
-        '''
 
 
 class GuestPassengerDetailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request, guest_id):
         try:
             guest = GuestPassenger.objects.get(id=guest_id)

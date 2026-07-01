@@ -215,9 +215,9 @@ class TripSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_active_reservations(self, obj) -> int:
-        """filter reservations by especific trip"""
-        reservations = Reservation.objects.filter(trip=obj).count()
-        return reservations
+        """Return occupied seats, including local passengers added by the driver."""
+        occupied_seats, _ = TripService.get_trip_occupancy(obj)
+        return occupied_seats
 
     def get_same_route_trips_count(self, obj) -> int:
         return Trip.objects.filter(
@@ -675,6 +675,7 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
     """Compact public representation of a guest passenger."""
 
     # invited_by: string;
+    passenger_identifier = serializers.SerializerMethodField()
     trip_date = serializers.DateField(
         source="trip.trip_date", read_only=True, format="%d-%m-%Y"
     )
@@ -699,8 +700,20 @@ class GuestPassengerSerializer(serializers.ModelSerializer):
             "origin", 
             "destiny", 
             "arrival_time", 
-            "invited_by"
+            "invited_by",
+            "passenger_identifier",
         )
+
+    def get_passenger_identifier(self, obj):
+        reservation = (
+            Reservation.objects
+            .filter(trip=obj.trip, guest_passenger=obj)
+            .only("id")
+            .first()
+        )
+        if not reservation:
+            return str(obj.id)
+        return f"{reservation.id}@{obj.id}"
 
 
 class AdminTripDetailSerializer(serializers.ModelSerializer):
@@ -780,9 +793,8 @@ class AdminTripDetailSerializer(serializers.ModelSerializer):
         return obj.bus.id if obj.bus else None
 
     def get_active_reservations(self, obj):
-        from ..reservations.models import Reservation
-
-        return Reservation.objects.filter(trip=obj).count()
+        occupied_seats, _ = TripService.get_trip_occupancy(obj)
+        return occupied_seats
 
     def get_checked_in_count(self, obj):
         from ..reservations.models import Reservation

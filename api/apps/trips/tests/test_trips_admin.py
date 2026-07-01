@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.trips.models import Bus, Route, Trip
+from apps.trips.models import Bus, Route, Trip, TripPassenger
 from apps.users.models import CustomUser
 from apps.users.models.profiles import (
     AdministratorProfile,
@@ -143,6 +143,12 @@ class TripAdminDetailTests(APITestCase):
             bus=self.bus,
             seating_capacity=self.bus.seating_capacity,
         )
+        TripPassenger.objects.create(
+            trip=self.trip,
+            passenger_type=TripPassenger.PassengerType.LOCAL_GUEST,
+            full_name="Passageiro Local",
+            cpf="12345678901",
+        )
 
         self.url = reverse("trip-admin-detail", args=[self.trip.id])
 
@@ -165,7 +171,9 @@ class TripAdminDetailTests(APITestCase):
         assert str(response.data["bus_id"]) == str(self.bus.id)
         assert "passengers" in response.data
         assert "active_reservations" in response.data
+        assert response.data["active_reservations"] == 1
         assert "checked_in_count" in response.data
+        assert response.data["checked_in_count"] == 1
 
     def test_admin_detail_returns_404_for_nonexistent_trip(self):
         """Admin detail returns 404 when trip does not exist."""
