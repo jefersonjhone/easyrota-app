@@ -747,7 +747,11 @@ class MyNextTripView(APIView):
             base_running_query = Trip.objects.running().by_date_gte(yesterday)
             base_next_query = Trip.objects.upcoming().by_date_gte(today)
         else:
-            valid_statuses = ["CONFIRMADA", "LISTA SECUNDÁRIA", "PENDENTE"]
+            valid_statuses = [
+                "CONFIRMADA",
+                "LISTA SECUNDÁRIA",
+                "PENDENTE",
+            ]
 
             user_trip_filter = (
                 Q(
