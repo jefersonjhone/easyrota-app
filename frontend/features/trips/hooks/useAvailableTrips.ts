@@ -10,7 +10,7 @@ export const availableTripsKeys = {
 export function useAvailableTrips() {
   return useQuery({
     queryKey: availableTripsKeys.all,
-    queryFn: () => apiFetch<AvailableTrip[]>('/trips'),
+    queryFn: () => apiFetch<AvailableTrip[]>('/trips/'),
     retry: false,
   })
 }
