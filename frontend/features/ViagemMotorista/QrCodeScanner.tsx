@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import {
+  type CameraDevice,
   Html5Qrcode,
   type Html5QrcodeCameraScanConfig,
   Html5QrcodeScannerState,
@@ -13,6 +14,12 @@ type QrCodeScannerProps = {
   enabled: boolean
 }
 
+const cameraVideoConstraints: MediaTrackConstraints = {
+  facingMode: { ideal: 'environment' },
+  width: { ideal: 1280 },
+  height: { ideal: 720 },
+}
+
 const scannerConfig: Html5QrcodeCameraScanConfig = {
   fps: 10,
   qrbox: (viewfinderWidth, viewfinderHeight) => {
@@ -23,10 +30,12 @@ const scannerConfig: Html5QrcodeCameraScanConfig = {
     return { width: qrboxSize, height: qrboxSize }
   },
   aspectRatio: 1,
-  videoConstraints: {
-    width: { min: 640, ideal: 1280 },
-    height: { min: 480, ideal: 720 },
-  },
+  videoConstraints: cameraVideoConstraints,
+}
+
+const fallbackScannerConfig: Html5QrcodeCameraScanConfig = {
+  ...scannerConfig,
+  videoConstraints: undefined,
 }
 
 function isScannerActive(scanner: Html5Qrcode) {
@@ -42,6 +51,20 @@ async function stopScanner(scanner: Html5Qrcode) {
     }
   } catch { /* camera may already be stopped */ }
   try { scanner.clear() } catch { /* internal element may be empty */ }
+}
+
+function isRearCamera(camera: CameraDevice) {
+  const label = camera.label.toLowerCase()
+  return (
+    label.includes('back') ||
+    label.includes('rear') ||
+    label.includes('environment') ||
+    label.includes('traseira')
+  )
+}
+
+function selectFallbackCamera(cameras: CameraDevice[]) {
+  return cameras.find(isRearCamera) ?? cameras[cameras.length - 1] ?? cameras[0]
 }
 
 export function QrCodeScanner({
@@ -105,19 +128,22 @@ export function QrCodeScanner({
         onStatusChangeRef.current?.('loading')
         document.getElementById(elementId)?.replaceChildren()
 
-        const cameras = await Html5Qrcode.getCameras()
-        console.debug('[QrCodeScanner] cameras found:', cameras.length, cameras.map((c) => ({ id: c.id, label: c.label })))
+        try {
+          console.debug('[QrCodeScanner] starting with rear camera preference')
+          await scanner.start({ facingMode: 'environment' }, scannerConfig, handleSuccess, handleDecodeError)
+        } catch (cameraPreferenceError) {
+          console.warn('[QrCodeScanner] rear camera preference failed:', cameraPreferenceError)
 
-        const rearCamera = cameras.find(
-          (c) => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment')
-        )
-        const selected = rearCamera ?? cameras[cameras.length - 1] ?? cameras[0]
-        if (!selected) throw new Error('Nenhuma camera encontrada.')
+          const cameras = await Html5Qrcode.getCameras()
+          console.debug('[QrCodeScanner] cameras found:', cameras.length, cameras.map((c) => ({ id: c.id, label: c.label })))
 
-        const cameraId = selected.id
-        console.debug('[QrCodeScanner] starting with camera:', cameraId, selected.label)
+          const selected = selectFallbackCamera(cameras)
+          if (!selected) throw new Error('Nenhuma camera encontrada.')
 
-        await scanner.start(cameraId, scannerConfig, handleSuccess, handleDecodeError)
+          console.debug('[QrCodeScanner] starting with fallback camera:', selected.id, selected.label)
+          await scanner.start(selected.id, fallbackScannerConfig, handleSuccess, handleDecodeError)
+        }
+
         if (!cancelled) {
           const v = document.querySelector(`#${elementId} video`) as HTMLVideoElement | null
           console.debug('[QrCodeScanner] camera started, video:', v?.videoWidth, 'x', v?.videoHeight)
