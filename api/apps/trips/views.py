@@ -505,6 +505,17 @@ class TripViewSet(viewsets.ModelViewSet):
         trip = Trip.objects.get(id=pk)
         driver = request.user.driver_profile
 
+        if trip.driver == driver and trip.status == "EM ANDAMENTO":
+            return Response(
+                {
+                    "error": (
+                        "Não é possível desassociar o motorista de"
+                        " uma viagem em andamento."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if not TripService.can_unassign_driver(trip, driver):
             return Response(
                 {"error": "Você não é o motorista desta viagem."},

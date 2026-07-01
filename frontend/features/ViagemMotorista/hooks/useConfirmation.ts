@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import type { DriverTripDetail } from '../types'
 import { startTrip, finishTrip, unassignDriverFromTrip } from '../api'
-import { getApiErrorMessage } from '../utils'
+import { getApiErrorMessage, normalizeTripStatus } from '../utils'
 
 export function useConfirmation(trip: DriverTripDetail | null, _setTrip: (t: DriverTripDetail | null) => void, setActionError: (s: string | null) => void, currentDriverId?: string | null) {
   const [isConfirmationLoading, setIsConfirmationLoading] = useState(false)
@@ -17,7 +17,9 @@ export function useConfirmation(trip: DriverTripDetail | null, _setTrip: (t: Dri
 
     try {
       const isDriver = currentDriverId != null && trip.driverId === currentDriverId
-      if (isDriver) {
+      const isTripInProgress = normalizeTripStatus(trip.status) === 'EM ANDAMENTO'
+
+      if (isDriver && !isTripInProgress) {
         await unassignDriverFromTrip(trip.id)
       }
       navigate({ to: '/app/motorista/viagens' })

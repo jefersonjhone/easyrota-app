@@ -32,8 +32,12 @@ type TripModel = {
   is_full?: boolean
   driver?: string | null
   bus_plate?: string | null
+  bus_number_plate?: string | null
+  active_reservations?: number
   students_count?: number
   servants_count?: number
+  guests_count?: number
+  local_passengers_count?: number
 }
 
 type DriverTrip = {
@@ -48,8 +52,11 @@ type DriverTrip = {
   availableSeats: number | null
   driverId: string | null
   busPlate: string | null
+  activeReservations: number
   studentsCount: number
   servantsCount: number
+  guestsCount: number
+  localPassengersCount: number
 }
 
 const statusLabels: Record<string, string> = {
@@ -98,7 +105,15 @@ function normalizeTripFromModel(trip: TripModel): DriverTrip {
   const departureTime = normalizeTripTime(trip.departure_time ?? trip.departure_timestamp)
 
   const availableSeats =
-    (typeof trip.seating_capacity === 'number' && typeof trip.reserved_seats === 'number') ? trip.seating_capacity - trip.reserved_seats : null
+    typeof trip.available_seats === 'number'
+      ? trip.available_seats
+      : (typeof trip.seating_capacity === 'number' && typeof trip.reserved_seats === 'number') ? trip.seating_capacity - trip.reserved_seats : null
+  const studentsCount = trip.students_count ?? 0
+  const servantsCount = trip.servants_count ?? 0
+  const guestsCount = trip.guests_count ?? 0
+  const localPassengersCount = trip.local_passengers_count ?? 0
+  const activeReservations = trip.active_reservations ?? studentsCount + servantsCount + guestsCount
+
   return {
     id: trip.id,
     tripDate: normalizeDateToIso(trip.trip_date),
@@ -110,9 +125,12 @@ function normalizeTripFromModel(trip: TripModel): DriverTrip {
     statusLabel: toStatusLabel(trip.status),
     availableSeats,
     driverId: trip.driver ?? null,
-    busPlate: trip.bus_plate ?? null,
-    studentsCount: trip.students_count ?? 0,
-    servantsCount: trip.servants_count ?? 0,
+    busPlate: trip.bus_plate ?? trip.bus_number_plate ?? null,
+    activeReservations,
+    studentsCount,
+    servantsCount,
+    guestsCount,
+    localPassengersCount,
   }
 }
 
@@ -145,6 +163,20 @@ const baseCardClass =
 
 function TripCard({ trip, isCanceled, isInProgress }: { trip: DriverTrip; isCanceled: boolean; isInProgress: boolean }) {
   const statusTone = getStatusTone(trip.status)
+  const passengerSummaryByKind = [
+    { count: trip.studentsCount, singular: 'aluno', plural: 'alunos' },
+    { count: trip.servantsCount, singular: 'servidor', plural: 'servidores' },
+    { count: trip.guestsCount, singular: 'convidado', plural: 'convidados' },
+    { count: trip.localPassengersCount, singular: 'passageiro local', plural: 'passageiros locais' },
+  ]
+    .filter((item) => item.count > 0)
+    .map((item) => `${item.count} ${item.count === 1 ? item.singular : item.plural}`)
+    .join(' · ')
+  const passengerSummary =
+    passengerSummaryByKind
+    || (trip.activeReservations > 0
+      ? `${trip.activeReservations} ${trip.activeReservations === 1 ? 'passageiro' : 'passageiros'}`
+      : 'Nenhum passageiro')
 
   const cardContent = (
     <>
@@ -182,9 +214,17 @@ function TripCard({ trip, isCanceled, isInProgress }: { trip: DriverTrip; isCanc
         <div className="rounded-xl bg-muted/30 px-2.5 py-1.5 md:p-2.5">
           <p className="text-[9px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Passageiros</p>
           <p className="mt-0.5 text-xs md:text-sm font-semibold">
-            {trip.studentsCount} alunos · {trip.servantsCount} servidores
+            {passengerSummary}
           </p>
         </div>
+        {trip.availableSeats !== null ? (
+          <div className="rounded-xl bg-muted/30 px-2.5 py-1.5 md:p-2.5">
+            <p className="text-[9px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Vagas</p>
+            <p className="mt-0.5 text-xs md:text-sm font-semibold">
+              {trip.availableSeats}
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-3 pt-2.5 border-t border-border/50">

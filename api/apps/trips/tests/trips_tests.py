@@ -14,6 +14,7 @@ from apps.trips.models import Bus, Route, Trip
 from apps.users.models import CustomUser
 from apps.users.models.profiles import (
     AdministratorProfile,
+    CivilServantProfile,
     DriverProfile,
     StudentProfile,
 )
@@ -205,6 +206,65 @@ class TripAPITestCase(APITestCase):
         trip_ids = [str(item["id"]) for item in response.data]
         self.assertIn(str(today_trip.id), trip_ids)
         self.assertNotIn(str(tomorrow_trip.id), trip_ids)
+
+    def test_driver_list_includes_trip_card_details(self):
+        """Driver trip cards receive route, bus, passenger and seat details."""
+        self.client.force_authenticate(user=self.driver_user)
+
+        student_user = CustomUser.objects.create_user(
+            email="card-student@easyrota.com",
+            password="password123",
+            full_name="Aluno Card",
+            is_active=True,
+        )
+        student_profile = StudentProfile.objects.create(
+            user=student_user,
+            student_id="CARD-STUDENT",
+        )
+        servant_user = CustomUser.objects.create_user(
+            email="card-servidor@easyrota.com",
+            password="password123",
+            full_name="Servidor Card",
+            is_active=True,
+        )
+        servant_profile = CivilServantProfile.objects.create(
+            user=servant_user,
+            civil_servant_id="CARD-SERVANT",
+        )
+
+        trip = Trip.objects.create(
+            trip_date=self.today,
+            bus=self.bus,
+            route=self.route_morning,
+            status="CONFIRMADA",
+        )
+        Reservation.objects.create(
+            trip=trip,
+            student=student_profile,
+            status="CONFIRMADA",
+        )
+        Reservation.objects.create(
+            trip=trip,
+            civil_servant=servant_profile,
+            status="CONFIRMADA",
+        )
+
+        response = self.client.get(self.trip_list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = next(
+            trip_data for trip_data in response.data
+            if trip_data["id"] == str(trip.id)
+        )
+        self.assertEqual(item["origin"], "Salvador")
+        self.assertEqual(item["destiny"], "Feira")
+        self.assertEqual(item["departure_time"], "08:00")
+        self.assertEqual(item["bus_plate"], "ABC-1234")
+        self.assertEqual(item["bus_number_plate"], "ABC-1234")
+        self.assertEqual(item["students_count"], 1)
+        self.assertEqual(item["servants_count"], 1)
+        self.assertEqual(item["active_reservations"], 2)
+        self.assertEqual(item["available_seats"], 38)
 
     def test_admin_can_filter_trips_by_status_and_recent_date(self):
         """Admins can filter by trip status and order by latest date."""
@@ -1003,6 +1063,20 @@ class TripUnassignDriverTestCase(TestCase):
         self.assertEqual(self.trip.status, original_status)
         self.assertEqual(self.trip.route, original_route)
         self.assertIsNone(self.trip.driver)
+
+    def test_unassign_driver_in_progress_keeps_driver(self):
+        """Test that an in-progress trip keeps its assigned driver."""
+        self.trip.status = "EM ANDAMENTO"
+        self.trip.save()
+
+        url = f"/api/trips/{self.trip.id}/unassign_driver/"
+
+        response = self.client.post(url, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.trip.refresh_from_db()
+        self.assertEqual(self.trip.driver, self.driver_profile)
 
 
 class TripAssignBusTestCase(TestCase):

@@ -194,6 +194,13 @@ class TripSerializer(serializers.ModelSerializer):
     active_reservations = serializers.SerializerMethodField(read_only=True)
     checked_in_count = serializers.SerializerMethodField(read_only=True)
     checked_in_passengers = serializers.SerializerMethodField(read_only=True)
+    available_seats = serializers.SerializerMethodField(read_only=True)
+    bus_plate = serializers.SerializerMethodField(read_only=True)
+    bus_number_plate = serializers.SerializerMethodField(read_only=True)
+    students_count = serializers.SerializerMethodField(read_only=True)
+    servants_count = serializers.SerializerMethodField(read_only=True)
+    guests_count = serializers.SerializerMethodField(read_only=True)
+    local_passengers_count = serializers.SerializerMethodField(read_only=True)
     departure_time = serializers.TimeField(
         source="route.departure_time", format="%H:%M", read_only=True
     )
@@ -241,6 +248,11 @@ class TripSerializer(serializers.ModelSerializer):
             Reservation.objects.filter(trip=obj, check_in=True).count()
             + obj.trip_passengers.count()
         )
+
+    def get_available_seats(self, obj) -> int:
+        occupied_seats, _ = TripService.get_trip_occupancy(obj)
+        capacity = obj.bus.seating_capacity if obj.bus_id else obj.seating_capacity
+        return max(capacity - occupied_seats, 0)
 
     def get_checked_in_passengers(self, obj) -> list[dict]:
         """Return the checked-in passengers used by the driver occupancy screen."""
@@ -327,11 +339,22 @@ class TripSerializer(serializers.ModelSerializer):
             return obj.bus.number_plate
         return None
 
+    def get_bus_number_plate(self, obj):
+        return self.get_bus_plate(obj)
+
     def get_students_count(self, obj):
         return Reservation.objects.filter(trip=obj, student__isnull=False).count()
 
     def get_servants_count(self, obj):
         return Reservation.objects.filter(trip=obj, civil_servant__isnull=False).count()
+
+    def get_guests_count(self, obj):
+        return Reservation.objects.filter(
+            trip=obj, guest_passenger__isnull=False
+        ).count()
+
+    def get_local_passengers_count(self, obj):
+        return obj.trip_passengers.count()
 
     def validate_trip_date(self, value):
         today = timezone.localtime().date()

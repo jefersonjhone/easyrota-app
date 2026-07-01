@@ -134,7 +134,7 @@ class TripService:
     @staticmethod
     def can_unassign_driver(trip, driver):
         """Check whether the given driver can unassign from the trip."""
-        return trip.driver and trip.driver == driver
+        return trip.driver and trip.driver == driver and trip.status != "EM ANDAMENTO"
 
     # ------------------------------------------------------------------
     # Bus assignment
