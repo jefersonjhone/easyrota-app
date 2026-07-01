@@ -62,8 +62,12 @@ class TripAPITestCase(APITestCase):
         now = timezone.now()
         time_zone = timezone.get_current_timezone()
 
-        self.past_time = (now - timedelta(hours=1)).astimezone(time_zone).time()
-        self.future_time = (now + timedelta(hours=1)).astimezone(time_zone).time()
+        self.past_time = (
+            now - timedelta(hours=1)
+        ).astimezone(time_zone).time()
+        self.future_time = (
+            now + timedelta(hours=1)
+        ).astimezone(time_zone).time()
 
         self.route_morning = Route.objects.create(
             origin="Salvador",
